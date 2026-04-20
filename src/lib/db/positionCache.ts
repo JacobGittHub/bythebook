@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import {
+  createAdminSupabaseClient,
+  createServerSupabaseClient,
+} from "@/lib/supabase";
 import type { ExplorerResponse } from "@/types/chess";
 
 const explorerMoveSchema = z.object({
@@ -21,7 +24,7 @@ const explorerResponseSchema = z.object({
 });
 
 export async function getCachedPosition(fen: string): Promise<ExplorerResponse | null> {
-  const supabase = createAdminSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("position_cache")
     .select("explorer_data")

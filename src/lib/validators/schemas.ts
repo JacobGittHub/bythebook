@@ -43,7 +43,14 @@ export const explorerBodySchema = z.object({
 });
 
 export const credentialsInputSchema = z.object({
-  username: z.string().trim().min(1),
+  email: z.string().trim().email(),
+  password: z.string().min(8),
+});
+
+export const registerInputSchema = z.object({
+  username: z.string().trim().min(1).max(50),
+  email: z.string().trim().email(),
+  password: z.string().min(8),
 });
 
 export const schemas = {
@@ -53,4 +60,5 @@ export const schemas = {
   explorerQuery: explorerQuerySchema,
   explorerBody: explorerBodySchema,
   credentials: credentialsInputSchema,
+  register: registerInputSchema,
 };

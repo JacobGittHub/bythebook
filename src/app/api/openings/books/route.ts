@@ -1,23 +1,19 @@
-import { auth, getSessionUserId } from "@/lib/auth";
+import { getAuthenticatedUser } from "@/lib/supabase";
 import { listOpeningBooks } from "@/lib/db/openings";
 import { openingBookInputSchema } from "@/lib/validators/schemas";
 
 export async function GET() {
-  const session = await auth();
-  const userId = getSessionUserId(session);
-
-  if (!userId) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  return Response.json({ books: await listOpeningBooks(userId) });
+  return Response.json({ books: await listOpeningBooks() });
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
-  const userId = getSessionUserId(session);
-
-  if (!userId) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

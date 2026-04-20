@@ -1,34 +1,24 @@
-import {
-  auth,
-  getSessionUserEmail,
-  getSessionUserId,
-  getSessionUserName,
-} from "@/lib/auth";
 import { getCurrentUser } from "@/lib/db/users";
+import { getAuthenticatedUser } from "@/lib/supabase";
 import { userPreferencesSchema } from "@/lib/validators/schemas";
 
 export async function GET() {
-  const session = await auth();
-  const userId = getSessionUserId(session);
-
-  if (!userId) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   return Response.json({
     user: await getCurrentUser({
-      userId,
-      email: getSessionUserEmail(session),
-      name: getSessionUserName(session),
+      userId: user.id,
+      email: user.email,
     }),
   });
 }
 
 export async function PATCH(request: Request) {
-  const session = await auth();
-  const userId = getSessionUserId(session);
-
-  if (!userId) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

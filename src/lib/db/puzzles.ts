@@ -1,4 +1,4 @@
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase";
 import type { Tables } from "@/types/database";
 
 export type Puzzle = {
@@ -24,7 +24,7 @@ function mapPuzzle(row: PuzzleRow): Puzzle {
 }
 
 export async function listPuzzles(limit = 25): Promise<Puzzle[]> {
-  const supabase = createAdminSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("puzzles")
     .select("*")

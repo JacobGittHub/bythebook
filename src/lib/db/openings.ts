@@ -1,4 +1,4 @@
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase";
 import type { Json, Tables } from "@/types/database";
 import type { Move, OpeningBook } from "@/types/chess";
 
@@ -42,19 +42,12 @@ function mapOpeningBook(row: OpeningBookRow): OpeningBook {
   };
 }
 
-export async function listOpeningBooks(userId?: string): Promise<OpeningBook[]> {
-  const supabase = createAdminSupabaseClient();
-
-  let query = supabase
+export async function listOpeningBooks(): Promise<OpeningBook[]> {
+  const supabase = await createServerSupabaseClient();
+  const query = supabase
     .from("opening_books")
     .select("*")
     .order("updated_at", { ascending: false, nullsFirst: false });
-
-  if (userId) {
-    query = query.or(`user_id.eq.${userId},is_public.eq.true`);
-  } else {
-    query = query.eq("is_public", true);
-  }
 
   const { data, error } = await query;
 
@@ -65,21 +58,13 @@ export async function listOpeningBooks(userId?: string): Promise<OpeningBook[]> 
   return data.map(mapOpeningBook);
 }
 
-export async function getOpeningBook(
-  bookId: string,
-  userId?: string,
-): Promise<OpeningBook | null> {
-  const supabase = createAdminSupabaseClient();
-
-  let query = supabase.from("opening_books").select("*").eq("id", bookId);
-
-  if (userId) {
-    query = query.or(`user_id.eq.${userId},is_public.eq.true`);
-  } else {
-    query = query.eq("is_public", true);
-  }
-
-  const { data, error } = await query.maybeSingle();
+export async function getOpeningBook(bookId: string): Promise<OpeningBook | null> {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("opening_books")
+    .select("*")
+    .eq("id", bookId)
+    .maybeSingle();
 
   if (error || !data) {
     return null;

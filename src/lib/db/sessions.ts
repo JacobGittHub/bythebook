@@ -1,4 +1,4 @@
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase";
 import type { Tables } from "@/types/database";
 import type { Session } from "@/types/training";
 
@@ -26,7 +26,7 @@ function mapTrainingSession(row: TrainingSessionRow): Session {
 }
 
 export async function listSessions(userId: string): Promise<Session[]> {
-  const supabase = createAdminSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("training_sessions")
     .select("*")

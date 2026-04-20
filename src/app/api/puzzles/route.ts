@@ -1,11 +1,9 @@
-import { auth, getSessionUserId } from "@/lib/auth";
+import { getAuthenticatedUser } from "@/lib/supabase";
 import { listPuzzles } from "@/lib/db/puzzles";
 
 export async function GET() {
-  const session = await auth();
-  const userId = getSessionUserId(session);
-
-  if (!userId) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -13,10 +11,8 @@ export async function GET() {
 }
 
 export async function POST() {
-  const session = await auth();
-  const userId = getSessionUserId(session);
-
-  if (!userId) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

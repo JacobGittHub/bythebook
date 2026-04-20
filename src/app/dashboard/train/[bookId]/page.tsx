@@ -1,5 +1,4 @@
 import { OpeningTrainer } from "@/components/training/OpeningTrainer";
-import { auth, getSessionUserId } from "@/lib/auth";
 import { getOpeningBook } from "@/lib/db/openings";
 import { notFound } from "next/navigation";
 
@@ -9,10 +8,7 @@ export default async function TrainingSessionPage({
   params: Promise<{ bookId: string }>;
 }) {
   const { bookId } = await params;
-  const book = await getOpeningBook(
-    bookId,
-    getSessionUserId(await auth()) ?? undefined,
-  );
+  const book = await getOpeningBook(bookId);
 
   if (!book) {
     notFound();

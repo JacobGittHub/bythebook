@@ -1,10 +1,9 @@
 import { BookEditor } from "@/components/repertoire/BookEditor";
 import { BookCard } from "@/components/repertoire/BookCard";
-import { auth, getSessionUserId } from "@/lib/auth";
 import { listOpeningBooks } from "@/lib/db/openings";
 
 export default async function RepertoirePage() {
-  const books = await listOpeningBooks(getSessionUserId(await auth()) ?? undefined);
+  const books = await listOpeningBooks();
 
   return (
     <main className="space-y-6">

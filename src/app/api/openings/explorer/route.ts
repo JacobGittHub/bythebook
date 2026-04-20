@@ -1,6 +1,6 @@
-import { auth, getSessionUserId } from "@/lib/auth";
 import { fetchExplorerMoves, LichessRateLimitError } from "@/lib/chess/lichessExplorer";
 import { getCachedPosition, setCachedPosition } from "@/lib/db/positionCache";
+import { getAuthenticatedUser } from "@/lib/supabase";
 import {
   explorerBodySchema,
   explorerQuerySchema,
@@ -19,10 +19,8 @@ async function resolveFenFromRequest(request: Request) {
 }
 
 async function handleExplorerRequest(request: Request) {
-  const session = await auth();
-  const userId = getSessionUserId(session);
-
-  if (!userId) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
