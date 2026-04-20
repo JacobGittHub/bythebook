@@ -26,3 +26,13 @@ export type ExplorerMove = {
   draws: number;
   black: number;
 };
+
+export type OpeningInfo = {
+  eco?: string;
+  name?: string;
+};
+
+export type ExplorerResponse = {
+  moves: ExplorerMove[];
+  opening?: OpeningInfo;
+};

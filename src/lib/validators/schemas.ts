@@ -1,8 +1,56 @@
+import { z } from "zod";
+import { normalizeFen } from "@/lib/chess/fen";
+
+export const colorSchema = z.enum(["white", "black"]);
+
+export const moveSchema = z.object({
+  san: z.string().trim().min(1),
+  uci: z.string().trim().min(1),
+  fen: z.string().trim().optional(),
+});
+
+export const openingBookInputSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  color: colorSchema,
+  moves: z.unknown().optional(),
+  isPublic: z.boolean().optional(),
+});
+
+export const sessionInputSchema = z.object({
+  bookId: z.string().uuid().nullable().optional(),
+  result: z.enum(["pass", "fail", "abandoned"]),
+  movesPlayed: z.array(z.string()).default([]),
+  correctMoves: z.number().int().nonnegative().optional(),
+  totalMoves: z.number().int().nonnegative().optional(),
+  durationSeconds: z.number().int().nonnegative().optional(),
+});
+
+export const userPreferencesSchema = z.object({
+  boardTheme: z.enum(["classic", "blue", "green"]).optional(),
+  autoFlipForBlack: z.boolean().optional(),
+  showEngine: z.boolean().optional(),
+});
+
+export const explorerQuerySchema = z.object({
+  fen: z
+    .string()
+    .optional()
+    .transform((value) => normalizeFen(value ?? "startpos")),
+});
+
+export const explorerBodySchema = z.object({
+  fen: z.string().transform((value) => normalizeFen(value)),
+});
+
+export const credentialsInputSchema = z.object({
+  username: z.string().trim().min(1),
+});
+
 export const schemas = {
-  openingBook: {
-    required: ["name", "color", "rootFen"],
-  },
-  session: {
-    required: ["bookId", "startedAt"],
-  },
+  openingBook: openingBookInputSchema,
+  session: sessionInputSchema,
+  userPreferences: userPreferencesSchema,
+  explorerQuery: explorerQuerySchema,
+  explorerBody: explorerBodySchema,
+  credentials: credentialsInputSchema,
 };

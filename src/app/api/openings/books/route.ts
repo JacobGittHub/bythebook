@@ -1,12 +1,38 @@
+import { auth, getSessionUserId } from "@/lib/auth";
 import { listOpeningBooks } from "@/lib/db/openings";
+import { openingBookInputSchema } from "@/lib/validators/schemas";
 
 export async function GET() {
-  return Response.json({ books: await listOpeningBooks() });
+  const session = await auth();
+  const userId = getSessionUserId(session);
+
+  if (!userId) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  return Response.json({ books: await listOpeningBooks(userId) });
 }
 
-export async function POST() {
+export async function POST(request: Request) {
+  const session = await auth();
+  const userId = getSessionUserId(session);
+
+  if (!userId) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const payload = await request.json();
+  const parsedPayload = openingBookInputSchema.safeParse(payload);
+
+  if (!parsedPayload.success) {
+    return Response.json(
+      { error: "Invalid opening book payload", issues: parsedPayload.error.flatten() },
+      { status: 400 },
+    );
+  }
+
   return Response.json(
-    { message: "Create opening book placeholder" },
-    { status: 201 },
+    { message: "Opening book writes are not implemented yet." },
+    { status: 501 },
   );
 }

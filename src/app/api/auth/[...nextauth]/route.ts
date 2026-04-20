@@ -1,12 +1,3 @@
-export async function GET() {
-  return Response.json({
-    message: "NextAuth route placeholder",
-    providers: [],
-  });
-}
+import { handlers } from "@/lib/auth";
 
-export async function POST() {
-  return Response.json({
-    message: "NextAuth callback placeholder",
-  });
-}
+export const { GET, POST } = handlers;

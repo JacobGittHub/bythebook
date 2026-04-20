@@ -1,9 +1,50 @@
-const cache = new Map<string, unknown>();
+import { z } from "zod";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import type { ExplorerResponse } from "@/types/chess";
 
-export function getCachedPosition(key: string) {
-  return cache.get(key);
+const explorerMoveSchema = z.object({
+  san: z.string(),
+  uci: z.string(),
+  white: z.number(),
+  draws: z.number(),
+  black: z.number(),
+});
+
+const explorerResponseSchema = z.object({
+  moves: z.array(explorerMoveSchema),
+  opening: z
+    .object({
+      eco: z.string().optional(),
+      name: z.string().optional(),
+    })
+    .optional(),
+});
+
+export async function getCachedPosition(fen: string): Promise<ExplorerResponse | null> {
+  const supabase = createAdminSupabaseClient();
+  const { data, error } = await supabase
+    .from("position_cache")
+    .select("explorer_data")
+    .eq("fen", fen)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  const parsed = explorerResponseSchema.safeParse(data.explorer_data);
+  return parsed.success ? parsed.data : null;
 }
 
-export function setCachedPosition(key: string, value: unknown) {
-  cache.set(key, value);
+export async function setCachedPosition(fen: string, value: ExplorerResponse) {
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase.from("position_cache").upsert({
+    fen,
+    explorer_data: value,
+    cached_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    throw error;
+  }
 }
