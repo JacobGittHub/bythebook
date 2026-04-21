@@ -1,0 +1,46 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="4" y1="4" x2="28" y2="28">
+      <stop offset="0%" stop-color="#94A3B8"/>
+      <stop offset="100%" stop-color="#64748B"/>
+    </linearGradient>
+    <linearGradient id="pawn" x1="12" y1="4" x2="20" y2="28">
+      <stop offset="0%" stop-color="#8B6B5A"/>
+      <stop offset="45%" stop-color="#6B4B3A"/>
+      <stop offset="100%" stop-color="#4A2E1E"/>
+    </linearGradient>
+    <linearGradient id="dark" x1="12" y1="4" x2="20" y2="28">
+      <stop offset="0%" stop-color="#5C3D2E"/>
+      <stop offset="100%" stop-color="#2E1A10"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Blueish-grey circle background -->
+  <circle cx="16" cy="16" r="15" fill="url(#bg)"/>
+
+  <!-- === PAWN (bottom to top) === -->
+
+  <!-- Base bottom edge -->
+  <ellipse cx="16" cy="27.5" rx="8" ry="0.8" fill="url(#dark)"/>
+
+  <!-- Base block -->
+  <path d="M8 25.5 L8 27 Q8 27.8 9 27.8 L23 27.8 Q24 27.8 24 27 L24 25.5 Z" fill="url(#pawn)"/>
+
+  <!-- Base rim -->
+  <ellipse cx="16" cy="25" rx="8.5" ry="1.2" fill="url(#dark)"/>
+
+  <!-- Body - bell curve -->
+  <path d="M13.5 14.5 C13 16.5 11.5 18.5 10 21 Q9.5 22.5 8.5 24.5 L23.5 24.5 Q22.5 22.5 22 21 C20.5 18.5 19 16.5 18.5 14.5 Z" fill="url(#pawn)"/>
+
+  <!-- Neck (drawn BEFORE collar so collar renders on top) -->
+  <rect x="13.5" y="11" width="5" height="4" fill="url(#pawn)"/>
+
+  <!-- Collar disc - now renders ON TOP of neck as a full ring -->
+  <ellipse cx="16" cy="12.2" rx="5.2" ry="1.5" fill="url(#dark)"/>
+
+  <!-- Head (on top of collar, overlapping its upper portion) -->
+  <circle cx="16" cy="7.5" r="3.8" fill="url(#pawn)"/>
+
+  <!-- Head highlight -->
+  <ellipse cx="15" cy="6.5" rx="1.5" ry="1" fill="white" fill-opacity="0.12"/>
+</svg>
