@@ -9,3 +9,11 @@ export function normalizeFen(fen: string) {
 
   return normalized;
 }
+
+export function toPositionKey(fen: string) {
+  const normalizedFen = normalizeFen(fen);
+  const [board, turn = "w", castling = "-", enPassant = "-"] =
+    normalizedFen.split(" ");
+
+  return [board, turn, castling, enPassant].join(" ");
+}

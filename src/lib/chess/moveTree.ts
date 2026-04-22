@@ -134,3 +134,80 @@ export function findMoveNodeById(node: MoveNode, targetId: string): MoveNode | n
 export function findChildMoveNodeByUci(node: MoveNode, uci: string): MoveNode | null {
   return node.children.find((child) => child.uci === uci) ?? null;
 }
+
+export function cloneMoveTree(node: MoveNode): MoveNode {
+  return {
+    ...node,
+    children: node.children.map(cloneMoveTree),
+  };
+}
+
+export function mergeMoveLineIntoTree(root: MoveNode, moves: Move[]): MoveNode {
+  const nextRoot = cloneMoveTree(root);
+  let currentNode = nextRoot;
+
+  for (const move of moves) {
+    const existingChild = currentNode.children.find((child) => child.uci === move.uci);
+
+    if (existingChild) {
+      currentNode = existingChild;
+      continue;
+    }
+
+    const childNode: MoveNode = {
+      id: createMoveNodeId(currentNode.id, move.uci),
+      san: move.san,
+      uci: move.uci,
+      fen: normalizeFen(move.fen ?? currentNode.fen),
+      children: [],
+    };
+
+    currentNode.children.push(childNode);
+    currentNode = childNode;
+  }
+
+  return nextRoot;
+}
+
+export function getNodePathById(root: MoveNode, nodeId: string): MoveNode[] {
+  if (root.id === nodeId) {
+    return [root];
+  }
+
+  for (const child of root.children) {
+    const childPath = getNodePathById(child, nodeId);
+
+    if (childPath.length > 0) {
+      return [root, ...childPath];
+    }
+  }
+
+  return [];
+}
+
+export function getNodePathByUciLine(root: MoveNode, uciMoves: string[]): MoveNode[] {
+  const path: MoveNode[] = [root];
+  let currentNode = root;
+
+  for (const uci of uciMoves) {
+    const matchingChild = currentNode.children.find((child) => child.uci === uci);
+
+    if (!matchingChild) {
+      break;
+    }
+
+    path.push(matchingChild);
+    currentNode = matchingChild;
+  }
+
+  return path;
+}
+
+export function getNodeIdsForPath(path: MoveNode[]): string[] {
+  return path.map((node) => node.id);
+}
+
+export function getCurrentNodeByUciLine(root: MoveNode, uciMoves: string[]): MoveNode | null {
+  const path = getNodePathByUciLine(root, uciMoves);
+  return path[path.length - 1] ?? null;
+}

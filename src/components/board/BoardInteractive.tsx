@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { BoardBase } from "./BoardBase";
 import { BOARD_THEME } from "./boardTheme";
 import { useChessGame } from "@/hooks/useChessGame";
 import type { MoveResult } from "@/hooks/useChessGame";
 import type { ChessboardOptions } from "react-chessboard";
+import type { ScriptedBoardMove } from "@/lib/chess/linePlayback";
 
 type BoardInteractiveProps = {
   /** Starting FEN position. */
@@ -25,6 +26,8 @@ type BoardInteractiveProps = {
   showLastMove?: boolean;
   /** Whether undo is available. */
   allowUndo?: boolean;
+  /** Apply a programmatic move when the command id changes. */
+  scriptedMove?: ScriptedBoardMove | null;
 };
 
 /**
@@ -40,6 +43,7 @@ export function BoardInteractive({
   onIllegalMove,
   showLegalMoves = true,
   showLastMove = true,
+  scriptedMove,
 }: BoardInteractiveProps) {
   const {
     fen,
@@ -52,6 +56,7 @@ export function BoardInteractive({
 
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [legalTargets, setLegalTargets] = useState<string[]>([]);
+  const lastScriptedMoveIdRef = useRef<string | null>(null);
 
   /** Can the user move pieces for the current turn? */
   const canMoveForTurn =
@@ -77,6 +82,27 @@ export function BoardInteractive({
     },
     [canMoveForTurn, makeMove, onMove, onIllegalMove]
   );
+
+  useEffect(() => {
+    if (!scriptedMove || scriptedMove.id === lastScriptedMoveIdRef.current) {
+      return;
+    }
+
+    lastScriptedMoveIdRef.current = scriptedMove.id;
+
+    const result = makeMove(
+      scriptedMove.from,
+      scriptedMove.to,
+      scriptedMove.promotion,
+    );
+
+    if (result) {
+      onMove?.(result);
+      return;
+    }
+
+    onIllegalMove?.(scriptedMove.from, scriptedMove.to);
+  }, [makeMove, onIllegalMove, onMove, scriptedMove]);
 
   /** react-chessboard drop handler. */
   const handlePieceDrop = useCallback<

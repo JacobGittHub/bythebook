@@ -12,6 +12,56 @@ export type MoveNode = {
   children: MoveNode[];
 };
 
+export type LinePlaybackMode = "manual" | "auto";
+
+export type MoveNodeState = "default" | "highlighted" | "active" | "transient";
+
+export type CatalogMatch = {
+  eco: string;
+  name: string;
+  pgn: string;
+  moves: Move[];
+  moveNode: MoveNode;
+};
+
+export type ParsedCatalogMove = {
+  san: string;
+  uci: string;
+  fen: string;
+  positionKey: string;
+};
+
+export type GeneratedCatalogOpening = {
+  id: string;
+  eco: string;
+  name: string;
+  pgn: string;
+  normalizedEco: string;
+  normalizedName: string;
+  normalizedPgn: string;
+  moves: ParsedCatalogMove[];
+  finalFen: string;
+  finalPositionKey: string;
+};
+
+export type GeneratedOpeningCatalog = {
+  version: 2;
+  generatedAt: string;
+  sourceCount: number;
+  openings: GeneratedCatalogOpening[];
+  indexes: {
+    byEco: Record<string, string[]>;
+    byUciPrefix: Record<string, string[]>;
+    byPositionKey: Record<string, string[]>;
+  };
+};
+
+export type CatalogLinePreview = {
+  root: MoveNode;
+  highlightedNodeIds: string[];
+  activeNodeIds: string[];
+};
+
 export type Position = {
   fen: string;
   turn: "w" | "b";
