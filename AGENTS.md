@@ -119,7 +119,7 @@ id uuid (PK)
 user_id uuid (FK -> profiles)
 name text
 color text ('white' | 'black')
-moves jsonb
+move_node jsonb
 is_public boolean
 created_at timestamptz
 updated_at timestamptz
@@ -192,7 +192,7 @@ When making a schema change:
 2. Run it in the Supabase SQL Editor.
 3. Regenerate TypeScript types:
    ```bash
-   npx supabase gen types typescript --project-id alyrmmmaxbcxgbphjcag > src/types/database.ts
+   npx supabase gen types typescript --project-id bcpkifxnjfjzfrqvpkby > src/types/database.ts
    ```
 4. Commit both the migration file and the updated `src/types/database.ts`.
 
@@ -228,7 +228,7 @@ Never call the Lichess API directly from client components.
 
 ### Opening books are stored as JSONB trees
 
-Opening repertoires are stored in the `moves` JSONB column on `opening_books`, not as relational move rows.
+Opening repertoires are stored in the `move_node` JSONB column on `opening_books`, not as relational move rows.
 
 ### Chessboard Architecture & UX
 
@@ -241,7 +241,21 @@ We use a strict three-tier component architecture for chess boards to ensure con
 Any page featuring a main interactive chessboard (training, puzzles, explorer) MUST fit within the viewport height. The page body `body` must not scroll. Use `h-[calc(100vh-<header>)]` on the main layout loop. The board should scale to fit the available height (`size="full"`), and only side panels (like move histories) are allowed to overflow and scroll internally. A scrollable chessboard page is considered a poor UX pattern in this app.
 
 **Visual Move Tree UI (Future Architectual Goal):**
-The right-hand side panel of the Opening Trainer will eventually host a literal node-link visual graph (a tree diagram) where users can intuitively see branches and click to select their active training line. Because of this, all opening repertoire data (`opening_books.moves`) MUST be structured as a deeply nested Tree (`MoveNode` with `children: MoveNode[]`), rather than a flat array of lines. Every node must be uniquely identifiable to support opaque/faded visual states in the graph rendering.
+The right-hand side panel of the Opening Trainer will eventually host a literal node-link visual graph (a tree diagram) where users can intuitively see branches and click to select their active training line. Because of this, all opening repertoire data (`opening_books.move_node`) MUST be structured as a deeply nested Tree (`MoveNode` with `children: MoveNode[]`), rather than a flat array of lines. Every node must be uniquely identifiable to support opaque/faded visual states in the graph rendering.
+
+`MoveNode` shape:
+
+```ts
+type MoveNode = {
+  id: string;
+  san: string | null;
+  uci: string | null;
+  fen: string;
+  children: MoveNode[];
+};
+```
+
+The root node represents the starting position for the book and therefore uses `san: null` and `uci: null`.
 
 ### Auth pattern
 

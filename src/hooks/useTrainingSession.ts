@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { findChildMoveNodeByUci, findMoveNodeById } from "@/lib/chess/moveTree";
 import { useChessGame } from "./useChessGame";
 import type { MoveResult } from "./useChessGame";
 import type { OpeningBook } from "@/types/chess";
@@ -9,6 +10,7 @@ type TrainingStatus = "idle" | "active" | "complete";
 
 type TrainingSessionState = {
   status: TrainingStatus;
+  currentNodeId: string;
   correctMoves: number;
   totalMoves: number;
   mistakes: string[];
@@ -16,6 +18,7 @@ type TrainingSessionState = {
 
 const initialSessionState: TrainingSessionState = {
   status: "idle",
+  currentNodeId: "root",
   correctMoves: 0,
   totalMoves: 0,
   mistakes: [],
@@ -39,16 +42,29 @@ export function useTrainingSession(book: OpeningBook) {
     (move: MoveResult) => {
       if (session.status !== "active") return;
 
-      // For now, accept all legal moves and count them.
-      // Full book-tree validation will be wired when the opening book
-      // JSONB structure is finalized.
+      const currentNode =
+        findMoveNodeById(book.moveNode, session.currentNodeId) ?? book.moveNode;
+      const matchingChild = findChildMoveNodeByUci(currentNode, move.uci);
+
+      if (!matchingChild) {
+        setSession((prev) => ({
+          ...prev,
+          status: "complete",
+          totalMoves: prev.totalMoves + 1,
+          mistakes: [...prev.mistakes, move.san],
+        }));
+        return;
+      }
+
       setSession((prev) => ({
         ...prev,
+        currentNodeId: matchingChild.id,
         totalMoves: prev.totalMoves + 1,
         correctMoves: prev.correctMoves + 1,
+        status: matchingChild.children.length === 0 ? "complete" : prev.status,
       }));
     },
-    [session.status]
+    [book.moveNode, session.currentNodeId, session.status]
   );
 
   const finish = useCallback(() => {

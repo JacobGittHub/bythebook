@@ -4,6 +4,14 @@ export type Move = {
   fen?: string;
 };
 
+export type MoveNode = {
+  id: string;
+  san: string | null;
+  uci: string | null;
+  fen: string;
+  children: MoveNode[];
+};
+
 export type Position = {
   fen: string;
   turn: "w" | "b";
@@ -16,7 +24,7 @@ export type OpeningBook = {
   color: "white" | "black";
   description?: string;
   rootFen: string;
-  lines: Move[][];
+  moveNode: MoveNode;
 };
 
 export type ExplorerMove = {

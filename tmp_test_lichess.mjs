@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 
 // /tmp/test_lichess.js
 async function test() {

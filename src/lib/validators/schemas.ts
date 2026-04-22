@@ -12,7 +12,7 @@ export const moveSchema = z.object({
 export const openingBookInputSchema = z.object({
   name: z.string().trim().min(1).max(120),
   color: colorSchema,
-  moves: z.unknown().optional(),
+  moveNode: z.unknown().optional(),
   isPublic: z.boolean().optional(),
 });
 

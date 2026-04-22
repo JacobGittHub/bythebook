@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Chess } from "chess.js";
 import type { Move as ChessJsMove, Square } from "chess.js";
 
 export type MoveResult = {
   san: string;
+  uci: string;
   from: Square;
   to: Square;
   color: "w" | "b";
@@ -24,6 +25,7 @@ const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 function toMoveResult(move: ChessJsMove, game: Chess): MoveResult {
   return {
     san: move.san,
+    uci: `${move.from}${move.to}${move.promotion ?? ""}`,
     from: move.from,
     to: move.to,
     color: move.color,
@@ -39,13 +41,11 @@ function toMoveResult(move: ChessJsMove, game: Chess): MoveResult {
  * Single source of truth for board position, move validation, and game status.
  */
 export function useChessGame(initialFen: string = START_FEN) {
-  const gameRef = useRef<Chess>(new Chess(initialFen));
+  const [game] = useState(() => new Chess(initialFen));
   const [fen, setFen] = useState(initialFen);
   const [moveHistory, setMoveHistory] = useState<MoveResult[]>([]);
 
-  const game = gameRef.current;
-
-  const turn = useMemo(() => game.turn(), [fen]);
+  const turn = game.turn();
 
   const lastMove = useMemo(() => {
     if (moveHistory.length === 0) return null;
@@ -53,11 +53,11 @@ export function useChessGame(initialFen: string = START_FEN) {
     return { from: last.from, to: last.to };
   }, [moveHistory]);
 
-  const isCheck = useMemo(() => game.inCheck(), [fen]);
-  const isCheckmate = useMemo(() => game.isCheckmate(), [fen]);
-  const isStalemate = useMemo(() => game.isStalemate(), [fen]);
-  const isDraw = useMemo(() => game.isDraw(), [fen]);
-  const isGameOver = useMemo(() => game.isGameOver(), [fen]);
+  const isCheck = game.inCheck();
+  const isCheckmate = game.isCheckmate();
+  const isStalemate = game.isStalemate();
+  const isDraw = game.isDraw();
+  const isGameOver = game.isGameOver();
 
   const makeMove = useCallback(
     (
@@ -91,6 +91,7 @@ export function useChessGame(initialFen: string = START_FEN) {
 
     const result: MoveResult = {
       san: move.san,
+      uci: `${move.from}${move.to}${move.promotion ?? ""}`,
       from: move.from,
       to: move.to,
       color: move.color,
@@ -132,8 +133,7 @@ export function useChessGame(initialFen: string = START_FEN) {
         return [];
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [game, fen]
+    [game]
   );
 
   return {

@@ -1,18 +1,14 @@
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { START_FEN } from "@/lib/chess/fen";
+import { buildMoveTreeFromLines, isMove, parseMoveNode } from "@/lib/chess/moveTree";
 import type { Json, Tables } from "@/types/database";
 import type { Move, OpeningBook } from "@/types/chess";
 
 type OpeningBookRow = Tables<"opening_books">;
-
-function isMove(value: Json | undefined): value is Move {
-  return Boolean(
-    value &&
-      typeof value === "object" &&
-      !Array.isArray(value) &&
-      typeof value.san === "string" &&
-      typeof value.uci === "string",
-  );
-}
+type OpeningBookRowWithRuntimeMoveNode = OpeningBookRow & {
+  move_node?: Json;
+  moves?: Json;
+};
 
 function parseMoveLines(value: Json): Move[][] {
   if (!Array.isArray(value)) {
@@ -32,13 +28,21 @@ function parseMoveLines(value: Json): Move[][] {
 }
 
 function mapOpeningBook(row: OpeningBookRow): OpeningBook {
+  const runtimeRow = row as OpeningBookRowWithRuntimeMoveNode;
+  const storedMoveTree = runtimeRow.move_node;
+  const legacyLines = parseMoveLines(runtimeRow.moves ?? []);
+  const moveNode =
+    storedMoveTree !== undefined
+      ? parseMoveNode(storedMoveTree, START_FEN)
+      : buildMoveTreeFromLines(legacyLines, START_FEN);
+
   return {
     id: row.id,
     name: row.name,
     color: row.color === "black" ? "black" : "white",
     description: row.is_public ? "Public repertoire" : "Private repertoire",
-    rootFen: "startpos",
-    lines: parseMoveLines(row.moves),
+    rootFen: moveNode.fen,
+    moveNode,
   };
 }
 
