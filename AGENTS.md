@@ -230,6 +230,19 @@ Never call the Lichess API directly from client components.
 
 Opening repertoires are stored in the `moves` JSONB column on `opening_books`, not as relational move rows.
 
+### Chessboard Architecture & UX
+
+We use a strict three-tier component architecture for chess boards to ensure consistency:
+1. **`BoardBase`**: The only component that wraps `react-chessboard`. Handles theming (`boardTheme.ts`). Has NO game logic.
+2. **`BoardDisplay` & `BoardInteractive`**: Wrappers around `BoardBase`. `BoardDisplay` is for static thumbnails. `BoardInteractive` is the playable board that hooks into `chess.js` via the `useChessGame` hook.
+3. **Feature Compositions**: Pages like `OpeningTrainer` and `PuzzleBoard` compose `BoardInteractive` with side panels. They do not define separate board components.
+
+**Critical UX Rule - Non-scrollable Board Pages:**
+Any page featuring a main interactive chessboard (training, puzzles, explorer) MUST fit within the viewport height. The page body `body` must not scroll. Use `h-[calc(100vh-<header>)]` on the main layout loop. The board should scale to fit the available height (`size="full"`), and only side panels (like move histories) are allowed to overflow and scroll internally. A scrollable chessboard page is considered a poor UX pattern in this app.
+
+**Visual Move Tree UI (Future Architectual Goal):**
+The right-hand side panel of the Opening Trainer will eventually host a literal node-link visual graph (a tree diagram) where users can intuitively see branches and click to select their active training line. Because of this, all opening repertoire data (`opening_books.moves`) MUST be structured as a deeply nested Tree (`MoveNode` with `children: MoveNode[]`), rather than a flat array of lines. Every node must be uniquely identifiable to support opaque/faded visual states in the graph rendering.
+
 ### Auth pattern
 
 Supabase Auth with `@supabase/ssr`.
@@ -263,6 +276,7 @@ Required in `.env.local` (never commit this file):
 NEXT_PUBLIC_SUPABASE_URL=https://bcpkifxnjfjzfrqvpkby.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
+LICHESS_API_TOKEN=lip_...
 ```
 
 `NEXT_PUBLIC_` prefixed variables are safe to use in client components. Variables without this prefix are server-only and must never be referenced in client components or passed to the browser.
@@ -286,7 +300,8 @@ SUPABASE_SERVICE_ROLE_KEY=...
 ### Lichess Opening Explorer
 
 - Base URL: `https://explorer.lichess.ovh`
-- Master games endpoint: `GET /master?fen=<FEN>&moves=<N>`
+- Master games endpoint: `GET /masters?fen=<FEN>&moves=<N>`
+- **Authentication:** As of March 2026, requires a Personal API Token (`Authorization: Bearer <TOKEN>`) due to DDoS protections.
 - Back off on HTTP 429
 - Always proxy through `/api/openings/explorer`
 

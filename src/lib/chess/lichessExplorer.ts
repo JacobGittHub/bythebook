@@ -27,14 +27,23 @@ export class LichessRateLimitError extends Error {
 }
 
 export async function fetchExplorerMoves(fen: string): Promise<ExplorerResponse> {
-  const url = new URL("https://explorer.lichess.ovh/master");
+  const url = new URL("https://explorer.lichess.ovh/masters");
   url.searchParams.set("fen", fen);
   url.searchParams.set("moves", "12");
 
+  const token = process.env.LICHESS_API_TOKEN;
+  const headers: HeadersInit = {
+    Accept: "application/json",
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  } else {
+    console.warn("⚠️ LICHESS_API_TOKEN is missing. Requests will likely fail with 401 Unauthorized.");
+  }
+
   const response = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-    },
+    headers,
   });
 
   if (response.status === 429) {
