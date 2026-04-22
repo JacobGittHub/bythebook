@@ -31,7 +31,7 @@ function renderNode(
           isHighlighted && isActive
             ? "bg-slate-950 text-white"
             : isActive
-              ? "bg-slate-200 text-slate-950"
+              ? "bg-sky-100 text-sky-950"
               : isHighlighted
                 ? "bg-amber-100 text-amber-950"
                 : "bg-slate-50 text-slate-600"
@@ -41,7 +41,13 @@ function renderNode(
         <div className="flex items-center justify-between gap-3">
           <span className="font-medium">{node.san}</span>
           <span className="text-xs uppercase tracking-[0.14em] opacity-70">
-            {isActive ? "active" : isHighlighted ? "highlight" : "line"}
+            {isActive && isHighlighted
+              ? "active + highlight"
+              : isActive
+                ? "active"
+                : isHighlighted
+                  ? "highlight"
+                  : "line"}
           </span>
         </div>
       </div>

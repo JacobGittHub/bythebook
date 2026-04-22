@@ -1,19 +1,17 @@
 "use client";
 
-import type { CatalogMatch, LinePlaybackMode } from "@/types/chess";
+import type { CatalogMatch } from "@/types/chess";
 
 type OpeningCatalogResultsProps = {
   results: CatalogMatch[];
-  selectedEco?: string;
+  selectedMatch?: CatalogMatch | null;
   onHighlight: (match: CatalogMatch) => void;
-  onLoadLine: (match: CatalogMatch, mode: LinePlaybackMode) => void;
 };
 
 export function OpeningCatalogResults({
   results,
-  selectedEco,
+  selectedMatch,
   onHighlight,
-  onLoadLine,
 }: OpeningCatalogResultsProps) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-4">
@@ -28,7 +26,12 @@ export function OpeningCatalogResults({
           </p>
         )}
         {results.map((result) => {
-          const isSelected = result.eco === selectedEco;
+          const isSelected =
+            selectedMatch !== null &&
+            selectedMatch !== undefined &&
+            result.eco === selectedMatch.eco &&
+            result.name === selectedMatch.name &&
+            result.pgn === selectedMatch.pgn;
 
           return (
             <article
@@ -64,28 +67,6 @@ export function OpeningCatalogResults({
                   }`}
                 >
                   Highlight Path
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onLoadLine(result, "manual")}
-                  className={`rounded-full px-3 py-2 text-xs font-medium transition-colors ${
-                    isSelected
-                      ? "bg-slate-800 text-white hover:bg-slate-700"
-                      : "bg-white text-slate-900 ring-1 ring-slate-200 hover:bg-slate-100"
-                  }`}
-                >
-                  Load Manual
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onLoadLine(result, "auto")}
-                  className={`rounded-full px-3 py-2 text-xs font-medium transition-colors ${
-                    isSelected
-                      ? "bg-slate-800 text-white hover:bg-slate-700"
-                      : "bg-white text-slate-900 ring-1 ring-slate-200 hover:bg-slate-100"
-                  }`}
-                >
-                  Load Auto
                 </button>
               </div>
             </article>

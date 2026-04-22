@@ -7,7 +7,7 @@ import { BOARD_THEME } from "./boardTheme";
 import { useChessGame } from "@/hooks/useChessGame";
 import type { MoveResult } from "@/hooks/useChessGame";
 import type { ChessboardOptions } from "react-chessboard";
-import type { ScriptedBoardMove } from "@/lib/chess/linePlayback";
+import type { ScriptedBoardCommand } from "@/lib/chess/linePlayback";
 
 type BoardInteractiveProps = {
   /** Starting FEN position. */
@@ -18,6 +18,10 @@ type BoardInteractiveProps = {
   playerColor?: "white" | "black" | "both";
   /** Called after a legal move is made. */
   onMove?: (move: MoveResult) => void;
+  /** Called after a successful undo. */
+  onUndo?: (move: MoveResult | null) => void;
+  /** Called after the board is reset to the initial position. */
+  onReset?: () => void;
   /** Called when an illegal move is attempted. */
   onIllegalMove?: (from: string, to: string) => void;
   /** Show dot indicators on legal target squares. */
@@ -26,8 +30,8 @@ type BoardInteractiveProps = {
   showLastMove?: boolean;
   /** Whether undo is available. */
   allowUndo?: boolean;
-  /** Apply a programmatic move when the command id changes. */
-  scriptedMove?: ScriptedBoardMove | null;
+  /** Apply a programmatic board command when the command id changes. */
+  scriptedCommand?: ScriptedBoardCommand | null;
 };
 
 /**
@@ -40,10 +44,12 @@ export function BoardInteractive({
   orientation = "white",
   playerColor = "both",
   onMove,
+  onUndo,
+  onReset,
   onIllegalMove,
   showLegalMoves = true,
   showLastMove = true,
-  scriptedMove,
+  scriptedCommand,
 }: BoardInteractiveProps) {
   const {
     fen,
@@ -51,12 +57,14 @@ export function BoardInteractive({
     lastMove,
     isCheck,
     makeMove,
+    undoMove,
+    resetGame,
     getLegalMoves,
   } = useChessGame(initialFen);
 
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [legalTargets, setLegalTargets] = useState<string[]>([]);
-  const lastScriptedMoveIdRef = useRef<string | null>(null);
+  const lastScriptedCommandIdRef = useRef<string | null>(null);
 
   /** Can the user move pieces for the current turn? */
   const canMoveForTurn =
@@ -84,16 +92,28 @@ export function BoardInteractive({
   );
 
   useEffect(() => {
-    if (!scriptedMove || scriptedMove.id === lastScriptedMoveIdRef.current) {
+    if (!scriptedCommand || scriptedCommand.id === lastScriptedCommandIdRef.current) {
       return;
     }
 
-    lastScriptedMoveIdRef.current = scriptedMove.id;
+    lastScriptedCommandIdRef.current = scriptedCommand.id;
+
+    if (scriptedCommand.type === "reset") {
+      resetGame();
+      onReset?.();
+      return;
+    }
+
+    if (scriptedCommand.type === "undo") {
+      const undoneMove = undoMove();
+      onUndo?.(undoneMove);
+      return;
+    }
 
     const result = makeMove(
-      scriptedMove.from,
-      scriptedMove.to,
-      scriptedMove.promotion,
+      scriptedCommand.from,
+      scriptedCommand.to,
+      scriptedCommand.promotion,
     );
 
     if (result) {
@@ -101,8 +121,17 @@ export function BoardInteractive({
       return;
     }
 
-    onIllegalMove?.(scriptedMove.from, scriptedMove.to);
-  }, [makeMove, onIllegalMove, onMove, scriptedMove]);
+    onIllegalMove?.(scriptedCommand.from, scriptedCommand.to);
+  }, [
+    makeMove,
+    onIllegalMove,
+    onMove,
+    onReset,
+    onUndo,
+    resetGame,
+    scriptedCommand,
+    undoMove,
+  ]);
 
   /** react-chessboard drop handler. */
   const handlePieceDrop = useCallback<

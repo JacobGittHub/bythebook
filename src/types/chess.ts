@@ -12,9 +12,9 @@ export type MoveNode = {
   children: MoveNode[];
 };
 
-export type LinePlaybackMode = "manual" | "auto";
-
 export type MoveNodeState = "default" | "highlighted" | "active" | "transient";
+
+export type ExplorerMatchMode = "prefix" | "position" | "none";
 
 export type CatalogMatch = {
   eco: string;
