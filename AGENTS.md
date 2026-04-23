@@ -362,7 +362,7 @@ Supabase Auth with `@supabase/ssr`.
 
 - `src/lib/supabase.ts` exports the browser and server auth clients
 - Sign in and sign up use `supabase.auth.signInWithPassword()` and `supabase.auth.signUp()`
-- Route protection is handled in `src/proxy.ts`
+- Route protection is handled in `src/proxy.ts` — Next.js 16 renamed "middleware" to "proxy". The file must be named `proxy.ts` and must export a function named `proxy` (not `middleware`). The `config.matcher` export works the same as before.
 - The currently logged-in user is resolved server-side with `supabase.auth.getUser()`
 - All `/dashboard/*` routes require authentication
 
@@ -442,5 +442,6 @@ LICHESS_API_TOKEN=lip_...
 - Do not store opening tree moves as relational rows
 - Do not add Load or auto-play actions to `OpeningCatalogResults` result cards — all playback is controlled by the top-bar navigator in `OpeningExplorer`
 - Do not add forward-navigation logic that bypasses the `isBoardOnHighlightedLine` check — forward controls must be gated on board alignment with the highlighted line
+- Do not rename the `proxy` export in `src/proxy.ts` to `middleware` — Next.js 16 requires the export to be named `proxy`, not `middleware`
 - Do not use the React Compiler - it is not enabled in this project
 <!-- END:nextjs-agent-rules -->
