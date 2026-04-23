@@ -22,16 +22,16 @@ export const BOARD_THEME: BoardTheme = {
   lastMoveDark: { backgroundColor: "rgba(170, 162, 58, 0.5)" },
 
   validTarget: {
-    background:
+    backgroundImage:
       "radial-gradient(circle, rgba(0,0,0,0.15) 25%, transparent 25%)",
   },
   validTargetCapture: {
-    background:
+    backgroundImage:
       "radial-gradient(circle, transparent 55%, rgba(0,0,0,0.15) 55%)",
   },
 
   checkSquare: {
-    background:
+    backgroundImage:
       "radial-gradient(ellipse at center, rgba(255,0,0,0.6) 0%, rgba(200,0,0,0.3) 40%, transparent 70%)",
   },
 

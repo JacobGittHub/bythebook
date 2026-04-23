@@ -17,12 +17,13 @@ import {
   type ScriptedBoardCommand,
 } from "@/lib/chess/linePlayback";
 import { useOpeningExplorer } from "@/hooks/useOpeningExplorer";
+import { useEngine, type EngineMode } from "@/hooks/useEngine";
+import { useBackgroundMode } from "@/context/BackgroundMode";
+import { formatScore, evalToBarPct } from "@/lib/chess/stockfishUci";
 import type { MoveResult } from "@/hooks/useChessGame";
-import type { CatalogMatch, ExplorerMatchMode, Move } from "@/types/chess";
+import type { CatalogMatch, ExplorerMatchMode, ExplorerMove, Move } from "@/types/chess";
 
 const AUTO_PLAY_DELAY_MS = 700;
-
-type EngineMode = "none" | "light" | "heavy";
 
 function moveResultsToMoves(moveHistory: MoveResult[]): Move[] {
   return moveHistory.map((move) => ({
@@ -48,12 +49,67 @@ export function OpeningExplorer() {
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
   const [engineMode, setEngineMode] = useState<EngineMode>("none");
+  const [showEngineArrow, setShowEngineArrow] = useState(true);
+  const [boardOrientation, setBoardOrientation] = useState<"white" | "black">("white");
   const commandNonceRef = useRef(0);
   const blurTimeoutRef = useRef<number | null>(null);
+
+  const { mode } = useBackgroundMode();
+  const [hoveredMoveUci, setHoveredMoveUci] = useState<string | null>(null);
+
+  const arrowColor = useMemo(() => {
+    switch (mode) {
+      case "dark":  return "rgba(140, 130, 220, 0.55)";
+      case "blue":  return "rgba(40,  80,  200, 0.55)";
+      case "green": return "rgba(40,  130, 60,  0.55)";
+      case "red":   return "rgba(170, 50,  40,  0.55)";
+      default:      return "rgba(80,  60,  20,  0.50)";
+    }
+  }, [mode]);
+
+  const hoverArrows = useMemo(
+    () =>
+      hoveredMoveUci
+        ? [{ startSquare: hoveredMoveUci.slice(0, 2), endSquare: hoveredMoveUci.slice(2, 4), color: arrowColor }]
+        : [],
+    [hoveredMoveUci, arrowColor],
+  );
 
   const currentMoves = useMemo(() => moveResultsToMoves(moveHistory), [moveHistory]);
   const currentUciLine = useMemo(() => currentMoves.map((m) => m.uci), [currentMoves]);
   const currentFen = currentMoves[currentMoves.length - 1]?.fen ?? START_FEN;
+
+  // Clear hover arrow whenever the board position changes.
+  useEffect(() => {
+    setHoveredMoveUci(null);
+  }, [currentFen]);
+
+  const engine = useEngine(currentFen, engineMode);
+
+  const engineArrows = useMemo(() => {
+    if (!showEngineArrow || engine.lines.length === 0) return [];
+    const top = engine.lines[0];
+    if (!top || top.pv.length === 0) return [];
+    return [{
+      startSquare: top.pv[0].slice(0, 2),
+      endSquare: top.pv[0].slice(2, 4),
+      color: "rgba(230, 140, 40, 0.70)",
+    }];
+  }, [showEngineArrow, engine.lines]);
+
+  // Deduplicate arrows by square pair — hover takes priority, engine fills gaps.
+  const combinedArrows = useMemo(() => {
+    const seen = new Set<string>();
+    const result: { startSquare: string; endSquare: string; color: string }[] = [];
+    for (const a of [...hoverArrows, ...engineArrows]) {
+      const key = `${a.startSquare}-${a.endSquare}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(a);
+      }
+    }
+    return result;
+  }, [hoverArrows, engineArrows]);
 
   const searchResults = useMemo(
     () => (searchQuery.length > 0 ? searchCatalogMatches(searchQuery, 8) : []),
@@ -212,6 +268,12 @@ export function OpeningExplorer() {
     setPlaybackError("Move could not be applied to the current board state.");
   };
 
+  const handleExplorerMoveClick = (move: ExplorerMove) => {
+    setPendingForwardMoves([]);
+    setIsAutoPlaying(false);
+    setScriptedCommand(createMoveCommand({ san: move.san, uci: move.uci }, nextCommandId()));
+  };
+
   const matchModeLabel =
     matchMode === "prefix"
       ? "Exact line match"
@@ -253,6 +315,16 @@ export function OpeningExplorer() {
               <p className="mt-0.5 text-sm text-slate-400">Play moves or search.</p>
             )}
           </div>
+
+          {/* Flip board button */}
+          <button
+            type="button"
+            onClick={() => setBoardOrientation((o) => (o === "white" ? "black" : "white"))}
+            title="Flip board"
+            className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          >
+            ⇅ {boardOrientation === "white" ? "White" : "Black"}
+          </button>
 
           {/* Search input */}
           <div className="relative flex-1">
@@ -309,20 +381,49 @@ export function OpeningExplorer() {
           </div>
         </div>
 
-        {/* Board — container query keeps the board square within its cell */}
-        <div
-          className="flex min-h-0 items-center justify-center rounded-[2rem] border border-slate-200 bg-white p-4"
-          style={{ containerType: "size" }}
-        >
-          <div style={{ width: "min(100cqw, 100cqh)", height: "min(100cqw, 100cqh)" }}>
-            <BoardInteractive
-              initialFen={START_FEN}
-              scriptedCommand={scriptedCommand}
-              playerColor="both"
-              onMove={handleBoardMove}
-              onUndo={handleBoardUndo}
-              onReset={handleBoardReset}
-              onIllegalMove={handleIllegalMove}
+        {/* Board + right-side eval bar */}
+        <div className="flex min-h-0 gap-2 rounded-[2rem] border border-slate-200 bg-white p-4">
+          <div className="min-h-0 flex-1" style={{ containerType: "size" }}>
+            <div style={{ width: "min(100cqw, 100cqh)", height: "min(100cqw, 100cqh)" }}>
+              <BoardInteractive
+                initialFen={START_FEN}
+                scriptedCommand={scriptedCommand}
+                playerColor="both"
+                orientation={boardOrientation}
+                onMove={handleBoardMove}
+                onUndo={handleBoardUndo}
+                onReset={handleBoardReset}
+                onIllegalMove={handleIllegalMove}
+                arrows={combinedArrows}
+              />
+            </div>
+          </div>
+          {/* Vertical eval bar — always present; fill only when engine is active */}
+          <div
+            className="relative w-3 self-stretch overflow-hidden rounded-full border border-[var(--border-card)]"
+            style={{ backgroundColor: "var(--bar-black)" }}
+          >
+            {/* Decorative tick marks */}
+            {[25, 50, 75].map((pct) => (
+              <div
+                key={pct}
+                className="absolute left-0 right-0 z-10 h-px"
+                style={{ top: `${pct}%`, backgroundColor: "rgba(128,128,128,0.25)" }}
+              />
+            ))}
+            {/* Eval fill */}
+            <div
+              className="absolute w-full transition-all duration-500"
+              style={{
+                ...(boardOrientation === "black" ? { top: 0 } : { bottom: 0 }),
+                height:
+                  engineMode !== "none" && engine.lines[0]
+                    ? `${evalToBarPct(engine.lines[0].score, engine.lines[0].mate)}%`
+                    : engineMode !== "none"
+                      ? "50%"
+                      : "0%",
+                backgroundColor: "var(--bar-white)",
+              }}
             />
           </div>
         </div>
@@ -332,29 +433,87 @@ export function OpeningExplorer() {
       <aside className="flex min-h-0 flex-col gap-4">
         {/* ① Engine panel */}
         <div className="shrink-0 rounded-3xl border border-slate-200 bg-white px-5 py-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+          {/* Controls row */}
+          <div className="flex items-center gap-2">
+            <p className="mr-auto text-xs font-semibold uppercase tracking-widest text-slate-400">
               Engine
             </p>
+            {/* Arrow toggle — invisible when engine is off so the pills never shift */}
+            <button
+              type="button"
+              onClick={() => setShowEngineArrow((v) => !v)}
+              title={showEngineArrow ? "Hide engine arrow" : "Show engine arrow"}
+              className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                engineMode === "none"
+                  ? "invisible"
+                  : showEngineArrow
+                    ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                    : "border-slate-200 bg-slate-50 text-slate-400 hover:text-slate-600"
+              }`}
+            >
+              ↗ Arrow
+            </button>
+            {/* Mode pills */}
             <div className="flex rounded-full border border-slate-200 bg-slate-50 p-0.5">
-              {(["none", "light", "heavy"] as const).map((mode) => (
+              {(["none", "light", "heavy"] as const).map((m) => (
                 <button
-                  key={mode}
+                  key={m}
                   type="button"
-                  onClick={() => setEngineMode(mode)}
+                  onClick={() => setEngineMode(m)}
                   className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
-                    engineMode === mode
+                    engineMode === m
                       ? "bg-slate-950 text-white"
                       : "text-slate-500 hover:text-slate-900"
                   }`}
                 >
-                  {mode}
+                  {m}
                 </button>
               ))}
             </div>
           </div>
+
+          {/* Engine output */}
           {engineMode !== "none" && (
-            <p className="mt-2 text-xs text-slate-400">Engine integration coming soon.</p>
+            <div className="mt-4 space-y-3">
+              {!engine.isReady ? (
+                <p className="text-xs text-slate-400">Loading engine…</p>
+              ) : (
+                <>
+                  {/* Score + depth */}
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-2xl font-semibold tabular-nums text-slate-900">
+                      {engine.lines[0]
+                        ? formatScore(engine.lines[0].score, engine.lines[0].mate)
+                        : "—"}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      {engine.isAnalyzing
+                        ? `depth ${engine.lines[0]?.depth ?? "…"}`
+                        : `depth ${engine.lines[0]?.depth ?? "—"}`}
+                    </span>
+                    {engine.isAnalyzing && (
+                      <span className="ml-auto animate-pulse text-xs text-slate-300">●</span>
+                    )}
+                  </div>
+
+                  {/* PV lines */}
+                  {engine.lines.length > 0 && (
+                    <div className="space-y-1.5">
+                      {engine.lines.map((line) => (
+                        <div key={line.multipv} className="flex items-baseline gap-2">
+                          <span className="w-9 shrink-0 text-xs font-semibold tabular-nums text-slate-900">
+                            {formatScore(line.score, line.mate)}
+                          </span>
+                          <span className="truncate text-xs text-slate-500">
+                            {line.pvSan.slice(0, 6).join(" ")}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           )}
         </div>
 
@@ -369,7 +528,7 @@ export function OpeningExplorer() {
         <div className="shrink-0 rounded-3xl border border-slate-200 bg-white px-5 py-4">
           <div className="flex items-center gap-2">
             {/* Scrollable move tokens */}
-            <div className="flex-1 overflow-x-auto">
+            <div className="min-w-0 flex-1 overflow-x-auto">
               {selectedMatch ? (
                 <div className="flex items-baseline gap-1 whitespace-nowrap pb-0.5">
                   {selectedMatch.moves.map((move, index) => {
@@ -514,7 +673,7 @@ export function OpeningExplorer() {
                 <span>W / D / B</span>
                 <span className="text-right">Games</span>
               </div>
-              <div className="space-y-0.5">
+              <div className="space-y-0.5" onMouseLeave={() => setHoveredMoveUci(null)}>
                 {explorerData.data.moves.map((move) => {
                   const total = move.white + move.draws + move.black;
                   if (total === 0) return null;
@@ -525,36 +684,46 @@ export function OpeningExplorer() {
                     selectedMatch &&
                     currentBoardIndexWithinHighlightedLine === 0 &&
                     selectedMatch.moves[0]?.san === move.san;
+                  const isHovered = hoveredMoveUci === move.uci;
                   return (
                     <div
                       key={move.uci}
-                      className={`grid grid-cols-[2rem_1fr_3.5rem] items-center gap-2 rounded-xl px-2 py-2 transition-colors ${
-                        isHighlightedFirst ? "bg-slate-50" : ""
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleExplorerMoveClick(move)}
+                      onMouseEnter={() => setHoveredMoveUci(move.uci)}
+                      onMouseLeave={() => setHoveredMoveUci(null)}
+                      onKeyDown={(e) => e.key === "Enter" && handleExplorerMoveClick(move)}
+                      className={`grid cursor-pointer grid-cols-[2rem_1fr_3.5rem] items-center gap-2 rounded-xl px-2 py-2 transition-colors ${
+                        isHovered || isHighlightedFirst
+                          ? "bg-[var(--bg-muted)]"
+                          : "hover:bg-[var(--bg-muted)]"
                       }`}
                     >
                       <span
-                        className={`text-sm font-semibold ${isHighlightedFirst ? "text-slate-950 underline decoration-slate-400 underline-offset-2" : "text-slate-800"}`}
+                        className={`text-sm font-semibold ${
+                          isHighlightedFirst
+                            ? "text-[var(--text-primary)] underline decoration-[var(--text-muted)] underline-offset-2"
+                            : "text-[var(--text-primary)]"
+                        }`}
                       >
                         {move.san}
                       </span>
                       <div className="flex h-2 overflow-hidden rounded-full">
                         <div
-                          style={{ width: `${wPct}%` }}
-                          className="bg-slate-200"
+                          style={{ width: `${wPct}%`, backgroundColor: "var(--bar-white)" }}
                           title={`White ${Math.round(wPct)}%`}
                         />
                         <div
-                          style={{ width: `${dPct}%` }}
-                          className="bg-slate-400"
+                          style={{ width: `${dPct}%`, backgroundColor: "var(--bar-draw)" }}
                           title={`Draw ${Math.round(dPct)}%`}
                         />
                         <div
-                          style={{ width: `${bPct}%` }}
-                          className="bg-slate-800"
+                          style={{ width: `${bPct}%`, backgroundColor: "var(--bar-black)" }}
                           title={`Black ${Math.round(bPct)}%`}
                         />
                       </div>
-                      <span className="text-right text-xs text-slate-400">
+                      <span className="text-right text-xs text-[var(--text-muted)]">
                         {formatGames(total)}
                       </span>
                     </div>

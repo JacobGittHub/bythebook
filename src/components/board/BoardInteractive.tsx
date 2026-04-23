@@ -6,7 +6,7 @@ import { BoardBase } from "./BoardBase";
 import { BOARD_THEME } from "./boardTheme";
 import { useChessGame } from "@/hooks/useChessGame";
 import type { MoveResult } from "@/hooks/useChessGame";
-import type { ChessboardOptions } from "react-chessboard";
+import type { ChessboardOptions, Arrow } from "react-chessboard";
 import type { ScriptedBoardCommand } from "@/lib/chess/linePlayback";
 
 type BoardInteractiveProps = {
@@ -32,6 +32,8 @@ type BoardInteractiveProps = {
   allowUndo?: boolean;
   /** Apply a programmatic board command when the command id changes. */
   scriptedCommand?: ScriptedBoardCommand | null;
+  /** Arrows to overlay on the board (e.g. hover hints from the explorer). */
+  arrows?: Arrow[];
 };
 
 /**
@@ -50,6 +52,7 @@ export function BoardInteractive({
   showLegalMoves = true,
   showLastMove = true,
   scriptedCommand,
+  arrows = [],
 }: BoardInteractiveProps) {
   const {
     fen,
@@ -264,6 +267,7 @@ export function BoardInteractive({
       onPieceDrop={handlePieceDrop}
       onSquareClick={handleSquareClick}
       squareStyles={squareStyles}
+      arrows={arrows}
     />
   );
 }

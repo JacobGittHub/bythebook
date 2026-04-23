@@ -16,6 +16,10 @@
   --border-card: #ddd5c8;
   --text-primary: #1c1917;
   --text-muted: #78716c;
+  --bar-white: #d4c8b4;
+  --bar-draw: #9a8870;
+  --bar-black: #2e1e10;
+  --bar-arrow: rgba(80, 60, 20, 0.5);
 }
 
 [data-bg="dark"] {
@@ -28,6 +32,10 @@
   --border-card: #30303d;
   --text-primary: #e8e6f2;
   --text-muted: #9390a8;
+  --bar-white: #b0aac8;
+  --bar-draw: #5c5878;
+  --bar-black: #28283c;
+  --bar-arrow: rgba(140, 130, 220, 0.55);
 }
 
 [data-bg="blue"] {
@@ -40,6 +48,10 @@
   --border-card: #c4cedf;
   --text-primary: #1e2a3a;
   --text-muted: #4a5a70;
+  --bar-white: #bacedd;
+  --bar-draw: #5a8098;
+  --bar-black: #152840;
+  --bar-arrow: rgba(40, 80, 200, 0.55);
 }
 
 [data-bg="green"] {
@@ -52,6 +64,10 @@
   --border-card: #bfd0c4;
   --text-primary: #1a2820;
   --text-muted: #4a6050;
+  --bar-white: #b4cebc;
+  --bar-draw: #507860;
+  --bar-black: #102818;
+  --bar-arrow: rgba(40, 130, 60, 0.55);
 }
 
 [data-bg="red"] {
@@ -64,6 +80,10 @@
   --border-card: #dcc5be;
   --text-primary: #231815;
   --text-muted: #6b504a;
+  --bar-white: #d8c0b8;
+  --bar-draw: #9a5848;
+  --bar-black: #301010;
+  --bar-arrow: rgba(170, 50, 40, 0.55);
 }
 
 /* ── Dark mode global overrides for components with hardcoded Tailwind classes ── */

@@ -1,11 +1,3 @@
-export type WorkerRequest = {
-  type: "analyze";
-  fen: string;
-};
-
-export function handleWorkerRequest(request: WorkerRequest) {
-  return {
-    received: request.type,
-    fen: request.fen,
-  };
-}
+// The Stockfish engine runs directly as a Web Worker loaded from public/engine/.
+// See src/hooks/useEngine.ts for the implementation.
+export {};
