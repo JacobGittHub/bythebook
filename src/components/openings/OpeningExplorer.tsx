@@ -17,9 +17,11 @@ import {
   type ScriptedBoardCommand,
 } from "@/lib/chess/linePlayback";
 import { useOpeningExplorer } from "@/hooks/useOpeningExplorer";
+import { useOpeningExplorerMulti } from "@/hooks/useOpeningExplorerMulti";
 import { useEngine, type EngineMode } from "@/hooks/useEngine";
 import { useBackgroundMode } from "@/context/BackgroundMode";
 import { formatScore, evalToBarPct } from "@/lib/chess/stockfishUci";
+import { OpeningMiniTree } from "@/components/openings/OpeningMiniTree";
 import type { MoveResult } from "@/hooks/useChessGame";
 import type { CatalogMatch, ExplorerMatchMode, ExplorerMove, Move } from "@/types/chess";
 
@@ -154,6 +156,24 @@ export function OpeningExplorer() {
   const canAutoPlay = canGoForward;
 
   const explorerData = useOpeningExplorer(currentFen);
+
+  const historyBeforeFens = useMemo(
+    () => moveHistory.map((_, i) => (i === 0 ? START_FEN : moveHistory[i - 1].fen)),
+    [moveHistory],
+  );
+  const historyExplorerData = useOpeningExplorerMulti(historyBeforeFens);
+  const historyPlayedFractions = useMemo((): (number | null)[] => {
+    return moveHistory.map((move, i) => {
+      const beforeFen = i === 0 ? START_FEN : moveHistory[i - 1].fen;
+      const data = historyExplorerData[beforeFen];
+      if (!data?.moves?.length) return null;
+      const total = data.moves.reduce((s, m) => s + m.white + m.draws + m.black, 0);
+      if (total === 0) return null;
+      const played = data.moves.find((m) => m.uci === move.uci);
+      if (!played) return null;
+      return (played.white + played.draws + played.black) / total;
+    });
+  }, [moveHistory, historyExplorerData]);
 
   const nextCommandId = () => {
     commandNonceRef.current += 1;
@@ -430,7 +450,7 @@ export function OpeningExplorer() {
       </section>
 
       {/* ── Right: four-section sidebar ── */}
-      <aside className="flex min-h-0 flex-col gap-4">
+      <aside className="flex min-h-0 flex-col gap-3">
         {/* ① Engine panel */}
         <div className="shrink-0 rounded-3xl border border-slate-200 bg-white px-5 py-4">
           {/* Controls row */}
@@ -517,11 +537,18 @@ export function OpeningExplorer() {
           )}
         </div>
 
-        {/* ② Tree placeholder */}
-        <div className="flex h-36 shrink-0 flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-300">
-            Tree coming soon
-          </p>
+        {/* ② Mini look-ahead tree */}
+        <div className="h-52 shrink-0 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-3 py-3">
+          <OpeningMiniTree
+            moveHistory={moveHistory}
+            explorerMoves={explorerData.data?.moves ?? []}
+            currentFen={currentFen}
+            historyPlayedFractions={historyPlayedFractions}
+            boardOrientation={boardOrientation}
+            onMoveClick={handleExplorerMoveClick}
+            onHoverUci={setHoveredMoveUci}
+            hoveredUci={hoveredMoveUci}
+          />
         </div>
 
         {/* ③ Move sequence + navigation */}

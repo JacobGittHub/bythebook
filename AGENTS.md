@@ -81,7 +81,8 @@ src/
 │   │   ├── OpeningExplorer.tsx       # top-level orchestrator for the explorer feature
 │   │   ├── OpeningCatalogSearch.tsx  # search input
 │   │   ├── OpeningCatalogResults.tsx # result cards with Highlight Path action
-│   │   └── OpeningCatalogTreePreview.tsx  # recursive move-tree visualization
+│   │   ├── OpeningCatalogTreePreview.tsx  # recursive move-tree visualization
+│   │   └── OpeningMiniTree.tsx       # mini SVG look-ahead tree in the explorer sidebar
 │   ├── training/
 │   ├── repertoire/
 │   └── puzzles/
@@ -325,6 +326,105 @@ type MoveNode = {
 
 The root node represents the starting position for the book and therefore uses `san: null` and `uci: null`.
 
+---
+
+### Tree Visualization Architecture
+
+There are two distinct tree visualizations in this project. They share no code — different data, layout, interaction, and scale.
+
+#### Mini Tree (`OpeningMiniTree`) — Opening Explorer sidebar
+
+**Location:** `src/components/openings/OpeningMiniTree.tsx`
+
+**Purpose:** A lightweight tree visualization combining played history with look-ahead continuations. It shows both where the game has gone (past moves as a linear path) and where master games go from here (continuation branches). It complements the W/D/B stats table by adding the visual branching structure and relative frequency that a flat table cannot convey.
+
+**Layout:** Horizontal left-to-right. Three logical sections:
+
+1. **History path** — one node per played move, arranged in a linear left-to-right chain. Up to 40 history nodes displayed in a horizontally scrollable container; auto-scrolls to the current position when a new move is played. Each node is labeled with its SAN move.
+2. **Current position node** — the last node of the history path (or "Start" at the initial position). Visually distinct (slightly larger, different color).
+3. **Continuation branches** — up to 3 nodes branching to the right from the current position node, one per top master-game continuation. Labeled with SAN. These only appear when `explorerData` has moves.
+
+**History path is always linear** — no alternative branches are shown at historical positions. A player who wants to see what else could have been played at an earlier position uses the normal undo/navigate-back flow, which updates the stats table and continuation branches live. Adding alternative branches at historical positions would require N additional API calls per position played and is deferred to a future enhancement.
+
+**Edge rendering:** Straight lines.
+- History edges: `strokeWidth` proportional to how popular that move was at the prior position — same formula as continuation edges (`1.2 + fraction * 5.5`). Thicker = more commonly played.
+- Continuation edges (from current to continuations): `strokeWidth` proportional to that move's share of total master games shown. Thickest edge = most popular continuation.
+- Divergence ghost edges: at each history node where >15% of players chose a different move, a short line angles downward-right with a small percentage label (e.g. "67%"). Stroke width = `1.2 + divergedFraction * 5.5`, low opacity. Signals where the user's line deviated from popular play.
+
+**Hover tooltip:** A floating overlay appears near the hovered node containing:
+- A `BoardDisplay` mini board (~110×110 px) showing the position FEN at that node.
+- Below the board: move SAN + opening name (from ECO catalog if available) + games count and W/D/B breakdown (for continuation nodes where `explorerData` is available; omitted for history nodes unless their data is already cached).
+
+Hovering a **continuation node** also highlights the corresponding board arrow on the chessboard (syncs with `hoveredMoveUci` state in the parent) — the same arrow that appears when hovering a stats table row.
+
+**Click behavior:**
+- **History node** → scripts the board back to that position (triggers undo/reset commands to reach the clicked FEN).
+- **Continuation node** → plays that move (calls `onMoveClick`, same as clicking the stats table row).
+- **"Beyond data" state** — when the user has played past the point where master game data exists, no new continuation nodes appear. The current position node is the last in the chain. Clicking it (if the user has played further beyond it) navigates back to that last data-available position.
+
+**Data source:**
+- History nodes: `moveHistory` array already in `OpeningExplorer.tsx` (contains SAN, UCI, FEN per move — no new fetches).
+- Continuation nodes: `explorerData.data?.moves[]` already fetched by `useOpeningExplorer`. No new API calls for the initial 1-level implementation.
+- Continuation FENs (for board thumbnails): computed synchronously with `chess.js` from the current FEN + UCI move — no fetch required.
+- Opening names for tooltips: `getCatalogMatchesForFen(fen)` — local, no fetch.
+
+**Depth:** 1 level of continuation look-ahead for the initial build. The component accepts an optional `continuationMoves?: Record<string, ExplorerMove[]>` prop (keyed by continuation UCI) so depth-2 display can be wired in later via a `useOpeningExplorerMulti` hook without restructuring the component.
+
+**Rendering:** Pure React + SVG. No D3 or external layout library. The SVG viewBox scales to the container height; node positions are computed in component logic. Container height in the sidebar is `h-52` (208 px).
+
+**What it does NOT do:**
+- Does not show alternative branches at historical positions.
+- Does not interact with the highlighted opening line selection (that is the stats table's responsibility).
+- Does not require its own API hook for the initial implementation.
+
+**Groundwork laid for future trees:**
+- SVG circle node + SAN text label pattern
+- `proportionToStrokeWidth(ratio: number): number` utility
+- Hover tooltip with `BoardDisplay` thumbnail
+- Hover/click interaction model that syncs with board arrows
+
+#### Planned: Opening book action bar (below board, left section)
+
+The left section of the Opening Explorer (`<section>` containing the header card + board card) will gain a third row below the board card for opening book actions. Use `gridTemplateRows: "auto 1fr auto"` when building this.
+
+Planned actions in this bar:
+- **Save current line** — save the moves played to the user's active opening book.
+- **Switch opening book** — select a different repertoire book as the active context.
+- **Load line from book** — highlight a specific line from the active book on the explorer (entry point from the Repertoire page via router state).
+
+Do not implement this bar yet. Reserve the row slot in the grid when the time comes.
+
+#### Large Repertoire Tree (`OpeningTreeFull`) — Future
+
+**Location (planned):** `src/components/repertoire/OpeningTreeFull.tsx`
+
+**Purpose:** An interactive tree diagram for building and visualizing a user's opening repertoire. Users click node paths to include or exclude lines. This is read-write and operates on the user's `MoveNode` book data.
+
+**Layout:** Radial or D3 hierarchical (as shown in the reference image — a spoke-wheel style from a center root). D3.js will be added as a dependency when this is built; import it lazily inside the component to avoid bundle impact on other pages.
+
+**Data source:** `MoveNode` tree from `opening_books.move_node` (JSONB). NOT the Lichess explorer data.
+
+**Interaction:**
+- Click a node path to mark it as part of the repertoire (solid) or exclude it (faded/dashed).
+- Visual state per node: `included` (solid, colored), `excluded` (faded), `unseen` (hollow).
+
+**Statistics overlay (planned):**
+- Coverage percentage: what fraction of known opponent replies are covered by included lines.
+- Refutation depth: how deep the user's lines go against each opponent deviation.
+- These statistics will drive the recommendation engine for companion and complementary openings.
+
+**Library:** D3.js (hierarchical layout). The large tree has too many nodes and too complex a layout to compute manually. D3's `d3.hierarchy()` + `d3.tree()` or `d3.cluster()` handle the layout; React renders the computed positions as SVG.
+
+**No code is shared with `OpeningMiniTree`** — the scale, data source, interaction model, and layout algorithm are all fundamentally different.
+
+#### On "pre-processing the opening tree"
+
+The infrastructure already exists in two forms:
+1. **`openingCatalogIndex.json`** — pre-generated at build time, covers 3,690 named openings, used for naming and ECO lookup. Never changes at runtime.
+2. **`position_cache` table** — demand-driven cache of Lichess master-game data per FEN. Warms up as users explore. For any common position it becomes an instant lookup. This IS the effective pre-processed master-game tree, populated incrementally.
+
+Do not build a separate pre-processed tree. The mini tree consumes `position_cache` indirectly (via the explorer API route) and the large repertoire tree consumes the user's `MoveNode` book. No new pre-processing step is needed.
+
 ### Opening Explorer: Hybrid Matching and Navigator Model
 
 The Opening Explorer (`src/components/openings/OpeningExplorer.tsx`) identifies the current board position using a two-stage hybrid match:
@@ -444,4 +544,6 @@ LICHESS_API_TOKEN=lip_...
 - Do not add forward-navigation logic that bypasses the `isBoardOnHighlightedLine` check — forward controls must be gated on board alignment with the highlighted line
 - Do not rename the `proxy` export in `src/proxy.ts` to `middleware` — Next.js 16 requires the export to be named `proxy`, not `middleware`
 - Do not use the React Compiler - it is not enabled in this project
+- Do not use D3.js in `OpeningMiniTree` — it uses pure React + SVG. D3 is reserved for the future large repertoire tree only.
+- Do not give `OpeningMiniTree` its own API calls — it consumes `ExplorerResponse.moves[]` and `historyPlayedFractions` passed as props from `OpeningExplorer`.
 <!-- END:nextjs-agent-rules -->
