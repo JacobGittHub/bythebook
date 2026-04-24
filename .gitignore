@@ -42,3 +42,7 @@ next-env.d.ts
 
 #supabase
 supabase/.temp/
+
+# Unused full-size Stockfish build (107 MB) — app uses the lite variants
+public/engine/stockfish-18-single.js
+public/engine/stockfish-18-single.wasm
