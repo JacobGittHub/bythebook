@@ -1,8 +1,8 @@
-import { createServerSupabaseClient } from "@/lib/supabase";
+import { createAdminSupabaseClient, createServerSupabaseClient } from "@/lib/supabase";
 import { START_FEN } from "@/lib/chess/fen";
-import { buildMoveTreeFromLines, isMove, parseMoveNode } from "@/lib/chess/moveTree";
+import { buildMoveTreeFromLines, createRootMoveNode, isMove, parseMoveNode } from "@/lib/chess/moveTree";
 import type { Json, Tables } from "@/types/database";
-import type { Move, OpeningBook } from "@/types/chess";
+import type { Move, MoveNode, OpeningBook } from "@/types/chess";
 
 type OpeningBookRow = Tables<"opening_books">;
 type OpeningBookRowWithRuntimeMoveNode = OpeningBookRow & {
@@ -29,12 +29,13 @@ function parseMoveLines(value: Json): Move[][] {
 
 function mapOpeningBook(row: OpeningBookRow): OpeningBook {
   const runtimeRow = row as OpeningBookRowWithRuntimeMoveNode;
-  const storedMoveTree = runtimeRow.move_node;
-  const legacyLines = parseMoveLines(runtimeRow.moves ?? []);
-  const moveNode =
-    storedMoveTree !== undefined
-      ? parseMoveNode(storedMoveTree, START_FEN)
-      : buildMoveTreeFromLines(legacyLines, START_FEN);
+  const stored = runtimeRow.move_node;
+
+  // After the moves→move_node rename, legacy rows have an array of line arrays in
+  // move_node. parseMoveNode rejects arrays, so detect and handle them here.
+  const moveNode = Array.isArray(stored)
+    ? buildMoveTreeFromLines(parseMoveLines(stored as Json), START_FEN)
+    : parseMoveNode(stored, START_FEN);
 
   return {
     id: row.id,
@@ -60,6 +61,41 @@ export async function listOpeningBooks(): Promise<OpeningBook[]> {
   }
 
   return data.map(mapOpeningBook);
+}
+
+export async function createOpeningBook(
+  userId: string,
+  input: { name: string; color: "white" | "black" },
+): Promise<OpeningBook | null> {
+  const supabase = createAdminSupabaseClient();
+  const rootNode = createRootMoveNode(START_FEN);
+  const { data, error } = await supabase
+    .from("opening_books")
+    .insert({
+      user_id: userId,
+      name: input.name,
+      color: input.color,
+      move_node: rootNode as unknown as Json,
+      is_public: false,
+    })
+    .select("*")
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return mapOpeningBook(data);
+}
+
+export async function updateOpeningBookTree(
+  bookId: string,
+  moveNode: MoveNode,
+): Promise<void> {
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase
+    .from("opening_books")
+    .update({ move_node: moveNode as unknown as Json, updated_at: new Date().toISOString() })
+    .eq("id", bookId);
+
+  if (error) throw error;
 }
 
 export async function getOpeningBook(bookId: string): Promise<OpeningBook | null> {

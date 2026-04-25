@@ -349,7 +349,9 @@ There are two distinct tree visualizations in this project. They share no code �
 **Edge rendering:** Straight lines.
 - History edges: `strokeWidth` proportional to how popular that move was at the prior position — same formula as continuation edges (`1.2 + fraction * 5.5`). Thicker = more commonly played.
 - Continuation edges (from current to continuations): `strokeWidth` proportional to that move's share of total master games shown. Thickest edge = most popular continuation.
-- Divergence ghost edges: at each history node where >15% of players chose a different move, a short line angles downward-right with a small percentage label (e.g. "67%"). Stroke width = `1.2 + divergedFraction * 5.5`, low opacity. Signals where the user's line deviated from popular play.
+- Alternate branch edges: at each history node, up to 2 vertical branches fan above/below the main line — one per top master-game alternative that was NOT the move the user played. Stroke width = `1.2 + (altGames / positionTotal) * 5.5`, low opacity.
+- Clicking an alternate node navigates the board: resets to start, then replays all moves up to that position and plays the alternate (handled via `pendingPostResetMovesRef` + `pendingForwardMoves` queue in `OpeningExplorer`).
+- The aggregate divergence percentage ("X% chose differently") is surfaced in the tooltip when hovering a history node.
 
 **Hover tooltip:** A floating overlay appears near the hovered node containing:
 - A `BoardDisplay` mini board (~110×110 px) showing the position FEN at that node.
@@ -545,5 +547,5 @@ LICHESS_API_TOKEN=lip_...
 - Do not rename the `proxy` export in `src/proxy.ts` to `middleware` — Next.js 16 requires the export to be named `proxy`, not `middleware`
 - Do not use the React Compiler - it is not enabled in this project
 - Do not use D3.js in `OpeningMiniTree` — it uses pure React + SVG. D3 is reserved for the future large repertoire tree only.
-- Do not give `OpeningMiniTree` its own API calls — it consumes `ExplorerResponse.moves[]` and `historyPlayedFractions` passed as props from `OpeningExplorer`.
+- Do not give `OpeningMiniTree` its own API calls — it consumes `explorerMoves`, `historyPlayedFractions`, and `historyAlternates` passed as props from `OpeningExplorer`. All Lichess data flows through `OpeningExplorer`.
 <!-- END:nextjs-agent-rules -->

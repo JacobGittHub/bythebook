@@ -1,5 +1,5 @@
 import { getAuthenticatedUser } from "@/lib/supabase";
-import { listOpeningBooks } from "@/lib/db/openings";
+import { createOpeningBook, listOpeningBooks } from "@/lib/db/openings";
 import { openingBookInputSchema } from "@/lib/validators/schemas";
 
 export async function GET() {
@@ -27,8 +27,14 @@ export async function POST(request: Request) {
     );
   }
 
-  return Response.json(
-    { message: "Opening book writes are not implemented yet." },
-    { status: 501 },
-  );
+  const book = await createOpeningBook(user.id, {
+    name: parsedPayload.data.name,
+    color: parsedPayload.data.color,
+  });
+
+  if (!book) {
+    return Response.json({ error: "Failed to create opening book." }, { status: 500 });
+  }
+
+  return Response.json(book, { status: 201 });
 }

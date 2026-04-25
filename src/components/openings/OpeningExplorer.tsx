@@ -21,7 +21,7 @@ import { useOpeningExplorerMulti } from "@/hooks/useOpeningExplorerMulti";
 import { useEngine, type EngineMode } from "@/hooks/useEngine";
 import { useBackgroundMode } from "@/context/BackgroundMode";
 import { formatScore, evalToBarPct } from "@/lib/chess/stockfishUci";
-import { OpeningMiniTree } from "@/components/openings/OpeningMiniTree";
+import { OpeningMiniTree, type HistoryAltEntry } from "@/components/openings/OpeningMiniTree";
 import type { MoveResult } from "@/hooks/useChessGame";
 import type { CatalogMatch, ExplorerMatchMode, ExplorerMove, Move } from "@/types/chess";
 
@@ -55,6 +55,7 @@ export function OpeningExplorer() {
   const [boardOrientation, setBoardOrientation] = useState<"white" | "black">("white");
   const commandNonceRef = useRef(0);
   const blurTimeoutRef = useRef<number | null>(null);
+  const pendingPostResetMovesRef = useRef<Move[]>([]);
 
   const { mode } = useBackgroundMode();
   const [hoveredMoveUci, setHoveredMoveUci] = useState<string | null>(null);
@@ -175,6 +176,29 @@ export function OpeningExplorer() {
     });
   }, [moveHistory, historyExplorerData]);
 
+  const historyPlayedGames = useMemo((): (number | null)[] => {
+    return moveHistory.map((move, i) => {
+      const beforeFen = i === 0 ? START_FEN : moveHistory[i - 1].fen;
+      const data = historyExplorerData[beforeFen];
+      if (!data?.moves?.length) return null;
+      const played = data.moves.find((m) => m.uci === move.uci);
+      if (!played) return null;
+      return played.white + played.draws + played.black;
+    });
+  }, [moveHistory, historyExplorerData]);
+
+  const historyAlternates = useMemo((): (HistoryAltEntry | null)[] => {
+    return moveHistory.map((move, i) => {
+      const beforeFen = i === 0 ? START_FEN : moveHistory[i - 1].fen;
+      const data = historyExplorerData[beforeFen];
+      if (!data?.moves?.length) return null;
+      const total = data.moves.reduce((s, m) => s + m.white + m.draws + m.black, 0);
+      if (total === 0) return null;
+      const alts = data.moves.filter((m) => m.uci !== move.uci).slice(0, 2);
+      return alts.length > 0 ? { alts, total } : null;
+    });
+  }, [moveHistory, historyExplorerData]);
+
   const nextCommandId = () => {
     commandNonceRef.current += 1;
     return String(commandNonceRef.current);
@@ -237,9 +261,39 @@ export function OpeningExplorer() {
 
   const handleBoardReset = () => {
     setMoveHistory([]);
-    setPendingForwardMoves([]);
     setIsAutoPlaying(false);
     setPlaybackError(null);
+    const postResetMoves = pendingPostResetMovesRef.current;
+    pendingPostResetMovesRef.current = [];
+    if (postResetMoves.length > 0) {
+      const [first, ...rest] = postResetMoves;
+      setPendingForwardMoves(rest);
+      setScriptedCommand(createMoveCommand(first, nextCommandId()));
+    } else {
+      setPendingForwardMoves([]);
+    }
+  };
+
+  const handleHistoryAlternateClick = (fullMoveIndex: number, move: ExplorerMove) => {
+    const movesToPlay: Move[] = [
+      ...moveHistory.slice(0, fullMoveIndex).map((m) => ({ san: m.san, uci: m.uci })),
+      { san: move.san, uci: move.uci },
+    ];
+    setPendingForwardMoves([]);
+    setIsAutoPlaying(false);
+    pendingPostResetMovesRef.current = movesToPlay;
+    setScriptedCommand(createResetCommand(nextCommandId()));
+  };
+
+  const handleHistoryNodeClick = (fullMoveIndex: number) => {
+    if (fullMoveIndex === moveHistory.length - 1) return;
+    const movesToPlay: Move[] = moveHistory
+      .slice(0, fullMoveIndex + 1)
+      .map((m) => ({ san: m.san, uci: m.uci }));
+    setPendingForwardMoves([]);
+    setIsAutoPlaying(false);
+    pendingPostResetMovesRef.current = movesToPlay;
+    setScriptedCommand(createResetCommand(nextCommandId()));
   };
 
   const handleGoToStart = () => {
@@ -318,7 +372,7 @@ export function OpeningExplorer() {
     <div className="grid h-[calc(100vh-8rem)] gap-4 xl:grid-cols-[1.1fr_0.9fr]">
       {/* ── Left: board + search ── */}
       <section
-        className="grid h-full gap-3 rounded-[2rem] bg-slate-50 p-3"
+        className="grid h-full min-w-0 gap-3 rounded-[2rem] bg-slate-50 p-3"
         style={{ gridTemplateRows: "auto 1fr" }}
       >
         {/* Header card: title left, search right — single compact row */}
@@ -450,7 +504,7 @@ export function OpeningExplorer() {
       </section>
 
       {/* ── Right: four-section sidebar ── */}
-      <aside className="flex min-h-0 flex-col gap-3">
+      <aside className="flex min-h-0 min-w-0 flex-col gap-3">
         {/* ① Engine panel */}
         <div className="shrink-0 rounded-3xl border border-slate-200 bg-white px-5 py-4">
           {/* Controls row */}
@@ -538,14 +592,18 @@ export function OpeningExplorer() {
         </div>
 
         {/* ② Mini look-ahead tree */}
-        <div className="h-52 shrink-0 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-3 py-3">
+        <div className="h-52 shrink-0 overflow-hidden rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-3 py-3">
           <OpeningMiniTree
             moveHistory={moveHistory}
             explorerMoves={explorerData.data?.moves ?? []}
             currentFen={currentFen}
             historyPlayedFractions={historyPlayedFractions}
+            historyPlayedGames={historyPlayedGames}
+            historyAlternates={historyAlternates}
             boardOrientation={boardOrientation}
             onMoveClick={handleExplorerMoveClick}
+            onHistoryNodeClick={handleHistoryNodeClick}
+            onHistoryAlternateClick={handleHistoryAlternateClick}
             onHoverUci={setHoveredMoveUci}
             hoveredUci={hoveredMoveUci}
           />

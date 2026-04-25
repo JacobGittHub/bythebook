@@ -5,6 +5,26 @@ import {
   explorerBodySchema,
   explorerQuerySchema,
 } from "@/lib/validators/schemas";
+import type { ExplorerResponse } from "@/types/chess";
+
+// Lichess returns castling as king-to-rook (e1h1, e1a1, e8h8, e8a8).
+// chess.js expects king-to-destination (e1g1, e1c1, e8g8, e8c8).
+const CASTLING_UCI: Record<string, string> = {
+  e1h1: "e1g1",
+  e1a1: "e1c1",
+  e8h8: "e8g8",
+  e8a8: "e8c8",
+};
+
+function normalizeCastling(data: ExplorerResponse): ExplorerResponse {
+  return {
+    ...data,
+    moves: data.moves.map((m) => ({
+      ...m,
+      uci: CASTLING_UCI[m.uci] ?? m.uci,
+    })),
+  };
+}
 
 async function resolveFenFromRequest(request: Request) {
   if (request.method === "POST") {
@@ -29,10 +49,11 @@ async function handleExplorerRequest(request: Request) {
     const cached = await getCachedPosition(fen);
 
     if (cached) {
-      return Response.json({ fen, ...cached, cached: true });
+      const normalized = normalizeCastling(cached);
+      return Response.json({ fen, ...normalized, cached: true });
     }
 
-    const explorerData = await fetchExplorerMoves(fen);
+    const explorerData = normalizeCastling(await fetchExplorerMoves(fen));
     await setCachedPosition(fen, explorerData);
 
     return Response.json({ fen, ...explorerData, cached: false });

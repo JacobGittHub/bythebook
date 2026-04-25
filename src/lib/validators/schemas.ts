@@ -53,6 +53,10 @@ export const registerInputSchema = z.object({
   password: z.string().min(8),
 });
 
+export const updateBookTreeSchema = z.object({
+  moveNode: z.unknown(),
+});
+
 export const schemas = {
   openingBook: openingBookInputSchema,
   session: sessionInputSchema,

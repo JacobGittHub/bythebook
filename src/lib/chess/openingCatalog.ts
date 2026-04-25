@@ -1,5 +1,5 @@
 import openingCatalogData from "./generated/openingCatalogIndex.json";
-import { START_FEN, toPositionKey } from "@/lib/chess/fen";
+import { START_FEN, normalizeFen, toPositionKey } from "@/lib/chess/fen";
 import {
   createMoveNodeId,
   createRootMoveNode,
@@ -217,4 +217,65 @@ export function buildCatalogPreview(
   }
 
   return root;
+}
+
+// ── Default catalog tree ─────────────────────────────────────────────────────
+//
+// A pre-built 5-level radial tree sourced entirely from the local ECO catalog
+// (no API calls). Used as the always-visible base on the dashboard.
+
+const CATALOG_TREE_MAX_DEPTH = 5;
+const CATALOG_TREE_MAX_CHILDREN = [8, 5, 4, 3, 2]; // max per depth 0..4
+const CATALOG_TREE_MIN_COVERAGE = 3; // min ECO openings through a branch
+
+let _catalogTreeCache: MoveNode | null = null; // invalidated on server restart
+
+export function buildDefaultCatalogTree(): MoveNode {
+  if (_catalogTreeCache) return _catalogTreeCache;
+  const root = createRootMoveNode(START_FEN);
+  _fillCatalogTreeNode(root, [], 0);
+  _catalogTreeCache = root;
+  return root;
+}
+
+function _fillCatalogTreeNode(node: MoveNode, uciLine: string[], depth: number): void {
+  if (depth >= CATALOG_TREE_MAX_DEPTH) return;
+
+  const candidateIds: string[] =
+    depth === 0
+      ? openings.map((o) => o.id)
+      : (catalog.indexes.byUciPrefix[uciLine.join("|")] ?? []);
+
+  if (candidateIds.length < CATALOG_TREE_MIN_COVERAGE) return;
+
+  const moveCounts = new Map<string, { count: number; san: string; fen: string }>();
+  for (const id of candidateIds) {
+    const opening = openingById.get(id);
+    if (!opening || opening.moves.length <= depth) continue;
+    const move = opening.moves[depth];
+    const entry = moveCounts.get(move.uci);
+    if (entry) {
+      entry.count++;
+    } else {
+      moveCounts.set(move.uci, { count: 1, san: move.san, fen: move.fen });
+    }
+  }
+
+  const maxChildren = CATALOG_TREE_MAX_CHILDREN[depth] ?? 2;
+  const topMoves = [...moveCounts.entries()]
+    .filter(([, v]) => v.count >= CATALOG_TREE_MIN_COVERAGE)
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, maxChildren);
+
+  for (const [uci, { san, fen }] of topMoves) {
+    const child: MoveNode = {
+      id: createMoveNodeId(node.id, uci),
+      san,
+      uci,
+      fen: normalizeFen(fen),
+      children: [],
+    };
+    node.children.push(child);
+    _fillCatalogTreeNode(child, [...uciLine, uci], depth + 1);
+  }
 }

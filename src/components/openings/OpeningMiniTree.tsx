@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Chess } from "chess.js";
 import { BoardDisplay } from "@/components/board/BoardDisplay";
 import { getCatalogMatchesForFen } from "@/lib/chess/openingCatalog";
+import { START_FEN } from "@/lib/chess/fen";
 import type { MoveResult } from "@/hooks/useChessGame";
 import type { ExplorerMove } from "@/types/chess";
 
@@ -11,16 +12,21 @@ import type { ExplorerMove } from "@/types/chess";
 
 const MAX_HISTORY = 40;
 const MAX_CONT = 3;
+const MAX_ALTS = 2;
+const ALT_Y_OFF = 32;  // y distance from main line to alternate nodes
+const ALT_X_OFF = 10;  // x nudge toward continuation direction (inward angle)
 
 const VB_H = 160;
-const CY = VB_H / 2; // 80
+const CY = VB_H / 2;  // 80
 
 const CHAIN_X_START = 28;
-const NODE_STEP = 40;    // px between consecutive history nodes (viewBox units)
-const CONT_OFFSET = 120; // px from curX to continuation nodes
+const NODE_STEP = 40;    // viewBox px between consecutive history nodes
+const CONT_OFFSET = 120; // viewBox px from curX to continuation nodes
 const TOOLTIP_W = 144;   // w-36 in px
 
 // ── Types ───────────────────────────────────────────────────────────────────
+
+export type HistoryAltEntry = { alts: ExplorerMove[]; total: number };
 
 type TooltipData = {
   fen: string;
@@ -36,18 +42,42 @@ type Props = {
   explorerMoves: ExplorerMove[];
   currentFen: string;
   historyPlayedFractions?: (number | null)[];
+  historyPlayedGames?: (number | null)[];
+  historyAlternates?: (HistoryAltEntry | null)[];
   boardOrientation?: "white" | "black";
   onMoveClick: (move: ExplorerMove) => void;
+  onHistoryNodeClick?: (fullMoveIndex: number) => void;
+  onHistoryAlternateClick?: (fullMoveIndex: number, move: ExplorerMove) => void;
   onHoverUci: (uci: string | null) => void;
   hoveredUci: string | null;
 };
 
-// ── Shared edge-width formula ────────────────────────────────────────────────
+// ── Edge-width formula — piecewise linear over absolute game counts ──────────
+//
+// Adjust these three constants to tune the visual:
+//   GAMES_KNEE  — below this: hairline → 60 % of max  (default 50 000)
+//   GAMES_SAT   — at/above this: 100 % of max           (default 2 000 000)
+//   MIN_W / MAX_W — stroke-width range
 
-const calcEdgeWidth = (fraction: number | null): number => {
-  if (fraction === null) return 1.5;
-  return 1.2 + fraction * 5.5;
+const GAMES_KNEE = 50_000;
+const GAMES_SAT  = 2_000_000;
+const MIN_W = 1.2;
+const MAX_W = 6.7;
+const MID_W = MIN_W + 0.6 * (MAX_W - MIN_W); // 4.5 — 60 % of range
+
+const calcEdgeWidth = (games: number | null): number => {
+  if (games === null || games <= 0) return MIN_W;
+  if (games < GAMES_KNEE) {
+    return MIN_W + (games / GAMES_KNEE) * (MID_W - MIN_W);
+  }
+  const t = Math.min((games - GAMES_KNEE) / (GAMES_SAT - GAMES_KNEE), 1);
+  return MID_W + t * (MAX_W - MID_W);
 };
+
+// ── Label y: above top alternates, below bottom alternates ──────────────────
+
+const altSanLabelY  = (y: number): number => (y >= CY ? y + 12 : y - 9);
+const altPctLabelY  = (y: number): number => (y >= CY ? y + 20 : y - 17);
 
 // ── Component ───────────────────────────────────────────────────────────────
 
@@ -56,8 +86,12 @@ export function OpeningMiniTree({
   explorerMoves,
   currentFen,
   historyPlayedFractions,
+  historyPlayedGames,
+  historyAlternates,
   boardOrientation = "white",
   onMoveClick,
+  onHistoryNodeClick,
+  onHistoryAlternateClick,
   onHoverUci,
   hoveredUci,
 }: Props) {
@@ -68,15 +102,17 @@ export function OpeningMiniTree({
   const topMoves = explorerMoves.slice(0, MAX_CONT);
   const hasCont = topMoves.length > 0;
   const hasMoreHistory = moveHistory.length > MAX_HISTORY;
+  const fractionOffset = Math.max(0, moveHistory.length - MAX_HISTORY);
 
-  // Auto-scroll to current node when history grows
+  // Auto-scroll to current (rightmost) node when history grows
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
     }
   }, [moveHistory.length]);
 
-  // Compute FEN after each continuation move (chess.js, no API call)
+
+  // Compute FEN after each continuation move (no API call)
   const contFens = useMemo(() => {
     const map: Record<string, string> = {};
     for (const m of topMoves) {
@@ -93,7 +129,32 @@ export function OpeningMiniTree({
     return map;
   }, [currentFen, topMoves]);
 
-  // ── Layout computation ───────────────────────────────────────────────────
+  // Compute FEN after each alternate move — keyed by `${fullIdx}-${alt.uci}`
+  const altFens = useMemo(() => {
+    const map: Record<string, string> = {};
+    const offset = Math.max(0, moveHistory.length - MAX_HISTORY);
+    const count = Math.min(moveHistory.length, MAX_HISTORY);
+    for (let i = 0; i < count; i++) {
+      const fIdx = offset + i;
+      const entry = historyAlternates?.[fIdx];
+      if (!entry) continue;
+      const beforeFen = fIdx === 0 ? START_FEN : moveHistory[fIdx - 1].fen;
+      for (const alt of entry.alts.slice(0, MAX_ALTS)) {
+        try {
+          const chess = new Chess(beforeFen);
+          const r = chess.move({
+            from: alt.uci.slice(0, 2),
+            to: alt.uci.slice(2, 4),
+            promotion: alt.uci.length > 4 ? alt.uci[4] : undefined,
+          });
+          if (r) map[`${fIdx}-${alt.uci}`] = chess.fen();
+        } catch { /* skip */ }
+      }
+    }
+    return map;
+  }, [moveHistory, historyAlternates]);
+
+  // ── Layout ────────────────────────────────────────────────────────────────
 
   const histXs = visibleHistory.map((_, i) => CHAIN_X_START + i * NODE_STEP);
   const curX = CHAIN_X_START + visibleHistory.length * NODE_STEP;
@@ -107,14 +168,17 @@ export function OpeningMiniTree({
     return [CY - 52, CY, CY + 52];
   }, [topMoves.length]);
 
-  const totalContGames = topMoves.reduce((s, m) => s + m.white + m.draws + m.black, 0);
-  const contEdgeWidth = (m: ExplorerMove) => {
-    if (totalContGames === 0) return 1.5;
-    return 1.2 + ((m.white + m.draws + m.black) / totalContGames) * 5.5;
-  };
+  const contEdgeWidth = (m: ExplorerMove) =>
+    calcEdgeWidth(m.white + m.draws + m.black);
 
-  // Offset into historyPlayedFractions for the visible window
-  const fractionOffset = Math.max(0, moveHistory.length - MAX_HISTORY);
+  // Alternate node positions — angled inward (x offset toward continuations)
+  const altPositions = (baseX: number, count: number): { x: number; y: number }[] => {
+    if (count === 1) return [{ x: baseX + ALT_X_OFF, y: CY - ALT_Y_OFF }];
+    return [
+      { x: baseX + ALT_X_OFF, y: CY - ALT_Y_OFF },
+      { x: baseX + ALT_X_OFF, y: CY + ALT_Y_OFF },
+    ];
+  };
 
   if (visibleHistory.length === 0 && topMoves.length === 0) return null;
 
@@ -129,15 +193,18 @@ export function OpeningMiniTree({
 
   return (
     <>
+      {/* w-full constrains the container so overflow-x-auto activates scrolling */}
       <div
         ref={scrollRef}
-        className="h-full overflow-x-auto overflow-y-hidden"
+        className="h-full w-full overflow-x-auto overflow-y-hidden"
         style={{ scrollBehavior: "smooth" }}
         onMouseLeave={() => { hide(); onHoverUci(null); }}
       >
         <svg
           viewBox={`0 0 ${svgWidth} ${VB_H}`}
-          style={{ height: "100%", aspectRatio: `${svgWidth} / ${VB_H}`, display: "block" }}
+          width={svgWidth}
+          height="100%"
+          style={{ display: "block" }}
           preserveAspectRatio="xMinYMid meet"
         >
           {/* Cap indicator */}
@@ -154,48 +221,43 @@ export function OpeningMiniTree({
             </text>
           )}
 
-          {/* History edges + divergence ghost edges */}
+          {/* ── Edges (drawn beneath nodes) ────────────────────────────── */}
+
+          {/* History edges — width from absolute game count for each played move */}
           {visibleHistory.map((_, i) => {
             const fIdx = fractionOffset + i;
-            const fraction = historyPlayedFractions?.[fIdx] ?? null;
-            const diverged = fraction !== null ? 1 - fraction : null;
-            const x1 = histXs[i];
-            const x2 = i === visibleHistory.length - 1 ? curX : histXs[i + 1];
             return (
-              <g key={`he-${i}`}>
-                <line
-                  x1={x1} y1={CY}
-                  x2={x2} y2={CY}
-                  stroke="var(--border-card)"
-                  strokeWidth={calcEdgeWidth(fraction)}
-                />
-                {diverged !== null && diverged > 0.15 && (
-                  <>
-                    <line
-                      x1={x1} y1={CY}
-                      x2={x1 + 14} y2={CY + 26}
-                      stroke="var(--text-muted)"
-                      strokeWidth={calcEdgeWidth(diverged)}
-                      strokeOpacity={0.35}
-                      strokeLinecap="round"
-                    />
-                    <text
-                      x={x1 + 18}
-                      y={CY + 38}
-                      textAnchor="middle"
-                      fontSize={6.5}
-                      fill="var(--text-muted)"
-                      opacity={0.45}
-                    >
-                      {Math.round(diverged * 100)}%
-                    </text>
-                  </>
-                )}
-              </g>
+              <line
+                key={`he-${i}`}
+                x1={histXs[i]} y1={CY}
+                x2={i === visibleHistory.length - 1 ? curX : histXs[i + 1]} y2={CY}
+                stroke="var(--border-card)"
+                strokeWidth={calcEdgeWidth(historyPlayedGames?.[fIdx] ?? null)}
+              />
             );
           })}
 
-          {/* Continuation edges */}
+          {/* Alternate edges — angled inward, width from absolute game count */}
+          {visibleHistory.map((_, i) => {
+            const fIdx = fractionOffset + i;
+            const entry = historyAlternates?.[fIdx];
+            if (!entry) return null;
+            const alts = entry.alts.slice(0, MAX_ALTS);
+            const positions = altPositions(histXs[i], alts.length);
+            return alts.map((alt, j) => (
+              <line
+                key={`ae-${fIdx}-${alt.uci}`}
+                x1={histXs[i]} y1={CY}
+                x2={positions[j].x} y2={positions[j].y}
+                stroke="var(--text-muted)"
+                strokeWidth={calcEdgeWidth(alt.white + alt.draws + alt.black)}
+                strokeOpacity={0.4}
+                strokeLinecap="round"
+              />
+            ));
+          })}
+
+          {/* Continuation edges — width relative to each other from current position */}
           {topMoves.map((m, i) => (
             <line
               key={`ce-${m.uci}`}
@@ -207,17 +269,73 @@ export function OpeningMiniTree({
             />
           ))}
 
-          {/* History nodes */}
+          {/* ── Nodes (drawn above edges) ──────────────────────────────── */}
+
+          {/* Alternate nodes — dashed hollow, angled inward, with SAN + % labels */}
+          {visibleHistory.map((_, i) => {
+            const fIdx = fractionOffset + i;
+            const entry = historyAlternates?.[fIdx];
+            if (!entry) return null;
+            const alts = entry.alts.slice(0, MAX_ALTS);
+            const positions = altPositions(histXs[i], alts.length);
+            return alts.map((alt, j) => {
+              const fen = altFens[`${fIdx}-${alt.uci}`] ?? currentFen;
+              const localFrac = (alt.white + alt.draws + alt.black) / entry.total;
+              const pct = Math.round(localFrac * 100);
+              const pos = positions[j];
+              return (
+                <g
+                  key={`an-${fIdx}-${alt.uci}`}
+                  style={{ cursor: onHistoryAlternateClick ? "pointer" : "default" }}
+                  onMouseEnter={(e) => show(fen, alt.san, alt, null, e)}
+                  onMouseLeave={hide}
+                  onClick={() => onHistoryAlternateClick?.(fIdx, alt)}
+                >
+                  <circle
+                    cx={pos.x} cy={pos.y} r={4}
+                    fill="var(--bg-card)"
+                    stroke="var(--border-card)"
+                    strokeWidth={1.2}
+                    strokeDasharray="2 2"
+                  />
+                  <text
+                    x={pos.x}
+                    y={altSanLabelY(pos.y)}
+                    textAnchor="middle"
+                    fontSize={7}
+                    fill="var(--text-muted)"
+                    opacity={0.75}
+                  >
+                    {alt.san}
+                  </text>
+                  <text
+                    x={pos.x}
+                    y={altPctLabelY(pos.y)}
+                    textAnchor="middle"
+                    fontSize={6}
+                    fill="var(--text-muted)"
+                    opacity={0.5}
+                  >
+                    {pct}%
+                  </text>
+                </g>
+              );
+            });
+          })}
+
+          {/* History nodes — clickable, navigate back to that position */}
           {visibleHistory.map((h, i) => {
             const fIdx = fractionOffset + i;
             const fraction = historyPlayedFractions?.[fIdx] ?? null;
             const divergedPct = fraction !== null ? 1 - fraction : null;
+            const isLast = fIdx === moveHistory.length - 1;
             return (
               <g
                 key={`hn-${i}`}
-                style={{ cursor: "pointer" }}
+                style={{ cursor: onHistoryNodeClick && !isLast ? "pointer" : "default" }}
                 onMouseEnter={(e) => show(h.fen, h.san, null, divergedPct, e)}
                 onMouseLeave={hide}
+                onClick={() => { if (!isLast) onHistoryNodeClick?.(fIdx); }}
               >
                 <circle
                   cx={histXs[i]} cy={CY} r={5}
@@ -254,12 +372,7 @@ export function OpeningMiniTree({
 
           {/* No-data indicator */}
           {!hasCont && (
-            <text
-              x={curX + 20} y={CY + 4}
-              fontSize={11}
-              fill="var(--text-muted)"
-              opacity={0.35}
-            >
+            <text x={curX + 20} y={CY + 4} fontSize={11} fill="var(--text-muted)" opacity={0.35}>
               ···
             </text>
           )}
