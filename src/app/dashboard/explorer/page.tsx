@@ -1,9 +1,14 @@
 import { OpeningExplorer } from "@/components/openings/OpeningExplorer";
 
-export default function ExplorerPage() {
+type Props = {
+  searchParams: Promise<{ fen?: string }>;
+};
+
+export default async function ExplorerPage({ searchParams }: Props) {
+  const { fen } = await searchParams;
   return (
     <main className="space-y-6">
-      <OpeningExplorer />
+      <OpeningExplorer initialFen={fen} />
     </main>
   );
 }

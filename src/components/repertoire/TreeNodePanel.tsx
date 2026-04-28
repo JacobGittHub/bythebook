@@ -152,7 +152,10 @@ export function TreeNodePanel({
               </button>
             )}
 
-            <button onClick={() => router.push("/dashboard/explorer")} className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+            <button
+              onClick={() => router.push(`/dashboard/explorer?fen=${encodeURIComponent(node.fen)}`)}
+              className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            >
               Open in Explorer
             </button>
 

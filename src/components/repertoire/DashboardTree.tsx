@@ -95,7 +95,7 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
 
   const highlightIds = useMemo<Set<string>>(() => {
     if (!searchQuery.trim()) return new Set();
-    const matches = searchCatalogMatches(searchQuery.trim(), 5);
+    const matches = searchCatalogMatches(searchQuery.trim().toLowerCase(), 5);
     const ids = new Set<string>();
     for (const match of matches) {
       const path = getNodePathByUciLine(

@@ -22,8 +22,20 @@ import { useEngine, type EngineMode } from "@/hooks/useEngine";
 import { useBackgroundMode } from "@/context/BackgroundMode";
 import { formatScore, evalToBarPct } from "@/lib/chess/stockfishUci";
 import { OpeningMiniTree, type HistoryAltEntry } from "@/components/openings/OpeningMiniTree";
+import { mergeMoveLineIntoTree } from "@/lib/chess/moveTree";
 import type { MoveResult } from "@/hooks/useChessGame";
-import type { CatalogMatch, ExplorerMatchMode, ExplorerMove, Move } from "@/types/chess";
+import type { CatalogMatch, ExplorerMatchMode, ExplorerMove, Move, MoveNode, OpeningBook } from "@/types/chess";
+
+function collectBookLines(
+  node: MoveNode,
+  path: { san: string; uci: string }[] = [],
+): { san: string; uci: string }[][] {
+  if (node.children.length === 0) return path.length > 0 ? [path] : [];
+  return node.children.flatMap((child) => {
+    if (!child.san || !child.uci) return [];
+    return collectBookLines(child, [...path, { san: child.san, uci: child.uci }]);
+  });
+}
 
 const AUTO_PLAY_DELAY_MS = 700;
 
@@ -41,7 +53,7 @@ function formatGames(n: number): string {
   return String(n);
 }
 
-export function OpeningExplorer() {
+export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<CatalogMatch | null>(null);
@@ -56,6 +68,30 @@ export function OpeningExplorer() {
   const commandNonceRef = useRef(0);
   const blurTimeoutRef = useRef<number | null>(null);
   const pendingPostResetMovesRef = useRef<Move[]>([]);
+
+  // Opening book integration
+  const [explorerBooks, setExplorerBooks] = useState<OpeningBook[]>([]);
+  const [activeExplorerBookId, setActiveExplorerBookId] = useState<string | null>(null);
+  const [isSavingToBook, setIsSavingToBook] = useState(false);
+
+  // Load user's books for the book selector
+  useEffect(() => {
+    fetch("/api/openings/books")
+      .then((r) => r.json())
+      .then((d) => setExplorerBooks(d.books ?? []))
+      .catch(() => {});
+  }, []);
+
+  // On mount: if initialFen provided, replay catalog moves to reach that position
+  useEffect(() => {
+    if (!initialFen) return;
+    const matches = getCatalogMatchesForFen(initialFen, 1);
+    if (!matches.length || !matches[0].moves.length) return;
+    const movesToPlay = matches[0].moves.map((m) => ({ san: m.san, uci: m.uci }));
+    const [first, ...rest] = movesToPlay;
+    setPendingForwardMoves(rest);
+    setScriptedCommand(createMoveCommand(first, String(++commandNonceRef.current)));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { mode } = useBackgroundMode();
   const [hoveredMoveUci, setHoveredMoveUci] = useState<string | null>(null);
@@ -194,7 +230,7 @@ export function OpeningExplorer() {
       if (!data?.moves?.length) return null;
       const total = data.moves.reduce((s, m) => s + m.white + m.draws + m.black, 0);
       if (total === 0) return null;
-      const alts = data.moves.filter((m) => m.uci !== move.uci).slice(0, 2);
+      const alts = data.moves.filter((m) => m.uci !== move.uci).slice(0, 6);
       return alts.length > 0 ? { alts, total } : null;
     });
   }, [moveHistory, historyExplorerData]);
@@ -363,95 +399,195 @@ export function OpeningExplorer() {
       ? effectiveMatches.slice(0, 2).map((m) => m.name).join(" / ")
       : null);
 
+  // ── Book save ──────────────────────────────────────────────────────────────
+
+  const activeExplorerBook = explorerBooks.find((b) => b.id === activeExplorerBookId) ?? null;
+
+  const handleAddToBook = async () => {
+    if (!activeExplorerBook || currentMoves.length === 0) return;
+    const movesToAdd = currentMoves.slice(0, 20); // 20-move limit
+    const updatedTree = mergeMoveLineIntoTree(activeExplorerBook.moveNode, movesToAdd);
+    setIsSavingToBook(true);
+    try {
+      const res = await fetch(`/api/openings/books/${activeExplorerBook.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ moveNode: updatedTree }),
+      });
+      if (res.ok) {
+        setExplorerBooks((prev) =>
+          prev.map((b) =>
+            b.id === activeExplorerBook.id ? { ...b, moveNode: updatedTree } : b,
+          ),
+        );
+      }
+    } catch {
+      // silent fail — user can retry
+    } finally {
+      setIsSavingToBook(false);
+    }
+  };
+
+  const bookLines = useMemo(
+    () => (activeExplorerBook ? collectBookLines(activeExplorerBook.moveNode) : []),
+    [activeExplorerBook],
+  );
+
+  const handleViewBookLine = (lineJson: string) => {
+    if (!lineJson) return;
+    const moves: { san: string; uci: string }[] = JSON.parse(lineJson);
+    if (!moves.length) return;
+    pendingPostResetMovesRef.current = moves;
+    setPendingForwardMoves([]);
+    setIsAutoPlaying(false);
+    setScriptedCommand(createResetCommand(nextCommandId()));
+  };
+
+  const handleClickMoveToken = (index: number) => {
+    if (selectedMatch) {
+      const movesToPlay = selectedMatch.moves.slice(0, index + 1).map((m) => ({ san: m.san, uci: m.uci }));
+      setPendingForwardMoves([]);
+      setIsAutoPlaying(false);
+      pendingPostResetMovesRef.current = movesToPlay;
+      setScriptedCommand(createResetCommand(nextCommandId()));
+    } else {
+      // Navigate to position after this move in the current board history
+      handleHistoryNodeClick(index);
+    }
+  };
+
   const navBtnClass =
-    "rounded-full p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300";
+    "rounded-full p-1.5 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:text-slate-300 disabled:bg-transparent";
   const playBtnClass =
     "rounded-full bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400";
 
   return (
-    <div className="grid h-[calc(100vh-8rem)] gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+    <div className="grid h-[calc(100vh-3.5rem)] gap-4 xl:grid-cols-[1.1fr_0.9fr]">
       {/* ── Left: board + search ── */}
       <section
         className="grid h-full min-w-0 gap-3 rounded-[2rem] bg-slate-50 p-3"
         style={{ gridTemplateRows: "auto 1fr" }}
       >
-        {/* Header card: title left, search right — single compact row */}
-        <div className="flex items-center gap-4 rounded-3xl border border-slate-200 bg-white px-5 py-4">
-          <div className="shrink-0">
-            <h1 className="text-xl font-semibold text-slate-950">Opening Explorer</h1>
-            {selectedMatch ? (
-              <p className="mt-0.5 text-sm text-slate-500">
-                <span className="font-medium text-slate-700">{selectedMatch.eco}</span>
-                {" · "}
-                {selectedMatch.name}
+        {/* Header card: title row + book row */}
+        <div className="flex flex-col gap-2.5 rounded-3xl border border-slate-200 bg-white px-5 py-4">
+          {/* Row 1: title+subtitle (inline) | flip | search */}
+          <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-1 items-baseline gap-2">
+              <h1 className="shrink-0 text-lg font-semibold text-slate-950">Opening Explorer</h1>
+              <p className="truncate text-sm text-slate-400">
+                {selectedMatch
+                  ? `${selectedMatch.eco} · ${selectedMatch.name}`
+                  : "Play moves or search."}
               </p>
-            ) : (
-              <p className="mt-0.5 text-sm text-slate-400">Play moves or search.</p>
-            )}
+            </div>
+
+            {/* Flip board button */}
+            <button
+              type="button"
+              onClick={() => setBoardOrientation((o) => (o === "white" ? "black" : "white"))}
+              title="Flip board"
+              className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            >
+              ⇅ {boardOrientation === "white" ? "White" : "Black"}
+            </button>
+
+            {/* Search input */}
+            <div className="relative w-52 shrink-0">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => {
+                  if (blurTimeoutRef.current !== null) window.clearTimeout(blurTimeoutRef.current);
+                  setIsSearchFocused(true);
+                }}
+                onBlur={() => {
+                  blurTimeoutRef.current = window.setTimeout(
+                    () => setIsSearchFocused(false),
+                    150,
+                  );
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setSearchQuery("");
+                    setIsSearchFocused(false);
+                  }
+                }}
+                placeholder="Search — Sicilian, B12…"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
+              />
+
+              {showDropdown && (
+                <div className="absolute left-0 right-0 top-full z-20 mt-1.5 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl">
+                  {searchResults.map((result) => (
+                    <button
+                      key={`${result.eco}-${result.name}-${result.pgn}`}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleHighlightFromSearch(result);
+                      }}
+                      className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left last:border-0 hover:bg-slate-50"
+                    >
+                      <span className="w-10 shrink-0 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                        {result.eco}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-slate-900">{result.name}</p>
+                        <p className="truncate text-xs text-slate-400">{result.pgn}</p>
+                      </div>
+                      <span className="shrink-0 text-xs text-slate-400">
+                        {result.moves.length}m
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Flip board button */}
-          <button
-            type="button"
-            onClick={() => setBoardOrientation((o) => (o === "white" ? "black" : "white"))}
-            title="Flip board"
-            className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
-          >
-            ⇅ {boardOrientation === "white" ? "White" : "Black"}
-          </button>
+          {/* Row 2: book selector (narrow) + View Lines + Add line (always visible) */}
+          <div className="flex items-center gap-2">
+            <select
+              value={activeExplorerBookId ?? ""}
+              onChange={(e) => setActiveExplorerBookId(e.target.value || null)}
+              className="w-44 shrink-0 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none"
+            >
+              <option value="">— No book selected —</option>
+              {explorerBooks.map((b) => (
+                <option key={b.id} value={b.id}>{b.name} ({b.color})</option>
+              ))}
+            </select>
 
-          {/* Search input */}
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => {
-                if (blurTimeoutRef.current !== null) window.clearTimeout(blurTimeoutRef.current);
-                setIsSearchFocused(true);
-              }}
-              onBlur={() => {
-                blurTimeoutRef.current = window.setTimeout(
-                  () => setIsSearchFocused(false),
-                  150,
-                );
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  setSearchQuery("");
-                  setIsSearchFocused(false);
-                }
-              }}
-              placeholder="Search — Sicilian, B12, Ruy Lopez…"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
-            />
+            {/* View Lines dropdown */}
+            <select
+              value=""
+              onChange={(e) => handleViewBookLine(e.target.value)}
+              disabled={!activeExplorerBook || bookLines.length === 0}
+              className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <option value="">View Lines</option>
+              {bookLines.map((line, idx) => (
+                <option key={idx} value={JSON.stringify(line)}>
+                  {line.slice(0, 8).map((m) => m.san).join(" ")}
+                  {line.length > 8 ? "…" : ""}
+                </option>
+              ))}
+            </select>
 
-            {showDropdown && (
-              <div className="absolute left-0 right-0 top-full z-20 mt-1.5 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl">
-                {searchResults.map((result) => (
-                  <button
-                    key={`${result.eco}-${result.name}-${result.pgn}`}
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleHighlightFromSearch(result);
-                    }}
-                    className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left last:border-0 hover:bg-slate-50"
-                  >
-                    <span className="w-10 shrink-0 text-xs font-semibold uppercase tracking-widest text-slate-400">
-                      {result.eco}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-900">{result.name}</p>
-                      <p className="truncate text-xs text-slate-400">{result.pgn}</p>
-                    </div>
-                    <span className="shrink-0 text-xs text-slate-400">
-                      {result.moves.length}m
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Add line — always visible, disabled when no book or no moves */}
+            <button
+              type="button"
+              onClick={handleAddToBook}
+              disabled={!activeExplorerBook || currentMoves.length === 0 || isSavingToBook}
+              className="shrink-0 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {isSavingToBook
+                ? "Saving…"
+                : currentMoves.length > 0
+                  ? `Add line (${Math.min(currentMoves.length, 20)} moves)`
+                  : "Add line"}
+            </button>
           </div>
         </div>
 
@@ -592,7 +728,7 @@ export function OpeningExplorer() {
         </div>
 
         {/* ② Mini look-ahead tree */}
-        <div className="h-52 shrink-0 overflow-hidden rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-3 py-3">
+        <div className="h-64 shrink-0 overflow-hidden rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-3 py-3">
           <OpeningMiniTree
             moveHistory={moveHistory}
             explorerMoves={explorerData.data?.moves ?? []}
@@ -630,8 +766,10 @@ export function OpeningExplorer() {
                             {Math.floor(index / 2) + 1}.
                           </span>
                         )}
-                        <span
-                          className={`text-sm transition-colors ${
+                        <button
+                          type="button"
+                          onClick={() => handleClickMoveToken(index)}
+                          className={`cursor-pointer rounded px-0.5 text-sm transition-colors hover:bg-slate-100 ${
                             isPlayed
                               ? "font-semibold text-slate-700"
                               : isNext
@@ -640,7 +778,7 @@ export function OpeningExplorer() {
                           }`}
                         >
                           {move.san}
-                        </span>
+                        </button>
                       </span>
                     );
                   })}
@@ -654,7 +792,13 @@ export function OpeningExplorer() {
                           {Math.floor(index / 2) + 1}.
                         </span>
                       )}
-                      <span className="text-sm font-semibold text-slate-700">{move.san}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleClickMoveToken(index)}
+                        className="cursor-pointer rounded px-0.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                      >
+                        {move.san}
+                      </button>
                     </span>
                   ))}
                 </div>
@@ -714,7 +858,16 @@ export function OpeningExplorer() {
           </div>
 
           {selectedMatch && !isBoardOnHighlightedLine && currentMoves.length > 0 && (
-            <p className="mt-2 text-xs text-amber-600">Board diverged from highlighted line.</p>
+            <div className="mt-2 flex items-center gap-2">
+              <p className="text-xs text-amber-600">Board diverged from highlighted line.</p>
+              <button
+                type="button"
+                onClick={() => { setSelectedMatch(null); setPlaybackError(null); }}
+                className="text-xs font-medium text-amber-600 underline hover:text-amber-700"
+              >
+                Clear line
+              </button>
+            </div>
           )}
           {playbackError && (
             <p className="mt-2 text-xs text-rose-500">{playbackError}</p>
