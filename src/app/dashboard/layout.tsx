@@ -7,6 +7,7 @@ const navItems = [
   { href: "/dashboard/repertoire", label: "Repertoire" },
   { href: "/dashboard/puzzles", label: "Puzzles" },
   { href: "/dashboard/settings", label: "Settings" },
+  { href: "/dashboard/lab", label: "⚗ Lab" },
 ];
 
 export default function DashboardLayout({

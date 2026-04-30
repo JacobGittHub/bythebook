@@ -7,14 +7,18 @@ This file provides context, architecture decisions, and coding guidelines for AI
 
 ## Project Overview
 
-A chess opening training web application built for a small number of users (2-3 concurrent max). The goal is not to play chess games against others, but to train and test opening knowledge against an opening book database. Users authenticate, select or build opening repertoires (playbooks), and drill against the app which throws sidelines and tests depth using master-game data.
+A chess opening training web application. Users build personal opening repertoires (books), explore master-game statistics, and drill against the app in structured training sessions. The trainer generates "drills" — intentional computer mistakes that the user must punish — derived from the user's own opening lines.
 
-Planned features (in rough priority order):
-1. Opening training against a user-defined or suggested opening book
-2. Repertoire/playbook management (supporting lines for both colors)
-3. Puzzle trainer (free, unlimited)
-4. Position concept questions ("what are the main ideas here?") - future/experimental
-5. Optional 3D board perspective mode - future
+Deployed on Vercel + Supabase free tier. Expected concurrent users: small (planned for ~2-3, architected to handle up to ~50 without changes). If the Vercel URL is shared publicly, enable UptimeRobot (free) to ping the URL every 24 hours to prevent Supabase free-tier auto-pause.
+
+**Feature status:**
+- ✅ Opening Explorer (board + master stats + mini tree + engine)
+- ✅ Repertoire management (books, radial catalog tree, book editor)
+- ✅ Dashboard Overview (radial ECO tree, book overlay, node panel)
+- 🔜 Dashboard Globe + Branch View (3D globe replacing radial tree, animated branch expansion, drill heat-map overlay)
+- 🔜 Opening Trainer (drills, position stats, weakness map)
+- 🔜 Puzzle Trainer (Lichess puzzles, unlimited free)
+- ⏳ Position concept questions — future/experimental
 
 ---
 
@@ -34,6 +38,7 @@ Planned features (in rough priority order):
 | Opening catalog | Pre-generated local ECO index (3690+ openings from Lichess ECO data, built by `scripts/buildCatalog.mjs` + `scripts/buildOpeningCatalogIndex.mjs`) |
 | Opening stats | Lichess Opening Explorer API (`explorer.lichess.ovh`) - proxied through API routes, used for master-game win/draw/loss data |
 | Puzzle data | Lichess puzzle database dump (imported into Supabase) |
+| Graph visualization | D3.js (`d3`) — legacy radial catalog tree (`OpeningTreeFull`, kept as fallback). React Three Fiber (`@react-three/fiber`) + `three` + `@react-three/drei` — 3D globe on Overview (planned). React Flow (`@xyflow/react`) — 2D branch/book view (planned). Framer Motion (`framer-motion`) — globe↔branch transition (planned). |
 | Deployment | Vercel |
 
 ---
@@ -85,8 +90,10 @@ src/
 │   │   ├── OpeningCatalogTreePreview.tsx  # recursive move-tree visualization
 │   │   └── OpeningMiniTree.tsx       # mini SVG look-ahead tree in the explorer sidebar
 │   ├── repertoire/
-│   │   ├── OpeningTreeFull.tsx       # D3 radial SVG tree — overview page
-│   │   ├── DashboardTree.tsx         # orchestrates OpeningTreeFull + TreeNodePanel on overview
+│   │   ├── OpeningTreeFull.tsx       # D3 radial SVG tree — legacy overview, kept as fallback
+│   │   ├── OpeningGlobe.tsx          # React Three Fiber 3D globe — planned overview replacement
+│   │   ├── BookBranchView.tsx        # React Flow 2D branch/book view — planned
+│   │   ├── DashboardTree.tsx         # orchestrates globe/branch views + TreeNodePanel on overview
 │   │   ├── TreeNodePanel.tsx         # right-side panel shown on node click
 │   │   ├── BookEditor.tsx            # create-book form
 │   │   └── BookCard.tsx              # book list card
@@ -247,6 +254,57 @@ attempted_at timestamptz
 UNIQUE(user_id, puzzle_id)
 ```
 
+`user_position_stats` - per-user, per-position, per-book training aggregate
+
+```sql
+user_id uuid (PK component, FK -> profiles)
+position_key text (PK component) -- toPositionKey(fen): normalized FEN sans clock fields
+book_id uuid (PK component, FK -> opening_books)
+times_visited int
+success_count int
+failure_count int
+last_visited_at timestamptz
+```
+
+`position_evals` - engine analysis results, populated lazily by client-side Stockfish
+
+```sql
+position_key text (PK component)
+depth smallint (PK component)
+eval_cp smallint (null if forced mate)
+mate_in smallint (null if not forced mate)
+best_move_uci text
+pv_uci text[] -- principal variation
+computed_at timestamptz
+```
+
+`drills` - pre-generated trainer drill units: intentional computer mistakes with punishment lines
+
+```sql
+id uuid (PK)
+book_id uuid (FK -> opening_books)
+user_id uuid (FK -> profiles)
+start_position_key text -- position shown to user before computer's mistake
+mistake_move_uci text -- the bad move the computer plays
+punishment_line_uci text[] -- forced response(s) user must find
+end_position_key text -- where forced line ends (multiple good moves exist)
+mistake_depth smallint -- move number within the book where mistake occurs
+eval_drop_cp smallint -- eval swing of the mistake
+difficulty_score real -- derived: mistake_depth + line_length - log(eval_drop)
+generated_at timestamptz
+```
+
+`drill_attempts` - log of individual drill sessions
+
+```sql
+id uuid (PK)
+drill_id uuid (FK -> drills)
+user_id uuid (FK -> profiles)
+succeeded boolean
+moves_played text[]
+attempted_at timestamptz
+```
+
 ### RLS Policies Summary
 
 - `profiles`: users read/write their own row only
@@ -255,6 +313,10 @@ UNIQUE(user_id, puzzle_id)
 - `puzzle_history`: private to each user
 - `position_cache`: readable by all authenticated users, written only by server (service role)
 - `puzzles`: readable by all authenticated users
+- `user_position_stats`: private to each user
+- `position_evals`: readable by all authenticated users, written only by server (service role)
+- `drills`: private to each user
+- `drill_attempts`: private to each user
 
 ---
 
@@ -280,6 +342,29 @@ Until Prisma is introduced, all DB access goes through the Supabase JS client in
 ---
 
 ## Key Architectural Decisions
+
+### Architecture decision: position-stats overlay, not a graph database
+
+User repertoire books are stored as `MoveNode` JSONB trees (user's authorial choices, one response per position). The global position graph already exists as `openingCatalogIndex.json` (in-memory, 3,690 openings, O(1) lookups via `byPositionKey`). There is no benefit to migrating this to a Supabase `positions`/`edges` table at our scale.
+
+Training statistics are stored per-position in `user_position_stats`, keyed by `(user_id, position_key, book_id)`. `position_key` = output of `toPositionKey(fen)` from `fen.ts` — normalized FEN without clock fields. This handles transpositions automatically (same board state reached via different move orders → same key, aggregated stats).
+
+Weakness score is computed at query time: `(failure_count + 1) / (times_visited + 2) × log(1 + days_since_last_visit)` (Laplace-smoothed). Not stored.
+
+### Compute strategy
+
+| Operation | Where | Why |
+|---|---|---|
+| Opening name lookup | Client (in-memory catalog) | Instant, no roundtrip |
+| Master game stats | Vercel API → position_cache → Lichess | Already proxied and cached |
+| Engine analysis | Client (Stockfish WebWorker) | Already true; WASM runs browser-side |
+| Report eval to DB | Vercel API → upsert position_evals | Single-row write, service role |
+| Generate drills from book | Client (walks move_node, joins position_evals) | Light local computation |
+| Store generated drill | Vercel API → insert drills | Single-row write |
+| Pick weakest drills for session | Client (one Supabase fetch + in-memory sort) | Light query |
+| Record drill result | Vercel API → upsert user_position_stats + drill_attempts | Single-row write |
+
+**Rule: Vercel functions do `SELECT WHERE pk = ?` and `INSERT/UPDATE single row`. Anything involving iteration, tree-walking, or aggregation runs client-side.**
 
 ### Stockfish runs client-side, not server-side
 
@@ -394,7 +479,9 @@ MIN_W=1.2 / MID_W=4.1 / MAX_W=6.7
 
 ---
 
-#### Repertoire Tree (`OpeningTreeFull`) — Dashboard Overview
+#### Repertoire Tree (`OpeningTreeFull`) — Dashboard Overview (legacy, preserved as fallback)
+
+> **Status: Legacy.** `OpeningGlobe` is the planned replacement. Do not delete `OpeningTreeFull.tsx` until the globe is stable and shipped. `DashboardTree.tsx` currently imports this component; when the globe is ready, `DashboardTree` will switch imports.
 
 **Location:** `src/components/repertoire/OpeningTreeFull.tsx`  
 **Orchestrator:** `src/components/repertoire/DashboardTree.tsx`  
@@ -418,6 +505,57 @@ MIN_W=1.2 / MID_W=4.1 / MAX_W=6.7
 **Book management:** `DashboardTree` handles book switching, ghost node expansion (top master continuations fetched once on click), and saving via `PATCH /api/openings/books/[bookId]`. Search bar highlights matching ECO paths via `searchCatalogMatches`.
 
 **Library:** D3.js (`import * as d3 from "d3"`). No code shared with `OpeningMiniTree`.
+
+---
+
+#### Opening Globe (`OpeningGlobe`) — Dashboard Overview (planned)
+
+**Location:** `src/components/repertoire/OpeningGlobe.tsx`  
+**Orchestrator:** `src/components/repertoire/DashboardTree.tsx` (will replace `OpeningTreeFull` import once stable)
+
+**Purpose:** A slowly rotating 3D globe of the ECO opening catalog. Nodes represent chess positions arranged by ECO group and depth. Clicking a branch or ECO group triggers an animated transition to `BookBranchView`.
+
+**Library:** React Three Fiber (`@react-three/fiber`) + `@react-three/drei` helpers + `three` base. No D3.
+
+**Physics:** Spring-based node animation (`@react-spring/three` or custom Three.js animation loop) for floaty idle movement. Nodes at the same depth orbit at consistent radii. Continuous slow rotation when idle.
+
+**Visual states per node:**
+- User book node: emerald highlight
+- Catalog-only: muted
+- Hover: tooltip with ECO name + stats
+
+**Transition:** Clicking a branch fires a Framer Motion transition that swaps in `BookBranchView`. Reverse "back to globe" button restores the globe. Both views rendered inside `DashboardTree`; only one visible at a time.
+
+**URL state:** No route change. `?book=<bookId>` query param set when entering branch view, cleared on return.
+
+**Does NOT:** render the branch node graph — that is `BookBranchView`.
+
+---
+
+#### Book Branch View (`BookBranchView`) — Dashboard branch/book view (planned)
+
+**Location:** `src/components/repertoire/BookBranchView.tsx`  
+**Orchestrator:** `src/components/repertoire/DashboardTree.tsx`
+
+**Purpose:** A 2D interactive node-edge graph of a focused opening book or ECO subtree. Appears after the globe-to-branch transition. Shows user book lines alongside master game continuations and engine-flagged unsound moves. Serves as the primary visual for the drill heat-map overlay.
+
+**Library:** React Flow (`@xyflow/react`) with d3-force layout plugin for floaty physics. No D3 or Three.js.
+
+**Edge types (three distinct styles):**
+- Dark/thick: user's opening book main line
+- Regular: master game continuations and sidelines the user has explored
+- Dashed: moves with significant engine eval drop sourced from `position_evals`; also applied to moves surfaced by drills as "unsound opponent mistakes"
+
+**Node coloring:** Heat-map by success rate from `user_position_stats`. Unvisited nodes are muted; frequently failed nodes are warm-colored. This is the primary weakness visualization.
+
+**Physics:** d3-force layout with gentle collision and centering forces. Nodes settle into a stable layout but spring on interaction for the floaty feel.
+
+**Interaction:**
+- Click node → select position, show detail panel (board preview, stats, drill action)
+- Expand node → fetch top master continuations via `position_cache` API
+- "Back to globe" → reverse Framer Motion transition
+
+**Does NOT:** replace the board-based Opening Explorer. The detail panel can link to the explorer for deeper analysis.
 
 ---
 
@@ -558,7 +696,13 @@ LICHESS_API_TOKEN=lip_...
 - Do not add forward-navigation logic that bypasses the `isBoardOnHighlightedLine` check — forward controls must be gated on board alignment with the highlighted line
 - Do not rename the `proxy` export in `src/proxy.ts` to `middleware` — Next.js 16 requires the export to be named `proxy`, not `middleware`
 - Do not use the React Compiler — it is not enabled in this project
-- Do not use D3.js in `OpeningMiniTree` — it uses pure React + SVG only. D3 is only used in `OpeningTreeFull`.
+- Do not use D3.js in `OpeningMiniTree` — it uses pure React + SVG only. D3 is only used in the legacy `OpeningTreeFull`.
 - Do not give `OpeningMiniTree` its own API calls — it consumes `explorerMoves`, `historyPlayedFractions`, and `historyAlternates` passed as props from `OpeningExplorer`. All Lichess data flows through `OpeningExplorer`.
 - Do not use `h-[calc(100vh-8rem)]` or other large offsets for the explorer height — the correct value is `h-[calc(100vh-3.5rem)]` based on the dashboard layout's actual padding (see Opening Explorer section).
+- Do not migrate `openingCatalogIndex.json` to Supabase — it is a deduplicated, transposition-aware in-memory graph already; moving it adds DB roundtrips with no benefit at this scale.
+- Do not build a separate global `positions` or `edges` table in Supabase — the catalog index and `position_cache` already serve these roles. Training stats belong in `user_position_stats` keyed by position_key.
+- Do not run Stockfish analysis or drill generation inside Vercel serverless functions — both are client-side operations. Vercel functions only persist results (single-row upserts).
+- Do not add React Flow (`@xyflow/react`) to `OpeningTreeFull` or `OpeningGlobe` — React Flow is for `BookBranchView` only. The legacy radial tree uses D3; the globe uses React Three Fiber.
+- Do not use React Three Fiber or Three.js in `BookBranchView` or `OpeningMiniTree` — Three.js is only for `OpeningGlobe`.
+- Do not delete `OpeningTreeFull.tsx` until `OpeningGlobe` is stable and shipped — it is the current live implementation and preserved fallback.
 <!-- END:nextjs-agent-rules -->
