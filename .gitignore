@@ -46,3 +46,10 @@ supabase/.temp/
 # Unused full-size Stockfish build (107 MB) — app uses the lite variants
 public/engine/stockfish-18-single.js
 public/engine/stockfish-18-single.wasm
+
+# Developer process notes — local only, not for version control
+.dev-notes/
+
+#Hide agents from git deployment
+AGENTS.md
+CLAUDE.MD

@@ -537,25 +537,31 @@ MIN_W=1.2 / MID_W=4.1 / MAX_W=6.7
 **Location:** `src/components/repertoire/BookBranchView.tsx`  
 **Orchestrator:** `src/components/repertoire/DashboardTree.tsx`
 
-**Purpose:** A 2D interactive node-edge graph of a focused opening book or ECO subtree. Appears after the globe-to-branch transition. Shows user book lines alongside master game continuations and engine-flagged unsound moves. Serves as the primary visual for the drill heat-map overlay.
+> **Architecture note:** The 2D React Flow approach is under reconsideration. The 3D globe aesthetic is strongly preferred; the branch view may remain 3D (React Three Fiber) for a unified look. React Flow is kept as a fallback low-graphics option for weaker hardware. This section describes the intended feature behaviour regardless of final rendering library.
 
-**Library:** React Flow (`@xyflow/react`) with d3-force layout plugin for floaty physics. No D3 or Three.js.
+**Two sub-modes within `BookBranchView`:**
 
-**Edge types (three distinct styles):**
-- Dark/thick: user's opening book main line
-- Regular: master game continuations and sidelines the user has explored
-- Dashed: moves with significant engine eval drop sourced from `position_evals`; also applied to moves surfaced by drills as "unsound opponent mistakes"
+**1. Opening Book Branch View** — centred on the user's opening repertoire, entered from the globe via branch transition.
+- Shows the user's entire book tree with sidelines at every node (master continuations fetched from `position_cache`)
+- Previous-path subtrees visible so the user can assess their overall coverage
+- Node colour: heat-map by success rate (`user_position_stats`). Unvisited = muted/pale; frequently failed = warm
+- Node size + edge brightness: proportional to games played at that position (same weight system as the lab globe)
+- Unused/pruned branches fade out over time (animated prune, with undo capability — undo does not need to be instant and may use an animation to cover loading time)
+- Future colour system: pale nodes + faded edges for positions the user has never reached, with a toggle to define "reached" as: imported PGNs, opening drills, or both. Edges between nodes of different colours fade between the two endpoint colours.
 
-**Node coloring:** Heat-map by success rate from `user_position_stats`. Unvisited nodes are muted; frequently failed nodes are warm-colored. This is the primary weakness visualization.
+**2. Branch Expansion View** — follows a single game line outward to significant depth.
+- Max render depth: 25 moves. Edge length is a fixed constant regardless of depth (`edgeLength = BRANCH_STEP`, not normalised to a max radius) so deep lines extend far from centre. Camera pan/follow needed.
+- Previous-path subtrees not displayed (too cluttered at depth 25); the user follows the line forward.
+- A depth indicator or breadcrumb shows how far from the opening root the user currently is.
 
-**Physics:** d3-force layout with gentle collision and centering forces. Nodes settle into a stable layout but spring on interaction for the floaty feel.
+**Shared visual rules (both sub-modes):**
+- Edge types: dark/thick = user's book main line; regular = explored sidelines; dashed = positions with significant eval drop (from `position_evals`) or unsound moves surfaced by drills
+- Node sizing: driven by `weight` field (games played or engine eval toggle, same as globe lab) — larger nodes = more important positions
+- Physics: floaty spring-based idle movement (same R3F philosophy as the globe)
 
-**Interaction:**
-- Click node → select position, show detail panel (board preview, stats, drill action)
-- Expand node → fetch top master continuations via `position_cache` API
-- "Back to globe" → reverse Framer Motion transition
+**Transition into branch view:** Framer Motion (or R3F camera animation if staying 3D) animates from the globe's radial layout to the branch layout. The transition normalises the branch orientation to face right and zooms in to fill the viewport.
 
-**Does NOT:** replace the board-based Opening Explorer. The detail panel can link to the explorer for deeper analysis.
+**Does NOT:** replace the board-based Opening Explorer. The detail panel links to the explorer for deeper analysis.
 
 ---
 
@@ -702,7 +708,7 @@ LICHESS_API_TOKEN=lip_...
 - Do not migrate `openingCatalogIndex.json` to Supabase — it is a deduplicated, transposition-aware in-memory graph already; moving it adds DB roundtrips with no benefit at this scale.
 - Do not build a separate global `positions` or `edges` table in Supabase — the catalog index and `position_cache` already serve these roles. Training stats belong in `user_position_stats` keyed by position_key.
 - Do not run Stockfish analysis or drill generation inside Vercel serverless functions — both are client-side operations. Vercel functions only persist results (single-row upserts).
-- Do not add React Flow (`@xyflow/react`) to `OpeningTreeFull` or `OpeningGlobe` — React Flow is for `BookBranchView` only. The legacy radial tree uses D3; the globe uses React Three Fiber.
-- Do not use React Three Fiber or Three.js in `BookBranchView` or `OpeningMiniTree` — Three.js is only for `OpeningGlobe`.
+- Do not add React Flow (`@xyflow/react`) to `OpeningTreeFull` or `OpeningGlobe` — React Flow is reserved for `BookBranchView` as a low-graphics fallback only. The legacy radial tree uses D3; the globe uses React Three Fiber.
+- Do not use React Three Fiber or Three.js in `OpeningMiniTree` — Three.js is only for `OpeningGlobe` and potentially `BookBranchView`.
 - Do not delete `OpeningTreeFull.tsx` until `OpeningGlobe` is stable and shipped — it is the current live implementation and preserved fallback.
 <!-- END:nextjs-agent-rules -->
