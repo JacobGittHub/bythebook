@@ -3,6 +3,7 @@
 import { Component, useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import type { GlobeConfig, RendererStats } from "@/components/lab/GlobeTest";
+import type { ChessMapConfig } from "@/components/lab/ChessMap";
 
 // ── Error boundary ────────────────────────────────────────────────────────────
 
@@ -47,7 +48,25 @@ const GlobeTest = dynamic(() => import("@/components/lab/GlobeTest"), {
   ),
 });
 
+const ChessMap = dynamic(() => import("@/components/lab/ChessMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
+      Loading map…
+    </div>
+  ),
+});
+
 // ── Config defaults ───────────────────────────────────────────────────────────
+
+const DEFAULT_MAP_CONFIG: ChessMapConfig = {
+  maxNodes: 200,
+  baseBranchLength: 300,
+  depthDecay: 0.48,
+  retrogradeStrength: 0.55,
+  lineWidthMax: 10,
+  showGhostLines: true,
+};
 
 const DEFAULT_CONFIG: GlobeConfig = {
   nodeCount: 40,
@@ -58,15 +77,15 @@ const DEFAULT_CONFIG: GlobeConfig = {
   dataSource: "synthetic",
   layout: "fibonacci",
   showLabels: false,
-  nodeSizeByWeight: false,
+  scaleByWeight: false,
   nodeEntryAnim: "none",
   nodeAnimDuration: 0.4,
   buildAnim: false,
   buildAnimSpeed: 10,
   buildAnimPriority: 0,
   engineBias: 0,
-  edgeWeight: 0.8,
-  edgeWeightByChild: false,
+  edgeWidth: 1.5,
+  edgeWidthMax: 5,
 };
 
 // ── Sidebar primitives ────────────────────────────────────────────────────────
@@ -170,12 +189,13 @@ function priorityLabel(v: number) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-const TABS = ["Globe (R3F)", "React Flow", "Transitions"] as const;
+const TABS = ["Globe (R3F)", "2D Map"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function LabPage() {
   const [tab, setTab] = useState<Tab>("Globe (R3F)");
   const [config, setConfig] = useState<GlobeConfig>(DEFAULT_CONFIG);
+  const [mapConfig, setMapConfig] = useState<ChessMapConfig>(DEFAULT_MAP_CONFIG);
   const [animResetToken, setAnimResetToken] = useState(0);
   const [animProgress, setAnimProgress] = useState({ visible: 0, total: 0 });
 
@@ -226,17 +246,47 @@ export default function LabPage() {
               <GlobeTest config={config} onStats={handleStats} animResetToken={animResetToken} onProgress={handleProgress} />
             </CanvasErrorBoundary>
           )}
-          {tab === "React Flow" && (
-            <div className="flex h-full items-center justify-center rounded-xl bg-[var(--bg-muted)] text-sm text-[var(--text-muted)]">
-              React Flow — add when ready
-            </div>
-          )}
-          {tab === "Transitions" && (
-            <div className="flex h-full items-center justify-center rounded-xl bg-[var(--bg-muted)] text-sm text-[var(--text-muted)]">
-              Framer Motion — add when ready
-            </div>
+          {tab === "2D Map" && (
+            <CanvasErrorBoundary>
+              <ChessMap config={mapConfig} />
+            </CanvasErrorBoundary>
           )}
         </div>
+
+        {/* Sidebar — 2D Map tab */}
+        {tab === "2D Map" && (
+          <div className="flex w-52 flex-col gap-3 overflow-y-auto rounded-xl bg-[var(--bg-sidebar)] p-3 text-[var(--bg-sidebar-text)]">
+            <Section title="Layout" defaultOpen>
+              <Slider label="Nodes at 1×" value={mapConfig.maxNodes} min={50} max={800} step={50}
+                onChange={(v) => setMapConfig((c) => ({ ...c, maxNodes: v }))}
+                note="Zoom in to reveal more detail (LOD)" />
+              <Slider label="Branch length" value={mapConfig.baseBranchLength} min={80} max={400} step={10}
+                onChange={(v) => setMapConfig((c) => ({ ...c, baseBranchLength: v }))} />
+              <Slider label="Depth decay" value={mapConfig.depthDecay} min={0.45} max={0.95} step={0.01}
+                onChange={(v) => setMapConfig((c) => ({ ...c, depthDecay: v }))}
+                display={(v) => v.toFixed(2)} />
+            </Section>
+            <Divider />
+            <Section title="Branches" defaultOpen>
+              <Slider label="Max line width" value={mapConfig.lineWidthMax} min={2} max={20} step={0.5}
+                onChange={(v) => setMapConfig((c) => ({ ...c, lineWidthMax: v }))}
+                display={(v) => `${v.toFixed(1)}px`} />
+              <Slider label="Retrograde" value={mapConfig.retrogradeStrength} min={0} max={1} step={0.05}
+                onChange={(v) => setMapConfig((c) => ({ ...c, retrogradeStrength: v }))}
+                display={(v) => v.toFixed(2)}
+                note="0 = all branches fan outward · 1 = least popular fold fully back" />
+              <Toggle label="Ghost lines" checked={mapConfig.showGhostLines}
+                onChange={(v) => setMapConfig((c) => ({ ...c, showGhostLines: v }))} />
+            </Section>
+            <Divider />
+            <button
+              onClick={() => setMapConfig(DEFAULT_MAP_CONFIG)}
+              className="rounded-lg bg-white/5 px-3 py-2 text-xs text-[var(--bg-sidebar-muted)] transition-colors hover:text-[var(--bg-sidebar-text)]"
+            >
+              Reset defaults
+            </button>
+          </div>
+        )}
 
         {/* Sidebar — Globe tab only */}
         {tab === "Globe (R3F)" && (
@@ -259,6 +309,7 @@ export default function LabPage() {
               <Toggle label="Labels" checked={config.showLabels} onChange={tog("showLabels")} />
               <SideValue>{animProgress.total} nodes</SideValue>
             </div>
+            <Toggle label="Scale by popularity" checked={config.scaleByWeight} onChange={tog("scaleByWeight")} />
 
             <Divider />
 
@@ -279,17 +330,18 @@ export default function LabPage() {
             <Section title="Edges" defaultOpen>
               <Slider label="Opacity" value={config.edgeOpacity} min={0} max={1} step={0.05}
                 onChange={set("edgeOpacity")} display={(v) => v.toFixed(2)} />
-              <Slider label="Brightness" value={config.edgeWeight} min={0} max={1} step={0.05}
-                onChange={set("edgeWeight")} display={(v) => v.toFixed(2)}
-                note="Visual weight proxy — true px-width lines require Line2 (future)" />
-              <Toggle label="Weight by child" checked={config.edgeWeightByChild} onChange={tog("edgeWeightByChild")} />
+              <Slider label="Width (px)" value={config.edgeWidth} min={0.5} max={8} step={0.25}
+                onChange={set("edgeWidth")} display={(v) => `${v.toFixed(2)}px`} />
+              {config.scaleByWeight && (
+                <Slider label="Max width (px)" value={config.edgeWidthMax} min={1} max={12} step={0.5}
+                  onChange={set("edgeWidthMax")} display={(v) => `${v.toFixed(1)}px`} />
+              )}
             </Section>
 
             <Divider />
 
             {/* ── Nodes ──────────────────────────────────────────────────── */}
             <Section title="Nodes">
-              <Toggle label="Size by weight" checked={config.nodeSizeByWeight} onChange={tog("nodeSizeByWeight")} />
               <div className="flex flex-col gap-0.5">
                 <SideLabel>Entry animation</SideLabel>
                 <select value={config.nodeEntryAnim}

@@ -155,7 +155,7 @@ export function useEngine(fen: string, mode: EngineMode): UseEngineResult {
       setIsReady(false);
       setIsAnalyzing(false);
     };
-  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   // Restart analysis whenever the position changes.
   useEffect(() => {
@@ -182,7 +182,7 @@ export function useEngine(fen: string, mode: EngineMode): UseEngineResult {
       worker.postMessage(`position fen ${fen}`);
       worker.postMessage(`go depth ${depthRef.current}`);
     }
-  }, [fen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fen]);
 
   return { lines, isReady, isAnalyzing };
 }

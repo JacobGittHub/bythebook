@@ -47,9 +47,20 @@ supabase/.temp/
 public/engine/stockfish-18-single.js
 public/engine/stockfish-18-single.wasm
 
-# Developer process notes — local only, not for version control
-.dev-notes/
-
-#Hide agents from git deployment
-AGENTS.md
-CLAUDE.MD
+# ---------------------------------------------------------------------------
+# Agent-facing documentation and settings — local only, never version controlled.
+#
+# AGENTS.md is the entry point (CLAUDE.md just imports it); .dev-notes/ holds
+# the architecture and design docs it points to. .claude/settings.local.json
+# blocks agent git mutations.
+#
+# NOTE: `git rm --cached` was run on AGENTS.md / CLAUDE.md / memory/ to untrack
+# them. That stops future commits but does NOT purge them from existing history
+# on the remote — older commits still expose them. Rewriting history would
+# require git filter-repo + a force push.
+# ---------------------------------------------------------------------------
+#AGENTS.md
+#CLAUDE.md
+#.dev-notes/
+memory/
+.claude/settings.local.json

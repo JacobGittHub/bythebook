@@ -7,8 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "catalog:download": "node scripts/buildCatalog.mjs",
-    "catalog:index": "node scripts/buildOpeningCatalogIndex.mjs"
+    "catalog:index": "node scripts/buildOpeningCatalogIndex.mjs",
+    "db:types": "supabase gen types typescript --project-id bcpkifxnjfjzfrqvpkby > src/types/database.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -30,13 +33,14 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/d3": "^7.4.3",
-    "@types/node": "^20",
+    "@types/node": "^22.20.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "supabase": "^2.92.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.2"
   }
 }

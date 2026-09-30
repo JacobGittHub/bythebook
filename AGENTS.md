@@ -1,714 +1,171 @@
 <!-- BEGIN:nextjs-agent-rules -->
-# AGENTS.md - Chess Trainer Project
+# This is NOT the Next.js you know
 
-This file provides context, architecture decisions, and coding guidelines for AI coding agents working on this project. Read this fully before making any changes.
-
----
-
-## Project Overview
-
-A chess opening training web application. Users build personal opening repertoires (books), explore master-game statistics, and drill against the app in structured training sessions. The trainer generates "drills" — intentional computer mistakes that the user must punish — derived from the user's own opening lines.
-
-Deployed on Vercel + Supabase free tier. Expected concurrent users: small (planned for ~2-3, architected to handle up to ~50 without changes). If the Vercel URL is shared publicly, enable UptimeRobot (free) to ping the URL every 24 hours to prevent Supabase free-tier auto-pause.
-
-**Feature status:**
-- ✅ Opening Explorer (board + master stats + mini tree + engine)
-- ✅ Repertoire management (books, radial catalog tree, book editor)
-- ✅ Dashboard Overview (radial ECO tree, book overlay, node panel)
-- 🔜 Dashboard Globe + Branch View (3D globe replacing radial tree, animated branch expansion, drill heat-map overlay)
-- 🔜 Opening Trainer (drills, position stats, weakness map)
-- 🔜 Puzzle Trainer (Lichess puzzles, unlimited free)
-- ⏳ Position concept questions — future/experimental
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript (strict) |
-| Styling | Tailwind CSS v4 |
-| Auth | Supabase Auth with `@supabase/ssr` |
-| Database | Supabase (Postgres) |
-| ORM | None currently - raw Supabase JS client. Prisma may be introduced later. |
-| Chess logic | `chess.js` |
-| Chess board UI | `react-chessboard` |
-| Chess engine | `stockfish` (npm) - WASM, runs client-side in a Web Worker |
-| Opening catalog | Pre-generated local ECO index (3690+ openings from Lichess ECO data, built by `scripts/buildCatalog.mjs` + `scripts/buildOpeningCatalogIndex.mjs`) |
-| Opening stats | Lichess Opening Explorer API (`explorer.lichess.ovh`) - proxied through API routes, used for master-game win/draw/loss data |
-| Puzzle data | Lichess puzzle database dump (imported into Supabase) |
-| Graph visualization | D3.js (`d3`) — legacy radial catalog tree (`OpeningTreeFull`, kept as fallback). React Three Fiber (`@react-three/fiber`) + `three` + `@react-three/drei` — 3D globe on Overview (planned). React Flow (`@xyflow/react`) — 2D branch/book view (planned). Framer Motion (`framer-motion`) — globe↔branch transition (planned). |
-| Deployment | Vercel |
-
----
-
-## Repository Structure
-
-```txt
-scripts/
-├── buildCatalog.mjs                  # downloads ECO TSV data from Lichess GitHub
-└── buildOpeningCatalogIndex.mjs      # parses PGNs and emits openingCatalogIndex.json
-
-src/
-├── app/
-│   ├── layout.tsx
-│   ├── page.tsx
-│   ├── auth/
-│   │   ├── login/page.tsx
-│   │   └── register/page.tsx
-│   ├── dashboard/
-│   │   ├── layout.tsx
-│   │   ├── page.tsx                  # Overview page — renders DashboardTree
-│   │   ├── explorer/page.tsx         # Opening Explorer page
-│   │   ├── train/
-│   │   │   ├── page.tsx
-│   │   │   └── [bookId]/page.tsx
-│   │   ├── repertoire/page.tsx
-│   │   ├── puzzles/page.tsx
-│   │   └── settings/page.tsx
-│   └── api/
-│       ├── openings/
-│       │   ├── explorer/route.ts
-│       │   ├── books/route.ts        # GET list, POST create
-│       │   └── books/[bookId]/route.ts  # PATCH update moveNode
-│       ├── training/
-│       │   └── sessions/route.ts
-│       ├── puzzles/route.ts
-│       └── user/route.ts
-├── components/
-│   ├── ui/
-│   ├── board/
-│   │   ├── BoardBase.tsx             # sole react-chessboard wrapper, no game logic
-│   │   ├── BoardInteractive.tsx      # playable board via useChessGame + scripted commands
-│   │   ├── BoardDisplay.tsx          # static/thumbnail board
-│   │   └── boardTheme.ts             # Lichess classic square/piece colors
-│   ├── openings/
-│   │   ├── OpeningExplorer.tsx       # top-level orchestrator for the explorer feature
-│   │   ├── OpeningCatalogSearch.tsx  # search input
-│   │   ├── OpeningCatalogResults.tsx # result cards with Highlight Path action
-│   │   ├── OpeningCatalogTreePreview.tsx  # recursive move-tree visualization
-│   │   └── OpeningMiniTree.tsx       # mini SVG look-ahead tree in the explorer sidebar
-│   ├── repertoire/
-│   │   ├── OpeningTreeFull.tsx       # D3 radial SVG tree — legacy overview, kept as fallback
-│   │   ├── OpeningGlobe.tsx          # React Three Fiber 3D globe — planned overview replacement
-│   │   ├── BookBranchView.tsx        # React Flow 2D branch/book view — planned
-│   │   ├── DashboardTree.tsx         # orchestrates globe/branch views + TreeNodePanel on overview
-│   │   ├── TreeNodePanel.tsx         # right-side panel shown on node click
-│   │   ├── BookEditor.tsx            # create-book form
-│   │   └── BookCard.tsx              # book list card
-│   ├── training/
-│   └── puzzles/
-├── lib/
-│   ├── supabase.ts
-│   ├── db/
-│   │   ├── users.ts
-│   │   ├── openings.ts               # listOpeningBooks, getOpeningBook, createOpeningBook, updateOpeningBookTree
-│   │   ├── sessions.ts
-│   │   ├── puzzles.ts
-│   │   └── positionCache.ts
-│   ├── chess/
-│   │   ├── openingCatalog.ts         # search/match API + buildDefaultCatalogTree()
-│   │   ├── moveTree.ts               # MoveNode tree construction and navigation
-│   │   ├── linePlayback.ts           # ScriptedBoardCommand factory + prefix helpers
-│   │   ├── lichessExplorer.ts        # Lichess master-games API client
-│   │   ├── fen.ts                    # normalizeFen, toPositionKey, START_FEN
-│   │   └── generated/
-│   │       └── openingCatalogIndex.json  # auto-generated — do not hand-edit
-│   └── validators/
-│       └── schemas.ts
-├── hooks/
-│   ├── useChessGame.ts               # chess.js state wrapper (makeMove, undoMove, etc.)
-│   ├── useOpeningExplorer.ts         # single-position Lichess explorer hook
-│   └── useOpeningExplorerMulti.ts    # batched parallel Lichess fetches for history positions
-├── types/
-│   ├── database.ts                   # auto-generated by Supabase CLI — do not hand-edit
-│   ├── chess.ts
-│   ├── training.ts
-│   └── user.ts
-├── proxy.ts
-└── workers/
-    └── stockfish.worker.ts
-```
-
----
-
-## Opening Catalog Architecture
-
-The opening catalog is entirely local and pre-generated — no runtime parsing or external API calls are needed to identify opening names and lines.
-
-### Build pipeline
-
-Two npm scripts populate the catalog data:
-
-1. **`npm run catalog:download`** (`scripts/buildCatalog.mjs`)
-   - Fetches ECO volumes A–E from `https://github.com/lichess-org/chess-openings`
-   - Writes `src/lib/chess/ecoData.json` — raw `{ eco, name, pgn }` tuples
-
-2. **`npm run catalog:index`** (`scripts/buildOpeningCatalogIndex.mjs`)
-   - Replays every PGN with chess.js to generate per-move FENs and UCI strings
-   - Writes `src/lib/chess/generated/openingCatalogIndex.json` (v2 format)
-
-Both output files are committed to the repo so the app never generates them at runtime.
-
-### Catalog index format (`openingCatalogIndex.json`)
-
-```ts
-{
-  version: 2;
-  openings: GeneratedCatalogOpening[];   // 3690+ entries
-  indexes: {
-    byEco: Record<string, string[]>;          // normalized ECO → opening IDs
-    byUciPrefix: Record<string, string[]>;    // space-joined UCI line → opening IDs
-    byPositionKey: Record<string, string[]>;  // board+turn+castling+ep → opening IDs
-  };
-}
-```
-
-All three indexes support O(1) lookup. `toPositionKey()` in `fen.ts` strips the halfmove and fullmove clock so transpositions that reach the same position are grouped together.
-
-### Public API (`openingCatalog.ts`)
-
-| Function | Description |
-|---|---|
-| `searchCatalogMatches(query, max)` | Full-text search by ECO code, name, or PGN |
-| `getCatalogMatchesForUciLine(uciMoves, max)` | Openings where `uciMoves` is an exact prefix of the opening line |
-| `getCatalogMatchesForFen(fen, max)` | Openings that reach the same board position (transposition-aware) |
-| `buildCatalogPreview(matches, rootFen)` | Merge multiple lines into a single `MoveNode` tree for display |
-| `buildDefaultCatalogTree()` | Build the full ECO catalog as a `MoveNode` tree for the overview radial tree (cached module-level) |
-
-`CatalogMatch` objects and `MoveNode` trees are lazily built and cached in module-level Maps.
-
----
-
-## Database Schema
-
-The database is hosted on Supabase (Postgres). All tables have Row Level Security (RLS) enabled.
-
-### Tables
-
-`profiles` - extends `auth.users`, stores display info
-
-```sql
-id uuid (PK, FK -> auth.users)
-username text (unique)
-created_at timestamptz
-updated_at timestamptz
-```
-
-`opening_books` - user repertoires/playbooks
-
-```sql
-id uuid (PK)
-user_id uuid (FK -> profiles)
-name text
-color text ('white' | 'black')
-move_node jsonb
-is_public boolean
-created_at timestamptz
-updated_at timestamptz
-```
-
-`training_sessions` - results of each training drill
-
-```sql
-id uuid (PK)
-user_id uuid (FK -> profiles)
-book_id uuid (FK -> opening_books, nullable)
-result text ('pass' | 'fail' | 'abandoned')
-moves_played jsonb
-correct_moves int
-total_moves int
-duration_seconds int
-created_at timestamptz
-```
-
-`position_cache` - cached Lichess Opening Explorer API responses
-
-```sql
-fen text (PK)
-explorer_data jsonb
-cached_at timestamptz
-```
-
-`puzzles` - imported from Lichess puzzle database dump
-
-```sql
-id text (PK)
-fen text
-moves text[]
-rating int
-themes text[]
-popularity int
-```
-
-`puzzle_history` - per-user puzzle attempt tracking
-
-```sql
-id uuid (PK)
-user_id uuid (FK -> profiles)
-puzzle_id text (FK -> puzzles)
-solved boolean
-time_seconds int
-attempted_at timestamptz
-UNIQUE(user_id, puzzle_id)
-```
-
-`user_position_stats` - per-user, per-position, per-book training aggregate
-
-```sql
-user_id uuid (PK component, FK -> profiles)
-position_key text (PK component) -- toPositionKey(fen): normalized FEN sans clock fields
-book_id uuid (PK component, FK -> opening_books)
-times_visited int
-success_count int
-failure_count int
-last_visited_at timestamptz
-```
-
-`position_evals` - engine analysis results, populated lazily by client-side Stockfish
-
-```sql
-position_key text (PK component)
-depth smallint (PK component)
-eval_cp smallint (null if forced mate)
-mate_in smallint (null if not forced mate)
-best_move_uci text
-pv_uci text[] -- principal variation
-computed_at timestamptz
-```
-
-`drills` - pre-generated trainer drill units: intentional computer mistakes with punishment lines
-
-```sql
-id uuid (PK)
-book_id uuid (FK -> opening_books)
-user_id uuid (FK -> profiles)
-start_position_key text -- position shown to user before computer's mistake
-mistake_move_uci text -- the bad move the computer plays
-punishment_line_uci text[] -- forced response(s) user must find
-end_position_key text -- where forced line ends (multiple good moves exist)
-mistake_depth smallint -- move number within the book where mistake occurs
-eval_drop_cp smallint -- eval swing of the mistake
-difficulty_score real -- derived: mistake_depth + line_length - log(eval_drop)
-generated_at timestamptz
-```
-
-`drill_attempts` - log of individual drill sessions
-
-```sql
-id uuid (PK)
-drill_id uuid (FK -> drills)
-user_id uuid (FK -> profiles)
-succeeded boolean
-moves_played text[]
-attempted_at timestamptz
-```
-
-### RLS Policies Summary
-
-- `profiles`: users read/write their own row only
-- `opening_books`: users manage their own; all authenticated users can read public books
-- `training_sessions`: private to each user
-- `puzzle_history`: private to each user
-- `position_cache`: readable by all authenticated users, written only by server (service role)
-- `puzzles`: readable by all authenticated users
-- `user_position_stats`: private to each user
-- `position_evals`: readable by all authenticated users, written only by server (service role)
-- `drills`: private to each user
-- `drill_attempts`: private to each user
-
----
-
-## Schema Migration Workflow
-
-Never change the database schema in the Supabase UI without also recording it as a migration file.
-
-Migration files live in `supabase/migrations/` and are named with a timestamp prefix.
-
-When making a schema change:
-1. Write a new `.sql` file in `supabase/migrations/` describing only the change.
-2. Run it in the Supabase SQL Editor.
-3. Regenerate TypeScript types:
-   ```bash
-   npx supabase gen types typescript --project-id bcpkifxnjfjzfrqvpkby > src/types/database.ts
-   ```
-4. Commit both the migration file and the updated `src/types/database.ts`.
-
-`src/types/database.ts` is auto-generated. Do not hand-edit this file.
-
-Until Prisma is introduced, all DB access goes through the Supabase JS client in `src/lib/db/`.
-
----
-
-## Key Architectural Decisions
-
-### Architecture decision: position-stats overlay, not a graph database
-
-User repertoire books are stored as `MoveNode` JSONB trees (user's authorial choices, one response per position). The global position graph already exists as `openingCatalogIndex.json` (in-memory, 3,690 openings, O(1) lookups via `byPositionKey`). There is no benefit to migrating this to a Supabase `positions`/`edges` table at our scale.
-
-Training statistics are stored per-position in `user_position_stats`, keyed by `(user_id, position_key, book_id)`. `position_key` = output of `toPositionKey(fen)` from `fen.ts` — normalized FEN without clock fields. This handles transpositions automatically (same board state reached via different move orders → same key, aggregated stats).
-
-Weakness score is computed at query time: `(failure_count + 1) / (times_visited + 2) × log(1 + days_since_last_visit)` (Laplace-smoothed). Not stored.
-
-### Compute strategy
-
-| Operation | Where | Why |
-|---|---|---|
-| Opening name lookup | Client (in-memory catalog) | Instant, no roundtrip |
-| Master game stats | Vercel API → position_cache → Lichess | Already proxied and cached |
-| Engine analysis | Client (Stockfish WebWorker) | Already true; WASM runs browser-side |
-| Report eval to DB | Vercel API → upsert position_evals | Single-row write, service role |
-| Generate drills from book | Client (walks move_node, joins position_evals) | Light local computation |
-| Store generated drill | Vercel API → insert drills | Single-row write |
-| Pick weakest drills for session | Client (one Supabase fetch + in-memory sort) | Light query |
-| Record drill result | Vercel API → upsert user_position_stats + drill_attempts | Single-row write |
-
-**Rule: Vercel functions do `SELECT WHERE pk = ?` and `INSERT/UPDATE single row`. Anything involving iteration, tree-walking, or aggregation runs client-side.**
-
-### Stockfish runs client-side, not server-side
-
-The chess engine runs entirely in the browser via a Web Worker.
-
-- Zero server compute cost for analysis
-- No queue system needed
-- `src/workers/stockfish.worker.ts` manages worker communication
-- `useEngine` provides the UI-facing hook
-- Vercel must serve the app with `Cross-Origin-Embedder-Policy: require-corp` and `Cross-Origin-Opener-Policy: same-origin` headers for multithreaded engine support
-
-### Lichess Opening Explorer is proxied
-
-All calls to `explorer.lichess.ovh` go through `src/app/api/openings/explorer/route.ts`.
-
-That route:
-1. Checks `position_cache` first
-2. Calls Lichess on cache miss
-3. Stores the result in `position_cache`
-4. Backs off on HTTP 429
-
-Never call the Lichess API directly from client components.
-
-### Opening books are stored as JSONB trees
-
-Opening repertoires are stored in the `move_node` JSONB column on `opening_books`, not as relational move rows.
-
-### Chessboard Architecture & UX
-
-We use a strict three-tier component architecture for chess boards to ensure consistency:
-1. **`BoardBase`**: The only component that wraps `react-chessboard`. Handles theming (`boardTheme.ts`). Has NO game logic.
-2. **`BoardDisplay` & `BoardInteractive`**: Wrappers around `BoardBase`. `BoardDisplay` is for static thumbnails. `BoardInteractive` is the playable board that hooks into `chess.js` via the `useChessGame` hook.
-3. **Feature Compositions**: Pages like `OpeningTrainer` and `PuzzleBoard` compose `BoardInteractive` with side panels. They do not define separate board components.
-
-**Critical UX Rule - Non-scrollable Board Pages:**
-Any page featuring a main interactive chessboard (training, puzzles, explorer) MUST fit within the viewport height. The page body `body` must not scroll. Use `h-[calc(100vh-<header>)]` on the main layout loop. The board should scale to fit the available height (`size="full"`), and only side panels (like move histories) are allowed to overflow and scroll internally. A scrollable chessboard page is considered a poor UX pattern in this app.
-
-**Visual Move Tree UI (Future Architectual Goal):**
-The right-hand side panel of the Opening Trainer will eventually host a literal node-link visual graph (a tree diagram) where users can intuitively see branches and click to select their active training line. Because of this, all opening repertoire data (`opening_books.move_node`) MUST be structured as a deeply nested Tree (`MoveNode` with `children: MoveNode[]`), rather than a flat array of lines. Every node must be uniquely identifiable to support opaque/faded visual states in the graph rendering.
-
-`MoveNode` shape:
-
-```ts
-type MoveNode = {
-  id: string;
-  san: string | null;
-  uci: string | null;
-  fen: string;
-  children: MoveNode[];
-};
-```
-
-The root node represents the starting position for the book and therefore uses `san: null` and `uci: null`.
-
----
-
-### Tree Visualization Architecture
-
-There are two distinct tree visualizations in this project. They share no code — different data, layout, interaction, and scale.
-
-#### Mini Tree (`OpeningMiniTree`) — Opening Explorer sidebar
-
-**Location:** `src/components/openings/OpeningMiniTree.tsx`
-
-**Purpose:** A lightweight tree visualization combining played history with look-ahead continuations. Shows where the game has gone (history path) and where master games go from here (continuation branches), plus common alternatives at each historical position.
-
-**Layout:** Horizontal left-to-right. Three logical sections:
-
-1. **History path** — one node per played move in a linear left-to-right chain. Up to 40 history nodes in a horizontally scrollable container; auto-scrolls (via `requestAnimationFrame`) to the newest node when history grows. White moves use a cream fill; black moves use a dark fill.
-2. **Current position node** — the last history node, rendered slightly larger.
-3. **Continuation branches** — up to 3 nodes branching right from the current position, one per top master-game continuation.
-
-**Alternate branches:** At each history node, up to 6 vertical branches fan above/below the main line — one per top master-game alternative that was NOT the move actually played. Alt nodes use the same white/black color coding. Alt node x-position: `histXs[i] - ALT_GAP` (placed just left of the history node they branch from). For odd alt counts the group is shifted downward by half a spacing so no alt falls exactly on the center line. Clicking an alternate navigates the board via `pendingPostResetMovesRef` + `pendingForwardMoves` queue.
-
-**Key layout constants:**
-```
-NODE_STEP = 72         // horizontal distance between history layers (viewBox units)
-ALT_GAP   = 20         // how far left of histXs[i] the alt circles sit
-VB_H      = 240        // viewBox height; CY = 120
-MAX_ALTS  = 6          // max alternate branches per history node
-MAX_CONT  = 3          // max continuation nodes
-```
-
-**Edge width formula** (piecewise, used for both history and alternate edges):
-```
-GAMES_KNEE = 50_000 / GAMES_SAT = 2_000_000
-MIN_W=1.2 / MID_W=4.1 / MAX_W=6.7
-< KNEE: linear MIN_W → MID_W
-≥ KNEE: linear MID_W → MAX_W (capped at SAT)
-```
-
-**Percentage labels:** All game-share labels use one decimal place (e.g., `0.3%`) to capture proportions at deep positions where values are sub-1%.
-
-**Hover tooltip:** Floating overlay near the hovered node with a `BoardDisplay` mini board, SAN + ECO name, and W/D/B data where available. Hovering a continuation node syncs a board arrow via `hoveredMoveUci`.
-
-**Click behavior:**
-- History node → resets board and replays to that position.
-- Continuation node → plays that move.
-- Alternate node → resets and replays the alternate line.
-
-**Data flow** (all data flows down from `OpeningExplorer`, no own API calls):
-- `moveHistory` — history nodes and FENs
-- `explorerMoves` — top continuations at current position
-- `historyPlayedFractions` / `historyPlayedGames` — edge widths, computed via `useOpeningExplorerMulti`
-- `historyAlternates` — up to 6 alts per position, computed via `useOpeningExplorerMulti`
-
-**Rendering:** Pure React + SVG. No D3. Container height `h-64` (256 px).
-
-**Does NOT:**
-- Have its own API calls — all data is passed as props from `OpeningExplorer`.
-- Interact with the highlighted opening line selection (that is the stats table's responsibility).
-
----
-
-#### Repertoire Tree (`OpeningTreeFull`) — Dashboard Overview (legacy, preserved as fallback)
-
-> **Status: Legacy.** `OpeningGlobe` is the planned replacement. Do not delete `OpeningTreeFull.tsx` until the globe is stable and shipped. `DashboardTree.tsx` currently imports this component; when the globe is ready, `DashboardTree` will switch imports.
-
-**Location:** `src/components/repertoire/OpeningTreeFull.tsx`  
-**Orchestrator:** `src/components/repertoire/DashboardTree.tsx`  
-**Side panel:** `src/components/repertoire/TreeNodePanel.tsx`
-
-**Purpose:** An interactive radial SVG tree showing the full ECO opening catalog overlaid with the user's book lines. Lives on the `/dashboard` (Overview) page. The user clicks nodes to explore positions; the right panel shows the board, master game stats, and book actions.
-
-**Data source:** `buildDefaultCatalogTree()` in `openingCatalog.ts` — builds a `MoveNode` tree from the local ECO index at startup (no API calls). Branching limits by depth: `[8, 5, 4, 3, 2]`. User's book nodes are highlighted in emerald (`#059669`); catalog-only nodes use muted styling.
-
-**Layout:** D3 radial tree (`d3.hierarchy` + `d3.tree`). Fixed per-depth radius (`PER_DEPTH_R = 60` viewBox units), overriding D3's default leaf-at-max-radius behavior. ViewBox: 500×500 centered at origin. Dot-grid background (SVG `<pattern>`). Pan/drag via mouse with a `dragOrigin` ref.
-
-**Key visual states per node:**
-- Book node (FEN in user's `bookFens` set): emerald fill + stroke
-- Selected path ancestors: `var(--text-primary)` fill, thick stroke
-- Search highlight: indigo (`#6366f1`)
-- Catalog-only: `var(--bg-muted)` fill, muted stroke
-- Ghost (expansion preview): dashed stroke, low opacity
-
-**Side panel (`TreeNodePanel`):** Always rendered (shows placeholder when no node selected). Displays: position board, ECO name from catalog, master game stats via `useOpeningExplorer`, book actions (Add/Remove), "Open in Explorer" (navigates to `/dashboard/explorer?fen=...`), "Train this book".
-
-**Book management:** `DashboardTree` handles book switching, ghost node expansion (top master continuations fetched once on click), and saving via `PATCH /api/openings/books/[bookId]`. Search bar highlights matching ECO paths via `searchCatalogMatches`.
-
-**Library:** D3.js (`import * as d3 from "d3"`). No code shared with `OpeningMiniTree`.
-
----
-
-#### Opening Globe (`OpeningGlobe`) — Dashboard Overview (planned)
-
-**Location:** `src/components/repertoire/OpeningGlobe.tsx`  
-**Orchestrator:** `src/components/repertoire/DashboardTree.tsx` (will replace `OpeningTreeFull` import once stable)
-
-**Purpose:** A slowly rotating 3D globe of the ECO opening catalog. Nodes represent chess positions arranged by ECO group and depth. Clicking a branch or ECO group triggers an animated transition to `BookBranchView`.
-
-**Library:** React Three Fiber (`@react-three/fiber`) + `@react-three/drei` helpers + `three` base. No D3.
-
-**Physics:** Spring-based node animation (`@react-spring/three` or custom Three.js animation loop) for floaty idle movement. Nodes at the same depth orbit at consistent radii. Continuous slow rotation when idle.
-
-**Visual states per node:**
-- User book node: emerald highlight
-- Catalog-only: muted
-- Hover: tooltip with ECO name + stats
-
-**Transition:** Clicking a branch fires a Framer Motion transition that swaps in `BookBranchView`. Reverse "back to globe" button restores the globe. Both views rendered inside `DashboardTree`; only one visible at a time.
-
-**URL state:** No route change. `?book=<bookId>` query param set when entering branch view, cleared on return.
-
-**Does NOT:** render the branch node graph — that is `BookBranchView`.
-
----
-
-#### Book Branch View (`BookBranchView`) — Dashboard branch/book view (planned)
-
-**Location:** `src/components/repertoire/BookBranchView.tsx`  
-**Orchestrator:** `src/components/repertoire/DashboardTree.tsx`
-
-> **Architecture note:** The 2D React Flow approach is under reconsideration. The 3D globe aesthetic is strongly preferred; the branch view may remain 3D (React Three Fiber) for a unified look. React Flow is kept as a fallback low-graphics option for weaker hardware. This section describes the intended feature behaviour regardless of final rendering library.
-
-**Two sub-modes within `BookBranchView`:**
-
-**1. Opening Book Branch View** — centred on the user's opening repertoire, entered from the globe via branch transition.
-- Shows the user's entire book tree with sidelines at every node (master continuations fetched from `position_cache`)
-- Previous-path subtrees visible so the user can assess their overall coverage
-- Node colour: heat-map by success rate (`user_position_stats`). Unvisited = muted/pale; frequently failed = warm
-- Node size + edge brightness: proportional to games played at that position (same weight system as the lab globe)
-- Unused/pruned branches fade out over time (animated prune, with undo capability — undo does not need to be instant and may use an animation to cover loading time)
-- Future colour system: pale nodes + faded edges for positions the user has never reached, with a toggle to define "reached" as: imported PGNs, opening drills, or both. Edges between nodes of different colours fade between the two endpoint colours.
-
-**2. Branch Expansion View** — follows a single game line outward to significant depth.
-- Max render depth: 25 moves. Edge length is a fixed constant regardless of depth (`edgeLength = BRANCH_STEP`, not normalised to a max radius) so deep lines extend far from centre. Camera pan/follow needed.
-- Previous-path subtrees not displayed (too cluttered at depth 25); the user follows the line forward.
-- A depth indicator or breadcrumb shows how far from the opening root the user currently is.
-
-**Shared visual rules (both sub-modes):**
-- Edge types: dark/thick = user's book main line; regular = explored sidelines; dashed = positions with significant eval drop (from `position_evals`) or unsound moves surfaced by drills
-- Node sizing: driven by `weight` field (games played or engine eval toggle, same as globe lab) — larger nodes = more important positions
-- Physics: floaty spring-based idle movement (same R3F philosophy as the globe)
-
-**Transition into branch view:** Framer Motion (or R3F camera animation if staying 3D) animates from the globe's radial layout to the branch layout. The transition normalises the branch orientation to face right and zooms in to fill the viewport.
-
-**Does NOT:** replace the board-based Opening Explorer. The detail panel links to the explorer for deeper analysis.
-
----
-
-#### On "pre-processing the opening tree"
-
-The infrastructure already exists in two forms:
-1. **`openingCatalogIndex.json`** — pre-generated at build time, covers 3,690 named openings. `buildDefaultCatalogTree()` reads this at runtime (cached module-level). Never fetches at request time.
-2. **`position_cache` table** — demand-driven cache of Lichess master-game data per FEN. Warms as users explore.
-
-Do not build a separate pre-processed master-game tree. The mini tree consumes `position_cache` indirectly via the explorer API route. The repertoire tree consumes the catalog and the user's `MoveNode` book.
-
-### Opening Explorer
-
-**Header card layout (two rows):**
-- Row 1: Title "Opening Explorer" + inline subtitle/match info (left) | flip button | search bar (right).
-- Row 2: Book selector (narrow, `w-44`) | "View Lines" dropdown (enumerates all leaf paths from active book's `moveNode`; selecting one replays that line) | "Add line" button (always visible, disabled when no book selected or no moves played; 20-move max).
-
-**`initialFen` prop:** When the explorer is opened via `?fen=` URL param (e.g., from "Open in Explorer" in `TreeNodePanel`), it replays the catalog moves to reach that position on mount.
-
-**Height:** `h-[calc(100vh-3.5rem)]`. The 3.5rem accounts for the dashboard layout's `py-3` (outer grid, 1.5rem) + `p-4` (content wrapper, 2rem). Do not use larger values — they leave empty card background at the bottom.
-
-### Opening Explorer: Hybrid Matching and Navigator Model
-
-The Opening Explorer (`src/components/openings/OpeningExplorer.tsx`) identifies the current board position using a two-stage hybrid match:
-
-1. **Prefix match** — `getCatalogMatchesForUciLine(currentUciLine)` finds openings whose move sequence begins with the exact moves played. `matchMode = "prefix"`.
-2. **FEN fallback** — if no prefix matches exist, `getCatalogMatchesForFen(currentFen)` finds openings that reach the same board position by any move order (transpositions). `matchMode = "position"`.
-
-The `ExplorerMatchMode` type (`"prefix" | "position" | "none"`) is exposed in the status panel so users know whether the match is an exact line or a transposition.
-
-**Navigator controls** live in the top bar: `|<`, `<`, Play/Pause, `>`, `>|`.
-
-| Control | Behavior |
-|---|---|
-| `\|<` | Reset board to start; preserves the highlighted opening selection |
-| `<` | Undo one move from actual board history |
-| Play/Pause | Auto-advance along the highlighted line at 700 ms/move |
-| `>` | Step one move forward along the highlighted line |
-| `>\|` | Jump to the end of the highlighted line from the current position |
-
-**Key invariant:** forward controls (`>`, `>|`, Play) operate on the **highlighted line** only. They are disabled when:
-- no opening is highlighted (`selectedMatch === null`), or
-- the board has diverged from the highlighted line (`isBoardOnHighlightedLine === false`).
-
-Backward controls (`<`, `|<`) always operate on **real board history** and are never disabled by line alignment state.
-
-When the board diverges, a helper message "Board is off the highlighted line." appears and the user must step back or reset to realign before forward navigation re-enables.
-
-**Result cards** in `OpeningCatalogResults` expose only a **Highlight Path** action. Load/auto-play actions were deliberately removed — all playback lives in the top-bar navigator.
-
-**`pendingForwardMoves` queue:** `>|` enqueues the remaining line moves so each one fires as the board acknowledges the previous scripted command, keeping board state and `moveHistory` in sync without timing hacks.
-
-### Auth pattern
-
-Supabase Auth with `@supabase/ssr`.
-
-- `src/lib/supabase.ts` exports the browser and server auth clients
-- Sign in and sign up use `supabase.auth.signInWithPassword()` and `supabase.auth.signUp()`
-- Route protection is handled in `src/proxy.ts` — Next.js 16 renamed "middleware" to "proxy". The file must be named `proxy.ts` and must export a function named `proxy` (not `middleware`). The `config.matcher` export works the same as before.
-- The currently logged-in user is resolved server-side with `supabase.auth.getUser()`
-- All `/dashboard/*` routes require authentication
-
-### API route pattern
-
-```txt
-Client component
-  -> fetch('/api/openings/explorer', { method: 'POST', body: { fen } })
-  -> src/app/api/openings/explorer/route.ts
-  -> src/lib/db/positionCache.ts
-  -> src/lib/chess/lichessExplorer.ts (if cache miss)
-  -> returns data to client
-```
-
-Keep business logic out of route handlers. Route handlers should validate input with Zod, call lib functions, and return responses.
-
----
-
-## Environment Variables
-
-Required in `.env.local` (never commit this file):
-
-```txt
-NEXT_PUBLIC_SUPABASE_URL=https://bcpkifxnjfjzfrqvpkby.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
-LICHESS_API_TOKEN=lip_...
-```
-
-`NEXT_PUBLIC_` prefixed variables are safe to use in client components. Variables without this prefix are server-only and must never be referenced in client components or passed to the browser.
-
----
-
-## Coding Conventions
-
-- TypeScript strict mode - no `any`
-- Zod for all API input validation - schemas live in `src/lib/validators/schemas.ts`
-- No direct DB calls from client components
-- FEN strings are the universal position identifier
-- UCI format for engine moves; convert to SAN only at the UI layer
-- Tailwind v4 for styling
-- Server Components by default; only add `'use client'` when browser APIs or hooks are required
-
----
-
-## External APIs
-
-### Lichess Opening Explorer
-
-- Base URL: `https://explorer.lichess.ovh`
-- Master games endpoint: `GET /masters?fen=<FEN>&moves=<N>`
-- **Authentication:** As of March 2026, requires a Personal API Token (`Authorization: Bearer <TOKEN>`) due to DDoS protections.
-- Back off on HTTP 429
-- Always proxy through `/api/openings/explorer`
-
-### Lichess Opening Names
-
-- Static dataset from `https://github.com/lichess-org/chess-openings`
-- Bundle as local project data rather than fetching at runtime
-
-### Lichess Puzzle Database
-
-- Downloaded from `https://database.lichess.org/#puzzles`
-- Imported as CSV into `puzzles`
-- No runtime puzzle API calls
-
----
-
-## What Not to Do
-
-- Do not run Stockfish on the server
-- Do not call `explorer.lichess.ovh` directly from client components
-- Do not hand-edit `src/types/database.ts` — it is auto-generated by the Supabase CLI
-- Do not hand-edit `src/lib/chess/generated/openingCatalogIndex.json` — regenerate it with `npm run catalog:index`
-- Do not change the Supabase schema without writing a migration file
-- Do not expose `SUPABASE_SERVICE_ROLE_KEY` to the client
-- Do not store opening tree moves as relational rows
-- Do not add Load or auto-play actions to `OpeningCatalogResults` result cards — all playback is controlled by the top-bar navigator in `OpeningExplorer`
-- Do not add forward-navigation logic that bypasses the `isBoardOnHighlightedLine` check — forward controls must be gated on board alignment with the highlighted line
-- Do not rename the `proxy` export in `src/proxy.ts` to `middleware` — Next.js 16 requires the export to be named `proxy`, not `middleware`
-- Do not use the React Compiler — it is not enabled in this project
-- Do not use D3.js in `OpeningMiniTree` — it uses pure React + SVG only. D3 is only used in the legacy `OpeningTreeFull`.
-- Do not give `OpeningMiniTree` its own API calls — it consumes `explorerMoves`, `historyPlayedFractions`, and `historyAlternates` passed as props from `OpeningExplorer`. All Lichess data flows through `OpeningExplorer`.
-- Do not use `h-[calc(100vh-8rem)]` or other large offsets for the explorer height — the correct value is `h-[calc(100vh-3.5rem)]` based on the dashboard layout's actual padding (see Opening Explorer section).
-- Do not migrate `openingCatalogIndex.json` to Supabase — it is a deduplicated, transposition-aware in-memory graph already; moving it adds DB roundtrips with no benefit at this scale.
-- Do not build a separate global `positions` or `edges` table in Supabase — the catalog index and `position_cache` already serve these roles. Training stats belong in `user_position_stats` keyed by position_key.
-- Do not run Stockfish analysis or drill generation inside Vercel serverless functions — both are client-side operations. Vercel functions only persist results (single-row upserts).
-- Do not add React Flow (`@xyflow/react`) to `OpeningTreeFull` or `OpeningGlobe` — React Flow is reserved for `BookBranchView` as a low-graphics fallback only. The legacy radial tree uses D3; the globe uses React Three Fiber.
-- Do not use React Three Fiber or Three.js in `OpeningMiniTree` — Three.js is only for `OpeningGlobe` and potentially `BookBranchView`.
-- Do not delete `OpeningTreeFull.tsx` until `OpeningGlobe` is stable and shipped — it is the current live implementation and preserved fallback.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
+
+# AGENTS.md — ByTheBook
+
+ByTheBook is a chess opening trainer. Users build opening repertoires ("books"), explore
+master-game statistics, and drill their lines. It is a solo project built for a handful of
+users, and it is designed to handle about 50 without changes.
+
+**Stack:** Next.js 16 (App Router), TypeScript (strict), Tailwind v4, Supabase (Postgres +
+Auth via `@supabase/ssr`), deployed on Vercel. The stack also uses `chess.js` for rules,
+`react-chessboard` for the board, and Stockfish (WASM) running in the browser.
+
+**Product goal: memorability.** The app presents opening theory as explorable space. A user
+should come away thinking of the Najdorf as a *place* with neighbors, not a move list they
+once read. When a choice trades spatial memorability for technical elegance, memorability
+wins.
+
+**Status:** The Opening Explorer, repertoire management and the dashboard overview tree are
+live. The trainer and puzzle pages are placeholder scaffolding. The long-term direction is
+not settled. The territory map and hyperbolic panel are the leading candidates for the next
+visualizations, but don't start building them, or shape other work around them, unless the
+user asks.
+
+## Commands
+
+| Task | Command |
+|---|---|
+| Dev server | `npm run dev` |
+| Typecheck | `npx tsc --noEmit` (passes; keep it passing) |
+| Lint | `npm run lint` (13 pre-existing React hooks errors remain; don't add new ones) |
+| Tests | `npm test` (Vitest, runs `src/**/*.test.ts`); `npm run test:watch` while working |
+| Production build | `npm run build` |
+| Rebuild the opening catalog | `npm run catalog:download`, then `npm run catalog:index` |
+| Regenerate DB types | `npm run db:types` (see "Database changes" below) |
+
+To check a change, run the typecheck, the tests, and lint on the files you touched. For UI
+changes, also run the app and look at the result. Tests sit next to the code they test as
+`*.test.ts`; they run in Node, so keep tested code free of browser APIs.
+
+## Environment
+
+- The machine runs Windows 11. Agents have Git Bash and Windows PowerShell 5.1. PowerShell
+  5.1's `>` writes UTF-16, so use Git Bash (or `Out-File -Encoding utf8`) whenever you
+  redirect output into a file the project reads.
+- Next.js 16 renamed middleware to proxy. Route protection lives in `src/proxy.ts`, which must
+  export a function named `proxy`. All `/dashboard/*` routes require auth.
+- The React Compiler is not enabled. Don't use it.
+- `.env.local` (never commit it) holds `NEXT_PUBLIC_SUPABASE_URL`,
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and `LICHESS_API_TOKEN`. Only
+  `NEXT_PUBLIC_*` values may reach client code.
+
+## Where things live
+
+- `src/app/` holds routes, and `src/app/api/` holds route handlers.
+- `src/components/` is organized by feature: `board/`, `openings/`, `repertoire/`,
+  `training/`, `puzzles/`, `lab/`.
+- `src/lib/chess/` holds chess logic and the opening catalog. `src/lib/db/` holds all
+  Supabase access. `src/lib/validators/schemas.ts` holds the Zod schemas.
+- `scripts/` holds the catalog build scripts, and `supabase/migrations/` holds migrations.
+
+## How to work
+
+- **Plan first for anything non-trivial.** Use plan mode and settle design questions in
+  writing before implementing. This project stalled once from trying to converge on an
+  unstated vision through iterative prompting.
+- **Don't let estimated effort pick the solution.** Implementation time is cheap here; a
+  tangled workaround is not. When the proper fix is to install the right dependency, write
+  the missing module, or change the data model, do that. Don't bend an existing dependency
+  to fit or add a shim around the gap. You will often overestimate how hard the full
+  solution is. If it really is large, propose it in plan mode instead of quietly shrinking
+  it. This applies to the task at hand: it doesn't widen the scope, and it doesn't override
+  the git or deletion rules below.
+- **Specify visualization work by invariants, not appearance.** "Sibling regions are
+  disjoint, every child region lies inside its parent, and output is byte-identical on
+  identical input" can be tested; "make it look good" can't. Layout functions are pure,
+  of the form `layout(tree, weightMode) → Map<NodeId, Geometry>`, and ship with property
+  tests of their invariants.
+- **Git is read-only for agents.** `status`, `diff`, `log` and `show` are fine. The user
+  makes all commits. Mutating git commands are blocked in `.claude/settings.local.json`.
+- **Don't delete what's kept on purpose** (see the list below). Being unused is not a reason
+  to remove something. Removing anything on that list, or any agent doc, needs the user's
+  explicit say-so. When something becomes superseded, add it to the list rather than
+  deleting it.
+- **Keep the docs true.** When you change code that a `.dev-notes/` doc describes, update that
+  doc in the same change and bump its "Last reviewed" date. Don't copy values that live in
+  code (constants, line counts, file lists) into docs; name the constant instead. Only
+  create new docs when the user asks.
+- The harness memory is for how the user likes to work. Architecture decisions go in this
+  file or in `.dev-notes/`.
+
+## Project rules
+
+**Data and APIs**
+
+- Never call `explorer.lichess.ovh` from client code. All Lichess calls go through
+  `/api/openings/explorer`, which caches results in `position_cache`.
+- Stockfish runs only in the browser (`src/hooks/useEngine.ts`). Never run engine analysis
+  or drill generation in Vercel functions. Those functions do single-row reads and writes;
+  anything that walks trees or aggregates runs client-side.
+- Books are `MoveNode` trees stored in `opening_books.move_node` (JSONB). Don't store moves
+  as relational rows, don't build global `positions` or `edges` tables, and don't move
+  `openingCatalogIndex.json` into Supabase.
+- Opening trees are true trees keyed by move sequence, and transpositions duplicate subtrees
+  on purpose. Don't re-key them by position hash or turn them into a DAG.
+- Sort sibling moves deterministically: by count descending, then by UCI string ascending.
+  Without the tiebreak, layouts shift between runs.
+- Validate API input with Zod. Route handlers validate, call `src/lib/` functions and return;
+  keep business logic out of them. Client components never call the database directly.
+- Use FEN strings to identify positions. `toPositionKey()` (`src/lib/chess/fen.ts`) drops
+  the clock fields and is the key for per-position stats. Use UCI internally and convert to
+  SAN only in the UI.
+
+**Generated files (never hand-edit)**
+
+- `src/types/database.ts`, which the Supabase CLI generates.
+- `src/lib/chess/generated/openingCatalogIndex.json`, which `npm run catalog:index`
+  generates.
+
+**Database changes**
+
+1. Write `supabase/migrations/<timestamp>_<name>.sql` containing only the change. Never
+   change the schema any other way.
+2. Ask the user to run it in the Supabase SQL editor.
+3. Regenerate the types with `npm run db:types`. Don't run the underlying `supabase gen types`
+   command with PowerShell 5.1's `>`, which writes UTF-16 and breaks lint.
+
+**UI**
+
+- A page with a main interactive board (explorer, trainer, puzzles) must fit the viewport.
+  The page body never scrolls, the board scales to fit (`size="full"`), and only side panels
+  scroll internally.
+- `BoardBase` is the only component that wraps `react-chessboard`. `BoardDisplay` (static)
+  and `BoardInteractive` (playable, through `useChessGame`) wrap `BoardBase`. Feature pages
+  compose those two and never define their own board components.
+- Use Server Components by default, and add `'use client'` only when hooks or browser APIs
+  require it. Don't use `any`.
+
+## Kept on purpose
+
+These look removable but are retained deliberately. Don't delete them, or propose removing
+them, unless the user brings it up.
+
+| Item | Why it stays | Removable when |
+|---|---|---|
+| `src/components/repertoire/OpeningTreeFull.tsx` | It is the live dashboard overview | A successor ships and the user says so |
+| `src/components/openings/OpeningMiniTree.tsx` | It is the live explorer sidebar tree, and the user wants it kept as-is | A successor ships and the user says so |
+| `d3`, `@types/d3` | `OpeningTreeFull` uses them | `OpeningTreeFull` is removed |
+| `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx` | They are prototypes the user may revisit | The user says so |
+| `three`, `@react-three/fiber`, `@react-three/drei` | `GlobeTest` uses them | The user says so |
+| `@xyflow/react`, `framer-motion` | They are unused, but kept for possible lab work | The user says so |
+
+## Read before working on…
+
+These docs live in `.dev-notes/`, which is local-only like this file. They aren't loaded
+automatically, so read the relevant one before you start.
+
+| When you're working on… | Read |
+|---|---|
+| The data model, catalog, database, caching, engine, dependencies, or any "why is it like this" question | `.dev-notes/architecture.md` |
+| The Lichess API route or `position_cache` | `.dev-notes/processes/lichess-api-and-caching.md` |
+| Any tree or map visualization | `.dev-notes/architecture.md` § "Visualization principles", then the design doc below |
+| The Opening Explorer or the mini tree | `.dev-notes/design/explorer.md` |
+| The dashboard overview tree | `.dev-notes/design/dashboard-overview.md` |
+| The territory map (candidate) | `.dev-notes/design/territory-map.md` |
+| The hyperbolic panel (candidate) | `.dev-notes/design/hyperbolic-panel.md` |
+| The lab page, globe, ChessMap, or branch view | `.dev-notes/design/lab-prototypes.md` |
+| The lab "Regions" tab (region map) or `src/lib/regions/` | `.dev-notes/design/region-map.md` |

@@ -3,7 +3,10 @@
 import { useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Stats, Html, AdaptiveDpr } from "@react-three/drei";
-import { Mesh, BufferGeometry, Float32BufferAttribute } from "three";
+import { Mesh, Group, Vector2 } from "three";
+import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
+import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { buildDefaultCatalogTree } from "@/lib/chess/openingCatalog";
 import type { MoveNode } from "@/types/chess";
 
@@ -22,11 +25,11 @@ export type GlobeConfig = {
   buildAnimSpeed: number;    // nodes per second (3–20)
   buildAnimPriority: number; // 0 = BFS/round-robin, 1 = DFS
   engineBias: number;        // 0 = equal weight per branch, 1 = larger subtrees get more timeslices
-  nodeSizeByWeight: boolean; // scale node size + edge brightness by child-count weight
+  scaleByWeight: boolean;    // scale both node size and edge width by subtree size (games-played proxy)
   nodeEntryAnim: "none" | "scale" | "hinge" | "split";
   nodeAnimDuration: number;  // seconds for entry animation (0.1–2.0)
-  edgeWeight: number;        // base edge brightness 0–1 (proxy for visual thickness)
-  edgeWeightByChild: boolean; // vary brightness by child node's weight (games played proxy)
+  edgeWidth: number;         // base edge width in screen pixels
+  edgeWidthMax: number;      // max edge width when scaleByWeight is on
 };
 
 export type RendererStats = {
@@ -297,15 +300,22 @@ function computeBuildOrder(nodes: TreeNode[], priorityBias: number, engineBias: 
   return order;
 }
 
-// Fills weight = direct child count after any layout. Call once on the final node list.
+// Fills weight = total subtree size (self + all descendants). All layouts insert parents before
+// children (parentId < child.id always), so iterating in reverse gives leaves first and lets
+// us accumulate sizes bottom-up in a single O(n) pass without recursion.
 function postProcessWeights(nodes: TreeNode[]): TreeNode[] {
-  const childCount = new Map<number, number>();
-  nodes.forEach((n) => {
-    if (n.parentId !== null) {
-      childCount.set(n.parentId, (childCount.get(n.parentId) ?? 0) + 1);
-    }
-  });
-  nodes.forEach((n) => { n.weight = childCount.get(n.id) ?? 0; });
+  const childrenOf = new Map<number, number[]>();
+  nodes.forEach((n) => childrenOf.set(n.id, []));
+  nodes.forEach((n) => { if (n.parentId !== null) childrenOf.get(n.parentId)!.push(n.id); });
+
+  const size = new Map<number, number>();
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const n = nodes[i];
+    let s = 1;
+    for (const cid of childrenOf.get(n.id)!) s += size.get(cid) ?? 1;
+    size.set(n.id, s);
+  }
+  nodes.forEach((n) => { n.weight = size.get(n.id) ?? 1; });
   return nodes;
 }
 
@@ -334,53 +344,79 @@ function GlobeCore() {
   );
 }
 
-// Edges: vertex-colored by child weight; hides edges for nodes still in entry animation.
-// NOTE: WebGL limits line rendering to ~1 CSS pixel width. True variable-width edges require
-// Line2/LineMaterial from three/examples, which is a future optimisation. For now edge
-// "weight" is expressed through brightness/opacity, which reads clearly in practice.
-function Edges({
-  displayNodes, allNodes, opacity, nodeSizeByWeight, edgeWeight, edgeWeightByChild,
+// ThickEdges: true variable-width edges via LineSegments2 / LineMaterial from three/examples.
+// Edges are bucketed by node weight so we create at most EDGE_BUCKETS draw calls instead of
+// one per edge, keeping performance reasonable for large node counts.
+const EDGE_BUCKETS = 5;
+
+function ThickEdges({
+  displayNodes, allNodes, opacity, scaleByWeight, edgeWidth, edgeWidthMax,
   entryTimes, animDuration, edgeTick,
 }: {
   displayNodes: TreeNode[]; allNodes: TreeNode[];
-  opacity: number; nodeSizeByWeight: boolean;
-  edgeWeight: number; edgeWeightByChild: boolean;
+  opacity: number; scaleByWeight: boolean;
+  edgeWidth: number; edgeWidthMax: number;
   entryTimes: Map<number, NodeEntry>; animDuration: number; edgeTick: number;
 }) {
-  const maxWeight = useMemo(
-    () => allNodes.reduce((m, n) => Math.max(m, n.weight), 1),
-    [allNodes]
-  );
+  const { size } = useThree();
+  const groupRef = useRef<Group>(null);
+  const maxWeight = useMemo(() => allNodes.reduce((m, n) => Math.max(m, n.weight), 1), [allNodes]);
 
-  // edgeTick is included purely to force a re-run after animation timers fire.
-  const geometry = useMemo(() => {
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
     const now = performance.now();
-    const pts: number[] = [];
-    const cols: number[] = [];
+    const resolution = new Vector2(size.width, size.height);
+    const bucketPositions: number[][] = Array.from({ length: EDGE_BUCKETS }, () => []);
+
     displayNodes.forEach((node) => {
-      // Hide edge while node is still animating — node appears first, then edge.
       const entry = entryTimes.get(node.id);
       if (entry && (now - entry.time) < animDuration * 1000) return;
-
       const parent = node.parentId !== null ? allNodes[node.parentId] : null;
-      pts.push(...node.position, ...(parent ? parent.position : [0, 0, 0]));
+      const p1: Vec3 = parent ? parent.position : [0, 0, 0];
 
-      const childW = edgeWeightByChild ? Math.min(node.weight / maxWeight, 1) : 1;
-      const base = edgeWeight * (edgeWeightByChild ? (0.2 + 0.8 * childW) : 1);
-      cols.push(0.376 * base, 0.643 * base, 0.98, 0.376 * base * 0.5, 0.643 * base * 0.5, 0.7 * base);
+      let bucketIdx = 0;
+      if (scaleByWeight && maxWeight > 0) {
+        bucketIdx = Math.min(Math.floor((node.weight / maxWeight) * EDGE_BUCKETS), EDGE_BUCKETS - 1);
+      }
+      bucketPositions[bucketIdx].push(
+        node.position[0], node.position[1], node.position[2],
+        p1[0], p1[1], p1[2],
+      );
     });
-    const geo = new BufferGeometry();
-    geo.setAttribute("position", new Float32BufferAttribute(pts, 3));
-    geo.setAttribute("color", new Float32BufferAttribute(cols, 3));
-    return geo;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayNodes, allNodes, nodeSizeByWeight, edgeWeight, edgeWeightByChild, maxWeight, animDuration, edgeTick]);
 
-  return (
-    <lineSegments geometry={geometry}>
-      <lineBasicMaterial vertexColors opacity={opacity} transparent />
-    </lineSegments>
-  );
+    const objects: LineSegments2[] = [];
+    bucketPositions.forEach((positions, i) => {
+      if (positions.length < 6) return;
+      const t = scaleByWeight ? i / Math.max(EDGE_BUCKETS - 1, 1) : 0;
+      const width = edgeWidth + (edgeWidthMax - edgeWidth) * t;
+      const geo = new LineSegmentsGeometry();
+      geo.setPositions(positions);
+      const mat = new LineMaterial({
+        color: 0x60a5fa,
+        linewidth: width,
+        opacity,
+        transparent: opacity < 1,
+        resolution,
+      });
+      const line = new LineSegments2(geo, mat);
+      objects.push(line);
+      group.add(line);
+    });
+
+    return () => {
+      objects.forEach((o) => {
+        group.remove(o);
+        o.geometry.dispose();
+        (o.material as LineMaterial).dispose();
+      });
+    };
+  // edgeTick forces re-run after entry animations finish so new edges appear.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayNodes, allNodes, maxWeight, opacity, scaleByWeight, edgeWidth, edgeWidthMax, size.width, size.height, animDuration, edgeTick]);
+
+  return <group ref={groupRef} />;
 }
 
 const SPLIT_SHRINK = 0.72;
@@ -390,11 +426,11 @@ const SPLIT_SHRINK = 0.72;
 // animMode "split": child slides from parent pos while growing; parent permanently shrinks to SPLIT_SHRINK.
 // animMode "scale": child grows in place from 0.
 function AnimatedNodes({
-  nodes, nodeSize, nodeSizeByWeight, animMode, animDuration, entryTimes,
+  nodes, nodeSize, scaleByWeight, animMode, animDuration, entryTimes,
 }: {
   nodes: TreeNode[];
   nodeSize: number;
-  nodeSizeByWeight: boolean;
+  scaleByWeight: boolean;
   animMode: "none" | "scale" | "hinge" | "split";
   animDuration: number;
   entryTimes: Map<number, NodeEntry>;
@@ -420,7 +456,7 @@ function AnimatedNodes({
       const node = nodeById.get(id);
       if (!node) { mesh.scale.setScalar(0); continue; }
 
-      const ws = nodeSizeByWeight ? 0.45 + 1.1 * (node.weight / maxWeight) : 1.0;
+      const ws = scaleByWeight ? 0.3 + 0.8 * (node.weight / maxWeight) : 1.0;
       const entry = entryTimes.get(id);
       const elapsedT = entry ? Math.min((now - entry.time) / (animDuration * 1000), 1) : 1;
       const t = easeOutCubic(elapsedT);
@@ -670,13 +706,13 @@ export default function GlobeTest({
       <ambientLight intensity={1.0} />
       <hemisphereLight args={["#1e3a8a", "#0f0f1a", 1.0]} />
       <GlobeCore />
-      <Edges
+      <ThickEdges
         displayNodes={displayNodes}
         allNodes={nodes}
         opacity={config.edgeOpacity}
-        nodeSizeByWeight={config.nodeSizeByWeight}
-        edgeWeight={config.edgeWeight}
-        edgeWeightByChild={config.edgeWeightByChild}
+        scaleByWeight={config.scaleByWeight}
+        edgeWidth={config.edgeWidth}
+        edgeWidthMax={config.edgeWidthMax}
         entryTimes={entryTimesRef.current}
         animDuration={config.nodeAnimDuration}
         edgeTick={edgeTick}
@@ -684,7 +720,7 @@ export default function GlobeTest({
       <AnimatedNodes
         nodes={displayNodes}
         nodeSize={config.nodeSize}
-        nodeSizeByWeight={config.nodeSizeByWeight}
+        scaleByWeight={config.scaleByWeight}
         animMode={animMode}
         animDuration={config.nodeAnimDuration}
         entryTimes={entryTimesRef.current}
