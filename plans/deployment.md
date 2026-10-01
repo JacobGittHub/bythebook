@@ -188,7 +188,7 @@ commit. Migrations are run by the user in the Supabase SQL editor, followed by
 - `BoardInteractive` already supports tap-to-move.
 - Testing without a Mac: Chrome DevTools device mode, a real phone pointed at a Vercel
   preview URL, and Playwright's WebKit engine.
-  > ME: Is chrome devtools device mode a chrome extension? Can i also limit computation to replicate mobile device processing power? I typically use chrome so chrome devtools is a good choice.
+  > ME: Is chrome devtools device mode a chrome extension? Can i also limit computation to replicate mobile device processing power? I typically use chrome so chrome devtools is a good choice. 
 - Answer: it's built into Chrome (F12, then Ctrl+Shift+M). The Performance panel slows the
   CPU by 4×, 6× or 20×. It is still Chrome's engine, so Safari-only problems need a real
   iPhone or Playwright's WebKit.
