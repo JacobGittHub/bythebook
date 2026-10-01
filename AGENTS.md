@@ -23,7 +23,7 @@ wins.
 live. The trainer and puzzle pages are placeholder scaffolding. The long-term direction is
 not settled. The territory map and hyperbolic panel are the leading candidates for the next
 visualizations, but don't start building them, or shape other work around them, unless the
-user asks.
+user asks. The shared vision and current work are in `plans/`.
 
 ## Commands
 
@@ -66,7 +66,8 @@ changes, also run the app and look at the result. Tests sit next to the code the
 
 - **Plan first for anything non-trivial.** Use plan mode and settle design questions in
   writing before implementing. This project stalled once from trying to converge on an
-  unstated vision through iterative prompting.
+  unstated vision through iterative prompting. Multi-step work is tracked in `plans/` (see
+  "Plans" below).
 - **Don't let estimated effort pick the solution.** Implementation time is cheap here; a
   tangled workaround is not. When the proper fix is to install the right dependency, write
   the missing module, or change the data model, do that. Don't bend an existing dependency
@@ -91,6 +92,19 @@ changes, also run the app and look at the result. Tests sit next to the code the
   create new docs when the user asks.
 - The harness memory is for how the user likes to work. Architecture decisions go in this
   file or in `.dev-notes/`.
+
+## Plans
+
+`plans/` holds the shared vision and one file per piece of work. The user and agents both
+edit these files.
+
+- Start with `plans/README.md`, which has the index, the current focus and the file format.
+  Then read only the plan you're working on and the plans it depends on.
+- Lines starting with `> ME:` are the user's notes. A question stays open until the user
+  answers it; your recommendation doesn't settle it.
+- A plan's Decisions are binding. To change one, raise it with the user first.
+- When you edit a plan, update its `Updated` date and its row in the index. Create a new plan
+  only when the user asks.
 
 ## Project rules
 
