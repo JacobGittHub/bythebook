@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_codes: {
+        Row: {
+          claimed_at: string | null
+          code_hash: string
+          created_at: string
+          purpose: string
+          user_id: string | null
+        }
+        Insert: {
+          claimed_at?: string | null
+          code_hash: string
+          created_at?: string
+          purpose: string
+          user_id?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          code_hash?: string
+          created_at?: string
+          purpose?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       drill_attempts: {
         Row: {
           attempted_at: string

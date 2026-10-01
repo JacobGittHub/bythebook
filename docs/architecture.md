@@ -130,6 +130,7 @@ Supabase Postgres with Row Level Security on every table. Columns are in
 | `training_sessions` | Result of each training run | Private |
 | `position_cache` | Cached Lichess explorer responses, keyed by `position_key` | Read: authenticated · Write: service role. The app itself reads and writes it on the server with the service role, so guests can be served |
 | `usage_counters` | Calls per (user, day, kind), with one shared row for guests | Service role only |
+| `access_codes` | One-time invite and reset codes for the beta, stored as hashes | Service role only |
 | `puzzles` | Imported Lichess puzzle dump | Read: authenticated |
 | `puzzle_history` | Per-user puzzle attempts, unique per (user, puzzle) | Private |
 | `user_position_stats` | Per (user, position_key, book) visit/success/failure counts | Private |
@@ -207,8 +208,15 @@ that iterates, walks trees or aggregates runs client-side.
 
 - Supabase Auth uses `@supabase/ssr`. `src/lib/supabase.ts` exports the browser and server
   clients.
-- Sign-in and sign-up use `signInWithPassword()` and `signUp()`. The server resolves the user
-  with `supabase.auth.getUser()`.
+- Sign-in uses `signInWithPassword()`. The server resolves the user with
+  `supabase.auth.getUser()`.
+- Public sign-up is turned off in Supabase. An account is created on the server with the
+  admin API, already confirmed, and only in exchange for a one-time invite code
+  (`registerWithInvite` in `src/lib/auth/accounts.ts`). A forgotten password is set the same
+  way with a reset code (`resetPasswordWithCode`). Both codes are made locally by
+  `npm run invites:create`, which prints each one once; `access_codes` keeps only the hash.
+  A code is used up by one conditional update, and released again if the step it paid for
+  fails. The reasoning is in `plans/deployment.md` (D6, D14).
 - The request path for route handlers is: client `fetch('/api/…')` → route handler (Zod
   validation) → `src/lib/db/*` or `src/lib/chess/*` → response.
 

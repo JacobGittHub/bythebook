@@ -8,6 +8,13 @@ const pillars = [
   "Review with explorer and engine hooks",
 ];
 
+// Where a beta key is asked for. The address comes from the environment so it stays out of
+// the public repository; without it the link is not shown.
+const betaContactEmail = process.env.NEXT_PUBLIC_BETA_CONTACT_EMAIL;
+const betaKeyMailto = betaContactEmail
+  ? `mailto:${betaContactEmail}?subject=${encodeURIComponent("ByTheBook beta key")}`
+  : null;
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.18),_transparent_32%),linear-gradient(180deg,_#f8fafc_0%,_#e2e8f0_100%)]">
@@ -22,6 +29,14 @@ export default function HomePage() {
             </h1>
           </div>
           <div className="flex gap-3">
+            {betaKeyMailto ? (
+              <a
+                className="inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200"
+                href={betaKeyMailto}
+              >
+                Request a beta key
+              </a>
+            ) : null}
             <Button href="/auth/login" variant="ghost">
               Sign in
             </Button>

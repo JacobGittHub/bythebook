@@ -1,4 +1,4 @@
-import { Chess } from "chess.js";
+import { Chess, validateFen } from "chess.js";
 
 export const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -10,6 +10,11 @@ export function normalizeFen(fen: string) {
   }
 
   return normalized;
+}
+
+/** Whether `fen` is a full six-field FEN describing a possible board. */
+export function isValidFen(fen: string) {
+  return validateFen(fen).ok;
 }
 
 export function toPositionKey(fen: string) {

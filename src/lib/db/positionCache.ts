@@ -14,12 +14,15 @@ const explorerMoveSchema = z.object({
 // Keep in step with ExplorerResponse: z.object drops any key not listed here.
 const explorerResponseSchema = z.object({
   moves: z.array(explorerMoveSchema),
+  // Lichess sends `"opening": null` for a position with no opening name, and rows were
+  // stored that way, so null is read as "no opening" and not as a broken row.
   opening: z
     .object({
       eco: z.string().optional(),
       name: z.string().optional(),
     })
-    .optional(),
+    .nullish()
+    .transform((opening) => opening ?? undefined),
   totals: z
     .object({
       white: z.number(),
@@ -34,6 +37,12 @@ const explorerResponseSchema = z.object({
 // Both functions use the admin client: guests have no session to read with, and the table
 // holds nothing private.
 
+/** A row's `explorer_data` as explorer data, or null if it isn't shaped like any. */
+export function parseCachedExplorerData(value: unknown): ExplorerResponse | null {
+  const parsed = explorerResponseSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
+
 export async function getCachedPosition(fen: string): Promise<ExplorerResponse | null> {
   const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
@@ -46,8 +55,7 @@ export async function getCachedPosition(fen: string): Promise<ExplorerResponse |
     return null;
   }
 
-  const parsed = explorerResponseSchema.safeParse(data.explorer_data);
-  return parsed.success ? parsed.data : null;
+  return parseCachedExplorerData(data.explorer_data);
 }
 
 export async function setCachedPosition(fen: string, value: ExplorerResponse) {

@@ -72,18 +72,18 @@ commit. Migrations are run by the user in the Supabase SQL editor, followed by
 
 ### Phase 0. Private deployment
 
-- [ ] (user) Turn off "Allow new users to sign up" in Supabase (Authentication → Sign In /
+- [x] (user) Turn off "Allow new users to sign up" in Supabase (Authentication → Sign In /
       Providers). Existing accounts keep working.
-- [ ] (user) Create the Vercel project from the repo, copy in the four variables from
+- [x] (user) Create the Vercel project from the repo, copy in the four variables from
       `.env.local`, deploy, and check that login and the explorer work.
-- [ ] (user) Add one Vercel firewall rate-limit rule by IP on `/api/`. Hobby allows one, and
+- [x] (user) Add one Vercel firewall rate-limit rule by IP on `/api/`. Hobby allows one, and
       after Phase 2 the explorer route answers without a login.
 
 ### Phase 1. Call counting (D8)
 
 - [x] (agent) Migration `20261001120000_usage_counters.sql`, `src/lib/db/usage.ts`, and a
       count in every route handler and before every live Lichess call.
-- [ ] (user) Run the migration and regenerate the types.
+- [x] (user) Run the migration and regenerate the types.
 - [ ] (user) Use the app for a few days, then read the counts (query in Notes).
 
 ### Phase 2. Explorer for guests (D7)
@@ -94,16 +94,21 @@ commit. Migrations are run by the user in the Supabase SQL editor, followed by
       request can reach Lichess.
 - [x] (agent) `npm run cache:prefill`, which also takes a minimum game count for a deeper
       fill later.
-- [ ] (user) Run the migration with Phase 1's, regenerate the types, push, then run
+- [x?] (user) Run the migration with Phase 1's, regenerate the types, push, then run
       `npm run cache:prefill` (about two hours; it can be stopped and resumed).
 
 ### Phase 3. Invite and reset codes (D6, D14)
 
-- [ ] (agent) Migration for the codes table, and `npm run invites:create`.
-- [ ] (agent) Registration needs a code and creates an already-confirmed user with the
+- [x] (agent) Migration `20261001130000_access_codes.sql`, and `npm run invites:create`
+      (`-- --count 5` for several, `-- --reset <email>` for a reset code).
+- [x] (agent) Registration needs a code and creates an already-confirmed user with the
       admin client. `/auth/reset` takes a reset code and a new password.
-- [ ] (agent) A "Request a beta key" mailto link on the landing page.
-- [ ] (user) Run the migration, make a code, and register with it on the deployment.
+- [x] (agent) A "Request a beta key" mailto link on the landing page. It shows only when
+      `NEXT_PUBLIC_BETA_CONTACT_EMAIL` is set.
+- [ ] (user) Run the migration and regenerate the types (the typecheck fails until then).
+- [ ] (user) Set `NEXT_PUBLIC_BETA_CONTACT_EMAIL` in `.env.local` and in Vercel.
+- [ ] (user) Push, make a code, and register with it on the deployment. Then make a reset
+      code for that account and use it at `/auth/reset`.
 
 ### Phase 4. Library (D12, D13)
 
@@ -164,6 +169,9 @@ commit. Migrations are run by the user in the Supabase SQL editor, followed by
   each code once and stores only its hash, in a table that only the server can read.
   Claiming a code is one conditional update, so it can't be used twice.
 - Supabase Auth owns the password hashes. The app only asks Supabase to set a password.
+- A code is claimed before the account is made, and released if that fails, so a tester
+  whose email is already registered doesn't lose their code.
+- The contact address is an environment variable so that it stays out of the public repo.
 
 **Explorer (D7)**
 

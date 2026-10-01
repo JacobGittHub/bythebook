@@ -1,5 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { START_FEN, fenAfterUci } from "./fen";
+import { explorerBodySchema, explorerQuerySchema } from "@/lib/validators/schemas";
+import { START_FEN, fenAfterUci, isValidFen } from "./fen";
+import { listCatalogFens } from "./openingCatalog";
+
+describe("isValidFen", () => {
+  it("accepts every catalog position", () => {
+    expect(listCatalogFens().filter((fen) => !isValidFen(fen))).toEqual([]);
+  });
+
+  it("rejects text that is not a FEN, and a FEN missing fields", () => {
+    expect(isValidFen("not a fen")).toBe(false);
+    expect(isValidFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -")).toBe(false);
+    expect(isValidFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN w KQkq - 0 1")).toBe(false);
+  });
+});
+
+describe("explorer request schemas", () => {
+  it("refuse a malformed FEN", () => {
+    expect(explorerBodySchema.safeParse({ fen: "not a fen" }).success).toBe(false);
+    expect(explorerQuerySchema.safeParse({ fen: "not a fen" }).success).toBe(false);
+  });
+
+  it("accept a FEN, and read a missing or empty one as the start position", () => {
+    const e4 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
+    expect(explorerBodySchema.parse({ fen: ` ${e4} ` }).fen).toBe(e4);
+    expect(explorerQuerySchema.parse({}).fen).toBe(START_FEN);
+    expect(explorerQuerySchema.parse({ fen: "startpos" }).fen).toBe(START_FEN);
+  });
+});
 
 describe("fenAfterUci", () => {
   it("plays a move from the start", () => {

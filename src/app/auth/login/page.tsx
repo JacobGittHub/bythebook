@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { credentialsInputSchema } from "@/lib/validators/schemas";
@@ -5,9 +6,9 @@ import { credentialsInputSchema } from "@/lib/validators/schemas";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; notice?: string }>;
 }) {
-  const { next, error } = await searchParams;
+  const { next, error, notice } = await searchParams;
 
   async function loginAction(formData: FormData) {
     "use server";
@@ -42,8 +43,13 @@ export default async function LoginPage({
         <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Auth</p>
         <h1 className="mt-3 text-3xl font-semibold text-slate-950">Sign in</h1>
         <p className="mt-3 text-sm text-slate-600">
-          Sign in with your Supabase Auth email and password.
+          Sign in with the email and password of your beta account.
         </p>
+        {notice === "password_reset" ? (
+          <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            Your password was changed. Sign in with the new one.
+          </p>
+        ) : null}
         {error ? (
           <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {error === "invalid_credentials"
@@ -78,6 +84,15 @@ export default async function LoginPage({
             Sign in
           </button>
         </form>
+        <p className="mt-6 text-sm text-slate-600">
+          <Link className="font-medium text-slate-950 underline" href="/auth/reset">
+            Forgot your password?
+          </Link>{" "}
+          ·{" "}
+          <Link className="font-medium text-slate-950 underline" href="/auth/register">
+            Create an account
+          </Link>
+        </p>
       </section>
     </main>
   );

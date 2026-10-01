@@ -34,7 +34,8 @@ Client: fetch('/api/openings/explorer', POST { fen })   (GET ?fen= also works)
   ▼
 route.ts
   1. getAuthenticatedUser(). No user means a guest, not a 401.
-  2. Zod-parse the FEN. normalizeFen() only trims it and maps "startpos" to the start FEN.
+  2. Zod-parse the FEN. normalizeFen() trims it and maps "startpos" to the start FEN, and
+     isValidFen() refuses anything that isn't a full, possible FEN (a 400).
   3. getExplorerDataForUser(fen, user id or null), then return { fen, ...data, cached }.
      A null result returns 404.
   ▼
@@ -64,8 +65,8 @@ getExplorerData(fen, mayFetchLive)
        ▼
      cached: false
 
-Errors: not cached, for a guest → 404 · rate limit → 429 with Retry-After · Zod → 400 ·
-anything else → 500
+Errors: not cached, for a guest → 404 · rate limit → 429 with Retry-After · Zod, which
+includes a malformed FEN → 400 · anything else → 500
 ```
 
 ## Details worth knowing
@@ -74,6 +75,9 @@ anything else → 500
   the opening name, the position's `totals` (every game, including moves beyond the listed
   ones), and the `movesLimit` it was fetched with. Lichess honoured 20 moves when this was
   checked on 2026-09-29; asking for more returns every move the database has.
+- **A row's `opening` may be null.** Lichess sends `"opening": null` for a position with no
+  opening name, and rows were stored that way. `parseCachedExplorerData` reads null as "no
+  opening"; a row it can't read counts as a miss. New rows leave the field out.
 - **The cache key is `toPositionKey(fen)`,** the FEN without its two move counters. The same
   position reached by another move order is therefore the same row and one Lichess call.
   Callers pass a full FEN; `positionCache.ts` derives the key, and Lichess is still sent the

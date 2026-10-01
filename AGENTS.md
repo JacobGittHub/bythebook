@@ -1,7 +1,11 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
 <!-- END:nextjs-agent-rules -->
 
 # AGENTS.md — ByTheBook
@@ -36,6 +40,7 @@ user asks. The shared vision and current work are in `plans/`.
 | Production build | `npm run build` |
 | Rebuild the opening catalog | `npm run catalog:download`, then `npm run catalog:index` |
 | Fill `position_cache` for the catalog | `npm run cache:prefill` (calls Lichess for hours; the user runs it, agents use `-- --dry-run`) |
+| Make beta invite or reset codes | `npm run invites:create` (writes to the live database; the user runs it) |
 | Regenerate DB types | `npm run db:types` (see "Database changes" below) |
 
 To check a change, run the typecheck, the tests, and lint on the files you touched. For UI
@@ -51,7 +56,8 @@ changes, also run the app and look at the result. Tests sit next to the code the
   export a function named `proxy`. All `/dashboard/*` routes require auth.
 - The React Compiler is not enabled. Don't use it.
 - `.env.local` (never commit it) holds `NEXT_PUBLIC_SUPABASE_URL`,
-  `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and `LICHESS_API_TOKEN`. Only
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and `LICHESS_API_TOKEN`, and optionally
+  `NEXT_PUBLIC_BETA_CONTACT_EMAIL` (the address behind the landing page's beta key link). Only
   `NEXT_PUBLIC_*` values may reach client code.
 
 ## Where things live

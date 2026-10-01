@@ -14,10 +14,11 @@ type LichessMasterResponse = {
   draws?: number;
   black?: number;
   moves?: LichessMasterMove[];
+  /** Null when the position has no opening name. */
   opening?: {
     eco?: string;
     name?: string;
-  };
+  } | null;
 };
 
 export class LichessRateLimitError extends Error {
@@ -73,7 +74,7 @@ export async function fetchExplorerMoves(fen: string): Promise<ExplorerResponse>
 
   return {
     moves,
-    opening: data.opening,
+    opening: data.opening ?? undefined,
     totals: {
       white: data.white ?? sum("white"),
       draws: data.draws ?? sum("draws"),
