@@ -35,6 +35,7 @@ user asks. The shared vision and current work are in `plans/`.
 | Tests | `npm test` (Vitest, runs `src/**/*.test.ts`); `npm run test:watch` while working |
 | Production build | `npm run build` |
 | Rebuild the opening catalog | `npm run catalog:download`, then `npm run catalog:index` |
+| Fill `position_cache` for the catalog | `npm run cache:prefill` (calls Lichess for hours; the user runs it, agents use `-- --dry-run`) |
 | Regenerate DB types | `npm run db:types` (see "Database changes" below) |
 
 To check a change, run the typecheck, the tests, and lint on the files you touched. For UI
@@ -60,7 +61,8 @@ changes, also run the app and look at the result. Tests sit next to the code the
   `training/`, `puzzles/`, `lab/`.
 - `src/lib/chess/` holds chess logic and the opening catalog. `src/lib/db/` holds all
   Supabase access. `src/lib/validators/schemas.ts` holds the Zod schemas.
-- `scripts/` holds the catalog build scripts, and `supabase/migrations/` holds migrations.
+- `scripts/` holds the catalog build scripts and the cache pre-fill script, and
+  `supabase/migrations/` holds migrations.
 
 ## How to work
 
@@ -111,7 +113,11 @@ edit these files.
 **Data and APIs**
 
 - Never call `explorer.lichess.ovh` from client code. All Lichess calls go through
-  `/api/openings/explorer`, which caches results in `position_cache`.
+  `/api/openings/explorer`, which caches results in `position_cache`. The route serves
+  guests from the cache only; a guest's request must never reach Lichess. The one other
+  caller is the local `npm run cache:prefill` script, which uses the same library code.
+- Every route handler counts its call with `recordUsage` (`src/lib/db/usage.ts`), after the
+  auth check.
 - Stockfish runs only in the browser (`src/hooks/useEngine.ts`). Never run engine analysis
   or drill generation in Vercel functions. Those functions do single-row reads and writes;
   anything that walks trees or aggregates runs client-side.
@@ -125,8 +131,8 @@ edit these files.
 - Validate API input with Zod. Route handlers validate, call `src/lib/` functions and return;
   keep business logic out of them. Client components never call the database directly.
 - Use FEN strings to identify positions. `toPositionKey()` (`src/lib/chess/fen.ts`) drops
-  the clock fields and is the key for per-position stats. Use UCI internally and convert to
-  SAN only in the UI.
+  the clock fields and is the key for per-position stats and for `position_cache`. Use UCI
+  internally and convert to SAN only in the UI.
 
 **Generated files (never hand-edit)**
 

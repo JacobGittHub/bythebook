@@ -1,8 +1,6 @@
 import { z } from "zod";
-import {
-  createAdminSupabaseClient,
-  createServerSupabaseClient,
-} from "@/lib/supabase";
+import { toPositionKey } from "@/lib/chess/fen";
+import { createAdminSupabaseClient } from "@/lib/supabase";
 import type { ExplorerResponse } from "@/types/chess";
 
 const explorerMoveSchema = z.object({
@@ -32,12 +30,16 @@ const explorerResponseSchema = z.object({
   movesLimit: z.number().optional(),
 });
 
+// Rows are keyed by toPositionKey(fen), so move orders that reach one position share a row.
+// Both functions use the admin client: guests have no session to read with, and the table
+// holds nothing private.
+
 export async function getCachedPosition(fen: string): Promise<ExplorerResponse | null> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createAdminSupabaseClient();
   const { data, error } = await supabase
     .from("position_cache")
     .select("explorer_data")
-    .eq("fen", fen)
+    .eq("position_key", toPositionKey(fen))
     .maybeSingle();
 
   if (error || !data) {
@@ -51,7 +53,7 @@ export async function getCachedPosition(fen: string): Promise<ExplorerResponse |
 export async function setCachedPosition(fen: string, value: ExplorerResponse) {
   const supabase = createAdminSupabaseClient();
   const { error } = await supabase.from("position_cache").upsert({
-    fen,
+    position_key: toPositionKey(fen),
     explorer_data: value,
     cached_at: new Date().toISOString(),
   });

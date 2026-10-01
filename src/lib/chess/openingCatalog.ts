@@ -205,6 +205,21 @@ export function getCatalogMatchesForStartPosition(maxResults = 50): CatalogMatch
   return hydrateMatches(getOpeningIdsForPositionKey(startPositionKey), maxResults);
 }
 
+/** One FEN for every position the catalog reaches, the start position first. */
+export function listCatalogFens(): string[] {
+  const fenByPositionKey = new Map<string, string>([[startPositionKey, START_FEN]]);
+
+  for (const opening of openings) {
+    for (const move of opening.moves) {
+      if (!fenByPositionKey.has(move.positionKey)) {
+        fenByPositionKey.set(move.positionKey, move.fen);
+      }
+    }
+  }
+
+  return [...fenByPositionKey.values()];
+}
+
 export function buildCatalogPreview(
   matches: CatalogMatch[],
   rootFen: string = START_FEN,

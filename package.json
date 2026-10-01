@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "catalog:download": "node scripts/buildCatalog.mjs",
     "catalog:index": "node scripts/buildOpeningCatalogIndex.mjs",
+    "cache:prefill": "tsx --env-file=.env.local scripts/prefillPositionCache.ts",
     "db:types": "supabase gen types typescript --project-id bcpkifxnjfjzfrqvpkby > src/types/database.ts"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
     "eslint-config-next": "16.2.4",
     "supabase": "^2.92.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.2"
   }

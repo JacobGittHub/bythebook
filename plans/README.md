@@ -15,8 +15,10 @@ otherwise)
 | Plan | Status | Depends on | Goal |
 |---|---|---|---|
 | [vision.md](vision.md) | living | — | The shared picture every plan serves |
-| [deployment.md](deployment.md) | deciding | — | Public Vercel deployment for guests and about 100 beta users |
+| [deployment.md](deployment.md) | active | — | Public Vercel deployment for guests and about 100 beta users |
 | [region-map.md](region-map.md) | ready | — | Finish the Regions tab in the Visual Lab (build phases 3–7) |
+| [bookstore.md](bookstore.md) | deciding | deployment.md | Default books, repertoires, and library export and import |
+| [game-history.md](game-history.md) | deciding | deployment.md | Import a user's own games and show them on the app's displays |
 
 Statuses: `deciding` (open questions remain) · `ready` (steps written, not started) ·
 `active` · `done` · `parked`.

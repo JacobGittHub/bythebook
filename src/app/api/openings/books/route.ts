@@ -1,12 +1,14 @@
 import { getAuthenticatedUser } from "@/lib/supabase";
 import { createOpeningBook, listOpeningBooks } from "@/lib/db/openings";
 import { openingBookInputSchema } from "@/lib/validators/schemas";
+import { recordUsage } from "@/lib/db/usage";
 
 export async function GET() {
   const user = await getAuthenticatedUser();
   if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+  await recordUsage(user.id, "books_read");
 
   return Response.json({ books: await listOpeningBooks() });
 }
@@ -16,6 +18,7 @@ export async function POST(request: Request) {
   if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+  await recordUsage(user.id, "books_write");
 
   const payload = await request.json();
   const parsedPayload = openingBookInputSchema.safeParse(payload);

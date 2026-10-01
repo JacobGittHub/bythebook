@@ -3,12 +3,14 @@ import { getOpeningBook, updateOpeningBookTree } from "@/lib/db/openings";
 import { parseMoveNode } from "@/lib/chess/moveTree";
 import { updateBookTreeSchema } from "@/lib/validators/schemas";
 import type { Json } from "@/types/database";
+import { recordUsage } from "@/lib/db/usage";
 
 type Params = { params: Promise<{ bookId: string }> };
 
 export async function GET(_req: Request, { params }: Params) {
   const user = await getAuthenticatedUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  await recordUsage(user.id, "books_read");
 
   const { bookId } = await params;
   const book = await getOpeningBook(bookId);
@@ -20,6 +22,7 @@ export async function GET(_req: Request, { params }: Params) {
 export async function PATCH(request: Request, { params }: Params) {
   const user = await getAuthenticatedUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  await recordUsage(user.id, "books_write");
 
   const { bookId } = await params;
 

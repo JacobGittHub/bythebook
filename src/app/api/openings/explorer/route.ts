@@ -1,4 +1,4 @@
-import { getExplorerData } from "@/lib/chess/explorerService";
+import { getExplorerDataForUser } from "@/lib/chess/explorerService";
 import { LichessRateLimitError } from "@/lib/chess/lichessExplorer";
 import { getAuthenticatedUser } from "@/lib/supabase";
 import {
@@ -19,16 +19,21 @@ async function resolveFenFromRequest(request: Request) {
 }
 
 async function handleExplorerRequest(request: Request) {
+  // Guests are served too, from the cache only.
   const user = await getAuthenticatedUser();
-  if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   try {
     const fen = await resolveFenFromRequest(request);
-    const { data, cached } = await getExplorerData(fen);
+    const result = await getExplorerDataForUser(fen, user?.id ?? null);
 
-    return Response.json({ fen, ...data, cached });
+    if (!result) {
+      return Response.json(
+        { error: "This position is not cached. Live lookups need an account." },
+        { status: 404 },
+      );
+    }
+
+    return Response.json({ fen, ...result.data, cached: result.cached });
   } catch (error) {
     if (error instanceof LichessRateLimitError) {
       return Response.json(

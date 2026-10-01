@@ -158,17 +158,17 @@ export type Database = {
         Row: {
           cached_at: string | null
           explorer_data: Json
-          fen: string
+          position_key: string
         }
         Insert: {
           cached_at?: string | null
           explorer_data: Json
-          fen: string
+          position_key: string
         }
         Update: {
           cached_at?: string | null
           explorer_data?: Json
-          fen?: string
+          position_key?: string
         }
         Relationships: []
       }
@@ -343,6 +343,27 @@ export type Database = {
           },
         ]
       }
+      usage_counters: {
+        Row: {
+          calls: number
+          day: string
+          kind: string
+          user_id: string | null
+        }
+        Insert: {
+          calls?: number
+          day?: string
+          kind: string
+          user_id?: string | null
+        }
+        Update: {
+          calls?: number
+          day?: string
+          kind?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_position_stats: {
         Row: {
           book_id: string
@@ -393,7 +414,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_usage: {
+        Args: { p_kind: string; p_user_id?: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

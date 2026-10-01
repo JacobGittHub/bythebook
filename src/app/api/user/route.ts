@@ -1,12 +1,14 @@
 import { getCurrentUser } from "@/lib/db/users";
 import { getAuthenticatedUser } from "@/lib/supabase";
 import { userPreferencesSchema } from "@/lib/validators/schemas";
+import { recordUsage } from "@/lib/db/usage";
 
 export async function GET() {
   const user = await getAuthenticatedUser();
   if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+  await recordUsage(user.id, "user");
 
   return Response.json({
     user: await getCurrentUser({
@@ -21,6 +23,7 @@ export async function PATCH(request: Request) {
   if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+  await recordUsage(user.id, "user");
 
   const payload = await request.json();
   const parsedPayload = userPreferencesSchema.safeParse(payload);

@@ -1,6 +1,6 @@
 # Architecture
 
-**Last reviewed:** 2026-09-29
+**Last reviewed:** 2026-10-01
 
 This file explains why the system is built the way it is. The rules themselves are in
 `AGENTS.md`; this file holds the reasoning and detail behind them. When the code can answer
@@ -128,7 +128,8 @@ Supabase Postgres with Row Level Security on every table. Columns are in
 | `profiles` | Extends `auth.users` with display info | Own row only |
 | `opening_books` | User repertoires; `move_node` JSONB tree | Own books; public books readable by authenticated users |
 | `training_sessions` | Result of each training run | Private |
-| `position_cache` | Cached Lichess explorer responses | Read: authenticated · Write: service role |
+| `position_cache` | Cached Lichess explorer responses, keyed by `position_key` | Read: authenticated · Write: service role. The app itself reads and writes it on the server with the service role, so guests can be served |
+| `usage_counters` | Calls per (user, day, kind), with one shared row for guests | Service role only |
 | `puzzles` | Imported Lichess puzzle dump | Read: authenticated |
 | `puzzle_history` | Per-user puzzle attempts, unique per (user, puzzle) | Private |
 | `user_position_stats` | Per (user, position_key, book) visit/success/failure counts | Private |
@@ -146,9 +147,13 @@ Supabase Postgres with Row Level Security on every table. Columns are in
   choices, one response per position. The global position graph already exists as the
   in-memory catalog index. At this scale a Supabase `positions`/`edges` model adds round
   trips and no benefit.
-- **The migration history is incomplete.** The database has ten tables, but
-  `supabase/migrations/` holds a single column-rename file; the tables were created outside
-  migrations. From now on every schema change gets a migration (see `AGENTS.md`).
+- **The migration history is incomplete.** The first ten tables were created outside
+  migrations, so `supabase/migrations/` holds only the changes made since. From now on every
+  schema change gets a migration (see `AGENTS.md`).
+- **Call counts.** `increment_usage` adds one to a `usage_counters` row and returns the new
+  count in a single statement. `recordUsage` (`src/lib/db/usage.ts`) calls it from every
+  route handler and before every live Lichess request. The counts exist to choose per-user
+  ceilings from (`plans/deployment.md`, D8).
 - **As of 2026-09-29, no application code reads or writes `user_position_stats`,
   `position_evals` or `drills`.** They exist for the trainer.
 
@@ -160,7 +165,9 @@ that iterates, walks trees or aggregates runs client-side.
 | Operation | Where | Why |
 |---|---|---|
 | Opening name lookup | Client (in-memory catalog) | Instant, with no round trip |
-| Master game stats | Vercel API → `position_cache` → Lichess | Proxied and cached |
+| Master game stats | Vercel API → `position_cache` → Lichess (signed-in users only) | Proxied and cached; guests read the cache |
+| Count a call | Vercel API → `increment_usage` | Single-row upsert |
+| Fill the cache for the catalog | Local script (`npm run cache:prefill`) | Thousands of Lichess calls, so never on Vercel |
 | Engine analysis | Client (Stockfish Web Worker) | WASM runs in the browser, so the server pays nothing |
 | Report an eval to the DB | Vercel API → upsert `position_evals` | Single-row write with the service role (not built yet) |
 | Generate drills from a book | Client (walks `move_node`, joins `position_evals`) | Light local computation |
@@ -185,7 +192,8 @@ that iterates, walks trees or aggregates runs client-side.
 
 - **Lichess Opening Explorer.** The app uses the masters endpoint at
   `explorer.lichess.ovh/masters`. Since March 2026 it requires a personal API token
-  (`Authorization: Bearer`) because of DDoS protection. All calls are proxied; see
+  (`Authorization: Bearer`) because of DDoS protection. All calls are proxied, and only a
+  signed-in user's request or the local pre-fill script can cause one; see
   `processes/lichess-api-and-caching.md`.
 - **Lichess opening names.** The static dataset from `github.com/lichess-org/chess-openings`
   is bundled locally (see "Opening catalog").
@@ -210,7 +218,8 @@ that iterates, walks trees or aggregates runs client-side.
 |---|---|---|
 | ECO opening catalog | `openingCatalogIndex.json` (repo) | Build time, committed |
 | ECO tree structure | In-memory module cache | Once per process |
-| Master-game moves at a position | `position_cache` | On demand, kept permanently |
+| Master-game moves at a position | `position_cache` | On demand and by the pre-fill script, kept permanently |
+| Call counts | `usage_counters` | On every counted request |
 | User book tree | `opening_books.move_node` | Read on page load |
 | Per-position training stats | `user_position_stats` | Per drill (not built yet) |
 | Engine evaluations | `position_evals` | Lazily, by client Stockfish (not built yet) |
@@ -219,9 +228,10 @@ that iterates, walks trees or aggregates runs client-side.
 **Storage gaps**, in rough order of how much they block:
 
 1. **Game counts per catalog position.** Without them, the `games` weight mode can't work.
-   Either extend `scripts/buildOpeningCatalogIndex.mjs` to bake them in, or pre-warm
-   `position_cache` for every catalog FEN. Pre-warming would also remove cold-cache Lichess
-   calls for common positions.
+   `npm run cache:prefill` loads them into `position_cache` for every catalog position,
+   which also removes cold-cache Lichess calls for those positions. The gap is closed for a
+   database once the script has been run against it; nothing reads the counts as weights
+   yet.
 2. **Pre-warmed `position_evals`** for the catalog positions at moderate depth (16–18 ply),
    filled by a one-off offline script. The `engine` weight mode and the hyperbolic panel's
    ordering bias need these.
@@ -243,7 +253,8 @@ The visualization dependencies and what each is for. Removal status is in `AGENT
 **Tooling.** `vitest` (dev only) runs the property tests; its config resolves the `@/*` alias
 from `tsconfig.json`. It needs `@types/node` 22 or newer. The project uses 22, the oldest Node
 line still supported, so the types never offer an API that a Node 22 deployment lacks
-(local development runs Node 24).
+(local development runs Node 24). `tsx` (dev only) runs the TypeScript scripts in `scripts/`
+that import from `src/`, since plain Node can't resolve the `@/*` alias.
 
 These are not wanted: `cytoscape`, `vis-network`, `react-force-graph`, graph layout engines
 (Cola.js, dagre, Graphviz WASM), physics engines (Cannon, Rapier) and shader libraries.
