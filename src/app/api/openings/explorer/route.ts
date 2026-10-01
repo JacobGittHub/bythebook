@@ -1,30 +1,10 @@
-import { fetchExplorerMoves, LichessRateLimitError } from "@/lib/chess/lichessExplorer";
-import { getCachedPosition, setCachedPosition } from "@/lib/db/positionCache";
+import { getExplorerData } from "@/lib/chess/explorerService";
+import { LichessRateLimitError } from "@/lib/chess/lichessExplorer";
 import { getAuthenticatedUser } from "@/lib/supabase";
 import {
   explorerBodySchema,
   explorerQuerySchema,
 } from "@/lib/validators/schemas";
-import type { ExplorerResponse } from "@/types/chess";
-
-// Lichess returns castling as king-to-rook (e1h1, e1a1, e8h8, e8a8).
-// chess.js expects king-to-destination (e1g1, e1c1, e8g8, e8c8).
-const CASTLING_UCI: Record<string, string> = {
-  e1h1: "e1g1",
-  e1a1: "e1c1",
-  e8h8: "e8g8",
-  e8a8: "e8c8",
-};
-
-function normalizeCastling(data: ExplorerResponse): ExplorerResponse {
-  return {
-    ...data,
-    moves: data.moves.map((m) => ({
-      ...m,
-      uci: CASTLING_UCI[m.uci] ?? m.uci,
-    })),
-  };
-}
 
 async function resolveFenFromRequest(request: Request) {
   if (request.method === "POST") {
@@ -46,17 +26,9 @@ async function handleExplorerRequest(request: Request) {
 
   try {
     const fen = await resolveFenFromRequest(request);
-    const cached = await getCachedPosition(fen);
+    const { data, cached } = await getExplorerData(fen);
 
-    if (cached) {
-      const normalized = normalizeCastling(cached);
-      return Response.json({ fen, ...normalized, cached: true });
-    }
-
-    const explorerData = normalizeCastling(await fetchExplorerMoves(fen));
-    await setCachedPosition(fen, explorerData);
-
-    return Response.json({ fen, ...explorerData, cached: false });
+    return Response.json({ fen, ...data, cached });
   } catch (error) {
     if (error instanceof LichessRateLimitError) {
       return Response.json(

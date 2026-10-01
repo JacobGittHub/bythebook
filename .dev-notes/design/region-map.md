@@ -7,10 +7,10 @@ like the other lab prototypes, but it is built to them anyway: containment, pure
 functions and property tests.
 **Last reviewed:** 2026-09-29
 **Files:** `src/lib/regions/` holds the pure logic, with `*.test.ts` alongside and shared test
-inputs in `testShapes.ts`. Built so far: `prng`, `geometry`, `bisect`, `pebble` and `layout`
-(which composes bisection and pebbles for one parent). Planned: `src/components/lab/RegionMap.tsx`,
-`src/components/lab/regionRender.ts`, `src/components/lab/LabSpinner.tsx`,
-`src/components/lab/LabStats.tsx`
+inputs in `testShapes.ts`. Built so far: `prng`, `geometry`, `bisect`, `pebble`, `layout`
+(which composes bisection and pebbles for one parent), `selection` and `loader`. Planned:
+`src/components/lab/RegionMap.tsx`, `src/components/lab/regionRender.ts`,
+`src/components/lab/LabSpinner.tsx`, `src/components/lab/LabStats.tsx`
 
 The design below was settled with the user on 2026-09-29. The values given as defaults are
 design decisions. Once they exist in code, replace them here with the names of their
@@ -24,7 +24,7 @@ phases 4 and 6.
 - [x] 0. Record this design
 - [x] 1. Vitest, and pure geometry (`geometry`, `prng`, `bisect`, `pebble`, `layout`) with
       property tests
-- [ ] 2. Data: explorer route and cache changes, `fenAfterUci`, `selection`, `loader`
+- [x] 2. Data: explorer route and cache changes, `fenAfterUci`, `selection`, `loader`
 - [ ] 3. Lab shell: the Regions tab, `LabSpinner`, `LabStats`, and FPS stats for `ChessMap`
 - [ ] 4. `RegionMap` core: camera, frame, visibility and fade, rendering, walls, labels,
       "Other" reveal (no focus or pins yet)
@@ -106,21 +106,32 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 
 ## Which children a blob gets: top p, top k and "Other"
 
-- **Order:** moves sorted by games, most first (ties by UCI).
-- **Tier 1 (default):** take the smallest prefix whose games reach p = 0.9 of the position's
-  total, capped at k = 8. Everything else becomes one dashed **"Other"** blob, whose area is
-  the position total minus the selected moves.
+`selectChildren` in `selection.ts` implements this.
+
+- **Order:** moves sorted by games, most first (ties by UCI). Moves with no games are dropped.
+- **Tier 1:** take the smallest prefix whose games reach p of the position's total, capped at
+  k moves (`DEFAULT_TOP_SETTINGS`: 0.9 and 8). Everything else becomes one dashed **"Other"**
+  blob, whose area is the position total minus the selected moves.
+- **The total is the explorer's position total,** so "Other" includes moves beyond the 20
+  Lichess lists. Old cache rows without totals fall back to the sum of the listed moves.
 - **Clicking "Other" reveals the next tier inside it,** so nothing else on the map moves. A
   smaller "Other" remains if moves are left.
-  - Tier 2: cumulative p = 0.99, k = 15.
-  - Tier 3: cumulative p = 0.999, k = 20.
-  - After tier 3, what remains is permanently sealed.
+  - Tier t covers share p of what tier t − 1 left over, so its cumulative cut-off is
+    1 − (1 − p)^t. With p = 0.9 that is 0.9, 0.99 and 0.999, as the user described ("p .9 of
+    the .9"), and it still holds when the sidebar changes p.
+  - k: tier 2 allows `TIER_2_K` moves in all, and tier 3 everything the explorer returns
+    (`EXPLORER_MOVES_LIMIT`).
+  - There are `TIER_COUNT` tiers. After the last, what remains is permanently sealed.
+  - Opening "Other" always reveals at least one move, even if the next tier's p is already
+    met. An "Other" whose remaining games belong only to unlisted moves is sealed, since
+    opening it would show nothing.
 - **p and k are cumulative totals for the parent** (confirmed with the user). Tier 2 shows at
   most 15 moves in all, not 15 more than tier 1.
 - **"Other" doesn't count as a layer.** The moves inside it have the same side to move as
   their siblings, so they have the same colour and depth.
-- **Pinned moves, and moves on the path to a pin, are always included.** They override top p
-  and top k.
+- **Pinned moves, and moves on the path to a pin, are always included.** They appear at the
+  tier level they were pinned in, whatever p and k say, and keep every "Other" above them
+  open, even one left with nothing else in it.
 - **Changing p or k re-lays out the whole map** behind a spinner.
 
 ## Zoom model
@@ -207,17 +218,20 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 
 - **One explorer lookup per blob, for its own position,** through `/api/openings/explorer`
   (see `processes/lichess-api-and-caching.md`).
-- **Planned route changes:**
-  - Request 20 moves (`EXPLORER_MOVES_LIMIT`), and verify once that Lichess honours it.
-  - Keep the position totals that Lichess returns.
-  - Record the moves limit in each cached row, and refetch rows that were cached with fewer
-    moves or without totals.
-- **The Explorer page keeps showing 12 moves.**
-- **The client loader:**
-  - At most 4 requests in flight, with a de-duplicating in-memory cache.
-  - Fetches in order of on-screen size.
-  - Pauses for `Retry-After` on a 429.
-  - Aborts on unmount.
+- **The route returns up to `EXPLORER_MOVES_LIMIT` moves and the position totals.** Old cache
+  rows are refetched lazily. The Explorer page, mini tree and dashboard tree still show 12
+  (`EXPLORER_DISPLAY_MOVES`). The process doc has the details.
+- **Child positions** come from `fenAfterUci` in `src/lib/chess/fen.ts`.
+- **The client loader** (`createExplorerLoader` in `loader.ts`):
+  - At most `EXPLORER_MAX_IN_FLIGHT` requests open, each position requested once.
+  - The view calls `want()` with the positions it needs and their on-screen sizes. That
+    replaces the waiting queue, so positions scrolled away are dropped, and the biggest load
+    first.
+  - A 429 pauses every request for its `Retry-After`, and the rate-limited position goes
+    first when the pause ends. Other failures wait `FAILED_RETRY_MS` before being asked
+    again.
+  - `dispose()` aborts open requests on unmount. Loaded data sits in a cache that lasts for
+    the page session, so switching tabs and back doesn't reload it.
 - **Master games thin out** past about 15 plies in sidelines, so many branches end before the
   depth limit.
 

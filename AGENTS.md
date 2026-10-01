@@ -155,8 +155,9 @@ them, unless the user brings it up.
 
 ## Read before working on…
 
-These docs live in `.dev-notes/`, which is local-only like this file. They aren't loaded
-automatically, so read the relevant one before you start.
+These docs live in `.dev-notes/`, which is version controlled and public like this file, so
+keep secrets out of both. They aren't loaded automatically, so read the relevant one before
+you start.
 
 | When you're working on… | Read |
 |---|---|

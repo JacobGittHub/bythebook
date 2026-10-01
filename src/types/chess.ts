@@ -90,7 +90,17 @@ export type OpeningInfo = {
   name?: string;
 };
 
+export type ExplorerTotals = {
+  white: number;
+  draws: number;
+  black: number;
+};
+
 export type ExplorerResponse = {
   moves: ExplorerMove[];
   opening?: OpeningInfo;
+  /** Every game in the position, including moves beyond the listed ones. Missing on old cache rows. */
+  totals?: ExplorerTotals;
+  /** The move limit this data was fetched with. Missing on old cache rows. */
+  movesLimit?: number;
 };

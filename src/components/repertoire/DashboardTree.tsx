@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Chess } from "chess.js";
 import { OpeningTreeFull, type DisplayNode, type SelectedNodeInfo } from "./OpeningTreeFull";
 import { TreeNodePanel } from "./TreeNodePanel";
 import { BookEditor } from "./BookEditor";
+import { fenAfterUci } from "@/lib/chess/fen";
 import { buildDefaultCatalogTree, searchCatalogMatches } from "@/lib/chess/openingCatalog";
 import { mergeMoveLineIntoTree, getNodePathByUciLine } from "@/lib/chess/moveTree";
 import type { ExplorerMove, MoveNode, OpeningBook } from "@/types/chess";
@@ -15,16 +15,6 @@ const MAX_GHOST_NODES = 6;
 const MIN_GHOST_GAMES = 200;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function fenAfterMove(baseFen: string, uci: string): string {
-  try {
-    const chess = new Chess(baseFen);
-    chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] });
-    return chess.fen();
-  } catch {
-    return baseFen;
-  }
-}
 
 function removeMoveNodeById(root: MoveNode, targetId: string): MoveNode {
   return {
@@ -49,7 +39,7 @@ function buildGhostNodes(
       id: `ghost:${parentId}:${m.uci}`,
       san: m.san,
       uci: m.uci,
-      fen: fenAfterMove(parentFen, m.uci),
+      fen: fenAfterUci(parentFen, m.uci) ?? parentFen,
       children: [],
       isGhost: true,
     }));

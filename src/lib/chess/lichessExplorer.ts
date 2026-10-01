@@ -1,3 +1,4 @@
+import { EXPLORER_MOVES_LIMIT } from "@/lib/chess/explorerData";
 import type { ExplorerResponse } from "@/types/chess";
 
 type LichessMasterMove = {
@@ -9,6 +10,9 @@ type LichessMasterMove = {
 };
 
 type LichessMasterResponse = {
+  white?: number;
+  draws?: number;
+  black?: number;
   moves?: LichessMasterMove[];
   opening?: {
     eco?: string;
@@ -29,7 +33,7 @@ export class LichessRateLimitError extends Error {
 export async function fetchExplorerMoves(fen: string): Promise<ExplorerResponse> {
   const url = new URL("https://explorer.lichess.ovh/masters");
   url.searchParams.set("fen", fen);
-  url.searchParams.set("moves", "12");
+  url.searchParams.set("moves", String(EXPLORER_MOVES_LIMIT));
 
   const token = process.env.LICHESS_API_TOKEN;
   const headers: HeadersInit = {
@@ -56,15 +60,25 @@ export async function fetchExplorerMoves(fen: string): Promise<ExplorerResponse>
   }
 
   const data = (await response.json()) as LichessMasterResponse;
+  const moves = (data.moves ?? []).map((move) => ({
+    san: move.san,
+    uci: move.uci,
+    white: move.white,
+    draws: move.draws,
+    black: move.black,
+  }));
+
+  // Lichess always sends the position totals; summing the listed moves is only a fallback.
+  const sum = (key: "white" | "draws" | "black") => moves.reduce((total, m) => total + m[key], 0);
 
   return {
-    moves: (data.moves ?? []).map((move) => ({
-      san: move.san,
-      uci: move.uci,
-      white: move.white,
-      draws: move.draws,
-      black: move.black,
-    })),
+    moves,
     opening: data.opening,
+    totals: {
+      white: data.white ?? sum("white"),
+      draws: data.draws ?? sum("draws"),
+      black: data.black ?? sum("black"),
+    },
+    movesLimit: EXPLORER_MOVES_LIMIT,
   };
 }

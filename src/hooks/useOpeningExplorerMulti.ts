@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { forDisplay } from "@/lib/chess/explorerData";
 import type { ExplorerResponse } from "@/types/chess";
 
 /**
@@ -34,7 +35,7 @@ export function useOpeningExplorerMulti(
           });
           if (!res.ok) return [fen, null];
           const data = (await res.json()) as ExplorerResponse;
-          return [fen, data];
+          return [fen, forDisplay(data)];
         } catch {
           return [fen, null];
         }

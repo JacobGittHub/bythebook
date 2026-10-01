@@ -13,6 +13,7 @@ const explorerMoveSchema = z.object({
   black: z.number(),
 });
 
+// Keep in step with ExplorerResponse: z.object drops any key not listed here.
 const explorerResponseSchema = z.object({
   moves: z.array(explorerMoveSchema),
   opening: z
@@ -21,6 +22,14 @@ const explorerResponseSchema = z.object({
       name: z.string().optional(),
     })
     .optional(),
+  totals: z
+    .object({
+      white: z.number(),
+      draws: z.number(),
+      black: z.number(),
+    })
+    .optional(),
+  movesLimit: z.number().optional(),
 });
 
 export async function getCachedPosition(fen: string): Promise<ExplorerResponse | null> {

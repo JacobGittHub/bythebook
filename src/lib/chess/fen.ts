@@ -1,3 +1,5 @@
+import { Chess } from "chess.js";
+
 export const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 export function normalizeFen(fen: string) {
@@ -16,4 +18,15 @@ export function toPositionKey(fen: string) {
     normalizedFen.split(" ");
 
   return [board, turn, castling, enPassant].join(" ");
+}
+
+/** The position after playing `uci` from `fen`, or null if the FEN is invalid or the move illegal. */
+export function fenAfterUci(fen: string, uci: string): string | null {
+  try {
+    const chess = new Chess(fen);
+    chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] });
+    return chess.fen();
+  } catch {
+    return null;
+  }
 }

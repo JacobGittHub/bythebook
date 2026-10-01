@@ -1,7 +1,7 @@
 # .dev-notes
 
-Local-only design and architecture docs for ByTheBook. Like `AGENTS.md`, this folder is
-gitignored.
+Design and architecture docs for ByTheBook. Like `AGENTS.md`, this folder is version
+controlled, and the repository is public, so never put secrets or keys here.
 
 The index of these docs, and when to read each one, is in `AGENTS.md` under "Read before
 working on…". Keep that table as the only index.

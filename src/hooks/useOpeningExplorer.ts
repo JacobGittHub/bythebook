@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { forDisplay } from "@/lib/chess/explorerData";
 import type { ExplorerResponse } from "@/types/chess";
 
 export type OpeningExplorerResult = {
@@ -32,7 +33,7 @@ export function useOpeningExplorer(fen: string): OpeningExplorerResult {
         return res.json() as Promise<ExplorerResponse>;
       })
       .then((data) => {
-        if (!cancelled) setState({ data, loading: false, error: null });
+        if (!cancelled) setState({ data: forDisplay(data), loading: false, error: null });
       })
       .catch((err: unknown) => {
         if (!cancelled) {
