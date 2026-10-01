@@ -34,7 +34,7 @@ as a place with neighbors, not a move list. The full statement is "Product goal"
 ## Not decided
 
 - The long-term visualization direction. The territory map and the hyperbolic panel are
-  candidates (`.dev-notes/design/`), not commitments.
+  candidates (`docs/design/`), not commitments.
 - What comes after deployment: the trainer, puzzles, or a new visualization.
 
 > ME:

@@ -86,12 +86,12 @@ changes, also run the app and look at the result. Tests sit next to the code the
   to remove something. Removing anything on that list, or any agent doc, needs the user's
   explicit say-so. When something becomes superseded, add it to the list rather than
   deleting it.
-- **Keep the docs true.** When you change code that a `.dev-notes/` doc describes, update that
+- **Keep the docs true.** When you change code that a `docs/` doc describes, update that
   doc in the same change and bump its "Last reviewed" date. Don't copy values that live in
   code (constants, line counts, file lists) into docs; name the constant instead. Only
   create new docs when the user asks.
 - The harness memory is for how the user likes to work. Architecture decisions go in this
-  file or in `.dev-notes/`.
+  file or in `docs/`.
 
 ## Plans
 
@@ -169,18 +169,18 @@ them, unless the user brings it up.
 
 ## Read before working on…
 
-These docs live in `.dev-notes/`, which is version controlled and public like this file, so
+These docs live in `docs/`, which is version controlled and public like this file, so
 keep secrets out of both. They aren't loaded automatically, so read the relevant one before
 you start.
 
 | When you're working on… | Read |
 |---|---|
-| The data model, catalog, database, caching, engine, dependencies, or any "why is it like this" question | `.dev-notes/architecture.md` |
-| The Lichess API route or `position_cache` | `.dev-notes/processes/lichess-api-and-caching.md` |
-| Any tree or map visualization | `.dev-notes/architecture.md` § "Visualization principles", then the design doc below |
-| The Opening Explorer or the mini tree | `.dev-notes/design/explorer.md` |
-| The dashboard overview tree | `.dev-notes/design/dashboard-overview.md` |
-| The territory map (candidate) | `.dev-notes/design/territory-map.md` |
-| The hyperbolic panel (candidate) | `.dev-notes/design/hyperbolic-panel.md` |
-| The lab page, globe, ChessMap, or branch view | `.dev-notes/design/lab-prototypes.md` |
-| The lab "Regions" tab (region map) or `src/lib/regions/` | `.dev-notes/design/region-map.md` |
+| The data model, catalog, database, caching, engine, dependencies, or any "why is it like this" question | `docs/architecture.md` |
+| The Lichess API route or `position_cache` | `docs/processes/lichess-api-and-caching.md` |
+| Any tree or map visualization | `docs/architecture.md` § "Visualization principles", then the design doc below |
+| The Opening Explorer or the mini tree | `docs/design/explorer.md` |
+| The dashboard overview tree | `docs/design/dashboard-overview.md` |
+| The territory map (candidate) | `docs/design/territory-map.md` |
+| The hyperbolic panel (candidate) | `docs/design/hyperbolic-panel.md` |
+| The lab page, globe, ChessMap, or branch view | `docs/design/lab-prototypes.md` |
+| The lab "Regions" tab (region map) or `src/lib/regions/` | `docs/design/region-map.md` |

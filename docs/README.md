@@ -1,4 +1,4 @@
-# .dev-notes
+# docs
 
 Design and architecture docs for ByTheBook. Like `AGENTS.md`, this folder is version
 controlled, and the repository is public, so never put secrets or keys here.

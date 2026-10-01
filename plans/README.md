@@ -4,7 +4,7 @@ Where ByTheBook is going and how it gets there. The user and agents edit these f
 together: agents write proposals, the user annotates them, and the choices they settle
 become decisions that later work follows.
 
-`.dev-notes/` describes the system as it is. This folder describes work that hasn't happened
+`docs/` describes the system as it is. This folder describes work that hasn't happened
 yet. The repository is public, so keep secrets out of here too.
 
 **Focus:** `deployment.md` (the user sets this; agents work on the focus plan unless told
@@ -16,6 +16,7 @@ otherwise)
 |---|---|---|---|
 | [vision.md](vision.md) | living | — | The shared picture every plan serves |
 | [deployment.md](deployment.md) | deciding | — | Public Vercel deployment for guests and about 100 beta users |
+| [region-map.md](region-map.md) | ready | — | Finish the Regions tab in the Visual Lab (build phases 3–7) |
 
 Statuses: `deciding` (open questions remain) · `ready` (steps written, not started) ·
 `active` · `done` · `parked`.
@@ -69,7 +70,7 @@ Background and reasoning.
 3. With every question settled, the agent drafts the Steps in plan mode, and the user
    approves them.
 4. When every step is done, the status becomes `done` and the plan's lasting facts move into
-   `.dev-notes/` or `AGENTS.md`. The file stays as the record.
+   `docs/` or `AGENTS.md`. The file stays as the record.
 
 **Size.** Keep each plan under about 150 lines. Past that, trim the Notes or split the plan.
 Split a plan when part of it could be finished on its own, and record the link in

@@ -5,7 +5,7 @@
 and tests that doc's layout questions. It is exempt from the production visualization rules
 like the other lab prototypes, but it is built to them anyway: containment, pure layout
 functions and property tests.
-**Last reviewed:** 2026-09-29
+**Last reviewed:** 2026-10-01
 **Files:** `src/lib/regions/` holds the pure logic, with `*.test.ts` alongside and shared test
 inputs in `testShapes.ts`. Built so far: `prng`, `geometry`, `bisect`, `pebble`, `layout`
 (which composes bisection and pebbles for one parent), `selection` and `loader`. Planned:
@@ -18,20 +18,7 @@ constants.
 
 ## Build progress
 
-Typecheck, lint and tests run at the end of every phase, and the user checks in after
-phases 4 and 6.
-
-- [x] 0. Record this design
-- [x] 1. Vitest, and pure geometry (`geometry`, `prng`, `bisect`, `pebble`, `layout`) with
-      property tests
-- [x] 2. Data: explorer route and cache changes, `fenAfterUci`, `selection`, `loader`
-- [ ] 3. Lab shell: the Regions tab, `LabSpinner`, `LabStats`, and FPS stats for `ChessMap`
-- [ ] 4. `RegionMap` core: camera, frame, visibility and fade, rendering, walls, labels,
-      "Other" reveal (no focus or pins yet)
-- [ ] 5. Focus: `windows` (window, corridor and chain rules), focus UI, zoom block
-- [ ] 6. Pinning: `pins` (fit and carve, free-space pieces), Shift+click, tints, share-error
-      stats
-- [ ] 7. Sidebar controls, Reshuffle, re-layout spinner, final docs pass
+The remaining build phases and their checks are tracked in `plans/region-map.md`.
 
 ## What it shows
 
