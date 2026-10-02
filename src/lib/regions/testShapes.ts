@@ -1,6 +1,10 @@
 // Random inputs shared by the region property tests. Test-only.
+import { Chess } from "chess.js";
+import { EXPLORER_MOVES_LIMIT, gameCount } from "@/lib/chess/explorerData";
+import type { ExplorerMove, ExplorerResponse } from "@/types/chess";
 import { sampleCircle, type Polygon, type Vec } from "./geometry";
-import type { Rng } from "./prng";
+import { rngFor, type Rng } from "./prng";
+import type { Blob, RegionStore } from "./store";
 
 /** Convex hull, counter-clockwise (Andrew's monotone chain). */
 export function convexHull(points: readonly Vec[]): Vec[] {
@@ -62,4 +66,54 @@ export function randomWeights(rng: Rng, count: number): number[] {
     if (kind === 1) return 1 / Math.pow(i + 1, 1.5);
     return Math.pow(0.5, i) * (0.5 + rng());
   });
+}
+
+/**
+ * Made-up explorer data for a position: its legal moves with long-tailed game counts. Like
+ * the real explorer, it lists at most `EXPLORER_MOVES_LIMIT` moves, and its totals also
+ * count the moves it leaves out. The same position and seed always give the same data.
+ */
+export function fakeExplorerData(fen: string, seed = 0): ExplorerResponse {
+  const rng = rngFor(fen, seed);
+  const legal = new Chess(fen).moves({ verbose: true });
+
+  const all: ExplorerMove[] = legal.map((move) => ({ san: move.san, uci: move.lan, white: 0, draws: 0, black: 0 }));
+  // Rank the moves at random, then give each a count that falls off with its rank.
+  const ranked = all
+    .map((move) => ({ move, key: rng() }))
+    .sort((a, b) => a.key - b.key || (a.move.uci < b.move.uci ? -1 : 1))
+    .map(({ move }, rank) => {
+      const games = Math.floor((200_000 * (0.5 + rng())) / Math.pow(rank + 1, 2.2));
+      const white = Math.floor(games * 0.4);
+      const draws = Math.floor(games * 0.35);
+      return { ...move, white, draws, black: games - white - draws };
+    })
+    .filter((move) => gameCount(move) > 0);
+
+  const sum = (key: "white" | "draws" | "black") => ranked.reduce((total, m) => total + m[key], 0);
+  return {
+    moves: ranked.slice(0, EXPLORER_MOVES_LIMIT),
+    totals: { white: sum("white"), draws: sum("draws"), black: sum("black") },
+    movesLimit: EXPLORER_MOVES_LIMIT,
+  };
+}
+
+/** Every blob in the store, each after its parent. */
+export function allBlobs(store: RegionStore): Blob[] {
+  const out: Blob[] = [];
+  const walk = (blob: Blob) => {
+    out.push(blob);
+    blob.children?.forEach(walk);
+  };
+  walk(store.root);
+  return out;
+}
+
+/** Expands every open blob down to `plies` below the root, with made-up data. */
+export function growStore(store: RegionStore, plies: number, seed = 0) {
+  for (let round = 0; round <= plies; round++) {
+    for (const blob of allBlobs(store)) {
+      if (blob.status === "open" && blob.depth < plies) store.expand(blob, fakeExplorerData(blob.fen, seed));
+    }
+  }
 }

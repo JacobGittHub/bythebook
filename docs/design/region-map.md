@@ -1,17 +1,20 @@
 # Region map (lab prototype)
 
-**Status:** Being built as a third prototype on the Visualizations page, "Regions", next to
-"Globe (R3F)" and "2D Map" (see `lab-prototypes.md` for how the prototypes are shown). It is
-the first hands-on prototype of the territory-map idea (`territory-map.md`)
-and tests that doc's layout questions. It is exempt from the production visualization rules
-like the other lab prototypes, but it is built to them anyway: containment, pure layout
-functions and property tests.
-**Last reviewed:** 2026-10-01
+**Status:** A third prototype on the Visualizations page, "Regions", next to "Globe (R3F)"
+and "2D Map" (see `lab-prototypes.md` for how the prototypes are shown). The map itself
+works: it lays out, zooms, pans and opens "Other". Focus, pinning and the sidebar controls
+are not built yet, and the sections on them below describe the design, not the code. It is
+the first hands-on prototype of the territory-map idea (`territory-map.md`) and tests that
+doc's layout questions. It is exempt from the production visualization rules like the other
+lab prototypes, but it is built to them anyway: containment, pure layout functions and
+property tests.
+**Last reviewed:** 2026-10-02
 **Files:** `src/lib/regions/` holds the pure logic, with `*.test.ts` alongside and shared test
-inputs in `testShapes.ts`. Built so far: `prng`, `geometry`, `bisect`, `pebble`, `layout`
-(which composes bisection and pebbles for one parent), `selection` and `loader`. Planned:
-`src/components/lab/RegionMap.tsx`, `src/components/lab/regionRender.ts`,
-`src/components/lab/LabSpinner.tsx`, `src/components/lab/LabStats.tsx`
+inputs in `testShapes.ts`: `prng`, `geometry`, `bisect`, `pebble`, `layout` (which composes
+bisection and pebbles for one parent), `selection`, `loader`, `store` (the blob tree),
+`camera`, `visibility` (what to draw) and `labels`. The view is
+`src/components/lab/RegionMap.tsx`, which draws with `src/components/lab/regionRender.ts`.
+Planned: `windows` (focus) and `pins`.
 
 The design below was settled with the user on 2026-09-29. The values given as defaults are
 design decisions. Once they exist in code, replace them here with the names of their
@@ -86,11 +89,28 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 - **A blob's own frame is centred on its core's centroid and scaled so the pebble has area
   1.** Every level therefore works with numbers around 1. The root (`ROOT_PEBBLE`) is a disc
   of area 1.
-- **The camera uses a floating origin,** `{anchorId, k, tx, ty}`. It re-anchors to the frame
-  blob whenever the frame changes, and screen points must not move when it does (this is
-  tested).
+- **The camera uses a floating origin,** `{anchorId, k, tx, ty}` (`camera.ts`). It re-anchors
+  to the frame blob whenever the frame changes, and screen points must not move when it does
+  (this is tested).
 - **Transforms are composed outward from the anchor,** up through ancestors and down into
   subtrees, never down from the root. This keeps deep zoom precise without a tile system.
+  `frameToFrame` goes between two blobs through their nearest common ancestor, and
+  `buildScene` (`visibility.ts`) works outward from the camera's anchor.
+
+## The blob tree
+
+`createRegionStore` in `store.ts` holds the blobs the view draws.
+
+- **It starts as the root alone and grows.** The view hands it explorer data for a blob
+  (`expand`), and it lays out that blob's children. Clicking "Other" lays out the next tier
+  inside it (`reveal`).
+- **A blob's id is its path from the root:** UCI moves and "Other" segments (`OTHER_SEGMENT`)
+  joined by spaces. The id seeds the blob's layout, so the same settings and data give the
+  same map in whatever order blobs are expanded (tested).
+- **A blob's status says what can happen to it** (`BlobStatus`): open, split, leaf, wall, or
+  for an "Other", closed or sealed.
+- **New settings mean a new store.** The settings (`RegionSettings`) are top p and k, the
+  layout options, the Reshuffle salt and the max zoom depth.
 
 ## Which children a blob gets: top p, top k and "Other"
 
@@ -124,23 +144,41 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 
 ## Zoom model
 
-- **Max zoom depth** (default 10 plies): blobs can be subdivided up to 10 layers below the
-  root or below any focus above them.
-- **Display depth** (default 3): blobs are drawn down to the frame blob's depth plus 3, and
-  only on screen.
-- **Frame blob:** the deepest blob covering at least 50% of the viewport, with the root as the
-  fallback.
+`buildScene` in `visibility.ts` implements this, apart from focus.
+
+- **Max zoom depth** (`DEFAULT_MAX_DEPTH` plies): blobs can be subdivided up to that many
+  layers below the root or below any focus above them.
+- **Display depth** (`DEFAULT_DISPLAY_DEPTH`): blobs are drawn down to the frame blob's depth
+  plus the display depth, and only on screen.
+- **Frame blob:** the deepest blob covering at least `FRAME_COVERAGE` of the viewport, with
+  the root as the fallback.
   - The frame is unique because siblings never overlap, so at most one can cover more than
     half the screen. Below 50%, two siblings could qualify.
-  - The next layer fades in as the leading child's coverage rises from 0% to 50%, so nothing
-    pops when the frame changes.
-  - Blobs under a minimum pixel size are neither computed nor drawn.
+  - Blobs under a minimum pixel size are neither computed nor drawn (`MIN_DRAW_PX`, and
+    `MIN_SUBDIVIDE_PX` for subdividing).
+- **The layer fade.** The next layer fades in inside a blob as that blob's coverage rises
+  from 0% to 50%, so nothing pops when the frame changes (tested).
+  - Each blob has a budget of layers it may show below itself. The root's is the display
+    depth. A child's is its parent's, less one, plus the child's own openness (its coverage
+    as a share of `FRAME_COVERAGE`, at most 1), capped at the display depth. A blob's
+    opacity is its parent's budget, clamped to 0–1.
+  - The frame and everything above it therefore keep the full budget, and the layer past
+    the display depth appears only inside the children being zoomed into.
+  - This replaces the first wording of the rule, "the next layer fades in as the leading
+    child's coverage rises", which fades one layer by one number. That version pops: the
+    moment a child becomes the frame, the layer below its own leading child appears at
+    once. With the budget, more than one extra layer can be partly visible down a line of
+    main moves, each fainter than the last.
 - **Wall:** a blob that can't be subdivided because of the depth limit is drawn with diagonal
-  hatching. When it's large on screen it also says "Click to focus and go deeper".
+  hatching. When it's large on screen it will also say "Click to focus and go deeper" (with
+  focus).
   - You can zoom past a wall, but nothing new appears.
-  - Zoom-in is blocked only when the frame is sealed and nothing on screen can reveal more,
-    allowing 2× past the point where the sealed frame fills the screen.
-  - Zoom-out stops when the root is 20% of the viewport's smaller dimension.
+  - Zoom-in is blocked when none of the frame's children are in view and the viewport,
+    grown by `SEALED_ZOOM_ALLOWANCE`, fits inside the frame. That covers a sealed frame
+    (the designed rule: 2× past the point where it fills the screen), and also the empty
+    padding between a frame's children, where zooming on would show nothing and wear out
+    the camera's precision.
+  - Zoom-out stops when the root is `MIN_ROOT_SHARE` of the viewport's smaller dimension.
 
 ## Focus and chains
 
@@ -199,8 +237,16 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
   - "Other": dashed.
   - Wall: hatched.
   - Waiting for data: a dotted outline.
-- **Labels:** SAN at the core centroid, sized to the blob, with a toggle. Opening names come
-  later.
+- **Labels:** SAN at the core centroid, sized to the blob, with a toggle (the toggle comes
+  with the sidebar). Opening names come later. `placeLabels` in `labels.ts` decides them.
+  - A blob much larger than the reading size (`READING_SIZE_SHARE` of the viewport) carries
+    its label as a faint watermark.
+  - A move that most games continue with sits in the middle of its parent, so their labels
+    land on each other. Of a blob and an ancestor whose labels overlap, the one nearer the
+    reading size keeps its label and the other gives way. They trade places gradually as
+    the view zooms, so nothing pops (tested).
+- **In code:** the colours and line styles are the constants at the top of
+  `regionRender.ts`.
 
 ## Data
 
@@ -225,9 +271,11 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 
 ## Interaction
 
-- **Pan and zoom:** wheel zoom toward the cursor, drag to pan (with a 4 px click threshold),
-  and two-finger pinch.
-- **Clicks:** click focuses, Shift+click pins, and clicking "Other" reveals it.
+- **Pan and zoom:** wheel zoom toward the cursor, drag to pan (with a click threshold,
+  `CLICK_THRESHOLD_PX`), and two-finger pinch. A trackpad pinch arrives as a wheel event
+  with Ctrl held and zooms too.
+- **Clicks:** click focuses, Shift+click pins, and clicking "Other" reveals it. Only the
+  "Other" click is built so far; `hitTest` finds the deepest drawn blob under the pointer.
 - **Buttons:** "Fit" and "Zoom to focus" animate with d3's `interpolateZoom`.
 - **The pointer handling is written by hand, not with `d3-zoom`,** because `d3-zoom` holds the
   wheel gesture's world point in the old frame, so re-anchoring mid-gesture would jump.
@@ -235,16 +283,20 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 ## Lab integration
 
 - **Views:** each prototype is a view of `LabHarness` on its own page, so only one is
-  mounted at a time. `RegionMap` must clean up its animation frame, `ResizeObserver`,
-  listeners and loader on unmount.
+  mounted at a time. `RegionMap` cleans up its animation frame, `ResizeObserver`, listeners,
+  retry timer and loader on unmount.
+- **One effect, no re-renders.** `RegionMap` keeps the store, camera and scene outside React.
+  Its animation loop redraws only when something changed (a dirty flag), and spends at most
+  `LAYOUT_BUDGET_MS` a frame laying out blobs, so a burst of loaded positions doesn't stall
+  the view.
 - **Loading:** a shared `LabSpinner` covers each view's first load. `RegionMap` shows a spinner
-  overlay during the first layout and any full re-layout.
+  overlay during the first layout, and will during any full re-layout.
 - **Stats:** they live in a `LabStats` component that owns the refresh timer, so only the
   stats panel re-renders.
   - Globe: renderer stats.
   - 2D Map: FPS and nodes drawn.
-  - Regions: FPS, blobs drawn, frame depth, layout time, pending requests, and the largest
-    share error.
+  - Regions: FPS, blobs drawn, frame depth, layout time and pending requests. The largest
+    share error comes with pinning.
 - **Sidebar:**
   - Settings that re-lay out the map: top p, top k, sibling gap, wall gap, roundness, cut
     jitter, and Reshuffle.
@@ -263,6 +315,13 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
   arrangement.
 - **Selection:** the tiers work, the totals are used, and pins override the cutoffs.
 - **Camera:** re-anchoring leaves screen points fixed to within 1e-9.
+- **Store:** every blob lies inside its parent, the geometry doesn't depend on the order of
+  expansion, opening "Other" moves nothing else, and walls, leaves and sealed "Other"s stay
+  as they are.
+- **Scene:** the frame is the deepest blob covering half the viewport, each blob is listed
+  after its parent and placed where the camera puts it, and opacity changes only slightly
+  for a slight move of the camera, including across a change of frame.
+- **Labels:** a blob's label and an ancestor's never both stay strong where they overlap.
 - **Focus:** the window, corridor and chain rules.
 - **Pins:** a pin that fits keeps its geometry exactly, and the carve fallback keeps its area
   share.

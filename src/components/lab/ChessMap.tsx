@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useEffect, useMemo, useCallback } from "react";
+import { useRef, useEffect, useMemo, useCallback, type RefObject } from "react";
+import type { LabStatValues } from "@/components/lab/LabStats";
 import { buildDefaultCatalogTree } from "@/lib/chess/openingCatalog";
 import type { MoveNode } from "@/types/chess";
 
@@ -317,13 +318,15 @@ function drawEdgesRecursive(
   }
 }
 
+/** Draws the node dots and returns how many it drew. */
 function drawNodesRecursive(
   ctx: CanvasRenderingContext2D,
   edges: MapEdge[],
   baseRadius: number,
   lodThreshold: number,
   wb: WorldBounds,
-) {
+): number {
+  let drawn = 0;
   for (const e of edges) {
     if (e.weight < lodThreshold) continue;
 
@@ -333,15 +336,27 @@ function drawNodesRecursive(
       ctx.arc(e.x1, e.y1, r, 0, Math.PI * 2);
       ctx.fillStyle = e.isLeaf ? `rgba(100, 160, 255, 0.55)` : `rgba(180, 215, 255, 0.8)`;
       ctx.fill();
+      drawn++;
     }
 
-    if (e.children.length) drawNodesRecursive(ctx, e.children, baseRadius, lodThreshold, wb);
+    if (e.children.length) drawn += drawNodesRecursive(ctx, e.children, baseRadius, lodThreshold, wb);
   }
+  return drawn;
 }
+
+/** The stretch of time the FPS figure is averaged over. */
+const FPS_WINDOW_MS = 500;
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export default function ChessMap({ config }: { config: ChessMapConfig }) {
+export default function ChessMap({
+  config,
+  statsRef,
+}: {
+  config: ChessMapConfig;
+  /** Where the map reports its FPS and the nodes it drew. */
+  statsRef?: RefObject<LabStatValues>;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const txRef = useRef({ x: 0, y: 0, scale: 1 });
   const dragRef = useRef<{ sx: number; sy: number; tx: number; ty: number } | null>(null);
@@ -396,7 +411,9 @@ export default function ChessMap({ config }: { config: ChessMapConfig }) {
     drawEdgesRecursive(ctx, layoutResult.edges, config.showGhostLines, lodThreshold, wb);
 
     const baseNodeRadius = 3.5 / scale;
-    drawNodesRecursive(ctx, layoutResult.edges, baseNodeRadius, lodThreshold, wb);
+    const nodesDrawn = drawNodesRecursive(ctx, layoutResult.edges, baseNodeRadius, lodThreshold, wb);
+    // The root's dot, drawn below, counts too.
+    if (statsRef?.current) statsRef.current.nodes = nodesDrawn + 1;
 
     // Root node
     ctx.beginPath();
@@ -408,16 +425,26 @@ export default function ChessMap({ config }: { config: ChessMapConfig }) {
     ctx.stroke();
 
     ctx.restore();
-  }, [layoutResult, config.showGhostLines, config.baseBranchLength]);
+  }, [layoutResult, config.showGhostLines, config.baseBranchLength, statsRef]);
 
   useEffect(() => {
-    function loop() {
+    let frames = 0;
+    let since = performance.now();
+    function loop(now: number) {
+      // The loop runs every frame and redraws only when something changed, so its own rate
+      // is the frame rate.
+      frames++;
+      if (now - since >= FPS_WINDOW_MS) {
+        if (statsRef?.current) statsRef.current.fps = (frames * 1000) / (now - since);
+        frames = 0;
+        since = now;
+      }
       if (dirtyRef.current) { render(); dirtyRef.current = false; }
       rafRef.current = requestAnimationFrame(loop);
     }
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [render]);
+  }, [render, statsRef]);
 
   useEffect(() => { dirtyRef.current = true; }, [layoutResult, config.showGhostLines]);
 

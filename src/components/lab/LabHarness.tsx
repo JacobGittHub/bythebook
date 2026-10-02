@@ -1,10 +1,12 @@
 "use client";
 
-import { Component, useState, useRef, useEffect, useCallback, type ReactNode } from "react";
+import { Component, useState, useRef, useCallback, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { GlobeConfig, RendererStats } from "@/components/lab/GlobeTest";
 import type { ChessMapConfig } from "@/components/lab/ChessMap";
+import { LabSpinner } from "@/components/lab/LabSpinner";
+import { LabStats, type LabStatRow, type LabStatValues } from "@/components/lab/LabStats";
 
 // ── Error boundary ────────────────────────────────────────────────────────────
 
@@ -42,21 +44,42 @@ class CanvasErrorBoundary extends Component<
 
 const GlobeTest = dynamic(() => import("@/components/lab/GlobeTest"), {
   ssr: false,
-  loading: () => (
-    <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
-      Loading canvas…
-    </div>
-  ),
+  loading: () => <LabSpinner label="Loading canvas…" />,
 });
 
 const ChessMap = dynamic(() => import("@/components/lab/ChessMap"), {
   ssr: false,
-  loading: () => (
-    <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
-      Loading map…
-    </div>
-  ),
+  loading: () => <LabSpinner label="Loading map…" />,
 });
+
+const RegionMap = dynamic(() => import("@/components/lab/RegionMap"), {
+  ssr: false,
+  loading: () => <LabSpinner label="Loading map…" />,
+});
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+// Each view writes its numbers into one shared ref, and `LabStats` reads the rows it is given.
+
+const GLOBE_STATS: LabStatRow[] = [
+  { key: "triangles", label: "Triangles" },
+  { key: "drawCalls", label: "Draw calls" },
+  { key: "geometries", label: "Geometries" },
+  { key: "textures", label: "Textures" },
+  { key: "nodes", label: "Nodes (meshes)" },
+];
+
+const MAP_STATS: LabStatRow[] = [
+  { key: "fps", label: "FPS" },
+  { key: "nodes", label: "Nodes drawn" },
+];
+
+const REGION_STATS: LabStatRow[] = [
+  { key: "fps", label: "FPS" },
+  { key: "blobs", label: "Blobs drawn" },
+  { key: "frameDepth", label: "Frame depth" },
+  { key: "layoutMs", label: "Layout time", format: (ms) => `${ms.toFixed(1)} ms` },
+  { key: "pending", label: "Pending requests" },
+];
 
 // ── Config defaults ───────────────────────────────────────────────────────────
 
@@ -101,15 +124,6 @@ function SideLabel({ children }: { children: ReactNode }) {
 
 function SideValue({ children }: { children: ReactNode }) {
   return <span className="font-mono tabular-nums text-[var(--bg-sidebar-text)] text-xs">{children}</span>;
-}
-
-function Row({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="flex justify-between">
-      <SideLabel>{label}</SideLabel>
-      <SideValue>{value}</SideValue>
-    </div>
-  );
 }
 
 function Slider({
@@ -191,11 +205,18 @@ function priorityLabel(v: number) {
 // ── Harness ───────────────────────────────────────────────────────────────────
 
 /** The prototypes this harness can show. Each has its own page under Visualizations. */
-export type LabView = "globe" | "map";
+export type LabView = "globe" | "map" | "regions";
 
 const VIEW_TITLES: Record<LabView, string> = {
   globe: "Globe (R3F)",
   map: "2D Map",
+  regions: "Regions",
+};
+
+const VIEW_NOTES: Record<LabView, string> = {
+  globe: "Stats overlay top-left — click to cycle FPS / MS / MB",
+  map: "A possible future visualization, kept as a prototype",
+  regions: "Scroll or pinch to zoom, drag to pan, and click a dashed “Other” to open it",
 };
 
 export function LabHarness({ view }: { view: LabView }) {
@@ -204,17 +225,12 @@ export function LabHarness({ view }: { view: LabView }) {
   const [animResetToken, setAnimResetToken] = useState(0);
   const [animProgress, setAnimProgress] = useState({ visible: 0, total: 0 });
 
-  const statsRef = useRef<RendererStats>({ triangles: 0, drawCalls: 0, geometries: 0, textures: 0 });
-  const [rendererStats, setRendererStats] = useState<RendererStats>(statsRef.current);
+  const statsRef = useRef<LabStatValues>({});
 
-  const handleStats = useCallback((s: RendererStats) => { statsRef.current = s; }, []);
+  const handleStats = useCallback((s: RendererStats) => { Object.assign(statsRef.current, s); }, []);
   const handleProgress = useCallback((visible: number, total: number) => {
+    statsRef.current.nodes = total;
     setAnimProgress({ visible, total });
-  }, []);
-
-  useEffect(() => {
-    const id = setInterval(() => setRendererStats({ ...statsRef.current }), 200);
-    return () => clearInterval(id);
   }, []);
 
   const set = (key: keyof GlobeConfig) => (v: number) =>
@@ -228,11 +244,7 @@ export function LabHarness({ view }: { view: LabView }) {
       <div className="flex items-center gap-4 pb-3">
         <div>
           <h1 className="text-lg font-semibold">{VIEW_TITLES[view]} · prototype</h1>
-          <p className="text-xs text-[var(--text-muted)]">
-            {view === "globe"
-              ? "Stats overlay top-left — click to cycle FPS / MS / MB"
-              : "A possible future visualization, kept as a prototype"}
-          </p>
+          <p className="text-xs text-[var(--text-muted)]">{VIEW_NOTES[view]}</p>
         </div>
         <Link
           href="/dashboard/visualizations"
@@ -253,10 +265,24 @@ export function LabHarness({ view }: { view: LabView }) {
           )}
           {view === "map" && (
             <CanvasErrorBoundary>
-              <ChessMap config={mapConfig} />
+              <ChessMap config={mapConfig} statsRef={statsRef} />
+            </CanvasErrorBoundary>
+          )}
+          {view === "regions" && (
+            <CanvasErrorBoundary>
+              <RegionMap statsRef={statsRef} />
             </CanvasErrorBoundary>
           )}
         </div>
+
+        {/* Sidebar — Regions view */}
+        {view === "regions" && (
+          <div className="flex w-52 flex-col gap-3 overflow-y-auto rounded-xl bg-[var(--bg-sidebar)] p-3 text-[var(--bg-sidebar-text)]">
+            <Section title="Stats" defaultOpen>
+              <LabStats statsRef={statsRef} rows={REGION_STATS} />
+            </Section>
+          </div>
+        )}
 
         {/* Sidebar — 2D Map view */}
         {view === "map" && (
@@ -282,6 +308,10 @@ export function LabHarness({ view }: { view: LabView }) {
                 note="0 = all branches fan outward · 1 = least popular fold fully back" />
               <Toggle label="Ghost lines" checked={mapConfig.showGhostLines}
                 onChange={(v) => setMapConfig((c) => ({ ...c, showGhostLines: v }))} />
+            </Section>
+            <Divider />
+            <Section title="Stats" defaultOpen>
+              <LabStats statsRef={statsRef} rows={MAP_STATS} />
             </Section>
             <Divider />
             <button
@@ -394,11 +424,7 @@ export function LabHarness({ view }: { view: LabView }) {
 
             {/* ── Renderer stats ─────────────────────────────────────────── */}
             <Section title="Renderer">
-              <Row label="Triangles" value={rendererStats.triangles.toLocaleString()} />
-              <Row label="Draw calls" value={rendererStats.drawCalls} />
-              <Row label="Geometries" value={rendererStats.geometries} />
-              <Row label="Textures" value={rendererStats.textures} />
-              <Row label="Nodes (meshes)" value={animProgress.total} />
+              <LabStats statsRef={statsRef} rows={GLOBE_STATS} />
             </Section>
 
             <Divider />

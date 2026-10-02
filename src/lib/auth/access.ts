@@ -44,7 +44,7 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     summary: "Experimental ways to see opening theory as a place.",
     details:
-      "The Atlas draws every named opening as one radial tree that you can pan, search and click through, with your own books highlighted on it. Prototypes of other views, a 3D globe and a flat map, are kept here as possible future visualizations.",
+      "The Atlas draws every named opening as one radial tree that you can pan, search and click through, with your own books highlighted on it. Prototypes of other views, a 3D globe, a flat map and a zoomable map of regions, are kept here as possible future visualizations.",
   },
   {
     href: "/dashboard/library",
@@ -119,6 +119,14 @@ export const VISUALIZATIONS: PageLink[] = [
     access: "account",
     status: "prototype",
     summary: "Openings as branches on a flat map that shows more detail as you zoom.",
+  },
+  {
+    href: "/dashboard/visualizations/regions",
+    label: "Regions",
+    access: "account",
+    status: "prototype",
+    summary:
+      "Every move as a region inside the move before it, sized by how often masters played it. Zoom in to go deeper.",
   },
 ];
 

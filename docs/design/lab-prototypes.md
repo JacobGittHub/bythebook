@@ -4,10 +4,11 @@
 they are retained deliberately, and the user may revisit the 3D globe in particular. Don't
 build production work on them. They are not deletion candidates (see "Kept on purpose" in
 `AGENTS.md`).
-**Last reviewed:** 2026-10-01
+**Last reviewed:** 2026-10-02
 **Files:** `src/components/lab/LabHarness.tsx` (the harness: one prototype and its controls
-per `view`), `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`, and the
-pages `src/app/dashboard/visualizations/globe/page.tsx` and `…/map/page.tsx`
+per `view`), `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`,
+`src/components/lab/LabSpinner.tsx`, `src/components/lab/LabStats.tsx`, and the pages
+`src/app/dashboard/visualizations/globe/page.tsx`, `…/map/page.tsx` and `…/regions/page.tsx`
 
 **Where they are shown.** There is no Lab page any more. The Visualizations page
 (`/dashboard/visualizations`) lists each prototype under "Possible future visualizations",
@@ -15,7 +16,14 @@ from `VISUALIZATIONS` in `src/lib/auth/access.ts`, and each has its own page tha
 `LabHarness` with one view. They need an account; a guest sees them listed but can't open
 them. "Lab" below means these prototypes and `src/components/lab/`.
 
-A third view, "Regions", is being built. It has its own doc: `region-map.md`.
+A third view, "Regions", has its own doc: `region-map.md`.
+
+**What the views share.**
+
+- `LabSpinner` shows while a view's code loads.
+- Each view writes its numbers (frame rate, what it drew) into one ref that the harness
+  owns, and `LabStats` in the sidebar reads the rows it is given from that ref on a timer
+  (`STATS_REFRESH_MS`). Only the stats panel re-renders on a tick.
 
 ## Rules
 
@@ -174,7 +182,8 @@ the prototype itself stays.
   continues past the loaded depth.
 
 **Rendering.** A dirty flag plus a `requestAnimationFrame` loop redraw only when the
-transform or layout changes. The layout is memoized per config.
+transform or layout changes. The layout is memoized per config. The loop reports its frame
+rate and the nodes it drew to the harness's stats.
 
 **Background layers**
 

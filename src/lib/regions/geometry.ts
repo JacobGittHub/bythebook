@@ -16,6 +16,19 @@ export function applySimilarity(t: Similarity, p: Vec): Vec {
   return { x: t.s * p.x + t.x, y: t.s * p.y + t.y };
 }
 
+/** The map `p → outer(inner(p))`. */
+export function composeSimilarity(outer: Similarity, inner: Similarity): Similarity {
+  return {
+    s: outer.s * inner.s,
+    x: outer.s * inner.x + outer.x,
+    y: outer.s * inner.y + outer.y,
+  };
+}
+
+export function invertSimilarity(t: Similarity): Similarity {
+  return { s: 1 / t.s, x: -t.x / t.s, y: -t.y / t.s };
+}
+
 /** Signed area: positive for counter-clockwise vertices. */
 export function polygonArea(poly: Polygon) {
   let twice = 0;

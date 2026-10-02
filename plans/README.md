@@ -16,7 +16,7 @@ otherwise)
 |---|---|---|---|
 | [vision.md](vision.md) | living | — | The shared picture every plan serves |
 | [deployment.md](deployment.md) | active | — | Public Vercel deployment for guests and about 100 beta users |
-| [region-map.md](region-map.md) | ready | — | Finish the Regions prototype on the Visualizations page (build phases 3–7) |
+| [region-map.md](region-map.md) | active | — | Finish the Regions prototype on the Visualizations page (build phases 3–7; 3 and 4 built, Q1 and Q2 open) |
 | [bookstore.md](bookstore.md) | deciding | deployment.md | Default books, repertoires, and library export and import |
 | [game-history.md](game-history.md) | deciding | deployment.md | Import a user's own games and show them on the app's displays |
 
