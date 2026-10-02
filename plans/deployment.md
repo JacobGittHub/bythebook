@@ -105,7 +105,7 @@ commit. Migrations are run by the user in the Supabase SQL editor, followed by
       admin client. `/auth/reset` takes a reset code and a new password.
 - [x] (agent) A "Request a beta key" mailto link on the landing page. It shows only when
       `NEXT_PUBLIC_BETA_CONTACT_EMAIL` is set.
-- [ ] (user) Run the migration and regenerate the types (the typecheck fails until then).
+- [x] (user) Run the migration and regenerate the types (the typecheck fails until then).
 - [ ] (user) Set `NEXT_PUBLIC_BETA_CONTACT_EMAIL` in `.env.local` and in Vercel.
 - [ ] (user) Push, make a code, and register with it on the deployment. Then make a reset
       code for that account and use it at `/auth/reset`.
