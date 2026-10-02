@@ -63,6 +63,17 @@ export default function HomePage() {
                 Browse training routes
               </Button>
             </div>
+            {betaKeyMailto ? (
+              // The address is written out because a mailto link does nothing for a visitor
+              // with no mail program set up; they can copy it instead.
+              <p className="text-sm text-slate-600">
+                Accounts need a beta key. To ask for one, email{" "}
+                <a className="font-medium text-slate-950 underline" href={betaKeyMailto}>
+                  {betaContactEmail}
+                </a>
+                .
+              </p>
+            ) : null}
           </div>
 
           <div className="rounded-[2rem] border border-slate-200 bg-white/80 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.12)] backdrop-blur">
