@@ -1,15 +1,18 @@
-# Opening tree (Atlas page)
+# Opening tree (Treemap page)
 
 **Status:** Live, though legacy. The territory map (`territory-map.md`) is the candidate
 successor. This tree stays until a successor ships and the user says otherwise.
-**Last reviewed:** 2026-10-01
-**Files:** `src/app/dashboard/visualizations/atlas/page.tsx` renders
+**Last reviewed:** 2026-10-02
+**Files:** `src/app/dashboard/visualizations/treemap/page.tsx` renders
 `src/components/repertoire/DashboardTree.tsx` (the orchestrator), which renders
-`OpeningTreeFull.tsx` (the radial tree) and `TreeNodePanel.tsx` (the side panel).
+`OpeningTreeFull.tsx` (the radial tree) and `TreeNodePanel.tsx` (the side panel, a wrapper
+around `PositionPanel.tsx`).
 
-The Atlas is the one live visualization on the Visualizations page
+The Treemap is the one live visualization on the Visualizations page
 (`/dashboard/visualizations`), which has a route button for each visualization. Until
 2026-10-01 the tree was the dashboard's Overview at `/dashboard`, which is now an info page.
+Until 2026-10-02 the page was called the Atlas; that name now belongs to the planned static
+region map (`plans/atlas.md`), and the old addresses redirect here (`next.config.ts`).
 
 ## Rules
 
@@ -59,11 +62,16 @@ DashboardTree
 ## Side panel (`TreeNodePanel`)
 
 The panel is always rendered and shows a placeholder when nothing is selected (on a narrow
-screen the placeholder is hidden to leave the tree its room). It contains:
+screen the placeholder is hidden to leave the tree its room). Its layout is `PositionPanel`,
+which the Labyrinth's panel shares (`region-map.md`); `TreeNodePanel` supplies the tree's
+data and buttons. It contains:
 
-- The position board
-- The ECO name from the catalog
-- Master-game stats, via `useOpeningExplorer`
+- The position board, whose pieces slide when the selection changes (`BoardDisplay`'s
+  `animate`)
+- The opening's name: `getOpeningForLine` gives the opening that ends at the node or,
+  failing that, at the nearest position before it on the selected path
+- Master-game stats, via `useOpeningExplorer`, added up from the listed moves
+  (`summarizeMasterGames`)
 - Add/Remove book actions
 - "Open in Explorer", which goes to `/dashboard/explorer?fen=…`
 - "Train this book"

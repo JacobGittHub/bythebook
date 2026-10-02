@@ -1,44 +1,13 @@
 "use client";
 
-import { Component, useState, useRef, useCallback, type ReactNode } from "react";
+import { useState, useRef, useCallback, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { GlobeConfig, RendererStats } from "@/components/lab/GlobeTest";
 import type { ChessMapConfig } from "@/components/lab/ChessMap";
+import { CanvasErrorBoundary } from "@/components/lab/CanvasErrorBoundary";
 import { LabSpinner } from "@/components/lab/LabSpinner";
 import { LabStats, type LabStatRow, type LabStatValues } from "@/components/lab/LabStats";
-
-// ── Error boundary ────────────────────────────────────────────────────────────
-
-class CanvasErrorBoundary extends Component<
-  { children: ReactNode },
-  { hasError: boolean; message: string }
-> {
-  constructor(props: { children: ReactNode }) {
-    super(props);
-    this.state = { hasError: false, message: "" };
-  }
-  static getDerivedStateFromError(e: Error) {
-    return { hasError: true, message: e.message };
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex h-full flex-col items-center justify-center gap-3 rounded-xl bg-[var(--bg-muted)]">
-          <p className="text-sm text-red-400">Canvas error</p>
-          <p className="max-w-xs text-center text-xs text-[var(--text-muted)]">{this.state.message}</p>
-          <button
-            onClick={() => this.setState({ hasError: false, message: "" })}
-            className="rounded-lg px-3 py-1.5 text-xs text-[var(--text-muted)] ring-1 ring-white/10 hover:text-[var(--text-primary)]"
-          >
-            Retry
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 // ── Lazy canvas ───────────────────────────────────────────────────────────────
 
@@ -48,11 +17,6 @@ const GlobeTest = dynamic(() => import("@/components/lab/GlobeTest"), {
 });
 
 const ChessMap = dynamic(() => import("@/components/lab/ChessMap"), {
-  ssr: false,
-  loading: () => <LabSpinner label="Loading map…" />,
-});
-
-const RegionMap = dynamic(() => import("@/components/lab/RegionMap"), {
   ssr: false,
   loading: () => <LabSpinner label="Loading map…" />,
 });
@@ -71,14 +35,6 @@ const GLOBE_STATS: LabStatRow[] = [
 const MAP_STATS: LabStatRow[] = [
   { key: "fps", label: "FPS" },
   { key: "nodes", label: "Nodes drawn" },
-];
-
-const REGION_STATS: LabStatRow[] = [
-  { key: "fps", label: "FPS" },
-  { key: "blobs", label: "Blobs drawn" },
-  { key: "frameDepth", label: "Frame depth" },
-  { key: "layoutMs", label: "Layout time", format: (ms) => `${ms.toFixed(1)} ms` },
-  { key: "pending", label: "Pending requests" },
 ];
 
 // ── Config defaults ───────────────────────────────────────────────────────────
@@ -204,19 +160,20 @@ function priorityLabel(v: number) {
 
 // ── Harness ───────────────────────────────────────────────────────────────────
 
-/** The prototypes this harness can show. Each has its own page under Visualizations. */
-export type LabView = "globe" | "map" | "regions";
+/**
+ * The prototypes this harness can show. Each has its own page under Visualizations. The
+ * region map has its own frame, `RegionMapView`.
+ */
+export type LabView = "globe" | "map";
 
 const VIEW_TITLES: Record<LabView, string> = {
   globe: "Globe (R3F)",
   map: "2D Map",
-  regions: "Regions",
 };
 
 const VIEW_NOTES: Record<LabView, string> = {
   globe: "Stats overlay top-left — click to cycle FPS / MS / MB",
   map: "A possible future visualization, kept as a prototype",
-  regions: "Scroll or pinch to zoom, drag to pan, and click a dashed “Other” to open it",
 };
 
 export function LabHarness({ view }: { view: LabView }) {
@@ -268,21 +225,7 @@ export function LabHarness({ view }: { view: LabView }) {
               <ChessMap config={mapConfig} statsRef={statsRef} />
             </CanvasErrorBoundary>
           )}
-          {view === "regions" && (
-            <CanvasErrorBoundary>
-              <RegionMap statsRef={statsRef} />
-            </CanvasErrorBoundary>
-          )}
         </div>
-
-        {/* Sidebar — Regions view */}
-        {view === "regions" && (
-          <div className="flex w-52 flex-col gap-3 overflow-y-auto rounded-xl bg-[var(--bg-sidebar)] p-3 text-[var(--bg-sidebar-text)]">
-            <Section title="Stats" defaultOpen>
-              <LabStats statsRef={statsRef} rows={REGION_STATS} />
-            </Section>
-          </div>
-        )}
 
         {/* Sidebar — 2D Map view */}
         {view === "map" && (

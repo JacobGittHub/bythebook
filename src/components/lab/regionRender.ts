@@ -7,7 +7,11 @@ import { pebbleArcs, type Arc } from "@/lib/regions/pebble";
 import type { Blob } from "@/lib/regions/store";
 import type { Scene } from "@/lib/regions/visibility";
 
-export type RenderOptions = { showLabels: boolean };
+export type RenderOptions = {
+  showLabels: boolean;
+  /** The time in milliseconds, which moves the dots along the outline of a blob that is loading. */
+  now: number;
+};
 
 type Rgb = readonly [number, number, number];
 
@@ -20,8 +24,10 @@ const WHITE_EDGE: Rgb = [247, 240, 226];
 const BLACK_EDGE: Rgb = [30, 22, 14];
 const ROOT_EDGE: Rgb = [58, 55, 51];
 
-const WHITE_FILL_ALPHA = 0.1;
-const BLACK_FILL_ALPHA = 0.12;
+// Strong enough that a White move's blob and a Black move's read as light and dark at a
+// glance. Each layer is filled over the one above it, so the map checkers as it nests.
+const WHITE_FILL_ALPHA = 0.2;
+const BLACK_FILL_ALPHA = 0.24;
 
 /** Stroke width in pixels by layers below the frame: heaviest at the frame and above. */
 const STROKE_BY_LAYER = [3, 2.25, 1.5, 1];
@@ -30,6 +36,8 @@ const MAX_STROKE_SHARE = 0.04;
 
 const OTHER_DASH = [7, 5];
 const WAITING_DASH = [1, 5];
+/** How fast the dots travel round a blob that is loading, in pixels a second. */
+const WAITING_DOT_SPEED = 14;
 
 const HATCH_SPACING_PX = 9;
 const HATCH_ALPHA = 0.3;
@@ -48,6 +56,9 @@ function edgeColor(blob: Blob): Rgb {
 
 function fillAlpha(blob: Blob) {
   if (blob.kind === "root") return 0;
+  // The moves inside an opened "Other" carry the fill, as the moves beside it do. Filling
+  // both would tint them twice.
+  if (blob.kind === "other" && blob.children) return 0;
   return blob.depth % 2 === 1 ? WHITE_FILL_ALPHA : BLACK_FILL_ALPHA;
 }
 
@@ -124,6 +135,8 @@ export function drawScene(
   }
 
   ctx.lineJoin = "round";
+  const period = WAITING_DASH[0] + WAITING_DASH[1];
+  const waitingOffset = ((options.now / 1000) * WAITING_DOT_SPEED) % period;
 
   for (const entry of scene.visible) {
     const { blob, toScreen: t } = entry;
@@ -151,11 +164,13 @@ export function drawScene(
     } else if (entry.wanted) {
       ctx.setLineDash(WAITING_DASH);
       ctx.lineCap = "round";
+      ctx.lineDashOffset = -waitingOffset;
     } else {
       ctx.setLineDash([]);
       ctx.lineCap = "butt";
     }
     ctx.stroke();
+    ctx.lineDashOffset = 0;
   }
 
   // Labels go on last, over every outline.

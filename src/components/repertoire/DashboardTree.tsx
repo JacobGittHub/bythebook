@@ -8,7 +8,7 @@ import { SignInPrompt } from "@/components/ui/SignInPrompt";
 import { useViewer } from "@/context/Viewer";
 import { fenAfterUci } from "@/lib/chess/fen";
 import { buildDefaultCatalogTree, searchCatalogMatches } from "@/lib/chess/openingCatalog";
-import { mergeMoveLineIntoTree, getNodePathByUciLine } from "@/lib/chess/moveTree";
+import { mergeMoveLineIntoTree, getNodePathByUciLine, removeMoveNodeById } from "@/lib/chess/moveTree";
 import type { ExplorerMove, MoveNode, OpeningBook } from "@/types/chess";
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -17,15 +17,6 @@ const MAX_GHOST_NODES = 6;
 const MIN_GHOST_GAMES = 200;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function removeMoveNodeById(root: MoveNode, targetId: string): MoveNode {
-  return {
-    ...root,
-    children: root.children
-      .filter((c) => c.id !== targetId)
-      .map((c) => removeMoveNodeById(c, targetId)),
-  };
-}
 
 function buildGhostNodes(
   parentFen: string,
@@ -266,6 +257,7 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
       {/* ── Right: node panel (always visible) ── */}
       <TreeNodePanel
         node={selectedInfo?.node ?? null}
+        pathFens={selectedInfo?.pathMoves.map((move) => move.fen) ?? []}
         book={activeBook}
         isExpanded={expandedNodeId === selectedInfo?.id}
         onAddToBook={handleAddToBook}

@@ -9,7 +9,12 @@ type BoardDisplayProps = {
   size?: "sm" | "md" | "lg";
   /** Which color faces the viewer. */
   orientation?: "white" | "black";
+  /** Slide the pieces when the position changes, for a board that follows a selection. */
+  animate?: boolean;
 };
+
+/** The same speed as a move on the playable board (`BoardBase`'s default). */
+const ANIMATION_MS = 200;
 
 /**
  * Non-interactive board thumbnail for cards, buttons, and previews.
@@ -19,6 +24,7 @@ export function BoardDisplay({
   fen,
   size = "sm",
   orientation = "white",
+  animate = false,
 }: BoardDisplayProps) {
   return (
     <BoardBase
@@ -27,7 +33,7 @@ export function BoardDisplay({
       interactive={false}
       size={size}
       showNotation={false}
-      animationDuration={0}
+      animationDuration={animate ? ANIMATION_MS : 0}
     />
   );
 }

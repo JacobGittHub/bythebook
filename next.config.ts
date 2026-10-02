@@ -6,9 +6,14 @@ const nextConfig: NextConfig = {
     { source: "/", destination: "/dashboard", permanent: false },
     // The Library page used to be called Repertoire.
     { source: "/dashboard/repertoire", destination: "/dashboard/library", permanent: false },
-    // The Atlas and the Lab's prototypes moved under the Visualizations page.
-    { source: "/dashboard/atlas", destination: "/dashboard/visualizations/atlas", permanent: false },
+    // The opening tree and the Lab's prototypes moved under the Visualizations page. The tree
+    // was called the Atlas until that name was kept for the static region map
+    // (plans/atlas.md); drop its second redirect when that map takes the address.
+    { source: "/dashboard/atlas", destination: "/dashboard/visualizations/treemap", permanent: false },
+    { source: "/dashboard/visualizations/atlas", destination: "/dashboard/visualizations/treemap", permanent: false },
     { source: "/dashboard/lab", destination: "/dashboard/visualizations", permanent: false },
+    // The region map prototype was listed as "Regions" before it was named the Labyrinth.
+    { source: "/dashboard/visualizations/regions", destination: "/dashboard/visualizations/labyrinth", permanent: false },
   ],
   headers: async () => [
     {

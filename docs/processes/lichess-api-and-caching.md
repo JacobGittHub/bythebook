@@ -1,6 +1,6 @@
 # Lichess API: call chain and caching
 
-**Last reviewed:** 2026-10-01
+**Last reviewed:** 2026-10-02
 **Files:**
 
 - `src/app/api/openings/explorer/route.ts` is the only route that reaches Lichess. It
@@ -140,8 +140,8 @@ includes a malformed FEN → 400 · anything else → 500
 |---|---|---|
 | `useOpeningExplorer` | Whenever the Explorer board's FEN changes (one call) | Sets `error` to the status code, and the component decides what to show |
 | `useOpeningExplorerMulti` | Explorer history positions, in parallel (`Promise.all`) | Silently maps that position to `null` |
-| `DashboardTree` ghost expansion | When a node in the Atlas tree is clicked, via `useOpeningExplorer` | Same as `useOpeningExplorer` |
-| Region map (`src/lib/regions/loader.ts`) | For blobs on screen, biggest first, at most `EXPLORER_MAX_IN_FLIGHT` at once | A 429 pauses every request for its `Retry-After`. Other failures mark the position failed and it may be asked again after `FAILED_RETRY_MS` |
+| `DashboardTree` ghost expansion | When a node in the Treemap is clicked, via `useOpeningExplorer` | Same as `useOpeningExplorer` |
+| Region map (`src/lib/regions/loader.ts`) | For blobs on screen, biggest first, at most `EXPLORER_MAX_IN_FLIGHT` at once, and for the frame's own position, which its panel shows from the same load | A 429 pauses every request for its `Retry-After`. Other failures mark the position failed and it may be asked again after `FAILED_RETRY_MS` |
 
 - **Failures are quiet.** A cold cache combined with a Lichess 429 or an expired token makes
   the mini tree and ghost expansions render with no moves, and the app stays usable. There
@@ -149,7 +149,7 @@ includes a malformed FEN → 400 · anything else → 500
   state.
 - **Guests reach every consumer except the region map.** `src/proxy.ts` lets guests into
   the dashboard, apart from the visualization prototypes. For a guest, a 404 means "not
-  saved", not a failure: the Explorer and the Atlas panel say that a live lookup needs a
+  saved", not a failure: the Explorer and the Treemap panel say that a live lookup needs a
   beta account, and `useOpeningExplorerMulti` leaves that position out. The region map
   loader still treats a 404 as a failure to retry, which is fine while the prototypes are
   for signed-in users only.

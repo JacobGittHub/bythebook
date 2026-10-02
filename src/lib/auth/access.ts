@@ -44,7 +44,7 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     summary: "Experimental ways to see opening theory as a place.",
     details:
-      "The Atlas draws every named opening as one radial tree that you can pan, search and click through, with your own books highlighted on it. Prototypes of other views, a 3D globe, a flat map and a zoomable map of regions, are kept here as possible future visualizations.",
+      "The Treemap draws every named opening as one radial tree that you can pan, search and click through, with your own books highlighted on it. Prototypes of other views, a 3D globe, a flat map and the Labyrinth, a zoomable map of regions, are kept here as possible future visualizations.",
   },
   {
     href: "/dashboard/library",
@@ -53,7 +53,7 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     summary: "Your own data: the books you build.",
     details:
-      "Everything that is yours. Create a book for an opening you play, add lines to it from the Explorer or the Atlas, and come back to it later. Repertoires that combine books, and imports of your own games, will live here too. Books need an account for now.",
+      "Everything that is yours. Create a book for an opening you play, add lines to it from the Explorer or the Treemap, and come back to it later. Repertoires that combine books, and imports of your own games, will live here too. Books need an account for now.",
   },
   {
     href: "/dashboard/bookstore",
@@ -99,8 +99,8 @@ export const NAV_ITEMS: NavItem[] = [
  */
 export const VISUALIZATIONS: PageLink[] = [
   {
-    href: "/dashboard/visualizations/atlas",
-    label: "Atlas",
+    href: "/dashboard/visualizations/treemap",
+    label: "Treemap",
     access: "everyone",
     status: "live",
     summary:
@@ -121,8 +121,8 @@ export const VISUALIZATIONS: PageLink[] = [
     summary: "Openings as branches on a flat map that shows more detail as you zoom.",
   },
   {
-    href: "/dashboard/visualizations/regions",
-    label: "Regions",
+    href: "/dashboard/visualizations/labyrinth",
+    label: "Labyrinth",
     access: "account",
     status: "prototype",
     summary:
@@ -149,7 +149,7 @@ export type AccessRow = { feature: string; guest: string; account: string };
 /** The guest and account differences, as shown on the Overview page. */
 export const ACCESS_ROWS: AccessRow[] = [
   {
-    feature: "Explorer, Atlas and the engine",
+    feature: "Explorer, Treemap and the engine",
     guest: "Yes",
     account: "Yes",
   },

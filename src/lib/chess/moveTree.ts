@@ -169,6 +169,16 @@ export function mergeMoveLineIntoTree(root: MoveNode, moves: Move[]): MoveNode {
   return nextRoot;
 }
 
+/** The tree without the node of this id and everything below it. */
+export function removeMoveNodeById(root: MoveNode, targetId: string): MoveNode {
+  return {
+    ...root,
+    children: root.children
+      .filter((child) => child.id !== targetId)
+      .map((child) => removeMoveNodeById(child, targetId)),
+  };
+}
+
 export function getNodePathById(root: MoveNode, nodeId: string): MoveNode[] {
   if (root.id === nodeId) {
     return [root];

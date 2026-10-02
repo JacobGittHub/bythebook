@@ -1,6 +1,6 @@
 # Public deployment
 
-Status: active · Updated: 2026-10-01 · Depends on: —
+Status: active · Updated: 2026-10-02 · Depends on: —
 
 **Goal:** put ByTheBook on Vercel so guests can use it without an
 account, while up to about 100 beta testers sign in and keep their data.
@@ -82,7 +82,8 @@ Chrome, Safari and Firefox, and the Overview page and explorer work on a phone (
 - D18. The sidebar names what each page is for. **Overview** is the info page (D16).
   **Explorer** is board analysis. **Visualizations** is the experimental visualizations
   page: it has a route button for each visualization and takes over from the Lab, which is
-  gone. The Atlas (the opening tree) is the live one. The Lab's globe and 2D map are kept
+  gone. The Treemap (the opening tree, called the Atlas until 2026-10-02) is the live one.
+  The Lab's globe and 2D map are kept
   there as possible future visualizations, for signed-in users only. **Library** is the
   user's own data: books now, then repertoires and game history import, which gets no tab
   of its own. **Bookstore** is the public store. Train, Puzzles and Settings keep their

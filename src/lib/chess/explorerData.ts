@@ -30,6 +30,37 @@ export function gameCount(stats: ExplorerMove | ExplorerTotals) {
   return stats.white + stats.draws + stats.black;
 }
 
+export type MasterSummary = {
+  games: number;
+  /** Whole percentages that add up to 100, or all zero when there are no games. */
+  whitePct: number;
+  drawPct: number;
+  blackPct: number;
+  /** The listed moves, each with its games and its whole-percentage share of `games`. */
+  moves: { san: string; uci: string; games: number; pct: number }[];
+};
+
+/**
+ * Master-game figures for a position panel. With `totals` they cover every game in the
+ * position; without, only the listed moves, which is what the existing screens add up.
+ */
+export function summarizeMasterGames(moves: ExplorerMove[], totals?: ExplorerTotals): MasterSummary {
+  const sum = (key: "white" | "draws" | "black") => moves.reduce((total, m) => total + m[key], 0);
+  const all = totals ?? { white: sum("white"), draws: sum("draws"), black: sum("black") };
+  const games = gameCount(all);
+  const pct = (count: number) => (games > 0 ? Math.round((count / games) * 100) : 0);
+
+  const whitePct = pct(all.white);
+  const drawPct = pct(all.draws);
+  return {
+    games,
+    whitePct,
+    drawPct,
+    blackPct: games > 0 ? 100 - whitePct - drawPct : 0,
+    moves: moves.map((m) => ({ san: m.san, uci: m.uci, games: gameCount(m), pct: pct(gameCount(m)) })),
+  };
+}
+
 /** False for cache rows written before totals were kept or the move limit was raised. */
 export function isCacheEntryCurrent(data: ExplorerResponse) {
   return data.totals !== undefined && (data.movesLimit ?? 0) >= EXPLORER_MOVES_LIMIT;

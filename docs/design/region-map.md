@@ -1,9 +1,12 @@
-# Region map (lab prototype)
+# Region map (the Labyrinth, a lab prototype)
 
-**Status:** A third prototype on the Visualizations page, "Regions", next to "Globe (R3F)"
-and "2D Map" (see `lab-prototypes.md` for how the prototypes are shown). The map itself
-works: it lays out, zooms, pans and opens "Other". Focus, pinning and the sidebar controls
-are not built yet, and the sections on them below describe the design, not the code. It is
+**Status:** A prototype on the Visualizations page, the **Labyrinth**, next to the globe and
+the 2D map (see `lab-prototypes.md` for how the prototypes are shown). The map itself works:
+it lays out, zooms, pans and opens "Other", and its page names the opening the view is inside
+and shows that position in a side panel. Focus, pinning and the map's own controls are not
+built yet, and the sections on them below describe the design, not the code. The name
+"region map" stays in the code. The Labyrinth is the live version; the **atlas** is a planned
+static, pre-generated one (`plans/atlas.md`). It is
 the first hands-on prototype of the territory-map idea (`territory-map.md`) and tests that
 doc's layout questions. It is exempt from the production visualization rules like the other
 lab prototypes, but it is built to them anyway: containment, pure layout functions and
@@ -12,9 +15,12 @@ property tests.
 **Files:** `src/lib/regions/` holds the pure logic, with `*.test.ts` alongside and shared test
 inputs in `testShapes.ts`: `prng`, `geometry`, `bisect`, `pebble`, `layout` (which composes
 bisection and pebbles for one parent), `selection`, `loader`, `store` (the blob tree),
-`camera`, `visibility` (what to draw) and `labels`. The view is
+`camera`, `visibility` (what to draw) and `labels`. The map is
 `src/components/lab/RegionMap.tsx`, which draws with `src/components/lab/regionRender.ts`.
-Planned: `windows` (focus) and `pins`.
+The page is `src/app/dashboard/visualizations/labyrinth/page.tsx`, which renders the page
+frame `src/components/lab/RegionMapView.tsx` (title bar, map and panel). The panel's layout is
+`src/components/repertoire/PositionPanel.tsx`, shared with the Treemap. Planned: `windows`
+(focus) and `pins`.
 
 The design below was settled with the user on 2026-09-29. The values given as defaults are
 design decisions. Once they exist in code, replace them here with the names of their
@@ -225,8 +231,13 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 
 ## Colour and style
 
-- **By side to move:** blobs for White's moves have a white edge and a faint white fill.
-  Blobs for Black's moves have a black edge and a faint black fill.
+- **By side to move:** blobs for White's moves have a white edge and a translucent white
+  fill. Blobs for Black's moves have a black edge and a translucent black fill. The fills
+  are strong enough (raised on 2026-10-02, at the user's request) that the two sides read as
+  light and dark at a glance, and because each layer is filled over the one above it, the
+  map checkers as it nests.
+- **An opened "Other" has no fill.** The moves inside it carry the fill, as the moves beside
+  it do; filling both would tint the moves inside twice.
 - **Size-function tint,** mixed into edge and fill: popularity is cream-brown, and engine
   (not built yet) is green.
 - **Background:** a neutral mid tone, so both white and black edges read.
@@ -236,9 +247,12 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
   - Pinned: a double edge.
   - "Other": dashed.
   - Wall: hatched.
-  - Waiting for data: a dotted outline.
+  - Waiting for data: a dotted outline. While requests are open the dots travel round it
+    (`WAITING_DOT_SPEED`), and the map redraws every frame only for as long as that lasts.
 - **Labels:** SAN at the core centroid, sized to the blob, with a toggle (the toggle comes
   with the sidebar). Opening names come later. `placeLabels` in `labels.ts` decides them.
+  - A closed "Other" is labelled "Other". An opened one has no label, since it has become
+    its moves, which carry their own.
   - A blob much larger than the reading size (`READING_SIZE_SHARE` of the viewport) carries
     its label as a faint watermark.
   - A move that most games continue with sits in the middle of its parent, so their labels
@@ -256,6 +270,9 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
   rows are refetched lazily. The Explorer page, mini tree and dashboard tree still show 12
   (`EXPLORER_DISPLAY_MOVES`). The process doc has the details.
 - **Child positions** come from `fenAfterUci` in `src/lib/chess/fen.ts`.
+- **The frame's own position is loaded too,** at the highest priority, because the panel
+  shows it. A blob that is split already has it; a wall or a blob not yet opened costs one
+  more request.
 - **The client loader** (`createExplorerLoader` in `loader.ts`):
   - At most `EXPLORER_MAX_IN_FLIGHT` requests open, each position requested once.
   - The view calls `want()` with the positions it needs and their on-screen sizes. That
@@ -280,11 +297,37 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 - **The pointer handling is written by hand, not with `d3-zoom`,** because `d3-zoom` holds the
   wheel gesture's world point in the old frame, so re-anchoring mid-gesture would jump.
 
+## The page
+
+`RegionMapView` frames the map. The map tells it the frame's position through `onFrame`
+(`RegionFrame`): the position blob (`positionBlob`, which for an "Other" is the move or root
+it belongs to), the line that reaches it (`lineTo`) and its explorer data. It is called only
+when the position or its load status changes, and nothing in the page reaches into the map.
+
+- **Title bar.** The opening the view is inside is the title, from `getOpeningForLine`: the
+  opening that ends at the frame's position or, failing that, at the nearest position before
+  it, so the title holds steady while the line goes deeper. The moves that reach the position
+  sit underneath on one line, which scrolls sideways and keeps its newest moves in view
+  (the user's design: a 30-move line would make a moving title). At the start position a
+  short hint takes that line.
+- **Book selector.** Small, in the title bar, because the map is the subject. A guest sees
+  `SignInPrompt` instead. Showing the chosen book's lines on the map is not built
+  (`plans/region-map.md`, Q4).
+- **Panel** (`PositionPanel`, as on the Treemap). The frame position's board, whose pieces
+  slide as the frame changes; its master games, from the map's own load and measured against
+  the position's totals (`summarizeMasterGames`); Add to book or Remove from book for the
+  line to the frame; Open in Explorer; and Train this book. Last comes a closed "Map stats and
+  controls" section, with the stats and how to move. On a wide screen the panel is open beside
+  the map, and on a narrow one it is closed and opens under the map. A closed panel is not
+  rendered at all, because the board can't animate inside a hidden element.
+
 ## Lab integration
 
-- **Views:** each prototype is a view of `LabHarness` on its own page, so only one is
-  mounted at a time. `RegionMap` cleans up its animation frame, `ResizeObserver`, listeners,
-  retry timer and loader on unmount.
+- **Its own page frame.** The globe and the 2D map are views of `LabHarness`. The region map
+  has `RegionMapView` instead, because its title bar and panel don't fit the harness's
+  layout. It shares `LabSpinner`, `LabStats` and `CanvasErrorBoundary` with the harness.
+  `RegionMap` cleans up its animation frame, `ResizeObserver`, listeners, retry timer and
+  loader on unmount.
 - **One effect, no re-renders.** `RegionMap` keeps the store, camera and scene outside React.
   Its animation loop redraws only when something changed (a dirty flag), and spends at most
   `LAYOUT_BUDGET_MS` a frame laying out blobs, so a burst of loaded positions doesn't stall
@@ -292,12 +335,10 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 - **Loading:** a shared `LabSpinner` covers each view's first load. `RegionMap` shows a spinner
   overlay during the first layout, and will during any full re-layout.
 - **Stats:** they live in a `LabStats` component that owns the refresh timer, so only the
-  stats panel re-renders.
-  - Globe: renderer stats.
-  - 2D Map: FPS and nodes drawn.
-  - Regions: FPS, blobs drawn, frame depth, layout time and pending requests. The largest
-    share error comes with pinning.
-- **Sidebar:**
+  stats re-render. The region map's are FPS, blobs drawn, frame depth, layout time and
+  pending requests, in the panel's closed "Map stats and controls" section. The largest share
+  error comes with pinning.
+- **Map controls (planned, Phase 7),** in the same section:
   - Settings that re-lay out the map: top p, top k, sibling gap, wall gap, roundness, cut
     jitter, and Reshuffle.
   - Size function: Popularity, with Engine disabled for now.
@@ -317,11 +358,12 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 - **Camera:** re-anchoring leaves screen points fixed to within 1e-9.
 - **Store:** every blob lies inside its parent, the geometry doesn't depend on the order of
   expansion, opening "Other" moves nothing else, and walls, leaves and sealed "Other"s stay
-  as they are.
+  as they are. `lineTo` replays to every blob's position, and an "Other" shares its owner's.
 - **Scene:** the frame is the deepest blob covering half the viewport, each blob is listed
   after its parent and placed where the camera puts it, and opacity changes only slightly
   for a slight move of the camera, including across a change of frame.
-- **Labels:** a blob's label and an ancestor's never both stay strong where they overlap.
+- **Labels:** a blob's label and an ancestor's never both stay strong where they overlap, and
+  an opened "Other" loses its label to the moves inside it.
 - **Focus:** the window, corridor and chain rules.
 - **Pins:** a pin that fits keeps its geometry exactly, and the carve fallback keeps its area
   share.
@@ -331,5 +373,5 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 - The engine-evaluation size function, and its green tint.
 - Opening-name labels.
 - Other blob shapes, such as clouds or textures.
-- Multiple chains, leading to the **atlas**: a separate display with a pre-generated, pinned
-  map. Its shapes would depend on the engine search depth or the current popularity counts.
+- Multiple chains, leading to the **atlas**: a separate display with a pre-generated map.
+  Its draft plan is `plans/atlas.md`.

@@ -7,8 +7,9 @@ build production work on them. They are not deletion candidates (see "Kept on pu
 **Last reviewed:** 2026-10-02
 **Files:** `src/components/lab/LabHarness.tsx` (the harness: one prototype and its controls
 per `view`), `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`,
-`src/components/lab/LabSpinner.tsx`, `src/components/lab/LabStats.tsx`, and the pages
-`src/app/dashboard/visualizations/globe/page.tsx`, `…/map/page.tsx` and `…/regions/page.tsx`
+`src/components/lab/LabSpinner.tsx`, `src/components/lab/LabStats.tsx`,
+`src/components/lab/CanvasErrorBoundary.tsx`, and the pages
+`src/app/dashboard/visualizations/globe/page.tsx` and `…/map/page.tsx`
 
 **Where they are shown.** There is no Lab page any more. The Visualizations page
 (`/dashboard/visualizations`) lists each prototype under "Possible future visualizations",
@@ -16,11 +17,14 @@ from `VISUALIZATIONS` in `src/lib/auth/access.ts`, and each has its own page tha
 `LabHarness` with one view. They need an account; a guest sees them listed but can't open
 them. "Lab" below means these prototypes and `src/components/lab/`.
 
-A third view, "Regions", has its own doc: `region-map.md`.
+A third prototype, the Labyrinth (the region map), has its own doc, `region-map.md`, and its
+own page frame, `RegionMapView`, instead of a view of the harness. It uses the shared pieces
+below.
 
-**What the views share.**
+**What the prototypes share.**
 
 - `LabSpinner` shows while a view's code loads.
+- `CanvasErrorBoundary` shows a prototype's crash in place of its canvas, with a retry.
 - Each view writes its numbers (frame rate, what it drew) into one ref that the harness
   owns, and `LabStats` in the sidebar reads the rows it is given from that ref on a timer
   (`STATS_REFRESH_MS`). Only the stats panel re-renders on a tick.

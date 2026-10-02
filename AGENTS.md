@@ -23,13 +23,18 @@ should come away thinking of the Najdorf as a *place* with neighbors, not a move
 once read. When a choice trades spatial memorability for technical elegance, memorability
 wins.
 
-**Status:** The Opening Explorer, the Library (book management), the Atlas opening tree
+**Status:** The Opening Explorer, the Library (book management), the Treemap opening tree
 (under the Visualizations page) and the Overview page are live, and guests can use all of
 them without an account. The trainer, puzzle and Bookstore pages are placeholder
 scaffolding. The long-term direction is
 not settled. The territory map and hyperbolic panel are the leading candidates for the next
 visualizations, but don't start building them, or shape other work around them, unless the
 user asks. The shared vision and current work are in `plans/`.
+
+**Names:** the **Treemap** is the live radial opening tree, which was called the Atlas until
+2026-10-02. The **Labyrinth** is the region map prototype, laid out live from explorer data.
+The **Atlas** now means the planned static, pre-generated region map (`plans/atlas.md`),
+which is not in development.
 
 ## Commands
 
@@ -194,7 +199,7 @@ them, unless the user brings it up.
 
 | Item | Why it stays | Removable when |
 |---|---|---|
-| `src/components/repertoire/OpeningTreeFull.tsx` | It is the live opening tree on the Atlas page (under Visualizations) | A successor ships and the user says so |
+| `src/components/repertoire/OpeningTreeFull.tsx` | It is the live opening tree on the Treemap page (under Visualizations) | A successor ships and the user says so |
 | `src/components/openings/OpeningMiniTree.tsx` | It is the live explorer sidebar tree, and the user wants it kept as-is | A successor ships and the user says so |
 | `d3`, `@types/d3` | `OpeningTreeFull` uses them | `OpeningTreeFull` is removed |
 | `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`, `src/components/lab/LabHarness.tsx` | They are prototypes the user may revisit, listed on the Visualizations page as possible future ones | The user says so |
@@ -213,9 +218,9 @@ you start.
 | The Lichess API route or `position_cache` | `docs/processes/lichess-api-and-caching.md` |
 | Any tree or map visualization | `docs/architecture.md` § "Visualization principles", then the design doc below |
 | The Opening Explorer or the mini tree | `docs/design/explorer.md` |
-| The Atlas page's opening tree | `docs/design/opening-tree.md` |
+| The Treemap page's opening tree | `docs/design/opening-tree.md` |
 | Guest and account access, the sidebar, or sign-in | `docs/architecture.md` § "Auth and API routes" |
 | The territory map (candidate) | `docs/design/territory-map.md` |
 | The hyperbolic panel (candidate) | `docs/design/hyperbolic-panel.md` |
 | The Visualizations page's prototypes: globe, ChessMap, or branch view | `docs/design/lab-prototypes.md` |
-| The region map prototype or `src/lib/regions/` | `docs/design/region-map.md` |
+| The Labyrinth (the region map prototype) or `src/lib/regions/` | `docs/design/region-map.md` |

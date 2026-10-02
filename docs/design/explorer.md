@@ -1,7 +1,7 @@
 # Opening Explorer and mini tree
 
 **Status:** Live
-**Last reviewed:** 2026-10-01
+**Last reviewed:** 2026-10-02
 **Files:** `src/components/openings/` (`OpeningExplorer.tsx` is the orchestrator, plus
 `OpeningCatalogSearch`, `OpeningCatalogResults`, `OpeningCatalogTreePreview` and
 `OpeningMiniTree`), `src/hooks/useOpeningExplorer.ts`, `src/hooks/useOpeningExplorerMulti.ts`
@@ -46,7 +46,7 @@ The header card has two rows:
 needs a beta account; it is not shown as a failure.
 
 **`initialFen` prop.** When the explorer opens with a `?fen=` URL parameter (for example
-from "Open in Explorer" in the Atlas), it replays the catalog moves to reach that position
+from "Open in Explorer" in the Treemap or the Labyrinth), it replays the catalog moves to reach that position
 on mount.
 
 ## Hybrid matching

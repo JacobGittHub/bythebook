@@ -7,6 +7,7 @@ import {
   gameCount,
   isCacheEntryCurrent,
   normalizeCastling,
+  summarizeMasterGames,
 } from "./explorerData";
 
 const move = (uci: string, games = 10): ExplorerMove => ({ san: uci, uci, white: games, draws: 0, black: 0 });
@@ -50,5 +51,36 @@ describe("forDisplay", () => {
 describe("gameCount", () => {
   it("adds wins, draws and losses", () => {
     expect(gameCount({ white: 3, draws: 4, black: 5 })).toBe(12);
+  });
+});
+
+describe("summarizeMasterGames", () => {
+  const moves: ExplorerMove[] = [
+    { san: "e4", uci: "e2e4", white: 30, draws: 20, black: 10 },
+    { san: "d4", uci: "d2d4", white: 10, draws: 20, black: 10 },
+  ];
+
+  it("adds up the listed moves when there are no totals", () => {
+    const summary = summarizeMasterGames(moves);
+    expect(summary.games).toBe(100);
+    expect([summary.whitePct, summary.drawPct, summary.blackPct]).toEqual([40, 40, 20]);
+    expect(summary.moves.map((m) => [m.san, m.games, m.pct])).toEqual([
+      ["e4", 60, 60],
+      ["d4", 40, 40],
+    ]);
+  });
+
+  it("measures against the totals when given them, which count unlisted moves too", () => {
+    const summary = summarizeMasterGames(moves, { white: 100, draws: 60, black: 40 });
+    expect(summary.games).toBe(200);
+    expect([summary.whitePct, summary.drawPct, summary.blackPct]).toEqual([50, 30, 20]);
+    expect(summary.moves.map((m) => m.pct)).toEqual([30, 20]);
+  });
+
+  it("gives percentages that add up to 100, and zeros for a position with no games", () => {
+    const thirds = summarizeMasterGames([], { white: 1, draws: 1, black: 1 });
+    expect(thirds.whitePct + thirds.drawPct + thirds.blackPct).toBe(100);
+
+    expect(summarizeMasterGames([])).toMatchObject({ games: 0, whitePct: 0, drawPct: 0, blackPct: 0 });
   });
 });

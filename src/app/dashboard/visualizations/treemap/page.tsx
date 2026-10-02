@@ -6,8 +6,8 @@ type Props = {
   searchParams: Promise<{ bookId?: string }>;
 };
 
-// The Atlas: the opening tree, reached from the Visualizations page.
-export default async function AtlasPage({ searchParams }: Props) {
+// The Treemap: the opening tree, reached from the Visualizations page.
+export default async function TreemapPage({ searchParams }: Props) {
   const [viewer, { bookId }] = await Promise.all([getViewer(), searchParams]);
   // A guest has no books, so the database isn't asked.
   const books = viewer.signedIn ? await listOpeningBooks() : [];

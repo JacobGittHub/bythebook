@@ -201,6 +201,45 @@ export function getCatalogMatchesForFen(
   return hydrateMatches(getOpeningIdsForPositionKey(toPositionKey(fen)), maxResults);
 }
 
+let openingByFinalPositionKey: Map<string, GeneratedCatalogOpening> | null = null;
+
+/**
+ * The opening whose own line ends at this position. `getCatalogMatchesForFen` answers a
+ * different question: which openings pass through the position, longest first.
+ */
+export function getOpeningEndingAt(fen: string): EcoOpening | undefined {
+  if (!openingByFinalPositionKey) {
+    openingByFinalPositionKey = new Map();
+    // When several lines end at one position, keep the shortest (ties by ECO, then id).
+    const ordered = [...openings].sort(
+      (left, right) =>
+        left.moves.length - right.moves.length ||
+        left.eco.localeCompare(right.eco) ||
+        left.id.localeCompare(right.id),
+    );
+    for (const opening of ordered) {
+      if (!openingByFinalPositionKey.has(opening.finalPositionKey)) {
+        openingByFinalPositionKey.set(opening.finalPositionKey, opening);
+      }
+    }
+  }
+
+  const opening = openingByFinalPositionKey.get(toPositionKey(fen));
+  return opening ? openingToEcoOpening(opening) : undefined;
+}
+
+/**
+ * The opening a line is in: the one that ends at its last position or, failing that, at the
+ * nearest position before it. `fens` are the positions after each move, in order.
+ */
+export function getOpeningForLine(fens: readonly string[]): EcoOpening | undefined {
+  for (let i = fens.length - 1; i >= 0; i--) {
+    const opening = getOpeningEndingAt(fens[i]);
+    if (opening) return opening;
+  }
+  return undefined;
+}
+
 export function getCatalogMatchesForStartPosition(maxResults = 50): CatalogMatch[] {
   return hydrateMatches(getOpeningIdsForPositionKey(startPositionKey), maxResults);
 }

@@ -1,6 +1,6 @@
 import { gameCount } from "@/lib/chess/explorerData";
 import { fenAfterUci, START_FEN } from "@/lib/chess/fen";
-import type { ExplorerResponse } from "@/types/chess";
+import type { ExplorerResponse, Move } from "@/types/chess";
 import type { WeightedItem } from "./bisect";
 import type { Similarity } from "./geometry";
 import { DEFAULT_LAYOUT_OPTIONS, ROOT_PEBBLE, layoutChildren, type LayoutOptions } from "./layout";
@@ -88,6 +88,25 @@ export type RegionStore = {
   /** Lays out the next tier of moves inside a closed "Other". Nothing outside it moves. */
   reveal(other: Blob): void;
 };
+
+/**
+ * The blob whose position a blob shows: itself, or for an "Other" the move or root whose
+ * moves it holds.
+ */
+export function positionBlob(blob: Blob): Blob {
+  let owner = blob;
+  while (owner.kind === "other" && owner.parent) owner = owner.parent;
+  return owner;
+}
+
+/** The moves that reach a blob's position from the start, in order. "Other" is not a move. */
+export function lineTo(blob: Blob): Move[] {
+  const line: Move[] = [];
+  for (let b: Blob | null = positionBlob(blob); b; b = b.parent) {
+    if (b.kind === "move") line.unshift({ san: b.san!, uci: b.uci!, fen: b.fen });
+  }
+  return line;
+}
 
 function reachOf(pebble: Pebble) {
   let far = 0;
@@ -202,13 +221,6 @@ export function createRegionStore(settings: RegionSettings = DEFAULT_REGION_SETT
     container.status = "split";
   }
 
-  /** The move or root blob whose position an "Other" belongs to. */
-  function ownerOf(other: Blob) {
-    let owner = other.parent;
-    while (owner && owner.kind === "other") owner = owner.parent;
-    return owner;
-  }
-
   return {
     settings,
     root,
@@ -230,9 +242,9 @@ export function createRegionStore(settings: RegionSettings = DEFAULT_REGION_SETT
 
     reveal(other) {
       if (other.kind !== "other" || other.status !== "closed") return;
-      const owner = ownerOf(other);
-      const shown = owner && expanded.get(owner);
-      if (!owner || !shown) return;
+      const owner = positionBlob(other);
+      const shown = expanded.get(owner);
+      if (!shown) return;
 
       shown.openLevels = other.level + 2;
       const { data } = shown;

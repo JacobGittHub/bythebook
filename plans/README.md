@@ -16,7 +16,8 @@ otherwise)
 |---|---|---|---|
 | [vision.md](vision.md) | living | — | The shared picture every plan serves |
 | [deployment.md](deployment.md) | active | — | Public Vercel deployment for guests and about 100 beta users |
-| [region-map.md](region-map.md) | active | — | Finish the Regions prototype on the Visualizations page (build phases 3–7; 3 and 4 built, Q1 and Q2 open) |
+| [region-map.md](region-map.md) | active | — | Finish the Labyrinth, the region map prototype (build phases 3–7; 3 and 4 built, check-in fixes done; Q1 and Q3–Q5 open) |
+| [atlas.md](atlas.md) | deciding | region-map.md | Draft: a static, pre-generated region map built in reproducible editions (Q1–Q6 open) |
 | [bookstore.md](bookstore.md) | deciding | deployment.md | Default books, repertoires, and library export and import |
 | [game-history.md](game-history.md) | deciding | deployment.md | Import a user's own games and show them on the app's displays |
 

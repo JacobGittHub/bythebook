@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { START_FEN } from "@/lib/chess/fen";
+import { START_FEN, fenAfterUci } from "@/lib/chess/fen";
 import { applySimilarity, signedDistance } from "./geometry";
 import { pebbleArea, samplePebble } from "./pebble";
 import { DEFAULT_TOP_SETTINGS, TIER_COUNT, selectChildren } from "./selection";
@@ -7,6 +7,8 @@ import {
   DEFAULT_REGION_SETTINGS,
   OTHER_SEGMENT,
   createRegionStore,
+  lineTo,
+  positionBlob,
   type Blob,
   type RegionStore,
 } from "./store";
@@ -224,5 +226,50 @@ describe("reveal", () => {
     store.expand(move, fakeExplorerData(move.fen));
     expect(move.status).toBe("split");
     expect(move.children!.every((child) => child.depth === move.depth + 1)).toBe(true);
+  });
+});
+
+describe("lineTo", () => {
+  const store = createRegionStore();
+  growStore(store, 3);
+  for (const blob of allBlobs(store)) {
+    if (blob.kind === "other" && blob.status === "closed") store.reveal(blob);
+  }
+  growStore(store, 3);
+
+  it("is empty at the root, and replays to every blob's position", () => {
+    expect(lineTo(store.root)).toEqual([]);
+
+    for (const blob of allBlobs(store)) {
+      const line = lineTo(blob);
+      expect(line.length).toBe(blob.kind === "other" ? blob.depth - 1 : blob.depth);
+
+      let fen: string | null = START_FEN;
+      for (const move of line) {
+        fen = fenAfterUci(fen!, move.uci);
+        expect(move.fen).toBe(fen);
+      }
+      expect(fen).toBe(blob.fen);
+    }
+  });
+
+  it("gives an Other, and a move inside one, the line of the position they belong to", () => {
+    const others = allBlobs(store).filter((blob) => blob.kind === "other");
+    expect(others.length).toBeGreaterThan(0);
+    for (const other of others) {
+      const owner = positionBlob(other);
+      expect(owner.kind).not.toBe("other");
+      expect(owner.fen).toBe(other.fen);
+      expect(lineTo(other)).toEqual(lineTo(owner));
+
+      for (const inside of other.children ?? []) {
+        if (inside.kind !== "move") continue;
+        expect(positionBlob(inside)).toBe(inside);
+        expect(lineTo(inside).map((move) => move.uci)).toEqual([
+          ...lineTo(owner).map((move) => move.uci),
+          inside.uci,
+        ]);
+      }
+    }
   });
 });

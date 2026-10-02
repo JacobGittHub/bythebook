@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { LabSpinner } from "@/components/lab/LabSpinner";
 import type { LabStatValues } from "@/components/lab/LabStats";
-import { drawScene, type RenderOptions } from "@/components/lab/regionRender";
+import { drawScene } from "@/components/lab/regionRender";
 import {
   centredCamera,
   panBy,
@@ -14,8 +14,9 @@ import {
 } from "@/lib/regions/camera";
 import type { Vec } from "@/lib/regions/geometry";
 import { FAILED_RETRY_MS, createExplorerLoader, type LoadRequest } from "@/lib/regions/loader";
-import { createRegionStore } from "@/lib/regions/store";
+import { createRegionStore, lineTo, positionBlob } from "@/lib/regions/store";
 import { MIN_ROOT_SHARE, buildScene, hitTest, type Scene } from "@/lib/regions/visibility";
+import type { ExplorerResponse, Move } from "@/types/chess";
 
 /** A press that travels no farther than this is a click, not a drag. */
 const CLICK_THRESHOLD_PX = 4;
@@ -35,9 +36,20 @@ const WHEEL_LINE_PX = 16;
 /** The stretch of time the FPS figure is averaged over. */
 const FPS_WINDOW_MS = 500;
 
-const RENDER_OPTIONS: RenderOptions = { showLabels: true };
-
 type LoadPhase = "loading" | "failed" | "ready";
+
+/** The position the view is inside: the frame blob's, or for an "Other" frame the one it belongs to. */
+export type RegionFrame = {
+  /** The blob's id, which is its path from the root. */
+  id: string;
+  fen: string;
+  /** The moves that reach the position from the start, in order. */
+  moves: Move[];
+  /** Whether the position's master games have loaded, are on their way, or didn't load. */
+  status: "loading" | "loaded" | "failed";
+  /** The position's master games, once loaded. */
+  data: ExplorerResponse | null;
+};
 
 /**
  * The region map: every move is a pebble inside the pebble of the move before it, sized by
@@ -46,7 +58,17 @@ type LoadPhase = "loading" | "failed" | "ready";
  * All of its state lives outside React, in one effect: the canvas redraws in an animation
  * loop when something has changed, and nothing here re-renders while the map is in use.
  */
-export default function RegionMap({ statsRef }: { statsRef?: RefObject<LabStatValues> }) {
+export default function RegionMap({
+  statsRef,
+  onFrame,
+}: {
+  statsRef?: RefObject<LabStatValues>;
+  /**
+   * Told the frame's position whenever it or its load status changes. Pass a function that
+   * stays the same between renders, such as a state setter: a new one rebuilds the map.
+   */
+  onFrame?: (frame: RegionFrame) => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [phase, setPhase] = useState<LoadPhase>("loading");
 
@@ -71,6 +93,8 @@ export default function RegionMap({ statsRef }: { statsRef?: RefObject<LabStatVa
     let camera: Camera | null = null;
     let scene: Scene | null = null;
     let shownPhase: LoadPhase = "loading";
+    /** The frame position and load status last passed to `onFrame`. */
+    let shownFrame: string | null = null;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
     let frames = 0;
@@ -104,7 +128,33 @@ export default function RegionMap({ statsRef }: { statsRef?: RefObject<LabStatVa
           laidOut++;
         }
       }
+      // The panel shows the frame's position, which a wall or an unopened blob hasn't asked for.
+      const position = positionBlob(scene.frame);
+      const positionState = loader.get(position.fen);
+      if (positionState?.status !== "loaded") requests.push({ fen: position.fen, priority: Infinity });
+
       loader.want(requests);
+      if (onFrame) {
+        // Read again: `want` may just have started the load.
+        const state = loader.get(position.fen);
+        const status = state?.status ?? "loading";
+        const key = `${position.id}|${status}`;
+        if (key !== shownFrame) {
+          shownFrame = key;
+          onFrame({
+            id: position.id,
+            fen: position.fen,
+            moves: lineTo(position),
+            status,
+            data: state?.status === "loaded" ? state.data : null,
+          });
+        }
+      }
+
+      // Keep drawing while blobs on show are loading, so the dots on their outlines travel.
+      const load = loader.stats();
+      if (scene.wanted.length > 0 && load.inFlight + load.queued > 0) dirty = true;
+
       if (laidOut > 0) {
         layoutMs = performance.now() - started;
         // The new blobs are drawn, and may themselves be subdivided, on the next frame.
@@ -118,7 +168,7 @@ export default function RegionMap({ statsRef }: { statsRef?: RefObject<LabStatVa
       }
 
       ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-      drawScene(ctx, scene, viewport, RENDER_OPTIONS);
+      drawScene(ctx, scene, viewport, { showLabels: true, now: performance.now() });
 
       const nextPhase: LoadPhase = store.root.children
         ? "ready"
@@ -319,7 +369,7 @@ export default function RegionMap({ statsRef }: { statsRef?: RefObject<LabStatVa
       canvas.removeEventListener("wheel", onWheel);
       loader.dispose();
     };
-  }, [statsRef]);
+  }, [statsRef, onFrame]);
 
   return (
     <div className="relative h-full w-full">

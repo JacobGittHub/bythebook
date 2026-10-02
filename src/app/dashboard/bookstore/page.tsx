@@ -16,9 +16,9 @@ export default function BookstorePage() {
           gambits. Until then, browse every named opening in the{" "}
           <Link
             className="font-medium text-[var(--text-primary)] underline"
-            href="/dashboard/visualizations/atlas"
+            href="/dashboard/visualizations/treemap"
           >
-            Atlas
+            Treemap
           </Link>{" "}
           or the{" "}
           <Link

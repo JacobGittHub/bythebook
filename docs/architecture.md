@@ -1,6 +1,6 @@
 # Architecture
 
-**Last reviewed:** 2026-10-01
+**Last reviewed:** 2026-10-02
 
 This file explains why the system is built the way it is. The rules themselves are in
 `AGENTS.md`; this file holds the reasoning and detail behind them. When the code can answer
@@ -109,8 +109,11 @@ an opening.
   `byEco`, `byUciPrefix` (a space-joined UCI line) and `byPositionKey` (transposition-aware).
 - **API.** The public API is the exports of `src/lib/chess/openingCatalog.ts`:
   `searchCatalogMatches`, `getCatalogMatchesForUciLine`, `getCatalogMatchesForFen`,
-  `buildCatalogPreview` and `buildDefaultCatalogTree`. Results are cached in module-level
-  Maps.
+  `getOpeningEndingAt`, `getOpeningForLine`, `buildCatalogPreview` and
+  `buildDefaultCatalogTree`. Results are cached in module-level Maps.
+  - `getCatalogMatchesForFen` lists the openings that pass through a position, longest line
+    first, so its first result is not the position's name. To name a position or a line, use
+    `getOpeningEndingAt` or `getOpeningForLine`.
 - **The catalog tree is small.** `buildDefaultCatalogTree()` prunes with
   `CATALOG_TREE_MAX_DEPTH` and `CATALOG_TREE_MAX_CHILDREN`. As of 2026-08-11 it yielded
   264 non-root nodes to depth 5, from an index of 3,690 openings. That is a hard ceiling

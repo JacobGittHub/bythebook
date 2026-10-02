@@ -52,7 +52,7 @@ describe("requiresAccount", () => {
     expect(requiresAccount("/dashboard")).toBe(false);
     expect(requiresAccount("/dashboard/explorer")).toBe(false);
     expect(requiresAccount("/dashboard/visualizations")).toBe(false);
-    expect(requiresAccount("/dashboard/visualizations/atlas")).toBe(false);
+    expect(requiresAccount("/dashboard/visualizations/treemap")).toBe(false);
     expect(requiresAccount("/dashboard/train/some-book-id")).toBe(false);
   });
 });

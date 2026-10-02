@@ -59,7 +59,8 @@ function roomOf(blob: Blob) {
 }
 
 function textOf(blob: Blob) {
-  if (blob.kind === "other") return "Other";
+  // An opened "Other" has become its moves, which carry their own labels.
+  if (blob.kind === "other") return blob.children ? null : "Other";
   return blob.san;
 }
 

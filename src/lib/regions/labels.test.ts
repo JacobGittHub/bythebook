@@ -53,6 +53,25 @@ describe("placeLabels", () => {
     }
   });
 
+  it("drops the Other label once the Other is opened, and labels the moves inside it", () => {
+    const opened = createRegionStore();
+    growStore(opened, 1);
+    const other = opened.root.children!.find((blob) => blob.kind === "other")!;
+    // Fill the view with the "Other", so it and its moves have room for labels.
+    const camera = centredCamera(other.id, 2 * other.reach, VIEWPORT, 0.9);
+    const labelled = () => labelsFor(other, camera).map((label) => label.blob);
+
+    expect(labelled()).toContain(other);
+
+    opened.reveal(other);
+    const inside = other.children!.filter((blob) => blob.kind === "move");
+    expect(inside.length).toBeGreaterThan(0);
+
+    const after = labelled();
+    expect(after).not.toContain(other);
+    expect(inside.some((blob) => after.includes(blob))).toBe(true);
+  });
+
   it("puts each label at the centre of a drawn blob, readable and no more opaque than its blob", () => {
     const rng = mulberry32(51);
     for (let run = 0; run < 150; run++) {
