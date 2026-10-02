@@ -1,30 +1,39 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { ViewerProvider } from "@/context/Viewer";
+import { visibleNavItems } from "@/lib/auth/access";
+import { betaKeyMailto } from "@/lib/auth/contact";
+import { getViewer } from "@/lib/auth/viewer";
+import { createServerSupabaseClient } from "@/lib/supabase";
 
-const navItems = [
-  { href: "/dashboard", label: "Overview" },
-  { href: "/dashboard/explorer", label: "Explorer" },
-  { href: "/dashboard/train", label: "Train" },
-  { href: "/dashboard/repertoire", label: "Repertoire" },
-  { href: "/dashboard/puzzles", label: "Puzzles" },
-  { href: "/dashboard/settings", label: "Settings" },
-  { href: "/dashboard/lab", label: "⚗ Lab" },
-];
+const accountLinkClass =
+  "rounded-2xl px-3 py-2 text-left text-sm text-[var(--bg-sidebar-muted)] transition-colors hover:bg-white/10 hover:text-white";
 
-export default function DashboardLayout({
+async function signOutAction() {
+  "use server";
+
+  const supabase = await createServerSupabaseClient();
+  await supabase.auth.signOut();
+  redirect("/dashboard");
+}
+
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const viewer = await getViewer();
+
   return (
     <div className="min-h-screen bg-[var(--bg-page)]">
       <div className="mx-auto grid min-h-screen max-w-[1600px] gap-3 px-3 py-3 lg:grid-cols-[200px_1fr]">
-        <aside className="rounded-[2rem] bg-[var(--bg-sidebar)] px-4 py-5 text-[var(--bg-sidebar-text)]">
+        <aside className="flex flex-col rounded-[2rem] bg-[var(--bg-sidebar)] px-4 py-5 text-[var(--bg-sidebar-text)]">
           <p className="text-xs uppercase tracking-[0.3em] text-[var(--bg-sidebar-muted)]">
             ByTheBook
           </p>
           <h2 className="mt-2 text-xl font-semibold">Dashboard</h2>
           <nav className="mt-6 grid gap-1">
-            {navItems.map((item) => (
+            {visibleNavItems(viewer.signedIn).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -34,9 +43,41 @@ export default function DashboardLayout({
               </Link>
             ))}
           </nav>
+
+          {/* Account block */}
+          <div className="mt-6 grid gap-1 border-t border-white/10 pt-4 lg:mt-auto">
+            {viewer.signedIn ? (
+              <>
+                <p className="truncate px-3 text-xs text-[var(--bg-sidebar-muted)]">
+                  Signed in as{" "}
+                  <span className="text-[var(--bg-sidebar-text)]">{viewer.displayName}</span>
+                </p>
+                <form action={signOutAction} className="grid">
+                  <button className={accountLinkClass} type="submit">
+                    Sign out
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <p className="px-3 text-xs text-[var(--bg-sidebar-muted)]">Browsing as a guest</p>
+                <Link className={accountLinkClass} href="/auth/login">
+                  Sign in
+                </Link>
+                <Link className={accountLinkClass} href="/auth/register">
+                  Create account
+                </Link>
+                {betaKeyMailto ? (
+                  <a className={accountLinkClass} href={betaKeyMailto}>
+                    Request a beta key
+                  </a>
+                ) : null}
+              </>
+            )}
+          </div>
         </aside>
         <div className="rounded-[2rem] border border-[var(--border-card)] bg-[var(--bg-card)] p-4 shadow-sm">
-          {children}
+          <ViewerProvider signedIn={viewer.signedIn}>{children}</ViewerProvider>
         </div>
       </div>
     </div>

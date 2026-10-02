@@ -210,6 +210,21 @@ that iterates, walks trees or aggregates runs client-side.
   clients.
 - Sign-in uses `signInWithPassword()`. The server resolves the user with
   `supabase.auth.getUser()`.
+- **Guests use the app without an account.** There is no landing page: `/` redirects to
+  `/dashboard` (`next.config.ts`). `src/lib/auth/access.ts` lists the pages, which of them
+  need an account, and the guest and account differences shown on the Overview page. The
+  sidebar, `src/proxy.ts` and the Overview all read it. The decision and the full table are
+  in `plans/deployment.md` (D16–D18).
+- **Three layers enforce it.** The proxy redirects a guest away from an account-only page.
+  Every route handler except the explorer returns 401 without a user, and the explorer
+  serves a guest from the cache only. The UI then avoids offering what would fail:
+  `getViewer()` (`src/lib/auth/viewer.ts`) tells Server Components who is viewing, and
+  `useViewer()` (`src/context/Viewer.tsx`) tells client components, so pages skip book
+  reads for a guest and show a sign-in notice in place of the save controls. The UI layer
+  is a courtesy, not a security boundary.
+- **A returning user is signed back in** because the Supabase cookies persist and the proxy
+  refreshes the session on every dashboard request. Sign out is a server action in
+  `src/app/dashboard/layout.tsx`.
 - Public sign-up is turned off in Supabase. An account is created on the server with the
   admin API, already confirmed, and only in exchange for a one-time invite code
   (`registerWithInvite` in `src/lib/auth/accounts.ts`). A forgotten password is set the same

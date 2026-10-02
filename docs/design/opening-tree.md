@@ -1,11 +1,15 @@
-# Dashboard overview tree
+# Opening tree (Atlas page)
 
 **Status:** Live, though legacy. The territory map (`territory-map.md`) is the candidate
 successor. This tree stays until a successor ships and the user says otherwise.
-**Last reviewed:** 2026-09-29
-**Files:** `src/app/dashboard/page.tsx` renders `src/components/repertoire/DashboardTree.tsx`
-(the orchestrator), which renders `OpeningTreeFull.tsx` (the radial tree) and
-`TreeNodePanel.tsx` (the side panel).
+**Last reviewed:** 2026-10-01
+**Files:** `src/app/dashboard/atlas/page.tsx` renders
+`src/components/repertoire/DashboardTree.tsx` (the orchestrator), which renders
+`OpeningTreeFull.tsx` (the radial tree) and `TreeNodePanel.tsx` (the side panel).
+
+The Atlas is the sidebar's visualizations page, and this tree is the only visualization on
+it so far. Until 2026-10-01 the tree was the dashboard's Overview at `/dashboard`, which is
+now an info page.
 
 ## Rules
 
@@ -25,6 +29,7 @@ master stats and book actions.
 DashboardTree
   ├─ buildDefaultCatalogTree()        local and in-memory, with no API calls (limits in architecture.md)
   ├─ opening_books (listOpeningBooks) the user's books → bookFens, a Set of every FEN in them
+  │                                   (the page skips this read for a guest, who has no books)
   ├─ useOpeningExplorer(selectedFen)  on click: top master moves for the "ghost" expansion
   │                                   (goes through position_cache; the result isn't persisted)
   └─ ghostExpansions                  local state: Map<nodeId, DisplayNode[]>
@@ -67,6 +72,11 @@ The panel is always rendered and shows a placeholder when nothing is selected. I
 - Ghost expansion, which fetches the top master continuations once per clicked node
 - Saving through `PATCH /api/openings/books/[bookId]`
 - The search bar, which highlights matching ECO paths via `searchCatalogMatches`
+
+**Guests.** Books belong to accounts, so a guest (`useViewer()`) sees a sign-in notice in
+place of the book selector and "+ New book", and the panel has no book actions. The tree,
+the search and the master stats work the same. For a position the server hasn't saved, the
+panel says a live lookup needs a beta account.
 
 ## Limits
 

@@ -37,10 +37,10 @@ AGENT  harness ≈20k + AGENTS.md 2.7k (auto-loaded) + plans/README.md 0.6k  = 2
 			       app/api/user/route.ts, lib/validators/schemas.ts, types/database.ts, supabase/migrations/*) 8.5k
 			= context 41.0k  →  implement
 		Q2 · guest book storage  [frontend]
-			architecture.md 4.2k + design/explorer.md 1.4k + design/dashboard-overview.md 0.8k
+			architecture.md 4.2k + design/explorer.md 1.4k + design/opening-tree.md 0.8k
 			= docs 6.4k, context 31.7k
 			= src (components/openings/OpeningExplorer.tsx, components/repertoire/DashboardTree.tsx,
-			       components/repertoire/BookEditor.tsx, app/dashboard/repertoire/page.tsx, app/api/openings/books/**,
+			       components/repertoire/BookEditor.tsx, app/dashboard/library/page.tsx, app/api/openings/books/**,
 			       lib/db/openings.ts, lib/chess/moveTree.ts, types/chess.ts, lib/validators/schemas.ts) 21.5k
 			= context 53.2k  →  implement
 		Q3 · guest explorer and cache pre-fill  [API]

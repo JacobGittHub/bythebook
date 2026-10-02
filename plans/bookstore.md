@@ -20,7 +20,7 @@ Carried over from `deployment.md` (D10–D13), where the user settled them.
   the back end. Export files carry a version number. A new account can upload earlier
   books, repertoires or libraries.
 - D3. Shared book codes and publicly uploaded books may follow. They are not in this plan.
-- D4. The library interface comes from `deployment.md` Phase 4. This plan builds on it and
+- D4. The library interface comes from `deployment.md` Phase 5. This plan builds on it and
   replaces the "coming soon" prompts that phase ships.
 
 ## Open questions

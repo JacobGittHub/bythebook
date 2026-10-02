@@ -1,7 +1,7 @@
 # Opening Explorer and mini tree
 
 **Status:** Live
-**Last reviewed:** 2026-09-29
+**Last reviewed:** 2026-10-01
 **Files:** `src/components/openings/` (`OpeningExplorer.tsx` is the orchestrator, plus
 `OpeningCatalogSearch`, `OpeningCatalogResults`, `OpeningCatalogTreePreview` and
 `OpeningMiniTree`), `src/hooks/useOpeningExplorer.ts`, `src/hooks/useOpeningExplorerMulti.ts`
@@ -29,10 +29,16 @@ The header card has two rows:
      line.
    - "Add line" is always visible. It is disabled when no book is selected or no moves have
      been played, and lines are capped at 20 moves.
+   - A guest (`useViewer()`) gets a sign-in notice in this row instead, and the book list is
+     not requested, because books belong to accounts.
+
+**Master stats for a guest.** The route answers 404 for a position the server hasn't saved
+(see `processes/lichess-api-and-caching.md`). The move list then says that a live lookup
+needs a beta account; it is not shown as a failure.
 
 **`initialFen` prop.** When the explorer opens with a `?fen=` URL parameter (for example
-from "Open in Explorer" on the dashboard), it replays the catalog moves to reach that
-position on mount.
+from "Open in Explorer" in the Atlas), it replays the catalog moves to reach that position
+on mount.
 
 ## Hybrid matching
 

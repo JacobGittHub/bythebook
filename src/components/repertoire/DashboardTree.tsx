@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { OpeningTreeFull, type DisplayNode, type SelectedNodeInfo } from "./OpeningTreeFull";
 import { TreeNodePanel } from "./TreeNodePanel";
 import { BookEditor } from "./BookEditor";
+import { SignInPrompt } from "@/components/ui/SignInPrompt";
+import { useViewer } from "@/context/Viewer";
 import { fenAfterUci } from "@/lib/chess/fen";
 import { buildDefaultCatalogTree, searchCatalogMatches } from "@/lib/chess/openingCatalog";
 import { mergeMoveLineIntoTree, getNodePathByUciLine } from "@/lib/chess/moveTree";
@@ -53,6 +55,7 @@ type Props = {
 };
 
 export function DashboardTree({ initialBooks, initialBookId }: Props) {
+  const { signedIn } = useViewer();
   const [books, setBooks] = useState<OpeningBook[]>(initialBooks);
   const [activeBookId, setActiveBookId] = useState<string | null>(initialBookId);
   const [activeMoveNode, setActiveMoveNode] = useState<MoveNode | null>(
@@ -191,8 +194,10 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
         {/* Top bar */}
         <div className="flex shrink-0 items-center gap-3 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-3">
-          {/* Book selector */}
-          {books.length > 0 ? (
+          {/* Book selector. Books are saved to an account, so a guest gets a notice. */}
+          {!signedIn ? (
+            <SignInPrompt action="build books from this tree" className="flex-1 text-sm" />
+          ) : books.length > 0 ? (
             <select
               value={activeBookId ?? ""}
               onChange={(e) => { if (e.target.value) switchBook(e.target.value); }}
@@ -224,12 +229,14 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
           )}
 
           {/* New book */}
-          <button
-            onClick={() => setShowCreateForm((v) => !v)}
-            className="shrink-0 rounded-xl border border-[var(--border-card)] px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-          >
-            {showCreateForm ? "Cancel" : "+ New book"}
-          </button>
+          {signedIn && (
+            <button
+              onClick={() => setShowCreateForm((v) => !v)}
+              className="shrink-0 rounded-xl border border-[var(--border-card)] px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+            >
+              {showCreateForm ? "Cancel" : "+ New book"}
+            </button>
+          )}
         </div>
 
         {/* Create form (inline, dismissible) */}

@@ -140,16 +140,18 @@ includes a malformed FEN → 400 · anything else → 500
 |---|---|---|
 | `useOpeningExplorer` | Whenever the Explorer board's FEN changes (one call) | Sets `error` to the status code, and the component decides what to show |
 | `useOpeningExplorerMulti` | Explorer history positions, in parallel (`Promise.all`) | Silently maps that position to `null` |
-| `DashboardTree` ghost expansion | When a dashboard node is clicked, via `useOpeningExplorer` | Same as `useOpeningExplorer` |
+| `DashboardTree` ghost expansion | When a node in the Atlas tree is clicked, via `useOpeningExplorer` | Same as `useOpeningExplorer` |
 | Region map (`src/lib/regions/loader.ts`) | For blobs on screen, biggest first, at most `EXPLORER_MAX_IN_FLIGHT` at once | A 429 pauses every request for its `Retry-After`. Other failures mark the position failed and it may be asked again after `FAILED_RETRY_MS` |
 
 - **Failures are quiet.** A cold cache combined with a Lichess 429 or an expired token makes
   the mini tree and ghost expansions render with no moves, and the app stays usable. There
   is no server-side logging of 429s and no user-facing error beyond the hook's `error`
   state.
-- **No page lets a guest in yet.** `src/proxy.ts` still requires a session for every
-  dashboard page, so only the route itself serves guests. When guests are let in, the
-  consumers above need to treat a 404 as "not cached" and not as a failure to retry.
+- **Guests reach every consumer except the region map.** `src/proxy.ts` lets guests into
+  the dashboard, apart from the Lab. For a guest, a 404 means "not saved", not a failure:
+  the Explorer and the Atlas panel say that a live lookup needs a beta account, and
+  `useOpeningExplorerMulti` leaves that position out. The region map loader still treats a
+  404 as a failure to retry, which is fine while the Lab is for signed-in users only.
 
 ## Scaling
 

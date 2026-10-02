@@ -122,7 +122,12 @@ export function TreeNodePanel({
               </>
             )}
             {!explorerData.loading && total === 0 && (
-              <p className="mt-2 text-xs text-[var(--text-muted)] opacity-50">No master game data.</p>
+              <p className="mt-2 text-xs text-[var(--text-muted)] opacity-50">
+                {/* A 404 is the route's answer to a guest for a position it hasn't saved. */}
+                {explorerData.error === "404"
+                  ? "Not saved yet. Live lookups need a beta account."
+                  : "No master game data."}
+              </p>
             )}
           </div>
 

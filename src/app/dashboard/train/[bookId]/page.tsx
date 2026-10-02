@@ -1,4 +1,5 @@
 import { OpeningTrainer } from "@/components/training/OpeningTrainer";
+import { getViewer } from "@/lib/auth/viewer";
 import { getOpeningBook } from "@/lib/db/openings";
 import { notFound } from "next/navigation";
 
@@ -7,8 +8,9 @@ export default async function TrainingSessionPage({
 }: {
   params: Promise<{ bookId: string }>;
 }) {
-  const { bookId } = await params;
-  const book = await getOpeningBook(bookId);
+  const [viewer, { bookId }] = await Promise.all([getViewer(), params]);
+  // Books belong to accounts, so a guest has none to open.
+  const book = viewer.signedIn ? await getOpeningBook(bookId) : null;
 
   if (!book) {
     notFound();

@@ -15,6 +15,9 @@ Carried over from the user's notes in `deployment.md` (D12, D13).
 - D2. The import must not burden the back end, and it works for guests.
 - D3. Later the library may hold game history alongside books, repertoires and drill
   statistics, so it can be exported and synced into an account.
+- D4. The import lives on the Library page, which holds the user's own data. It gets no
+  sidebar tab of its own (`deployment.md` D18). The Library shows a "coming soon" section
+  for it until this plan is built.
 
 ## Open questions
 

@@ -20,6 +20,8 @@ import { useOpeningExplorer } from "@/hooks/useOpeningExplorer";
 import { useOpeningExplorerMulti } from "@/hooks/useOpeningExplorerMulti";
 import { useEngine, type EngineMode } from "@/hooks/useEngine";
 import { useBackgroundMode } from "@/context/BackgroundMode";
+import { useViewer } from "@/context/Viewer";
+import { SignInPrompt } from "@/components/ui/SignInPrompt";
 import { formatScore, evalToBarPct } from "@/lib/chess/stockfishUci";
 import { OpeningMiniTree, type HistoryAltEntry } from "@/components/openings/OpeningMiniTree";
 import { mergeMoveLineIntoTree } from "@/lib/chess/moveTree";
@@ -74,13 +76,17 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
   const [activeExplorerBookId, setActiveExplorerBookId] = useState<string | null>(null);
   const [isSavingToBook, setIsSavingToBook] = useState(false);
 
-  // Load user's books for the book selector
+  const { signedIn } = useViewer();
+
+  // Load user's books for the book selector. A guest has none, so nothing is asked.
   useEffect(() => {
+    if (!signedIn) return;
+
     fetch("/api/openings/books")
       .then((r) => r.json())
       .then((d) => setExplorerBooks(d.books ?? []))
       .catch(() => {});
-  }, []);
+  }, [signedIn]);
 
   // On mount: if initialFen provided, replay catalog moves to reach that position
   useEffect(() => {
@@ -546,49 +552,54 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
             </div>
           </div>
 
-          {/* Row 2: book selector (narrow) + View Lines + Add line (always visible) */}
-          <div className="flex items-center gap-2">
-            <select
-              value={activeExplorerBookId ?? ""}
-              onChange={(e) => setActiveExplorerBookId(e.target.value || null)}
-              className="w-44 shrink-0 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none"
-            >
-              <option value="">— No book selected —</option>
-              {explorerBooks.map((b) => (
-                <option key={b.id} value={b.id}>{b.name} ({b.color})</option>
-              ))}
-            </select>
+          {/* Row 2: book selector (narrow) + View Lines + Add line (always visible).
+              Books are saved to an account, so a guest gets a notice in the same row. */}
+          {!signedIn ? (
+            <SignInPrompt action="save lines to a book" className="py-1.5 text-sm" />
+          ) : (
+            <div className="flex items-center gap-2">
+              <select
+                value={activeExplorerBookId ?? ""}
+                onChange={(e) => setActiveExplorerBookId(e.target.value || null)}
+                className="w-44 shrink-0 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none"
+              >
+                <option value="">— No book selected —</option>
+                {explorerBooks.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name} ({b.color})</option>
+                ))}
+              </select>
 
-            {/* View Lines dropdown */}
-            <select
-              value=""
-              onChange={(e) => handleViewBookLine(e.target.value)}
-              disabled={!activeExplorerBook || bookLines.length === 0}
-              className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <option value="">View Lines</option>
-              {bookLines.map((line, idx) => (
-                <option key={idx} value={JSON.stringify(line)}>
-                  {line.slice(0, 8).map((m) => m.san).join(" ")}
-                  {line.length > 8 ? "…" : ""}
-                </option>
-              ))}
-            </select>
+              {/* View Lines dropdown */}
+              <select
+                value=""
+                onChange={(e) => handleViewBookLine(e.target.value)}
+                disabled={!activeExplorerBook || bookLines.length === 0}
+                className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <option value="">View Lines</option>
+                {bookLines.map((line, idx) => (
+                  <option key={idx} value={JSON.stringify(line)}>
+                    {line.slice(0, 8).map((m) => m.san).join(" ")}
+                    {line.length > 8 ? "…" : ""}
+                  </option>
+                ))}
+              </select>
 
-            {/* Add line — always visible, disabled when no book or no moves */}
-            <button
-              type="button"
-              onClick={handleAddToBook}
-              disabled={!activeExplorerBook || currentMoves.length === 0 || isSavingToBook}
-              className="shrink-0 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {isSavingToBook
-                ? "Saving…"
-                : currentMoves.length > 0
-                  ? `Add line (${Math.min(currentMoves.length, 20)} moves)`
-                  : "Add line"}
-            </button>
-          </div>
+              {/* Add line — always visible, disabled when no book or no moves */}
+              <button
+                type="button"
+                onClick={handleAddToBook}
+                disabled={!activeExplorerBook || currentMoves.length === 0 || isSavingToBook}
+                className="shrink-0 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {isSavingToBook
+                  ? "Saving…"
+                  : currentMoves.length > 0
+                    ? `Add line (${Math.min(currentMoves.length, 20)} moves)`
+                    : "Add line"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Board + right-side eval bar */}
@@ -899,8 +910,9 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
           )}
           {!explorerData.loading && explorerData.error && (
             <p className="text-xs text-slate-400">
-              {explorerData.error === "401"
-                ? "Sign in to see master game statistics."
+              {/* A 404 is the route's answer to a guest for a position it hasn't saved. */}
+              {explorerData.error === "404"
+                ? "Master statistics for this position aren't saved yet. Live lookups need a beta account."
                 : "Could not load master game data."}
             </p>
           )}

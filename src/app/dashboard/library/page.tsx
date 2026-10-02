@@ -4,20 +4,26 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BoardDisplay } from "@/components/board/BoardDisplay";
 import { BookEditor } from "@/components/repertoire/BookEditor";
+import { SignInPrompt } from "@/components/ui/SignInPrompt";
+import { useViewer } from "@/context/Viewer";
 import { countMoveTreeLines, countMoveTreeNodes } from "@/lib/chess/moveTree";
 import type { OpeningBook } from "@/types/chess";
 
-export default function RepertoirePage() {
+export default function LibraryPage() {
+  const { signedIn } = useViewer();
   const [books, setBooks] = useState<OpeningBook[]>([]);
-  const [loading, setLoading] = useState(true);
+  // A guest has no books on the server, so nothing is loaded for them.
+  const [loading, setLoading] = useState(signedIn);
   const [showCreate, setShowCreate] = useState(false);
 
   useEffect(() => {
+    if (!signedIn) return;
+
     fetch("/api/openings/books")
       .then((r) => r.json())
       .then((d) => setBooks(d.books ?? []))
       .finally(() => setLoading(false));
-  }, []);
+  }, [signedIn]);
 
   const handleCreated = (book: OpeningBook) => {
     setBooks((prev) => [book, ...prev]);
@@ -34,18 +40,29 @@ export default function RepertoirePage() {
     <main className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-950">Repertoire</h1>
+          <h1 className="text-3xl font-semibold text-slate-950">Library</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Manage your opening books and navigate to the explorer or trainer.
+            Your own data: the opening books you build, and later your repertoires and games.
           </p>
         </div>
-        <button
-          onClick={() => setShowCreate((v) => !v)}
-          className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-        >
-          {showCreate ? "Cancel" : "+ New book"}
-        </button>
+        {signedIn && (
+          <button
+            onClick={() => setShowCreate((v) => !v)}
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            {showCreate ? "Cancel" : "+ New book"}
+          </button>
+        )}
       </div>
+
+      {!signedIn && (
+        <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+          <p className="text-sm text-slate-500">
+            Books are saved to an account, so a guest&apos;s library is empty for now.
+          </p>
+          <SignInPrompt action="build and keep books" className="mt-2 text-sm" />
+        </div>
+      )}
 
       {showCreate && (
         <div className="rounded-3xl border border-slate-200 bg-white p-5">
@@ -58,7 +75,7 @@ export default function RepertoirePage() {
         <p className="text-sm text-slate-400">Loading books…</p>
       )}
 
-      {!loading && books.length === 0 && !showCreate && (
+      {signedIn && !loading && books.length === 0 && !showCreate && (
         <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
           <p className="text-sm text-slate-500">No opening books yet.</p>
           <button
@@ -95,7 +112,7 @@ export default function RepertoirePage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Link
-                    href={`/dashboard?bookId=${book.id}`}
+                    href={`/dashboard/atlas?bookId=${book.id}`}
                     className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
                   >
                     View in tree
@@ -123,6 +140,19 @@ export default function RepertoirePage() {
             </article>
           );
         })}
+      </section>
+
+      {/* Game history */}
+      <section className="rounded-3xl border border-dashed border-slate-200 p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-slate-800">Game history</h2>
+          <span className="shrink-0 rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-500">
+            Coming soon
+          </span>
+        </div>
+        <p className="mt-2 text-sm text-slate-500">
+          Import your own games to see the moves you play beside the master statistics.
+        </p>
       </section>
     </main>
   );

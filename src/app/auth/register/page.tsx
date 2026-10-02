@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { registerWithInvite } from "@/lib/auth/accounts";
+import { betaContactEmail, betaKeyMailto } from "@/lib/auth/contact";
+import { getViewer } from "@/lib/auth/viewer";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { registerInputSchema } from "@/lib/validators/schemas";
 
@@ -8,6 +10,7 @@ const errorMessages: Record<string, string> = {
   invalid_registration:
     "Enter an invite code, a username, a valid email, and a password with at least 8 characters.",
   invalid_code: "That invite code isn't valid, or it has already been used.",
+  password_mismatch: "The two passwords don't match.",
 };
 
 export default async function RegisterPage({
@@ -17,8 +20,18 @@ export default async function RegisterPage({
 }) {
   const { error } = await searchParams;
 
+  if ((await getViewer()).signedIn) {
+    redirect("/dashboard");
+  }
+
   async function registerAction(formData: FormData) {
     "use server";
+
+    if (
+      String(formData.get("password") ?? "") !== String(formData.get("confirmPassword") ?? "")
+    ) {
+      redirect("/auth/register?error=password_mismatch");
+    }
 
     const parsedRegistration = registerInputSchema.safeParse({
       code: String(formData.get("code") ?? ""),
@@ -58,6 +71,18 @@ export default async function RegisterPage({
         <p className="mt-3 text-sm text-slate-600">
           ByTheBook is in beta, so creating an account needs an invite code. Each code
           works once.
+          {betaKeyMailto ? (
+            // The address is written out because a mailto link does nothing for a visitor
+            // with no mail program set up; they can copy it instead.
+            <>
+              {" "}
+              To ask for one, email{" "}
+              <a className="font-medium text-slate-950 underline" href={betaKeyMailto}>
+                {betaContactEmail}
+              </a>
+              .
+            </>
+          ) : null}
         </p>
         {error ? (
           <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -104,6 +129,16 @@ export default async function RegisterPage({
               type="password"
             />
           </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-slate-700">Confirm password</span>
+            <input
+              autoComplete="new-password"
+              className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none transition-colors focus:border-slate-950"
+              name="confirmPassword"
+              placeholder="Re-enter your password"
+              type="password"
+            />
+          </label>
           <button
             className="inline-flex items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-800"
             type="submit"
@@ -115,6 +150,10 @@ export default async function RegisterPage({
           Already have an account?{" "}
           <Link className="font-medium text-slate-950 underline" href="/auth/login">
             Sign in
+          </Link>{" "}
+          ·{" "}
+          <Link className="font-medium text-slate-950 underline" href="/dashboard">
+            Continue as a guest
           </Link>
         </p>
       </section>

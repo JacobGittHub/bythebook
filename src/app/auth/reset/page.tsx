@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { resetPasswordWithCode } from "@/lib/auth/accounts";
+import { betaContactEmail, resetRequestMailto } from "@/lib/auth/contact";
 import { resetPasswordInputSchema } from "@/lib/validators/schemas";
 
 const errorMessages: Record<string, string> = {
   invalid_reset: "Enter your reset code and a new password with at least 8 characters.",
   invalid_code: "That reset code isn't valid, or it has already been used.",
+  password_mismatch: "The two passwords don't match.",
 };
 
 export default async function ResetPasswordPage({
@@ -17,6 +19,12 @@ export default async function ResetPasswordPage({
 
   async function resetAction(formData: FormData) {
     "use server";
+
+    if (
+      String(formData.get("password") ?? "") !== String(formData.get("confirmPassword") ?? "")
+    ) {
+      redirect("/auth/reset?error=password_mismatch");
+    }
 
     const parsedReset = resetPasswordInputSchema.safeParse({
       code: String(formData.get("code") ?? ""),
@@ -42,9 +50,29 @@ export default async function ResetPasswordPage({
         <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Auth</p>
         <h1 className="mt-3 text-3xl font-semibold text-slate-950">Reset password</h1>
         <p className="mt-3 text-sm text-slate-600">
-          During the beta, passwords are reset with a one-time code. Ask the person who
-          invited you for a reset code, then choose a new password here.
+          During the beta, passwords are reset with a one-time code. Request one by email,
+          then choose a new password here.
         </p>
+        {resetRequestMailto ? (
+          // The address is written out because a mailto link does nothing for a visitor
+          // with no mail program set up; they can copy it instead.
+          <div className="mt-4 space-y-3">
+            <a
+              className="inline-flex items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-50"
+              href={resetRequestMailto}
+            >
+              Email for a reset code
+            </a>
+            <p className="text-sm text-slate-600">
+              Or write to{" "}
+              <a className="font-medium text-slate-950 underline" href={resetRequestMailto}>
+                {betaContactEmail}
+              </a>
+              . So the code works for your account, send the request from the email address
+              tied to it.
+            </p>
+          </div>
+        ) : null}
         {error ? (
           <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {errorMessages[error] ?? "Unable to set a new password right now. Try again."}
@@ -68,6 +96,16 @@ export default async function ResetPasswordPage({
               className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none transition-colors focus:border-slate-950"
               name="password"
               placeholder="At least 8 characters"
+              type="password"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-slate-700">Confirm new password</span>
+            <input
+              autoComplete="new-password"
+              className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none transition-colors focus:border-slate-950"
+              name="confirmPassword"
+              placeholder="Re-enter your new password"
               type="password"
             />
           </label>

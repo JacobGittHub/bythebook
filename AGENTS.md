@@ -23,8 +23,9 @@ should come away thinking of the Najdorf as a *place* with neighbors, not a move
 once read. When a choice trades spatial memorability for technical elegance, memorability
 wins.
 
-**Status:** The Opening Explorer, repertoire management and the dashboard overview tree are
-live. The trainer and puzzle pages are placeholder scaffolding. The long-term direction is
+**Status:** The Opening Explorer, the Library (book management), the Atlas opening tree and
+the Overview page are live, and guests can use all of them without an account. The trainer,
+puzzle and Bookstore pages are placeholder scaffolding. The long-term direction is
 not settled. The territory map and hyperbolic panel are the leading candidates for the next
 visualizations, but don't start building them, or shape other work around them, unless the
 user asks. The shared vision and current work are in `plans/`.
@@ -53,11 +54,12 @@ changes, also run the app and look at the result. Tests sit next to the code the
   5.1's `>` writes UTF-16, so use Git Bash (or `Out-File -Encoding utf8`) whenever you
   redirect output into a file the project reads.
 - Next.js 16 renamed middleware to proxy. Route protection lives in `src/proxy.ts`, which must
-  export a function named `proxy`. All `/dashboard/*` routes require auth.
+  export a function named `proxy`. Guests may open every `/dashboard/*` page except the ones
+  `src/lib/auth/access.ts` marks as needing an account.
 - The React Compiler is not enabled. Don't use it.
 - `.env.local` (never commit it) holds `NEXT_PUBLIC_SUPABASE_URL`,
   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and `LICHESS_API_TOKEN`, and optionally
-  `NEXT_PUBLIC_BETA_CONTACT_EMAIL` (the address behind the landing page's beta key link). Only
+  `NEXT_PUBLIC_BETA_CONTACT_EMAIL` (the address behind the beta key and reset code links). Only
   `NEXT_PUBLIC_*` values may reach client code.
 
 ## Where things live
@@ -140,6 +142,16 @@ edit these files.
   the clock fields and is the key for per-position stats and for `position_cache`. Use UCI
   internally and convert to SAN only in the UI.
 
+**Guests and accounts**
+
+- A sidebar page, and whether it needs an account, is declared in `NAV_ITEMS`
+  (`src/lib/auth/access.ts`). The sidebar, the proxy and the Overview page read it; don't
+  list pages anywhere else.
+- Every route handler except `/api/openings/explorer` returns 401 without a user.
+- A component that reads or saves account data checks `useViewer()` (client) or
+  `getViewer()` (server) first, so a guest causes no request that is bound to fail and sees
+  `SignInPrompt` in place of the control.
+
 **Generated files (never hand-edit)**
 
 - `src/types/database.ts`, which the Supabase CLI generates.
@@ -172,7 +184,7 @@ them, unless the user brings it up.
 
 | Item | Why it stays | Removable when |
 |---|---|---|
-| `src/components/repertoire/OpeningTreeFull.tsx` | It is the live dashboard overview | A successor ships and the user says so |
+| `src/components/repertoire/OpeningTreeFull.tsx` | It is the live opening tree on the Atlas page | A successor ships and the user says so |
 | `src/components/openings/OpeningMiniTree.tsx` | It is the live explorer sidebar tree, and the user wants it kept as-is | A successor ships and the user says so |
 | `d3`, `@types/d3` | `OpeningTreeFull` uses them | `OpeningTreeFull` is removed |
 | `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx` | They are prototypes the user may revisit | The user says so |
@@ -191,7 +203,8 @@ you start.
 | The Lichess API route or `position_cache` | `docs/processes/lichess-api-and-caching.md` |
 | Any tree or map visualization | `docs/architecture.md` § "Visualization principles", then the design doc below |
 | The Opening Explorer or the mini tree | `docs/design/explorer.md` |
-| The dashboard overview tree | `docs/design/dashboard-overview.md` |
+| The Atlas page's opening tree | `docs/design/opening-tree.md` |
+| Guest and account access, the sidebar, or sign-in | `docs/architecture.md` § "Auth and API routes" |
 | The territory map (candidate) | `docs/design/territory-map.md` |
 | The hyperbolic panel (candidate) | `docs/design/hyperbolic-panel.md` |
 | The lab page, globe, ChessMap, or branch view | `docs/design/lab-prototypes.md` |

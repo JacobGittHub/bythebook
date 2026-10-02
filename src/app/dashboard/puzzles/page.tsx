@@ -6,7 +6,8 @@ export default function PuzzlesPage() {
       <div>
         <h1 className="text-3xl font-semibold text-slate-950">Puzzle trainer</h1>
         <p className="mt-2 text-slate-600">
-          Tactical reps and attempt tracking live here.
+          Tactical reps and attempt tracking live here. Coming soon: the board below is an
+          early scaffold with no puzzles loaded yet.
         </p>
       </div>
       <PuzzleBoard />

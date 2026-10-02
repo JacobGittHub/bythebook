@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getViewer } from "@/lib/auth/viewer";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { credentialsInputSchema } from "@/lib/validators/schemas";
 
@@ -9,6 +10,11 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string; error?: string; notice?: string }>;
 }) {
   const { next, error, notice } = await searchParams;
+
+  // A returning user whose session is still good has nothing to do here.
+  if ((await getViewer()).signedIn) {
+    redirect("/dashboard");
+  }
 
   async function loginAction(formData: FormData) {
     "use server";
@@ -91,6 +97,10 @@ export default async function LoginPage({
           ·{" "}
           <Link className="font-medium text-slate-950 underline" href="/auth/register">
             Create an account
+          </Link>{" "}
+          ·{" "}
+          <Link className="font-medium text-slate-950 underline" href="/dashboard">
+            Continue as a guest
           </Link>
         </p>
       </section>

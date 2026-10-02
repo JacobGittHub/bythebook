@@ -4,8 +4,8 @@
 **not settled**. Nothing has been built yet: `src/components/territory/` doesn't exist, the
 dependencies aren't installed, and there is no geometry table. Don't start building it, or
 shape other work toward it, unless the user asks.
-**Last reviewed:** 2026-09-29
-**Would replace:** `OpeningTreeFull` on `/dashboard` (see `dashboard-overview.md`)
+**Last reviewed:** 2026-10-01
+**Would replace:** `OpeningTreeFull` on `/dashboard/atlas` (see `opening-tree.md`)
 
 Read `architecture.md` § "Visualization principles" first. Containment is the central rule
 for this design.
