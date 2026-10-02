@@ -33,7 +33,7 @@ export function OpeningTrainer({ book }: { book: OpeningBook }) {
         {session.status === "idle" && (
           <button
             onClick={start}
-            className="rounded-2xl bg-slate-950 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+            className="btn-primary rounded-2xl px-6 py-3 text-sm font-medium transition-opacity"
           >
             Start training
           </button>

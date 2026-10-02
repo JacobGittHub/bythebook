@@ -15,23 +15,17 @@ type Props = {
   href?: string;
   /** Shown under the summary, for example why the card can't be opened. */
   note?: ReactNode;
-  /** Draws the card as the selected one. */
-  active?: boolean;
-  /** Called when the pointer or the keyboard focus lands on the card. */
-  onActivate?: () => void;
 };
 
 /**
- * A button that routes to a page. The arrow beside the label is what tells a visitor that
+ * A button that routes to a page. The "Jump to page" tag is what tells a visitor that
  * pressing it leaves the current page.
  */
-export function RouteCard({ label, summary, status, href, note, active, onActivate }: Props) {
+export function RouteCard({ label, summary, status, href, note }: Props) {
   const tag = STATUS_TAGS[status];
-  const className = `group block rounded-3xl border p-4 transition-colors ${
-    active
-      ? "border-[var(--text-primary)] bg-[var(--bg-card)]"
-      : "border-[var(--border-card)] bg-[var(--bg-muted)]"
-  } ${href ? "hover:border-[var(--text-primary)]" : "opacity-70"}`;
+  const className = `group block rounded-3xl border border-[var(--border-card)] bg-[var(--bg-muted)] p-4 transition-colors ${
+    href ? "hover:border-[var(--text-primary)]" : "opacity-70"
+  }`;
 
   const body = (
     <>
@@ -43,11 +37,8 @@ export function RouteCard({ label, summary, status, href, note, active, onActiva
           </span>
         ) : null}
         {href ? (
-          <span
-            aria-hidden="true"
-            className="ml-auto shrink-0 text-lg leading-none text-[var(--text-primary)] transition-transform group-hover:translate-x-1 group-focus-visible:translate-x-1"
-          >
-            →
+          <span className="ml-auto shrink-0 rounded-full border border-[var(--border-card)] px-2.5 py-0.5 text-xs font-medium text-[var(--text-muted)] transition-colors group-hover:border-[var(--text-primary)] group-hover:text-[var(--text-primary)]">
+            Jump to page
           </span>
         ) : null}
       </div>
@@ -61,13 +52,7 @@ export function RouteCard({ label, summary, status, href, note, active, onActiva
   }
 
   return (
-    <Link
-      href={href}
-      aria-label={`Go to ${label}`}
-      className={className}
-      onMouseEnter={onActivate}
-      onFocus={onActivate}
-    >
+    <Link href={href} aria-label={`Jump to ${label}`} className={className}>
       {body}
     </Link>
   );

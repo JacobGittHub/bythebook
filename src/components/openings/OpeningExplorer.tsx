@@ -463,22 +463,26 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
   };
 
   const navBtnClass =
-    "rounded-full p-1.5 bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:text-slate-300 disabled:bg-transparent";
+    "btn-secondary rounded-full p-1.5 transition-colors";
   const playBtnClass =
-    "rounded-full bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400";
+    "btn-primary rounded-full px-3 py-1.5 text-xs font-semibold transition-opacity";
 
   return (
-    <div className="grid h-[calc(100vh-3.5rem)] gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+    // The page fits the viewport at every width. Wide: the board beside a panel column.
+    // Narrow (a phone or a small window): the board on top, sized from the viewport height,
+    // and the panels below it in one column that scrolls on its own.
+    <div className="flex h-[calc(100dvh-var(--dash-offset))] flex-col gap-2 xl:grid xl:grid-cols-[1.1fr_0.9fr] xl:gap-4">
       {/* ── Left: board + search ── */}
       <section
-        className="grid h-full min-w-0 gap-3 rounded-[2rem] bg-slate-50 p-3"
+        className="grid min-w-0 shrink-0 gap-2 rounded-3xl bg-slate-50 p-1.5 xl:h-full xl:gap-3 xl:rounded-[2rem] xl:p-3"
         style={{ gridTemplateRows: "auto 1fr" }}
       >
         {/* Header card: title row + book row */}
-        <div className="flex flex-col gap-2.5 rounded-3xl border border-slate-200 bg-white px-5 py-4">
+        <div className="flex flex-col gap-2 rounded-3xl border border-slate-200 bg-white px-3 py-2.5 xl:gap-2.5 xl:px-5 xl:py-4">
           {/* Row 1: title+subtitle (inline) | flip | search */}
-          <div className="flex items-center gap-3">
-            <div className="flex min-w-0 flex-1 items-baseline gap-2">
+          <div className="flex items-center gap-2 xl:gap-3">
+            {/* The title gives way to the search box when there is no room for both. */}
+            <div className="hidden min-w-0 flex-1 items-baseline gap-2 sm:flex">
               <h1 className="shrink-0 text-lg font-semibold text-slate-950">Opening Explorer</h1>
               <p className="truncate text-sm text-slate-400">
                 {selectedMatch
@@ -492,13 +496,13 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
               type="button"
               onClick={() => setBoardOrientation((o) => (o === "white" ? "black" : "white"))}
               title="Flip board"
-              className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+              className="btn-secondary shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
             >
               ⇅ {boardOrientation === "white" ? "White" : "Black"}
             </button>
 
             {/* Search input */}
-            <div className="relative w-52 shrink-0">
+            <div className="relative order-first min-w-0 flex-1 sm:order-none sm:w-52 sm:flex-none">
               <input
                 type="text"
                 value={searchQuery}
@@ -520,7 +524,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
                   }
                 }}
                 placeholder="Search — Sicilian, B12…"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
+                className="w-full rounded-2xl border border-[var(--border-card)] bg-[var(--bg-muted)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--text-muted)] focus:bg-[var(--bg-card)]"
               />
 
               {showDropdown && (
@@ -533,7 +537,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
                         e.preventDefault();
                         handleHighlightFromSearch(result);
                       }}
-                      className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left last:border-0 hover:bg-slate-50"
+                      className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left last:border-0 hover:bg-[var(--bg-muted)]"
                     >
                       <span className="w-10 shrink-0 text-xs font-semibold uppercase tracking-widest text-slate-400">
                         {result.eco}
@@ -555,13 +559,13 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
           {/* Row 2: book selector (narrow) + View Lines + Add line (always visible).
               Books are saved to an account, so a guest gets a notice in the same row. */}
           {!signedIn ? (
-            <SignInPrompt action="save lines to a book" className="py-1.5 text-sm" />
+            <SignInPrompt action="save lines to a book" className="text-xs xl:py-1.5 xl:text-sm" />
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <select
                 value={activeExplorerBookId ?? ""}
                 onChange={(e) => setActiveExplorerBookId(e.target.value || null)}
-                className="w-44 shrink-0 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none"
+                className="min-w-0 basis-full rounded-xl sm:w-44 sm:shrink-0 sm:basis-auto border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none"
               >
                 <option value="">— No book selected —</option>
                 {explorerBooks.map((b) => (
@@ -590,7 +594,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
                 type="button"
                 onClick={handleAddToBook}
                 disabled={!activeExplorerBook || currentMoves.length === 0 || isSavingToBook}
-                className="shrink-0 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="btn-primary shrink-0 rounded-xl px-3 py-1.5 text-xs font-medium"
               >
                 {isSavingToBook
                   ? "Saving…"
@@ -603,8 +607,14 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
         </div>
 
         {/* Board + right-side eval bar */}
-        <div className="flex min-h-0 gap-2 rounded-[2rem] border border-slate-200 bg-white p-4">
-          <div className="min-h-0 flex-1" style={{ containerType: "size" }}>
+        <div className="flex min-h-0 justify-center gap-2 rounded-3xl border border-slate-200 bg-white p-2 xl:rounded-[2rem] xl:p-4">
+          {/* Narrow: a square as wide as the card, but capped at about half the viewport's
+              height (max-w below), so the panels under it always keep some room. Wide: it
+              fills the card and the inner square takes the smaller side. */}
+          <div
+            className="aspect-square min-h-0 w-full max-w-[52dvh] flex-1 xl:aspect-auto xl:max-w-none"
+            style={{ containerType: "size" }}
+          >
             <div style={{ width: "min(100cqw, 100cqh)", height: "min(100cqw, 100cqh)" }}>
               <BoardInteractive
                 initialFen={START_FEN}
@@ -650,10 +660,11 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
         </div>
       </section>
 
-      {/* ── Right: four-section sidebar ── */}
-      <aside className="flex min-h-0 min-w-0 flex-col gap-3">
+      {/* ── Right: four-section sidebar. Narrow: it sits under the board and scrolls as one
+          column, with the move row first (and pinned) and the statistics next. ── */}
+      <aside className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-y-auto xl:gap-3 xl:overflow-visible">
         {/* ① Engine panel */}
-        <div className="shrink-0 rounded-3xl border border-slate-200 bg-white px-5 py-4">
+        <div className="order-3 shrink-0 rounded-3xl border border-slate-200 bg-white px-4 py-3 xl:order-none xl:px-5 xl:py-4">
           {/* Controls row */}
           <div className="flex items-center gap-2">
             <p className="mr-auto text-xs font-semibold uppercase tracking-widest text-slate-400">
@@ -669,7 +680,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
                   ? "invisible"
                   : showEngineArrow
                     ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                    : "border-slate-200 bg-slate-50 text-slate-400 hover:text-slate-600"
+                    : "border-[var(--border-card)] bg-[var(--bg-muted)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               }`}
             >
               ↗ Arrow
@@ -683,8 +694,8 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
                   onClick={() => setEngineMode(m)}
                   className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
                     engineMode === m
-                      ? "bg-slate-950 text-white"
-                      : "text-slate-500 hover:text-slate-900"
+                      ? "bg-[var(--text-primary)] text-[var(--bg-card)]"
+                      : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   {m}
@@ -739,7 +750,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
         </div>
 
         {/* ② Mini look-ahead tree */}
-        <div className="h-64 shrink-0 overflow-hidden rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-3 py-3">
+        <div className="order-4 h-64 shrink-0 overflow-hidden rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-3 py-3 xl:order-none">
           <OpeningMiniTree
             moveHistory={moveHistory}
             explorerMoves={explorerData.data?.moves ?? []}
@@ -757,7 +768,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
         </div>
 
         {/* ③ Move sequence + navigation */}
-        <div className="shrink-0 rounded-3xl border border-slate-200 bg-white px-5 py-4">
+        <div className="sticky top-0 z-10 order-1 shrink-0 rounded-3xl border border-slate-200 bg-white px-4 py-2.5 xl:static xl:order-none xl:px-5 xl:py-4">
           <div className="flex items-center gap-2">
             {/* Scrollable move tokens */}
             <div className="min-w-0 flex-1 overflow-x-auto">
@@ -780,7 +791,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
                         <button
                           type="button"
                           onClick={() => handleClickMoveToken(index)}
-                          className={`cursor-pointer rounded px-0.5 text-sm transition-colors hover:bg-slate-100 ${
+                          className={`cursor-pointer rounded px-0.5 text-sm transition-colors hover:bg-[var(--bg-muted)] ${
                             isPlayed
                               ? "font-semibold text-slate-700"
                               : isNext
@@ -806,7 +817,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
                       <button
                         type="button"
                         onClick={() => handleClickMoveToken(index)}
-                        className="cursor-pointer rounded px-0.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                        className="cursor-pointer rounded px-0.5 text-sm font-semibold text-slate-700 hover:bg-[var(--bg-muted)]"
                       >
                         {move.san}
                       </button>
@@ -886,7 +897,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
         </div>
 
         {/* ④ Opening name + master game stats */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-3xl border border-slate-200 bg-white px-5 py-4">
+        <div className="order-2 flex shrink-0 flex-col rounded-3xl border border-slate-200 bg-white px-4 py-3 xl:order-none xl:min-h-0 xl:flex-1 xl:shrink xl:overflow-y-auto xl:px-5 xl:py-4">
           {/* Match label + opening name */}
           <div className="shrink-0">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">

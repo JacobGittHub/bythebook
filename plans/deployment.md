@@ -87,10 +87,16 @@ Chrome, Safari and Firefox, and the Overview page and explorer work on a phone (
   user's own data: books now, then repertoires and game history import, which gets no tab
   of its own. **Bookstore** is the public store. Train, Puzzles and Settings keep their
   names.
-- D19. The Overview shows one demo window beside its page buttons. The window cycles
-  through the pages' demos by itself, and pointing at a button shows that page's demo and a
-  longer description. A button that routes to a page carries an arrow, so it is clear that
-  pressing it leaves the page. The demo animations themselves come in Phase 7.
+- D19. The Overview shows its page tabs and one demo window as a single group. The window
+  cycles through the pages' demos by itself, and pointing at a tab shows that page's demo
+  and a longer description, which writes itself out a word at a time. A button that routes
+  to a page says so in words ("Jump to page"); an arrow was tried and read as pointing at
+  the demo window. A phone has no pointer to hover with, so there the tabs are a row of
+  chips: the first tap shows the demo and the second opens the page. The demo animations
+  themselves come in Phase 7.
+- D20. Button colors come from the theme tokens (`btn-primary`, `btn-secondary` and
+  `btn-ghost` in `globals.css`), so a button's text stays readable on it in every
+  background mode. Fixed slate or white classes on buttons are how text went missing.
 
 ## Steps
 
@@ -120,8 +126,8 @@ steps are still open:
       New Overview, Visualizations (with the Atlas and the former Lab's prototypes under
       it), Library (was Repertoire) and placeholder Bookstore pages. Trainer and Puzzles say
       "coming soon".
-- [x] (agent) The Overview's demo window and arrowed route buttons (D19), with a placeholder
-      in the window until the demos exist.
+- [x] (agent) The Overview's tabs and demo window (D19), with a placeholder in the window
+      until the demos exist.
 - [x] (agent) Guests aren't offered what needs an account: no book requests are made for
       them, and the explorer, the tree and the Library show a sign-in notice in place of the
       book controls. The explorer says when a position's stats need a beta account.
@@ -140,12 +146,20 @@ steps are still open:
 - [ ] (agent) "Coming soon" export and import prompts in the Library, and the notice to
       guests that their work is kept in the browser.
 
-### Phase 6. Phones (D9, D15)
+### Phase 6. Phones and themes (D9, D15, D20)
 
-- [ ] (agent) `100dvh` on board pages, the collapsible sidebar, and an Overview and explorer
-      that work at phone width.
+- [x] (agent) The sidebar stays in view on a wide screen and collapses to a rail; on a phone
+      it is a drawer opened from a top bar.
+- [x] (agent) `100dvh` on the explorer, the Atlas and the prototypes, and an Overview,
+      explorer and Atlas that work at phone width.
+- [x] (agent) Theme button colors (D20) on the explorer, the tree, the book editor, the
+      Library and the sign-in pages. Checked with a headless browser in every background
+      mode for the controls a guest can reach.
+- [ ] (agent) The trainer and puzzle pages still use `100vh` and a desktop layout. They are
+      placeholders, so this waits for the pages themselves.
 - [ ] (agent) A warning when a phone user turns on the heavy engine.
-- [ ] (user) Check on a real phone and in Chrome DevTools device mode.
+- [ ] (user) Check on a real phone and in Chrome DevTools device mode, and check the
+      signed-in controls (book row, Library cards) in the dark background mode.
 
 ### Phase 7. Launch
 

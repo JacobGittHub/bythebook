@@ -14,7 +14,7 @@ export default async function AtlasPage({ searchParams }: Props) {
   const initialBookId = bookId ?? null;
 
   return (
-    <div className="h-[calc(100vh-6rem)] min-h-0">
+    <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">
       <DashboardTree initialBooks={books} initialBookId={initialBookId} />
     </div>
   );

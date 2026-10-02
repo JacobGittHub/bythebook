@@ -12,6 +12,7 @@ every move is a pebble-shaped region inside its parent move's region.
   binding. This plan tracks only the remaining build. Before starting a phase, read that
   doc's sections on the pieces the phase builds.
 - D2. Phases 0–2 are done: the design record, Vitest with the pure geometry and its property
+> ME: worth noting that the png that we produced looks like it contains 4 layers in many points. sticking to 3 layers from frame blob will hopefully preserve readability. The test pmg is quite the beauty though.
   tests, and the data layer (explorer route and cache changes, `fenAfterUci`, `selection`,
   `loader`).
 - D3. Every phase ends with the typecheck, lint and tests. The user checks in after phases 4
@@ -24,7 +25,7 @@ every move is a pebble-shaped region inside its parent move's region.
   below say "tab", read "view".
 
 ## Open questions
-
+> ME: keep in mind the fact that we are creating something of a dynamic version of the region map, call it the labyrinth; as opposed to the static version, the atlas, that will be more similar to google-maps detail oriented static map behavior. Both zoom deep, both have many similar functionalities, but the atlas will be slightly further in the future and may be subject to computation shortcuts because we may be able to prerender it like it's predetermined. And way way down the line, maybe we could even add current games that are happening as pins on the atlas map.
 ### Q1. Should guests see the region map once the site is public?
 
 **Recommendation:** not at first. Keep the Lab hidden from guests until the catalog cache
@@ -33,7 +34,7 @@ guest zooming around could trigger hundreds of Lichess calls on the user's token
 part of the app uses Lichess as heavily. Hiding the Lab is already listed under
 "Before going public" in `deployment.md`.
 
-> ME: This is problematic, i really want a working demo as this is my poster child. We need to find out if there are solutions to this opening information problem for this visualization and other visualizations. Think about the limitations of the filled default position cache and how we can try to display just the (default?) cache information for guest users without calling lichess. authed users will be able to make lichess calls which may require different functionality. Also investigate we can store data locally on the vercel server, like how the ecodata json is stored.
+> ME: This is problematic, i really want a working demo as this is my poster child. We need to find out if there are solutions to this opening information problem for this visualization and other visualizations. Think about the limitations of the filled default position cache and how we can try to display just the (default?) cache information for guest users without calling lichess. authed users will be able to make lichess calls which may require different functionality. Also investigate if we can store data locally on the vercel server, like how the ecodata json is stored. If not, maybe the guest master openings region graph is just limited to whatever data it can find, censoring further paths.
 
 ## Steps
 

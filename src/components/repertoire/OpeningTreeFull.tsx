@@ -125,7 +125,8 @@ export function OpeningTreeFull({
     return Math.min(width, height) / VB; // px per viewBox unit
   };
 
-  const onMouseDown = (e: React.MouseEvent) => {
+  // Pointer events cover the mouse and a finger alike, so the tree can be dragged on a phone.
+  const onPointerDown = (e: React.PointerEvent) => {
     // Only start drag on primary button
     if (e.button !== 0) return;
     dragOrigin.current = { sx: e.clientX, sy: e.clientY, px: pan.x, py: pan.y, moved: false };
@@ -133,7 +134,7 @@ export function OpeningTreeFull({
     e.preventDefault();
   };
 
-  const onMouseMove = (e: React.MouseEvent) => {
+  const onPointerMove = (e: React.PointerEvent) => {
     if (!dragOrigin.current) return;
     const dx = e.clientX - dragOrigin.current.sx;
     const dy = e.clientY - dragOrigin.current.sy;
@@ -146,7 +147,7 @@ export function OpeningTreeFull({
     }
   };
 
-  const onMouseUp = () => {
+  const onPointerUp = () => {
     dragOrigin.current = null;
     setIsDragging(false);
   };
@@ -176,11 +177,13 @@ export function OpeningTreeFull({
   return (
     <div
       className="h-full w-full overflow-hidden"
-      style={{ cursor: isDragging ? "grabbing" : "grab" }}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseUp}
+      // touch-action: a finger drags the tree, and the browser doesn't scroll the page instead.
+      style={{ cursor: isDragging ? "grabbing" : "grab", touchAction: "none" }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+      onPointerCancel={onPointerUp}
     >
       <svg
         ref={svgRef}

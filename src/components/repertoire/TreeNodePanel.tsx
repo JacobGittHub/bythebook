@@ -46,7 +46,8 @@ export function TreeNodePanel({
   const bPct = 100 - wPct - dPct;
 
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col gap-3 overflow-y-auto">
+    // Narrow: a strip under the tree that grows to at most half the page once a node is picked.
+    <aside className="flex max-h-[50%] w-full shrink-0 flex-col gap-2 overflow-y-auto lg:h-full lg:max-h-none lg:w-72 lg:gap-3">
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-3">
         <div className="min-w-0">
@@ -62,7 +63,7 @@ export function TreeNodePanel({
         {node && (
           <button
             onClick={onClose}
-            className="ml-2 shrink-0 rounded-full p-1 text-[var(--text-muted)] hover:bg-slate-100"
+            className="ml-2 shrink-0 rounded-full p-1 text-[var(--text-muted)] hover:bg-[var(--bg-muted)]"
             aria-label="Close"
           >
             ✕
@@ -72,7 +73,7 @@ export function TreeNodePanel({
 
       {/* Empty state */}
       {!node && (
-        <div className="flex flex-1 items-center justify-center rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] p-6 text-center">
+        <div className="hidden flex-1 items-center justify-center rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] p-6 text-center lg:flex">
           <p className="text-sm text-[var(--text-muted)] opacity-60">
             Click any node in the tree to explore that position.
           </p>
@@ -141,31 +142,31 @@ export function TreeNodePanel({
           <div className="shrink-0 space-y-2 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-3">
             {book && !isRoot && (
               isGhost ? (
-                <button onClick={onAddToBook} className="w-full rounded-2xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">
+                <button onClick={onAddToBook} className="btn-primary w-full rounded-2xl px-3 py-2 text-sm font-medium">
                   Add to book
                 </button>
               ) : (
-                <button onClick={onRemoveFromBook} className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                <button onClick={onRemoveFromBook} className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm">
                   Remove from book
                 </button>
               )
             )}
 
             {explorerData.data && moves.length > 0 && (
-              <button onClick={() => onExpand(moves)} className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+              <button onClick={() => onExpand(moves)} className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm">
                 {isExpanded ? "Collapse branch" : "Expand branch"}
               </button>
             )}
 
             <button
               onClick={() => router.push(`/dashboard/explorer?fen=${encodeURIComponent(node.fen)}`)}
-              className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+              className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm"
             >
               Open in Explorer
             </button>
 
             {book && (
-              <button onClick={() => router.push(`/dashboard/train/${book.id}`)} className="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+              <button onClick={() => router.push(`/dashboard/train/${book.id}`)} className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm">
                 Train this book
               </button>
             )}

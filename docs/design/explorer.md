@@ -12,9 +12,16 @@
   `OpeningCatalogResults`. All playback belongs to the top-bar navigator.
 - **Forward navigation must be gated on alignment.** Never add forward navigation that
   bypasses the `isBoardOnHighlightedLine` check.
-- **The explorer height is `h-[calc(100vh-3.5rem)]`.** The 3.5rem comes from the dashboard
-  layout's padding: `py-3` on the outer grid and `p-4` on the content wrapper. Larger offsets
-  such as `8rem` leave empty card background at the bottom.
+- **The explorer height is `h-[calc(100dvh-var(--dash-offset))]`.** `DashboardShell` sets
+  `--dash-offset` to the height of everything around the content (the padding, the card's
+  border and, on a phone, the top bar). A larger fixed offset leaves empty card background
+  at the bottom, and `100vh` is too tall on a phone whose browser bar is showing.
+- **The page fits the viewport at every width.** Below the `xl` breakpoint the board sits on
+  top, as a square capped at a share of the viewport height (the `max-w-[…dvh]` class on the
+  board's container), and the panels sit under it
+  in one column that scrolls on its own: the move row first (pinned), then the statistics,
+  the engine and the mini tree. At `xl` and wider the board is beside the panel column and
+  only the statistics panel scrolls.
 - **`OpeningMiniTree` uses pure React + SVG.** No D3 and no Three.js.
 - **`OpeningMiniTree` makes no API calls of its own.** It receives everything as props from
   `OpeningExplorer`, and all Lichess data flows through `OpeningExplorer`.
@@ -23,8 +30,10 @@
 
 The header card has two rows:
 
-1. The title and inline match info on the left, then the flip button and the search bar.
-2. A book selector (`w-44`), a "View Lines" dropdown and an "Add line" button.
+1. The title and inline match info on the left, then the flip button and the search bar. On
+   a phone the title is hidden and the search bar takes its place.
+2. A book selector, a "View Lines" dropdown and an "Add line" button. On a phone the
+   selector takes a line of its own.
    - "View Lines" lists every leaf path in the active book, and selecting one replays that
      line.
    - "Add line" is always visible. It is disabled when no book is selected or no moves have

@@ -67,7 +67,8 @@ changes, also run the app and look at the result. Tests sit next to the code the
 
 - `src/app/` holds routes, and `src/app/api/` holds route handlers.
 - `src/components/` is organized by feature: `board/`, `openings/`, `repertoire/`,
-  `training/`, `puzzles/`, `overview/`, `lab/` (the visualization prototypes).
+  `training/`, `puzzles/`, `overview/`, `layout/` (the dashboard frame), `lab/` (the
+  visualization prototypes).
 - `src/lib/chess/` holds chess logic and the opening catalog. `src/lib/db/` holds all
   Supabase access. `src/lib/validators/schemas.ts` holds the Zod schemas.
 - `scripts/` holds the catalog build scripts and the cache pre-fill script, and
@@ -148,8 +149,9 @@ edit these files.
 - A sidebar page is declared in `NAV_ITEMS`, and a visualization in `VISUALIZATIONS`, each
   with whether it needs an account (`src/lib/auth/access.ts`). The sidebar, the proxy, the
   Overview page and the Visualizations page read them; don't list pages anywhere else.
-- A button that routes to a page is a `RouteCard` (`src/components/ui/RouteCard.tsx`), whose
-  arrow tells the visitor they will leave the page.
+- A button that routes to a page says so in words, as `RouteCard`
+  (`src/components/ui/RouteCard.tsx`) does with its "Jump to page" tag. Don't use an arrow
+  for it.
 - Every route handler except `/api/openings/explorer` returns 401 without a user.
 - A component that reads or saves account data checks `useViewer()` (client) or
   `getViewer()` (server) first, so a guest causes no request that is bound to fail and sees
@@ -173,7 +175,12 @@ edit these files.
 
 - A page with a main interactive board (explorer, trainer, puzzles) must fit the viewport.
   The page body never scrolls, the board scales to fit (`size="full"`), and only side panels
-  scroll internally.
+  scroll internally. Such a page is `h-[calc(100dvh-var(--dash-offset))]` tall; the offset
+  is set by `DashboardShell` (`src/components/layout/`), so don't hardcode one, and don't
+  use `100vh`.
+- Color anything that is pressed with `btn-primary`, `btn-secondary` or `btn-ghost`
+  (`src/app/globals.css`), or with the theme variables. Fixed `slate-*` and `white` classes
+  on a button make its text unreadable in some background modes, most often on hover.
 - `BoardBase` is the only component that wraps `react-chessboard`. `BoardDisplay` (static)
   and `BoardInteractive` (playable, through `useChessGame`) wrap `BoardBase`. Feature pages
   compose those two and never define their own board components.

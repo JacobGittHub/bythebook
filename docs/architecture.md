@@ -215,11 +215,23 @@ that iterates, walks trees or aggregates runs client-side.
   visualizations, which of them need an account, and the guest and account differences
   shown on the Overview page. The sidebar, `src/proxy.ts`, the Overview and the
   Visualizations page all read it. The decisions and the full table are in
-  `plans/deployment.md` (D16–D19).
-- **The Overview and Visualizations pages are made of route buttons** (`RouteCard`). On the
-  Overview they sit beside one demo window (`OverviewShowcase`), which cycles through the
-  pages by `DEMO_ROTATE_MS` and follows the pointer or keyboard focus. It shows a
-  placeholder until the demo animations exist.
+  `plans/deployment.md` (D16–D20).
+- **The Visualizations page is made of route buttons** (`RouteCard`), each tagged "Jump to
+  page". The Overview has its own group (`OverviewShowcase`): page tabs beside one demo
+  window, which cycles through the pages by `DEMO_ROTATE_MS` and follows the pointer or
+  keyboard focus. The description is written out a word at a time (`.stream-word` in
+  `globals.css`, paced by `STREAM_WORD_MS`). On a touch screen the first tap on a tab shows
+  its demo and the second opens the page. The window shows a placeholder until the demo
+  animations exist.
+- **The dashboard frame is `DashboardShell`** (`src/components/layout/`). On a wide screen
+  the sidebar stays in view while the page scrolls and can collapse to a rail; on a phone it
+  is a drawer opened from a top bar. The shell sets `--dash-offset`, the height of
+  everything around the content. A page that must fit the viewport is
+  `calc(100dvh - var(--dash-offset))` tall.
+- **Button colors come from the theme tokens**: `btn-primary`, `btn-secondary` and
+  `btn-ghost` in `globals.css`. The link reset there sits in the base layer; outside a layer
+  it overrode every text-color utility on a link, which made links styled as dark buttons
+  unreadable.
 - **Three layers enforce it.** The proxy redirects a guest away from an account-only page.
   Every route handler except the explorer returns 401 without a user, and the explorer
   serves a guest from the cache only. The UI then avoids offering what would fail:

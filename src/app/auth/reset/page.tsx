@@ -58,7 +58,7 @@ export default async function ResetPasswordPage({
           // with no mail program set up; they can copy it instead.
           <div className="mt-4 space-y-3">
             <a
-              className="inline-flex items-center justify-center rounded-full border border-slate-300 px-5 py-3 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-50"
+              className="btn-secondary inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium transition-colors"
               href={resetRequestMailto}
             >
               Email for a reset code
@@ -110,7 +110,7 @@ export default async function ResetPasswordPage({
             />
           </label>
           <button
-            className="inline-flex items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+            className="btn-primary inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium transition-opacity"
             type="submit"
           >
             Set new password

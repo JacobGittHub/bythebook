@@ -46,7 +46,7 @@ export function BookEditor({ onCreated, onCancel }: Props) {
           placeholder="e.g. Ruy Lopez repertoire"
           maxLength={120}
           required
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none"
+          className="w-full rounded-xl border border-[var(--border-card)] bg-[var(--bg-muted)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--text-muted)] focus:outline-none"
         />
       </div>
 
@@ -58,10 +58,8 @@ export function BookEditor({ onCreated, onCancel }: Props) {
               key={c}
               type="button"
               onClick={() => setColor(c)}
-              className={`flex-1 rounded-xl border py-2 text-sm font-medium transition-colors ${
-                color === c
-                  ? "border-slate-800 bg-slate-800 text-white"
-                  : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+              className={`flex-1 rounded-xl py-2 text-sm font-medium transition-colors ${
+                color === c ? "btn-primary border border-transparent" : "btn-secondary"
               }`}
             >
               {c.charAt(0).toUpperCase() + c.slice(1)}
@@ -76,7 +74,7 @@ export function BookEditor({ onCreated, onCancel }: Props) {
         <button
           type="submit"
           disabled={submitting || !name.trim()}
-          className="flex-1 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="btn-primary flex-1 rounded-xl px-4 py-2 text-sm font-medium"
         >
           {submitting ? "Creating…" : "Create book"}
         </button>
@@ -84,7 +82,7 @@ export function BookEditor({ onCreated, onCancel }: Props) {
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+            className="btn-secondary rounded-xl px-4 py-2 text-sm"
           >
             Cancel
           </button>

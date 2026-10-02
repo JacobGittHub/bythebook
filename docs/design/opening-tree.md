@@ -41,7 +41,10 @@ DashboardTree
 - Each depth level gets a fixed radius (`PER_DEPTH_R`) instead of D3's
   leaves-at-maximum-radius default.
 - The viewBox is centered at the origin and drawn over a dot-grid `<pattern>` background.
-- Pan and drag are handled through the `dragOrigin` ref.
+- Pan and drag are handled through the `dragOrigin` ref, with pointer events so that a
+  finger drags the tree as a mouse does.
+- On a narrow screen the side panel sits under the tree instead of beside it, and takes at
+  most half the page's height.
 
 ## Node states
 
@@ -55,7 +58,8 @@ DashboardTree
 
 ## Side panel (`TreeNodePanel`)
 
-The panel is always rendered and shows a placeholder when nothing is selected. It contains:
+The panel is always rendered and shows a placeholder when nothing is selected (on a narrow
+screen the placeholder is hidden to leave the tree its room). It contains:
 
 - The position board
 - The ECO name from the catalog

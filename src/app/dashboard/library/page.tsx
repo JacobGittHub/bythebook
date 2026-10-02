@@ -48,7 +48,7 @@ export default function LibraryPage() {
         {signedIn && (
           <button
             onClick={() => setShowCreate((v) => !v)}
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="btn-secondary rounded-2xl px-4 py-2 text-sm font-medium"
           >
             {showCreate ? "Cancel" : "+ New book"}
           </button>
@@ -80,7 +80,7 @@ export default function LibraryPage() {
           <p className="text-sm text-slate-500">No opening books yet.</p>
           <button
             onClick={() => setShowCreate(true)}
-            className="mt-3 rounded-2xl bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+            className="btn-primary mt-3 rounded-2xl px-4 py-2 text-sm font-medium"
           >
             Create your first book
           </button>
@@ -113,25 +113,25 @@ export default function LibraryPage() {
                 <div className="flex flex-wrap gap-2">
                   <Link
                     href={`/dashboard/visualizations/atlas?bookId=${book.id}`}
-                    className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+                    className="btn-primary rounded-xl px-3 py-1.5 text-xs font-medium"
                   >
                     View in tree
                   </Link>
                   <Link
                     href={`/dashboard/train/${book.id}`}
-                    className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                    className="btn-secondary rounded-xl px-3 py-1.5 text-xs"
                   >
                     Train
                   </Link>
                   <Link
                     href="/dashboard/explorer"
-                    className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50"
+                    className="btn-secondary rounded-xl px-3 py-1.5 text-xs"
                   >
                     Explorer
                   </Link>
                   <button
                     onClick={() => handleDelete(book.id)}
-                    className="ml-auto rounded-xl border border-red-100 px-3 py-1.5 text-xs text-red-400 hover:bg-red-50"
+                    className="ml-auto rounded-xl border border-red-300 px-3 py-1.5 text-xs text-red-600 transition-colors hover:bg-red-600 hover:text-white dark:border-red-400/60 dark:text-red-400 dark:hover:text-white"
                   >
                     Delete
                   </button>

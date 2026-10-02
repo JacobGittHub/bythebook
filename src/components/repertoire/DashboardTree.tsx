@@ -189,19 +189,23 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-full min-h-0 gap-3">
+    // Wide: the tree beside the node panel. Narrow: the panel sits under the tree.
+    <div className="flex h-full min-h-0 flex-col gap-2 lg:flex-row lg:gap-3">
       {/* ── Left: controls + tree ── */}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 lg:gap-3">
         {/* Top bar */}
-        <div className="flex shrink-0 items-center gap-3 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-3">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-2.5 lg:gap-3 lg:py-3">
           {/* Book selector. Books are saved to an account, so a guest gets a notice. */}
           {!signedIn ? (
-            <SignInPrompt action="build books from this tree" className="flex-1 text-sm" />
+            <SignInPrompt
+              action="build books from this tree"
+              className="basis-full text-xs sm:flex-1 sm:basis-0 sm:text-sm"
+            />
           ) : books.length > 0 ? (
             <select
               value={activeBookId ?? ""}
               onChange={(e) => { if (e.target.value) switchBook(e.target.value); }}
-              className="min-w-0 flex-1 rounded-xl border border-[var(--border-card)] bg-transparent py-1.5 pl-2 pr-6 text-sm font-semibold text-slate-900 focus:outline-none"
+              className="min-w-0 flex-1 rounded-xl border border-[var(--border-card)] bg-[var(--bg-card)] py-1.5 pl-2 pr-6 text-sm font-semibold text-[var(--text-primary)] focus:outline-none"
             >
               <option value="">— Select a book —</option>
               {books.map((b) => (
@@ -220,7 +224,7 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search opening…"
-            className="w-44 rounded-xl border border-[var(--border-card)] bg-slate-50 px-3 py-1.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
+            className="min-w-0 flex-1 rounded-xl border border-[var(--border-card)] bg-[var(--bg-muted)] px-3 py-1.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none sm:w-44 sm:flex-none"
           />
 
           {/* Save indicator */}
@@ -232,7 +236,7 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
           {signedIn && (
             <button
               onClick={() => setShowCreateForm((v) => !v)}
-              className="shrink-0 rounded-xl border border-[var(--border-card)] px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+              className="btn-secondary shrink-0 rounded-xl px-3 py-1.5 text-sm"
             >
               {showCreateForm ? "Cancel" : "+ New book"}
             </button>

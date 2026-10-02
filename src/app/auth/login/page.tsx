@@ -84,7 +84,7 @@ export default async function LoginPage({
             />
           </label>
           <button
-            className="inline-flex items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+            className="btn-primary inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium transition-opacity"
             type="submit"
           >
             Sign in

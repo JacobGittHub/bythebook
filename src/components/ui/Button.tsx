@@ -9,9 +9,9 @@ type ButtonProps = {
 };
 
 const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-slate-950 text-white hover:bg-slate-800",
-  secondary: "bg-slate-200 text-slate-900 hover:bg-slate-300",
-  ghost: "bg-transparent text-slate-700 hover:bg-slate-200",
+  primary: "btn-primary",
+  secondary: "btn-secondary",
+  ghost: "btn-ghost",
 };
 
 export function Button({

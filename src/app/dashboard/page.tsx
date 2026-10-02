@@ -44,8 +44,23 @@ export default async function OverviewPage() {
       {/* Guest and account */}
       <section>
         <h2 className={sectionHeadingClass}>Guest and account</h2>
-        <div className={`${cardClass} overflow-x-auto`}>
-          <table className="w-full min-w-[32rem] text-left text-sm">
+        {/* A phone is too narrow for three columns, so there each row is stacked. */}
+        <dl className={`${cardClass} space-y-4 text-sm sm:hidden`}>
+          {ACCESS_ROWS.map((row) => (
+            <div key={row.feature}>
+              <dt className="font-medium text-[var(--text-primary)]">{row.feature}</dt>
+              <dd className="mt-1 text-[var(--text-muted)]">
+                <span className="font-medium text-[var(--text-primary)]">Guest:</span> {row.guest}
+              </dd>
+              <dd className="mt-0.5 text-[var(--text-muted)]">
+                <span className="font-medium text-[var(--text-primary)]">Beta account:</span>{" "}
+                {row.account}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <div className={`${cardClass} hidden sm:block`}>
+          <table className="w-full text-left text-sm">
             <thead>
               <tr className="text-[var(--text-primary)]">
                 <th className="pb-3 pr-4 font-semibold" scope="col">
