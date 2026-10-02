@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import type { NavItem } from "@/lib/auth/access";
 
@@ -26,19 +26,20 @@ function StreamedText({ text }: { text: string }) {
 
 /**
  * The Overview's page tabs and their demo window, as one group. The window cycles through
- * the pages' demos on its own. Pointing at a tab, or focusing it, shows that page's demo and
- * description and holds it there until the pointer leaves; clicking the tab goes to the
- * page. A touch screen has no pointer to hover with, so there the first tap on a tab shows
- * its demo and a second tap, or the window's own button, goes to the page.
+ * the pages' demos on its own, and waits while the pointer or keyboard focus is inside the
+ * group. Pointing at a tab only highlights it. Pressing a tab picks it: the window shows
+ * that page's demo and description and stops cycling. Pressing the picked tab again, its
+ * "Jump to page" tag at any time, or the window's own button, goes to the page. Mouse,
+ * touch and keyboard all work this way.
  */
 export function OverviewShowcase({ items }: { items: NavItem[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  // What the tab looked like when a press began, so a touch can tell a first tap from a second.
-  const pressRef = useRef({ touch: false, wasActive: false });
+  // Whether the visitor chose the active tab themselves, as opposed to the cycle landing on it.
+  const [picked, setPicked] = useState(false);
 
   useEffect(() => {
-    if (paused || items.length < 2) return;
+    if (picked || paused || items.length < 2) return;
     // A visitor who asked for less motion gets a window that changes only when they choose.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -46,20 +47,17 @@ export function OverviewShowcase({ items }: { items: NavItem[] }) {
       setActiveIndex((index) => (index + 1) % items.length);
     }, DEMO_ROTATE_MS);
     return () => window.clearInterval(id);
-  }, [paused, items.length]);
+  }, [picked, paused, items.length]);
 
   const active = items[activeIndex];
   if (!active) return null;
 
-  const show = (index: number) => {
-    setActiveIndex(index);
-    setPaused(true);
-  };
-
   return (
     <div
       className="grid gap-3 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-muted)] p-3 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-4 lg:p-4"
+      onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
       }}
@@ -68,26 +66,26 @@ export function OverviewShowcase({ items }: { items: NavItem[] }) {
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:mx-0 lg:grid lg:content-start lg:overflow-visible lg:p-0">
         {items.map((item, index) => {
           const isActive = index === activeIndex;
+          const isPicked = isActive && picked;
           return (
             <Link
               key={item.href}
               href={item.href}
-              aria-label={`Jump to ${item.label}`}
+              aria-label={isPicked ? `Jump to ${item.label}` : `Show ${item.label}`}
               aria-current={isActive ? "true" : undefined}
               className={`group shrink-0 rounded-full border px-3.5 py-1.5 transition-colors lg:rounded-2xl lg:px-4 lg:py-3 ${
                 isActive
                   ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--bg-card)] lg:bg-[var(--bg-card)] lg:text-[var(--text-primary)]"
                   : "border-[var(--border-card)] text-[var(--text-primary)] hover:border-[var(--text-primary)]"
               }`}
-              onPointerDown={(event) => {
-                pressRef.current = { touch: event.pointerType !== "mouse", wasActive: isActive };
-              }}
-              onMouseEnter={() => show(index)}
-              onFocus={() => show(index)}
               onClick={(event) => {
-                const press = pressRef.current;
-                pressRef.current = { touch: false, wasActive: false };
-                if (press.touch && !press.wasActive) event.preventDefault();
+                if (isPicked) return;
+                // A press meant for a new tab or window keeps doing that.
+                if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+                if ((event.target as Element).closest("[data-jump]")) return;
+                event.preventDefault();
+                setActiveIndex(index);
+                setPicked(true);
               }}
             >
               <span className="flex items-center gap-2">
@@ -97,7 +95,15 @@ export function OverviewShowcase({ items }: { items: NavItem[] }) {
                     Coming soon
                   </span>
                 ) : null}
-                <span className="ml-auto hidden shrink-0 rounded-full border border-[var(--border-card)] px-2.5 py-0.5 text-xs font-medium text-[var(--text-muted)] transition-colors group-hover:border-[var(--text-primary)] group-hover:text-[var(--text-primary)] lg:inline">
+                {/* Lit while pressing the tab would route: on its own hover, or once the tab is picked. */}
+                <span
+                  data-jump
+                  className={`ml-auto hidden shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] lg:inline ${
+                    isPicked
+                      ? "border-[var(--text-primary)] text-[var(--text-primary)]"
+                      : "border-[var(--border-card)] text-[var(--text-muted)]"
+                  }`}
+                >
                   Jump to page
                 </span>
               </span>
@@ -110,7 +116,7 @@ export function OverviewShowcase({ items }: { items: NavItem[] }) {
       </div>
 
       {/* Demo window */}
-      <div className="flex min-w-0 flex-col" onMouseEnter={() => setPaused(true)}>
+      <div className="flex min-w-0 flex-col">
         <div className="flex aspect-video flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border-card)] bg-[var(--bg-card)] text-center">
           <p className="text-lg font-semibold text-[var(--text-primary)]">{active.label}</p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">Demo animation coming soon</p>

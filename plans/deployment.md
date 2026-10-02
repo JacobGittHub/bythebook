@@ -88,12 +88,13 @@ Chrome, Safari and Firefox, and the Overview page and explorer work on a phone (
   of its own. **Bookstore** is the public store. Train, Puzzles and Settings keep their
   names.
 - D19. The Overview shows its page tabs and one demo window as a single group. The window
-  cycles through the pages' demos by itself, and pointing at a tab shows that page's demo
-  and a longer description, which writes itself out a word at a time. A button that routes
-  to a page says so in words ("Jump to page"); an arrow was tried and read as pointing at
-  the demo window. A phone has no pointer to hover with, so there the tabs are a row of
-  chips: the first tap shows the demo and the second opens the page. The demo animations
-  themselves come in Phase 7.
+  cycles through the pages' demos by itself. Pointing at a tab only highlights it. The
+  first press on a tab shows that page's demo and a longer description, which writes itself
+  out a word at a time, and stops the cycling; a second press on that tab, or a press on
+  its "Jump to page" tag, opens the page (changed 2026-10-01: pointing used to show the demo
+  and one click routed). A button that routes to a page says so in words ("Jump to page");
+  an arrow was tried and read as pointing at the demo window. On a phone the tabs are a row
+  of chips that work the same way. The demo animations themselves come in Phase 7.
 - D20. Button colors come from the theme tokens (`btn-primary`, `btn-secondary` and
   `btn-ghost` in `globals.css`), so a button's text stays readable on it in every
   background mode. Fixed slate or white classes on buttons are how text went missing.

@@ -218,11 +218,12 @@ that iterates, walks trees or aggregates runs client-side.
   `plans/deployment.md` (D16–D20).
 - **The Visualizations page is made of route buttons** (`RouteCard`), each tagged "Jump to
   page". The Overview has its own group (`OverviewShowcase`): page tabs beside one demo
-  window, which cycles through the pages by `DEMO_ROTATE_MS` and follows the pointer or
-  keyboard focus. The description is written out a word at a time (`.stream-word` in
-  `globals.css`, paced by `STREAM_WORD_MS`). On a touch screen the first tap on a tab shows
-  its demo and the second opens the page. The window shows a placeholder until the demo
-  animations exist.
+  window, which cycles through the pages by `DEMO_ROTATE_MS` and waits while the pointer or
+  keyboard focus is inside the group. The description is written out a word at a time
+  (`.stream-word` in `globals.css`, paced by `STREAM_WORD_MS`). Pointing at a tab only
+  highlights it. The first press on a tab shows its demo and stops the cycling; a second
+  press, or a press on its "Jump to page" tag, opens the page. Mouse, touch and keyboard
+  all work this way. The window shows a placeholder until the demo animations exist.
 - **The dashboard frame is `DashboardShell`** (`src/components/layout/`). On a wide screen
   the sidebar stays in view while the page scrolls and can collapse to a rail; on a phone it
   is a drawer opened from a top bar. The shell sets `--dash-offset`, the height of
