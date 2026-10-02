@@ -23,9 +23,10 @@ should come away thinking of the Najdorf as a *place* with neighbors, not a move
 once read. When a choice trades spatial memorability for technical elegance, memorability
 wins.
 
-**Status:** The Opening Explorer, the Library (book management), the Atlas opening tree and
-the Overview page are live, and guests can use all of them without an account. The trainer,
-puzzle and Bookstore pages are placeholder scaffolding. The long-term direction is
+**Status:** The Opening Explorer, the Library (book management), the Atlas opening tree
+(under the Visualizations page) and the Overview page are live, and guests can use all of
+them without an account. The trainer, puzzle and Bookstore pages are placeholder
+scaffolding. The long-term direction is
 not settled. The territory map and hyperbolic panel are the leading candidates for the next
 visualizations, but don't start building them, or shape other work around them, unless the
 user asks. The shared vision and current work are in `plans/`.
@@ -66,7 +67,7 @@ changes, also run the app and look at the result. Tests sit next to the code the
 
 - `src/app/` holds routes, and `src/app/api/` holds route handlers.
 - `src/components/` is organized by feature: `board/`, `openings/`, `repertoire/`,
-  `training/`, `puzzles/`, `lab/`.
+  `training/`, `puzzles/`, `overview/`, `lab/` (the visualization prototypes).
 - `src/lib/chess/` holds chess logic and the opening catalog. `src/lib/db/` holds all
   Supabase access. `src/lib/validators/schemas.ts` holds the Zod schemas.
 - `scripts/` holds the catalog build scripts and the cache pre-fill script, and
@@ -144,9 +145,11 @@ edit these files.
 
 **Guests and accounts**
 
-- A sidebar page, and whether it needs an account, is declared in `NAV_ITEMS`
-  (`src/lib/auth/access.ts`). The sidebar, the proxy and the Overview page read it; don't
-  list pages anywhere else.
+- A sidebar page is declared in `NAV_ITEMS`, and a visualization in `VISUALIZATIONS`, each
+  with whether it needs an account (`src/lib/auth/access.ts`). The sidebar, the proxy, the
+  Overview page and the Visualizations page read them; don't list pages anywhere else.
+- A button that routes to a page is a `RouteCard` (`src/components/ui/RouteCard.tsx`), whose
+  arrow tells the visitor they will leave the page.
 - Every route handler except `/api/openings/explorer` returns 401 without a user.
 - A component that reads or saves account data checks `useViewer()` (client) or
   `getViewer()` (server) first, so a guest causes no request that is bound to fail and sees
@@ -184,12 +187,12 @@ them, unless the user brings it up.
 
 | Item | Why it stays | Removable when |
 |---|---|---|
-| `src/components/repertoire/OpeningTreeFull.tsx` | It is the live opening tree on the Atlas page | A successor ships and the user says so |
+| `src/components/repertoire/OpeningTreeFull.tsx` | It is the live opening tree on the Atlas page (under Visualizations) | A successor ships and the user says so |
 | `src/components/openings/OpeningMiniTree.tsx` | It is the live explorer sidebar tree, and the user wants it kept as-is | A successor ships and the user says so |
 | `d3`, `@types/d3` | `OpeningTreeFull` uses them | `OpeningTreeFull` is removed |
-| `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx` | They are prototypes the user may revisit | The user says so |
+| `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`, `src/components/lab/LabHarness.tsx` | They are prototypes the user may revisit, listed on the Visualizations page as possible future ones | The user says so |
 | `three`, `@react-three/fiber`, `@react-three/drei` | `GlobeTest` uses them | The user says so |
-| `@xyflow/react`, `framer-motion` | They are unused, but kept for possible lab work | The user says so |
+| `@xyflow/react`, `framer-motion` | They are unused, but kept for possible prototype work | The user says so |
 
 ## Read before working on…
 
@@ -207,5 +210,5 @@ you start.
 | Guest and account access, the sidebar, or sign-in | `docs/architecture.md` § "Auth and API routes" |
 | The territory map (candidate) | `docs/design/territory-map.md` |
 | The hyperbolic panel (candidate) | `docs/design/hyperbolic-panel.md` |
-| The lab page, globe, ChessMap, or branch view | `docs/design/lab-prototypes.md` |
-| The lab "Regions" tab (region map) or `src/lib/regions/` | `docs/design/region-map.md` |
+| The Visualizations page's prototypes: globe, ChessMap, or branch view | `docs/design/lab-prototypes.md` |
+| The region map prototype or `src/lib/regions/` | `docs/design/region-map.md` |

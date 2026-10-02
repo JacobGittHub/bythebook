@@ -211,10 +211,15 @@ that iterates, walks trees or aggregates runs client-side.
 - Sign-in uses `signInWithPassword()`. The server resolves the user with
   `supabase.auth.getUser()`.
 - **Guests use the app without an account.** There is no landing page: `/` redirects to
-  `/dashboard` (`next.config.ts`). `src/lib/auth/access.ts` lists the pages, which of them
-  need an account, and the guest and account differences shown on the Overview page. The
-  sidebar, `src/proxy.ts` and the Overview all read it. The decision and the full table are
-  in `plans/deployment.md` (D16–D18).
+  `/dashboard` (`next.config.ts`). `src/lib/auth/access.ts` lists the sidebar pages and the
+  visualizations, which of them need an account, and the guest and account differences
+  shown on the Overview page. The sidebar, `src/proxy.ts`, the Overview and the
+  Visualizations page all read it. The decisions and the full table are in
+  `plans/deployment.md` (D16–D19).
+- **The Overview and Visualizations pages are made of route buttons** (`RouteCard`). On the
+  Overview they sit beside one demo window (`OverviewShowcase`), which cycles through the
+  pages by `DEMO_ROTATE_MS` and follows the pointer or keyboard focus. It shows a
+  placeholder until the demo animations exist.
 - **Three layers enforce it.** The proxy redirects a guest away from an account-only page.
   Every route handler except the explorer returns 401 without a user, and the explorer
   serves a guest from the cache only. The UI then avoids offering what would fail:

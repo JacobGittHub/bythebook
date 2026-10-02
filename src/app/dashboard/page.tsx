@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OverviewShowcase } from "@/components/overview/OverviewShowcase";
 import { ACCESS_ROWS, visibleNavItems } from "@/lib/auth/access";
 import { betaContactEmail, betaKeyMailto } from "@/lib/auth/contact";
 import { getViewer } from "@/lib/auth/viewer";
@@ -6,9 +7,6 @@ import { getViewer } from "@/lib/auth/viewer";
 const sectionHeadingClass =
   "mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]";
 const cardClass = "rounded-3xl border border-[var(--border-card)] bg-[var(--bg-muted)] p-5";
-
-// Demos that will be shown here once they are recorded.
-const demoSlots = ["Exploring an opening", "The opening tree", "Building a book"];
 
 const deploymentNotes = [
   "ByTheBook is a solo project in beta, hosted on the free tiers of Vercel and Supabase. It may be slow to wake up after a quiet spell.",
@@ -19,7 +17,8 @@ const deploymentNotes = [
 
 export default async function OverviewPage() {
   const viewer = await getViewer();
-  const pages = visibleNavItems(viewer.signedIn).filter((item) => item.href !== "/dashboard");
+  // Every sidebar page with a description to show beside its demo, which leaves out this one.
+  const pages = visibleNavItems(viewer.signedIn).filter((item) => item.details);
 
   return (
     <main className="space-y-8">
@@ -36,44 +35,10 @@ export default async function OverviewPage() {
         </p>
       </div>
 
-      {/* Pages */}
+      {/* Pages and their demos */}
       <section>
         <h2 className={sectionHeadingClass}>What you can do</h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {pages.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`${cardClass} transition-transform hover:-translate-y-0.5`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="font-semibold text-[var(--text-primary)]">{item.label}</h3>
-                {item.status === "coming_soon" ? (
-                  <span className="shrink-0 rounded-full border border-[var(--border-card)] px-2 py-0.5 text-xs text-[var(--text-muted)]">
-                    Coming soon
-                  </span>
-                ) : null}
-              </div>
-              <p className="mt-2 text-sm text-[var(--text-muted)]">{item.summary}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Demos */}
-      <section>
-        <h2 className={sectionHeadingClass}>See it in action</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          {demoSlots.map((title) => (
-            <div
-              key={title}
-              className="flex aspect-video flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--border-card)] p-5 text-center"
-            >
-              <p className="font-semibold text-[var(--text-primary)]">{title}</p>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">Demo coming soon</p>
-            </div>
-          ))}
-        </div>
+        <OverviewShowcase items={pages} />
       </section>
 
       {/* Guest and account */}

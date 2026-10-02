@@ -2,8 +2,8 @@
 
 Status: ready · Updated: 2026-10-01 · Depends on: —
 
-**Goal:** finish the Regions tab in the Visual Lab, a zoomable 2D map in which every move is a
-pebble-shaped region inside its parent move's region.
+**Goal:** finish the Regions prototype on the Visualizations page, a zoomable 2D map in which
+every move is a pebble-shaped region inside its parent move's region.
 **Done when:** phases 3–7 below are checked off and the manual checks pass in `npm run dev`.
 
 ## Decisions
@@ -17,6 +17,11 @@ pebble-shaped region inside its parent move's region.
 - D3. Every phase ends with the typecheck, lint and tests. The user checks in after phases 4
   and 6, and the agent suggests a commit at each check-in.
 - D4. Docs that describe code are updated in the same phase as the code.
+- D5. The Lab page is gone (`deployment.md` D18). Its harness is now
+  `src/components/lab/LabHarness.tsx`, which shows one prototype per page under
+  `/dashboard/visualizations/`. The region map is built as a third view of that harness, with
+  its own page and an entry in `VISUALIZATIONS` (`src/lib/auth/access.ts`). Where the steps
+  below say "tab", read "view".
 
 ## Open questions
 
@@ -28,14 +33,16 @@ guest zooming around could trigger hundreds of Lichess calls on the user's token
 part of the app uses Lichess as heavily. Hiding the Lab is already listed under
 "Before going public" in `deployment.md`.
 
-> ME:
+> ME: This is problematic, i really want a working demo as this is my poster child. We need to find out if there are solutions to this opening information problem for this visualization and other visualizations. Think about the limitations of the filled default position cache and how we can try to display just the (default?) cache information for guest users without calling lichess. authed users will be able to make lichess calls which may require different functionality. Also investigate we can store data locally on the vercel server, like how the ecodata json is stored.
 
 ## Steps
 
-### Phase 3. Lab shell
+### Phase 3. Prototype shell
 
-- [ ] Add a "Regions" tab to `src/app/dashboard/lab/page.tsx`, loaded with `next/dynamic`
-      (`ssr: false`) like the other two tabs.
+- [ ] Add a "regions" view to `src/components/lab/LabHarness.tsx`, loaded with
+      `next/dynamic` (`ssr: false`) like the other two views, a page at
+      `src/app/dashboard/visualizations/regions/page.tsx`, and a `prototype` entry in
+      `VISUALIZATIONS`.
 - [ ] Add `src/components/lab/LabSpinner.tsx`, and use it for every tab's first load in place
       of the "Loading…" text.
 - [ ] Move the page's 200 ms stats `setInterval` into `src/components/lab/LabStats.tsx`, so
@@ -73,10 +80,10 @@ part of the app uses Lichess as heavily. Hiding the Lab is already listed under
 - [ ] Final docs pass: `region-map.md`, `lab-prototypes.md`, and the `d3` row under "Kept on
       purpose" in `AGENTS.md`, since `RegionMap` uses `interpolateZoom`.
 
-### Manual checks (`npm run dev`, `/dashboard/lab`)
+### Manual checks (`npm run dev`, `/dashboard/visualizations`)
 
-- [ ] After switching through all three tabs, no animation loop is still running (DevTools
-      Performance).
+- [ ] After opening all three prototypes in turn, no animation loop is still running
+      (DevTools Performance).
 - [ ] The spinner shows on first load and after changing p.
 - [ ] Zooming to depth 10 shows wall hatching.
 - [ ] After focusing a depth-8 blob, you can zoom 10 layers below it.

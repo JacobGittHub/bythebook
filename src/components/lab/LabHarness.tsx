@@ -2,6 +2,7 @@
 
 import { Component, useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import type { GlobeConfig, RendererStats } from "@/components/lab/GlobeTest";
 import type { ChessMapConfig } from "@/components/lab/ChessMap";
 
@@ -187,13 +188,17 @@ function priorityLabel(v: number) {
   return v.toFixed(2);
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Harness ───────────────────────────────────────────────────────────────────
 
-const TABS = ["Globe (R3F)", "2D Map"] as const;
-type Tab = (typeof TABS)[number];
+/** The prototypes this harness can show. Each has its own page under Visualizations. */
+export type LabView = "globe" | "map";
 
-export default function LabPage() {
-  const [tab, setTab] = useState<Tab>("Globe (R3F)");
+const VIEW_TITLES: Record<LabView, string> = {
+  globe: "Globe (R3F)",
+  map: "2D Map",
+};
+
+export function LabHarness({ view }: { view: LabView }) {
   const [config, setConfig] = useState<GlobeConfig>(DEFAULT_CONFIG);
   const [mapConfig, setMapConfig] = useState<ChessMapConfig>(DEFAULT_MAP_CONFIG);
   const [animResetToken, setAnimResetToken] = useState(0);
@@ -219,42 +224,42 @@ export default function LabPage() {
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
-      {/* Tab bar */}
+      {/* Header */}
       <div className="flex items-center gap-4 pb-3">
         <div>
-          <h1 className="text-lg font-semibold">Visual Lab</h1>
-          <p className="text-xs text-[var(--text-muted)]">Stats overlay top-left — click to cycle FPS / MS / MB</p>
+          <h1 className="text-lg font-semibold">{VIEW_TITLES[view]} · prototype</h1>
+          <p className="text-xs text-[var(--text-muted)]">
+            {view === "globe"
+              ? "Stats overlay top-left — click to cycle FPS / MS / MB"
+              : "A possible future visualization, kept as a prototype"}
+          </p>
         </div>
-        <div className="ml-auto flex gap-1">
-          {TABS.map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                tab === t ? "bg-emerald-600 text-white"
-                  : "text-[var(--text-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--text-primary)]"
-              }`}
-            >{t}</button>
-          ))}
-        </div>
+        <Link
+          href="/dashboard/visualizations"
+          className="ml-auto rounded-lg px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-muted)] hover:text-[var(--text-primary)]"
+        >
+          ← All visualizations
+        </Link>
       </div>
 
       {/* Body */}
       <div className="flex flex-1 gap-3 overflow-hidden">
         {/* Canvas */}
         <div className="flex-1 overflow-hidden rounded-xl">
-          {tab === "Globe (R3F)" && (
+          {view === "globe" && (
             <CanvasErrorBoundary>
               <GlobeTest config={config} onStats={handleStats} animResetToken={animResetToken} onProgress={handleProgress} />
             </CanvasErrorBoundary>
           )}
-          {tab === "2D Map" && (
+          {view === "map" && (
             <CanvasErrorBoundary>
               <ChessMap config={mapConfig} />
             </CanvasErrorBoundary>
           )}
         </div>
 
-        {/* Sidebar — 2D Map tab */}
-        {tab === "2D Map" && (
+        {/* Sidebar — 2D Map view */}
+        {view === "map" && (
           <div className="flex w-52 flex-col gap-3 overflow-y-auto rounded-xl bg-[var(--bg-sidebar)] p-3 text-[var(--bg-sidebar-text)]">
             <Section title="Layout" defaultOpen>
               <Slider label="Nodes at 1×" value={mapConfig.maxNodes} min={50} max={800} step={50}
@@ -288,8 +293,8 @@ export default function LabPage() {
           </div>
         )}
 
-        {/* Sidebar — Globe tab only */}
-        {tab === "Globe (R3F)" && (
+        {/* Sidebar — Globe view only */}
+        {view === "globe" && (
           <div className="flex w-52 flex-col gap-3 overflow-y-auto rounded-xl bg-[var(--bg-sidebar)] p-3 text-[var(--bg-sidebar-text)]">
 
             {/* ── Always-visible quick controls ─────────────────────────── */}

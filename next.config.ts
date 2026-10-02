@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
     { source: "/", destination: "/dashboard", permanent: false },
     // The Library page used to be called Repertoire.
     { source: "/dashboard/repertoire", destination: "/dashboard/library", permanent: false },
+    // The Atlas and the Lab's prototypes moved under the Visualizations page.
+    { source: "/dashboard/atlas", destination: "/dashboard/visualizations/atlas", permanent: false },
+    { source: "/dashboard/lab", destination: "/dashboard/visualizations", permanent: false },
   ],
   headers: async () => [
     {

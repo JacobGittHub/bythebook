@@ -20,13 +20,13 @@ AGENT  harness ≈20k + AGENTS.md 2.7k (auto-loaded) + plans/README.md 0.6k  = 2
 		Phase 3 · lab shell  [frontend]
 			design/lab-prototypes.md 2.8k + design/region-map.md 4.0k + next:02-guides/lazy-loading.md 2.7k
 			= docs 9.5k, context 33.9k
-			= src (app/dashboard/lab/page.tsx, components/lab/ChessMap.tsx, components/lab/GlobeTest.tsx) 18.9k
+			= src (components/lab/LabHarness.tsx, components/lab/ChessMap.tsx, components/lab/GlobeTest.tsx) 18.9k
 			= context 52.8k  →  implement
 		Phase 4 · RegionMap core  [frontend + pure layout code]
 			architecture.md 4.2k + design/region-map.md 4.0k
 				‹region-map› processes/lichess-api-and-caching.md 1.8k
 			= docs 10.0k, context 34.4k
-			= src (lib/regions/*.ts non-test, layout.test.ts, geometry.test.ts, app/dashboard/lab/page.tsx,
+			= src (lib/regions/*.ts non-test, layout.test.ts, geometry.test.ts, components/lab/LabHarness.tsx,
 			       components/lab/ChessMap.tsx, lib/chess/fen.ts) 24.0k
 			= context 58.4k  →  implement
 	plans/deployment.md 2.0k  (status: deciding, steps not written; paths below are projected)
@@ -58,7 +58,7 @@ AGENT  harness ≈20k + AGENTS.md 2.7k (auto-loaded) + plans/README.md 0.6k  = 2
 - Every path starts implementing at 41k–58k tokens. The fixed 23.3k at the root is 40–57% of
   that, the task's docs are 6–10k, and source files are the part that varies (8–24k).
 - The largest single reads are `OpeningExplorer.tsx` (11.7k), `GlobeTest.tsx` (8.4k),
-  `lab/page.tsx` (5.3k), `ChessMap.tsx` (5.1k) and the generated `types/database.ts` (4.3k).
+  `LabHarness.tsx` (5.3k), `ChessMap.tsx` (5.1k) and the generated `types/database.ts` (4.3k).
 - Next.js docs are the easiest cost to inflate. The getting-started pages used above are
   0.9–2.7k each; the full references are far larger (`proxy.md` 7.4k, `route.md` 5.0k,
   `upgrading/version-16.md` 9.9k).

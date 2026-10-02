@@ -5,12 +5,13 @@
 dependencies aren't installed, and there is no geometry table. Don't start building it, or
 shape other work toward it, unless the user asks.
 **Last reviewed:** 2026-10-01
-**Would replace:** `OpeningTreeFull` on `/dashboard/atlas` (see `opening-tree.md`)
+**Would replace:** `OpeningTreeFull` on `/dashboard/visualizations/atlas` (see
+`opening-tree.md`)
 
 Read `architecture.md` § "Visualization principles" first. Containment is the central rule
 for this design.
 
-**Being tested in the lab.** The "Regions" tab (`region-map.md`) is prototyping this map. It
+**Being tested as a prototype.** The "Regions" view (`region-map.md`) is prototyping this map. It
 departs from this doc in several ways: seeded balanced-bisection cells rounded into pebbles
 with gaps instead of a Voronoi treemap with shared borders, top-p/top-k child selection with
 an "Other" region, focus chains, and pins. When the prototype settles, reconcile this doc with

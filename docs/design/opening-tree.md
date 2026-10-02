@@ -3,13 +3,13 @@
 **Status:** Live, though legacy. The territory map (`territory-map.md`) is the candidate
 successor. This tree stays until a successor ships and the user says otherwise.
 **Last reviewed:** 2026-10-01
-**Files:** `src/app/dashboard/atlas/page.tsx` renders
+**Files:** `src/app/dashboard/visualizations/atlas/page.tsx` renders
 `src/components/repertoire/DashboardTree.tsx` (the orchestrator), which renders
 `OpeningTreeFull.tsx` (the radial tree) and `TreeNodePanel.tsx` (the side panel).
 
-The Atlas is the sidebar's visualizations page, and this tree is the only visualization on
-it so far. Until 2026-10-01 the tree was the dashboard's Overview at `/dashboard`, which is
-now an info page.
+The Atlas is the one live visualization on the Visualizations page
+(`/dashboard/visualizations`), which has a route button for each visualization. Until
+2026-10-01 the tree was the dashboard's Overview at `/dashboard`, which is now an info page.
 
 ## Rules
 
@@ -86,5 +86,4 @@ panel says a live lookup needs a beta account.
 
 ## Planned
 
-- Add `OpeningTreeFull` as a tab on the lab page.
 - If the territory map ships, `DashboardTree` switches its import to it.

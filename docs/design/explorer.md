@@ -124,6 +124,6 @@ The data is transient and changes with every move. Caching happens one layer dow
 
 ## Planned
 
-- Add `OpeningMiniTree` as a tab on the lab page.
+- Add `OpeningMiniTree` as a page under Visualizations.
 - The hyperbolic panel (`hyperbolic-panel.md`) is the candidate successor in the sidebar.
   The mini tree stays until a successor ships and the user says otherwise.

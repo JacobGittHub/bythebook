@@ -112,7 +112,7 @@ export default function LibraryPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Link
-                    href={`/dashboard/atlas?bookId=${book.id}`}
+                    href={`/dashboard/visualizations/atlas?bookId=${book.id}`}
                     className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
                   >
                     View in tree

@@ -4,11 +4,18 @@
 they are retained deliberately, and the user may revisit the 3D globe in particular. Don't
 build production work on them. They are not deletion candidates (see "Kept on purpose" in
 `AGENTS.md`).
-**Last reviewed:** 2026-09-29
-**Files:** `src/app/dashboard/lab/page.tsx` (the lab harness, with tabs "Globe (R3F)" and
-"2D Map"), `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`
+**Last reviewed:** 2026-10-01
+**Files:** `src/components/lab/LabHarness.tsx` (the harness: one prototype and its controls
+per `view`), `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`, and the
+pages `src/app/dashboard/visualizations/globe/page.tsx` and `…/map/page.tsx`
 
-A third tab, "Regions", is being built. It has its own doc: `region-map.md`.
+**Where they are shown.** There is no Lab page any more. The Visualizations page
+(`/dashboard/visualizations`) lists each prototype under "Possible future visualizations",
+from `VISUALIZATIONS` in `src/lib/auth/access.ts`, and each has its own page that renders
+`LabHarness` with one view. They need an account; a guest sees them listed but can't open
+them. "Lab" below means these prototypes and `src/components/lab/`.
+
+A third view, "Regions", is being built. It has its own doc: `region-map.md`.
 
 ## Rules
 

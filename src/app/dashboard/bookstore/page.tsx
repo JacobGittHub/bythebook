@@ -14,7 +14,10 @@ export default function BookstorePage() {
         <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--text-muted)]">
           The Bookstore will offer default books such as the Queen&apos;s Gambit or a set of
           gambits. Until then, browse every named opening in the{" "}
-          <Link className="font-medium text-[var(--text-primary)] underline" href="/dashboard/atlas">
+          <Link
+            className="font-medium text-[var(--text-primary)] underline"
+            href="/dashboard/visualizations/atlas"
+          >
             Atlas
           </Link>{" "}
           or the{" "}

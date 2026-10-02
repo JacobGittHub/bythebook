@@ -148,10 +148,11 @@ includes a malformed FEN → 400 · anything else → 500
   is no server-side logging of 429s and no user-facing error beyond the hook's `error`
   state.
 - **Guests reach every consumer except the region map.** `src/proxy.ts` lets guests into
-  the dashboard, apart from the Lab. For a guest, a 404 means "not saved", not a failure:
-  the Explorer and the Atlas panel say that a live lookup needs a beta account, and
-  `useOpeningExplorerMulti` leaves that position out. The region map loader still treats a
-  404 as a failure to retry, which is fine while the Lab is for signed-in users only.
+  the dashboard, apart from the visualization prototypes. For a guest, a 404 means "not
+  saved", not a failure: the Explorer and the Atlas panel say that a live lookup needs a
+  beta account, and `useOpeningExplorerMulti` leaves that position out. The region map
+  loader still treats a 404 as a failure to retry, which is fine while the prototypes are
+  for signed-in users only.
 
 ## Scaling
 

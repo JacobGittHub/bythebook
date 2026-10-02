@@ -61,28 +61,36 @@ Chrome, Safari and Firefox, and the Overview page and explorer work on a phone (
   domain, so it waits until sign-up opens beyond the beta.
 - D15. The performance setting is left out of this plan. It may come back to let people cut
   browser storage or visualization complexity, with the Full and Lite values worked out in
-  the lab. One piece lands now if it is easy: detect the device and warn phone users when
-  they turn on the full engine.
+  the visualization prototypes. One piece lands now if it is easy: detect the device and
+  warn phone users when they turn on the full engine.
 - D16. There is no landing page. `/` redirects to `/dashboard`, so a visitor lands inside
   the app as a guest (D2) and a returning user lands signed in. The dashboard's Overview
   page does the landing page's job: it explains the app, shows what a guest and an account
-  can each do, describes the deployment's limits, and will hold demo animations.
+  can each do, describes the deployment's limits, and holds the demo window (D19).
 - D17. What a guest and a signed-in user may do. The rules live in
-  `src/lib/auth/access.ts`, which the sidebar, the proxy and the Overview page all read.
+  `src/lib/auth/access.ts`, which the sidebar, the proxy, the Overview page and the
+  Visualizations page all read.
 
   | | Guest | Signed in |
   |---|---|---|
-  | Pages | Every page except the Lab | Every page |
+  | Pages | Every page except the visualization prototypes, which are listed but not opened | Every page |
   | Master stats | Cached positions only; never causes a Lichess call (D7) | Cached, plus live Lichess, counted (D8) |
   | Engine and appearance settings | Yes, in the browser | Yes, in the browser |
   | Books | None for now; pages that save say an account is needed. Browser storage comes with Phase 5 (D12) | Create, edit and keep |
   | API routes other than the explorer | 401 | Yes |
 
 - D18. The sidebar names what each page is for. **Overview** is the info page (D16).
-  **Explorer** is board analysis. **Atlas** holds the visualizations, starting with the
-  opening tree. **Library** is the user's own data: books now, then repertoires and game
-  history import, which gets no tab of its own. **Bookstore** is the public store.
-  Train, Puzzles and Settings keep their names, and the Lab is for signed-in users.
+  **Explorer** is board analysis. **Visualizations** is the experimental visualizations
+  page: it has a route button for each visualization and takes over from the Lab, which is
+  gone. The Atlas (the opening tree) is the live one. The Lab's globe and 2D map are kept
+  there as possible future visualizations, for signed-in users only. **Library** is the
+  user's own data: books now, then repertoires and game history import, which gets no tab
+  of its own. **Bookstore** is the public store. Train, Puzzles and Settings keep their
+  names.
+- D19. The Overview shows one demo window beside its page buttons. The window cycles
+  through the pages' demos by itself, and pointing at a button shows that page's demo and a
+  longer description. A button that routes to a page carries an arrow, so it is clear that
+  pressing it leaves the page. The demo animations themselves come in Phase 7.
 
 ## Steps
 
@@ -101,20 +109,25 @@ steps are still open:
 - [x?] (user) Run `npm run cache:prefill` to the end (about two hours; it can be stopped and
       resumed).
 
-### Phase 4. Guest access (D2, D16, D17, D18)
+### Phase 4. Guest access (D2, D16–D19)
 
 - [x] (agent) `src/lib/auth/access.ts` holds the pages, who may open them, and the guest and
       account table, with tests.
 - [x] (agent) `/` redirects to `/dashboard`, and `src/proxy.ts` lets guests into every page
-      except the Lab. The login and register pages send a signed-in visitor to the dashboard.
+      except the visualization prototypes. The login and register pages send a signed-in
+      visitor to the dashboard.
 - [x] (agent) The sidebar from D18, with sign-in links for guests and Sign out for users.
-      New Overview, Atlas (the opening tree), Library (was Repertoire) and placeholder
-      Bookstore pages. Trainer and Puzzles say "coming soon".
+      New Overview, Visualizations (with the Atlas and the former Lab's prototypes under
+      it), Library (was Repertoire) and placeholder Bookstore pages. Trainer and Puzzles say
+      "coming soon".
+- [x] (agent) The Overview's demo window and arrowed route buttons (D19), with a placeholder
+      in the window until the demos exist.
 - [x] (agent) Guests aren't offered what needs an account: no book requests are made for
       them, and the explorer, the tree and the Library show a sign-in notice in place of the
       book controls. The explorer says when a position's stats need a beta account.
 - [ ] (user) Check in a browser: the guest pages; sign in, close the browser and return to
-      `/` still signed in; Sign out; the Lab shows only when signed in.
+      `/` still signed in; Sign out; the prototypes open only when signed in; the
+      Overview's demo window cycles and follows the pointer.
 - [ ] (user) After browsing as a guest, confirm no guest Lichess calls (query in Notes).
 
 ### Phase 5. Library (D12, D13)

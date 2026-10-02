@@ -1,7 +1,8 @@
 # Region map (lab prototype)
 
-**Status:** Being built in the Visual Lab as a third tab, "Regions", next to "Globe (R3F)" and
-"2D Map". It is the first hands-on prototype of the territory-map idea (`territory-map.md`)
+**Status:** Being built as a third prototype on the Visualizations page, "Regions", next to
+"Globe (R3F)" and "2D Map" (see `lab-prototypes.md` for how the prototypes are shown). It is
+the first hands-on prototype of the territory-map idea (`territory-map.md`)
 and tests that doc's layout questions. It is exempt from the production visualization rules
 like the other lab prototypes, but it is built to them anyway: containment, pure layout
 functions and property tests.
@@ -233,9 +234,10 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 
 ## Lab integration
 
-- **Tabs:** only the active tab is mounted. `RegionMap` must clean up its animation frame,
-  `ResizeObserver`, listeners and loader on unmount.
-- **Loading:** a shared `LabSpinner` covers each tab's first load. `RegionMap` shows a spinner
+- **Views:** each prototype is a view of `LabHarness` on its own page, so only one is
+  mounted at a time. `RegionMap` must clean up its animation frame, `ResizeObserver`,
+  listeners and loader on unmount.
+- **Loading:** a shared `LabSpinner` covers each view's first load. `RegionMap` shows a spinner
   overlay during the first layout and any full re-layout.
 - **Stats:** they live in a `LabStats` component that owns the refresh timer, so only the
   stats panel re-renders.

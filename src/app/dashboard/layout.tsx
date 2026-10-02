@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ViewerProvider } from "@/context/Viewer";
 import { visibleNavItems } from "@/lib/auth/access";
-import { betaKeyMailto } from "@/lib/auth/contact";
+import { betaContactEmail, betaKeyMailto } from "@/lib/auth/contact";
 import { getViewer } from "@/lib/auth/viewer";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
@@ -68,9 +68,19 @@ export default async function DashboardLayout({
                   Create account
                 </Link>
                 {betaKeyMailto ? (
-                  <a className={accountLinkClass} href={betaKeyMailto}>
-                    Request a beta key
-                  </a>
+                  // The address is written out because a mailto link does nothing for a
+                  // visitor with no mail program set up; they can copy it instead.
+                  <>
+                    <a className={accountLinkClass} href={betaKeyMailto}>
+                      Request a beta key
+                    </a>
+                    <p className="px-3 text-xs text-[var(--bg-sidebar-muted)]">
+                      Email{" "}
+                      <span className="select-all break-all text-[var(--bg-sidebar-text)]">
+                        {betaContactEmail}
+                      </span>
+                    </p>
+                  </>
                 ) : null}
               </>
             )}
