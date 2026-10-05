@@ -10,7 +10,7 @@ import {
 import { applySimilarity, composeSimilarity, type Similarity } from "./geometry";
 import { mulberry32, type Rng } from "./prng";
 import { DEFAULT_REGION_SETTINGS, createRegionStore, type Blob } from "./store";
-import { allBlobs, growStore } from "./testShapes";
+import { allBlobs, expectNoViolations, growStore } from "./testShapes";
 import {
   DEFAULT_DISPLAY_DEPTH,
   FRAME_COVERAGE,
@@ -66,22 +66,28 @@ describe("the frame", () => {
 
   it("is the deepest blob covering half the viewport, wherever the search starts", () => {
     const rng = mulberry32(31);
+    // Gathered and asserted once: an expect per blob made this test slow enough to time out.
+    const wrong: string[] = [];
     for (let run = 0; run < 200; run++) {
       const { anchor, camera } = randomCamera(rng);
       const { frame, frameToScreen } = buildScene(anchor, camera, VIEWPORT);
+      const coversHalf = (blob: Blob) =>
+        !(coverage(blob, toScreenOf(blob, anchor, camera), VIEWPORT) < FRAME_COVERAGE);
 
-      if (frame !== store.root) {
-        expect(coverage(frame, frameToScreen, VIEWPORT)).toBeGreaterThanOrEqual(FRAME_COVERAGE);
+      if (frame !== store.root && !(coverage(frame, frameToScreen, VIEWPORT) >= FRAME_COVERAGE)) {
+        wrong.push(`run ${run}: the frame "${frame.id}" covers less than FRAME_COVERAGE`);
       }
       for (const child of frame.children ?? []) {
-        expect(coverage(child, toScreenOf(child, anchor, camera), VIEWPORT)).toBeLessThan(FRAME_COVERAGE);
+        if (coversHalf(child)) wrong.push(`run ${run}: the frame's child "${child.id}" covers FRAME_COVERAGE`);
       }
       // No blob outside the frame's line of ancestors covers half the viewport either.
       for (const blob of blobs) {
-        if (isInside(frame, blob)) continue;
-        expect(coverage(blob, toScreenOf(blob, anchor, camera), VIEWPORT)).toBeLessThan(FRAME_COVERAGE);
+        if (!isInside(frame, blob) && coversHalf(blob)) {
+          wrong.push(`run ${run}: "${blob.id}", outside the frame's line, covers FRAME_COVERAGE`);
+        }
       }
     }
+    expectNoViolations(wrong);
   });
 });
 

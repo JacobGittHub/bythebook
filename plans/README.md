@@ -4,8 +4,9 @@ Where ByTheBook is going and how it gets there. The user and agents edit these f
 together: agents write proposals, the user annotates them, and the choices they settle
 become decisions that later work follows.
 
-`docs/` describes the system as it is. This folder describes work that hasn't happened
-yet. The repository is public, so keep secrets out of here too.
+`docs/` describes the system as it is. This folder describes work that hasn't happened yet,
+and it holds the user's latest direction, which outranks `docs/` where they disagree ("When
+sources disagree" in `AGENTS.md`). The repository is public, so keep secrets out of here too.
 
 **Focus:** `deployment.md` (the user sets this; agents work on the focus plan unless told
 otherwise)
@@ -16,13 +17,20 @@ otherwise)
 |---|---|---|---|
 | [vision.md](vision.md) | living | — | The shared picture every plan serves |
 | [deployment.md](deployment.md) | active | — | Public Vercel deployment for guests and about 100 beta users |
-| [region-map.md](region-map.md) | active | — | Finish the Labyrinth, the region map prototype (build phases 3–7; 3 and 4 built, check-in fixes done; Q1 and Q3–Q5 open) |
-| [atlas.md](atlas.md) | deciding | region-map.md | Draft: a static, pre-generated region map built in reproducible editions (Q1–Q6 open) |
+| [region-map.md](region-map.md) | active | — | Finish the Labyrinth, the region map prototype |
+| [data-delivery.md](data-delivery.md) | deciding | — | Shared data from static files and the CDN, with fewer function calls |
+| [testing.md](testing.md) | deciding | — | CI on GitHub, with Vitest and Playwright each doing one job |
+| [atlas.md](atlas.md) | deciding | region-map.md | A static, pre-generated region map built in reproducible editions |
 | [bookstore.md](bookstore.md) | deciding | deployment.md | Default books, repertoires, and library export and import |
 | [game-history.md](game-history.md) | deciding | deployment.md | Import a user's own games and show them on the app's displays |
 
 Statuses: `deciding` (open questions remain) · `ready` (steps written, not started) ·
-`active` · `done` · `parked`.
+`active` · `done` · `parked` · `living` (never finishes, like the vision).
+
+The index holds goals only. Progress and open questions live in each plan, so they can't
+go stale here. `docs/docs.test.ts` checks that every plan is listed with the status its
+header gives and that links between plans and docs resolve. It doesn't check the code a
+plan names, since plans describe code that doesn't exist yet.
 
 ## How to write in these files
 
@@ -72,9 +80,10 @@ Background and reasoning.
    keeps the answer's reasoning. Agents don't otherwise rewrite or delete `> ME:` notes.
 3. With every question settled, the agent drafts the Steps in plan mode, and the user
    approves them.
-4. When every step is done, the status becomes `done` and the plan's lasting facts move into
-   `docs/` or `AGENTS.md`. The file stays as the record.
+4. When a phase is done, its steps fold into a one-line "Done" summary that points to where
+   its facts now live in `docs/` or `AGENTS.md`. When every step is done, the status becomes
+   `done` and the file stays as the record.
 
-**Size.** Keep each plan under about 150 lines. Past that, trim the Notes or split the plan.
-Split a plan when part of it could be finished on its own, and record the link in
-"Depends on".
+**Size.** Plans grow and shrink with the work, so there is no hard limit. When one gets hard
+to scan, fold finished phases (step 4), trim the Notes, or split off a part that could
+finish on its own and record the link in "Depends on".

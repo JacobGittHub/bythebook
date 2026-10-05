@@ -1,10 +1,26 @@
-// Random inputs shared by the region property tests. Test-only.
+// Random inputs and helpers shared by the region property tests. Test-only.
 import { Chess } from "chess.js";
+import { expect } from "vitest";
 import { EXPLORER_MOVES_LIMIT, gameCount } from "@/lib/chess/explorerData";
 import type { ExplorerMove, ExplorerResponse } from "@/types/chess";
 import { sampleCircle, type Polygon, type Vec } from "./geometry";
 import { rngFor, type Rng } from "./prng";
 import type { Blob, RegionStore } from "./store";
+
+/** How many violations a failing property test shows. */
+const VIOLATIONS_SHOWN = 5;
+
+/**
+ * Asserts that a property test found no violations. Gather them into a list over every run
+ * and call this once: an expect per check can make a test slow enough to time out, and a
+ * full list of thousands is unreadable, so a failure shows the first few and the count.
+ */
+export function expectNoViolations(violations: string[]) {
+  expect(
+    violations.slice(0, VIOLATIONS_SHOWN),
+    `${violations.length} violations; the first ${VIOLATIONS_SHOWN} are shown`,
+  ).toEqual([]);
+}
 
 /** Convex hull, counter-clockwise (Andrew's monotone chain). */
 export function convexHull(points: readonly Vec[]): Vec[] {

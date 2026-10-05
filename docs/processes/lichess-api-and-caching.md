@@ -1,6 +1,5 @@
 # Lichess API: call chain and caching
 
-**Last reviewed:** 2026-10-02
 **Files:**
 
 - `src/app/api/openings/explorer/route.ts` is the only route that reaches Lichess. It
@@ -23,9 +22,11 @@
 
 Client code never calls Lichess directly. Every request goes through one route, which
 checks `position_cache` and calls Lichess only on a cache miss, and only for a signed-in
-user. A guest gets what the cache holds and nothing else. The cache is permanent, because
-master-game statistics for a position don't change. It is one table shared by everyone: it
-grows as signed-in users explore, and the pre-fill script loads the whole catalog into it.
+user. A guest gets what the cache holds and nothing else. Rows never expire: a position's
+master statistics only grow as new master games are added, slowly enough that an old row
+still serves the explorer. (The atlas needs numbers that never change, so it fetches its own;
+see `plans/atlas.md`.) It is one table shared by everyone: it grows as signed-in users
+explore, and the pre-fill script loads the whole catalog into it.
 
 ## Flow
 
@@ -156,8 +157,10 @@ includes a malformed FEN → 400 · anything else → 500
 
 ## Scaling
 
-- **Current scale is 2–50 users.** Only cold positions are expensive; after the first
-  request, every user gets the cached row from Supabase.
+- **The deployment is sized for guests and about 100 beta users.** Only cold positions are
+  expensive; after the first request, every user gets the cached row from Supabase.
+- **Planned:** a batch route and CDN caching of saved positions (`plans/data-delivery.md`),
+  which answer the fan-out below.
 - **Storage is not a concern.** At roughly 5 KB per row, the 500 MB free tier holds about
   100,000 positions. The catalog reaches fewer than 8,000.
 - **What breaks first:**

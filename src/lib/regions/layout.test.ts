@@ -10,7 +10,7 @@ import {
 } from "./layout";
 import { pebbleArea, type Pebble } from "./pebble";
 import { mulberry32, rngFor, type Rng } from "./prng";
-import { randomWeights } from "./testShapes";
+import { expectNoViolations, randomWeights } from "./testShapes";
 
 function itemsFrom(weights: number[]): WeightedItem[] {
   return weights.map((weight, i) => ({ id: `m${i}`, weight }));
@@ -41,37 +41,48 @@ function randomParent(rng: Rng): Pebble {
 describe("layoutChildren invariants", () => {
   it("keeps siblings apart, children inside the wall, and every local frame at area 1", () => {
     const rng = mulberry32(21);
+    // Gathered and asserted once: an expect per vertex made this test slow enough to time out.
+    const wrong: string[] = [];
     for (let run = 0; run < 150; run++) {
       const parent = randomParent(rng);
       const options = run % 3 === 0 ? DEFAULT_LAYOUT_OPTIONS : randomOptions(rng);
       const items = itemsFrom(randomWeights(rng, 1 + Math.floor(rng() * 20)));
       const children = layoutChildren(parent, items, rng, options);
-      expect(children).not.toBeNull();
+      if (!children) {
+        wrong.push(`run ${run}: no layout`);
+        continue;
+      }
 
-      const list = [...children!.values()];
-      for (const child of list) {
+      const list = [...children.entries()];
+      for (const [id, child] of list) {
         // Distance from the child to the parent's wall, measured at the child's core corners.
         for (const v of child.pebble.core) {
           const depth = parent.r - signedDistance(parent.core, v) - child.pebble.r;
-          expect(depth).toBeGreaterThan(wallInset(options) + child.gap / 2 - 1e-9);
+          if (!(depth > wallInset(options) + child.gap / 2 - 1e-9)) {
+            wrong.push(`run ${run}: "${id}" is ${depth} inside the wall`);
+          }
         }
 
-        expect(pebbleArea(child.local)).toBeCloseTo(1, 9);
+        // As toBeCloseTo(1, 9) would check it.
+        const area = pebbleArea(child.local);
+        if (!(Math.abs(area - 1) < 5e-10)) wrong.push(`run ${run}: "${id}" has local area ${area}`);
         child.local.core.forEach((v, i) => {
           const back = applySimilarity(child.toParent, v);
-          expect(Math.hypot(back.x - child.pebble.core[i].x, back.y - child.pebble.core[i].y)).toBeLessThan(1e-12);
+          const off = Math.hypot(back.x - child.pebble.core[i].x, back.y - child.pebble.core[i].y);
+          if (!(off < 1e-12)) wrong.push(`run ${run}: "${id}" vertex ${i} maps back ${off} off`);
         });
       }
 
       for (let i = 0; i < list.length; i++) {
         for (let j = i + 1; j < list.length; j++) {
-          const a = list[i];
-          const b = list[j];
+          const [aId, a] = list[i];
+          const [bId, b] = list[j];
           const gap = convexDistance(a.pebble.core, b.pebble.core) - a.pebble.r - b.pebble.r;
-          expect(gap).toBeGreaterThan((a.gap + b.gap) / 2 - 1e-9);
+          if (!(gap > (a.gap + b.gap) / 2 - 1e-9)) wrong.push(`run ${run}: "${aId}" and "${bId}" are ${gap} apart`);
         }
       }
     }
+    expectNoViolations(wrong);
   });
 
   it("keeps the full gaps with the defaults and typical move counts", () => {

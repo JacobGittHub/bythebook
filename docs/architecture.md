@@ -1,13 +1,11 @@
 # Architecture
 
-**Last reviewed:** 2026-10-02
-
 This file explains why the system is built the way it is. The rules themselves are in
 `AGENTS.md`; this file holds the reasoning and detail behind them. When the code can answer
 a question, the code is the source of truth. This file covers what the code can't tell you.
 
-**Contents:** Opening tree data model · Weight modes · Visualization principles · Opening
-catalog · Storage and database · Compute strategy · Engine · External data sources ·
+**Contents:** Opening tree data model · Position formats · Weight modes · Visualization
+principles · Opening catalog · Storage and database · Compute strategy · Engine · External data sources ·
 Auth and API routes · Stored vs computed · Dependencies · Known issues and scaling ·
 Rejected alternatives
 
@@ -44,15 +42,33 @@ type MoveNode = {
     back to `Map` insertion order. That is stable only for a fixed index file. Add the UCI
     tiebreak when the planned shared tree module (`src/lib/chess/openingTree.ts`) is built.
 
+## Position formats
+
+| Format | Example | What it holds | Used here for |
+|---|---|---|---|
+| FEN | `rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1` | One position: the pieces, side to move, castling rights, en passant square, and two clocks (moves since a capture or pawn move, and the move number) | Drawing boards, and asking Lichess about a position |
+| Position key | The FEN without its two clocks (`toPositionKey()`) | The same position, whatever move order reached it | Keys for `position_cache`, per-position stats and the catalog's `byPositionKey` |
+| UCI | `e2e4`, `e7e8q` | One move as from-square, to-square and promotion | Identifying moves: tree keys, region map blob ids, the catalog's `byUciPrefix` |
+| SAN | `e4`, `Nf3`, `exd5` | One move as people write it; it can only be read against the position before it | Display only |
+| PGN | `1. e4 e5 2. Nf3` | A game or line in SAN with move numbers | The catalog's source (`ecoData.json`), and game import later |
+
+- **A FEN can be worked out from the line that reaches it,** but only by replaying the moves
+  with chess.js, at about 0.15 ms a move. Storing FENs trades size for that time: the catalog
+  index stores one per move of every opening, which is most of its size (`plans/data-delivery.md`).
+- **Two lines can reach one position** (a transposition): two UCI lines, one position key.
+  That is why trees are keyed by line and stats by position key (see above).
+- **SAN needs the position to be read** (`Nf3` doesn't say which knight), so it is never a key.
+
 ## Weight modes
 
 Visualizations size nodes by a weight. There are three modes, and the user chooses between
 them:
 
 1. **`games`: game frequency.** It uses the local ECO catalog, supplemented by Lichess
-   explorer data for positions outside it. **This mode is unbuilt.** The catalog index holds
-   no game counts, so the counts would have to be baked into the index at build time or
-   loaded by pre-warming `position_cache`.
+   explorer data for positions outside it. **As a shared mode it is unbuilt:** the catalog
+   index holds no game counts, so they would come from `position_cache` once pre-filled.
+   The Labyrinth already sizes its regions this way, from each position's explorer data as
+   it loads (`design/region-map.md`).
 2. **`engine`: a softmax over centipawn loss relative to the best move,**
    `w_i = exp(-loss_i / λ)`, with λ exposed as a tunable sharpness parameter. It needs
    `position_evals`, which no code writes to yet.
@@ -104,7 +120,7 @@ an opening.
   - `npm run catalog:index` (`scripts/buildOpeningCatalogIndex.mjs`) replays every PGN with
     chess.js and writes `src/lib/chess/generated/openingCatalogIndex.json` (v2).
   - Both outputs are committed, so the app never generates them at runtime.
-- **Index format.** The index holds 3,690+ openings, each with `eco`, `name`, `pgn`,
+- **Index format.** The index holds about 3,800 openings, each with `eco`, `name`, `pgn`,
   `moves` and per-move FENs. It carries **no game counts**. Three indexes give O(1) lookup:
   `byEco`, `byUciPrefix` (a space-joined UCI line) and `byPositionKey` (transposition-aware).
 - **API.** The public API is the exports of `src/lib/chess/openingCatalog.ts`:
@@ -163,8 +179,9 @@ Supabase Postgres with Row Level Security on every table. Columns are in
 
 ## Compute strategy
 
-Vercel functions only do `SELECT … WHERE pk = ?` and single-row `INSERT`/`UPDATE`. Anything
-that iterates, walks trees or aggregates runs client-side.
+Vercel functions only do `SELECT … WHERE pk = ?` and single-row `INSERT`/`UPDATE` (a capped
+batch of primary-key reads is planned, `plans/data-delivery.md`). Anything that iterates,
+walks trees or aggregates runs client-side.
 
 | Operation | Where | Why |
 |---|---|---|
@@ -217,25 +234,8 @@ that iterates, walks trees or aggregates runs client-side.
   `/dashboard` (`next.config.ts`). `src/lib/auth/access.ts` lists the sidebar pages and the
   visualizations, which of them need an account, and the guest and account differences
   shown on the Overview page. The sidebar, `src/proxy.ts`, the Overview and the
-  Visualizations page all read it. The decisions and the full table are in
-  `plans/deployment.md` (D16–D20).
-- **The Visualizations page is made of route buttons** (`RouteCard`), each tagged "Jump to
-  page". The Overview has its own group (`OverviewShowcase`): page tabs beside one demo
-  window, which cycles through the pages by `DEMO_ROTATE_MS` and waits while the pointer or
-  keyboard focus is inside the group. The description is written out a word at a time
-  (`.stream-word` in `globals.css`, paced by `STREAM_WORD_MS`). Pointing at a tab only
-  highlights it. The first press on a tab shows its demo and stops the cycling; a second
-  press, or a press on its "Jump to page" tag, opens the page. Mouse, touch and keyboard
-  all work this way. The window shows a placeholder until the demo animations exist.
-- **The dashboard frame is `DashboardShell`** (`src/components/layout/`). On a wide screen
-  the sidebar stays in view while the page scrolls and can collapse to a rail; on a phone it
-  is a drawer opened from a top bar. The shell sets `--dash-offset`, the height of
-  everything around the content. A page that must fit the viewport is
-  `calc(100dvh - var(--dash-offset))` tall.
-- **Button colors come from the theme tokens**: `btn-primary`, `btn-secondary` and
-  `btn-ghost` in `globals.css`. The link reset there sits in the base layer; outside a layer
-  it overrode every text-color utility on a link, which made links styled as dark buttons
-  unreadable.
+  Visualizations page all read it, and the pages themselves are in `design/dashboard.md`.
+  The decisions and the full table are in `plans/deployment.md` (D16–D20).
 - **Three layers enforce it.** The proxy redirects a guest away from an account-only page.
   Every route handler except the explorer returns 401 without a user, and the explorer
   serves a guest from the cache only. The UI then avoids offering what would fail:
@@ -294,7 +294,8 @@ The visualization dependencies and what each is for. Removal status is in `AGENT
 | `@xyflow/react` | Nothing | 100 KB | Its only intended consumer (`BookBranchView`) was never built |
 | `framer-motion` | Nothing | 30 KB | Was intended for globe↔branch transitions |
 
-**Tooling.** `vitest` (dev only) runs the property tests; its config resolves the `@/*` alias
+**Tooling.** `vitest` (dev only) runs the unit and property tests and the docs test
+(`docs/docs.test.ts`); its config resolves the `@/*` alias
 from `tsconfig.json`. It needs `@types/node` 22 or newer. The project uses 22, the oldest Node
 line still supported, so the types never offer an API that a Node 22 deployment lacks
 (local development runs Node 24). `tsx` (dev only) runs the TypeScript scripts in `scripts/`
@@ -312,10 +313,15 @@ engine.
   `OpeningTreeFull` renders an empty tree for a null root.
 - **Lichess failures** (429 responses, an expired token) degrade silently to "no moves". See
   the Lichess process doc.
+- **The catalog ships inside the client JavaScript.** `openingCatalog.ts` imports the index,
+  so every page that names openings loads it as one script of about 10 MB (about 600 KB
+  compressed), which a phone must parse. `plans/data-delivery.md` moves it to a compact
+  static file.
 - **Scaling.** Visualizations run in the browser, so server load doesn't grow as users pan or
   zoom. Server work amounts to `position_cache` reads, one `opening_books` read per session
   and eventually one `user_position_stats` upsert per drill move. All of that is comfortable
-  on the Supabase free tier at about 50 users.
+  on the Supabase free tier for guests and about 100 beta users; what runs out first is in
+  `plans/deployment.md` (Notes, "Server limits").
 
 ## Rejected alternatives
 

@@ -11,8 +11,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # AGENTS.md — ByTheBook
 
 ByTheBook is a chess opening trainer. Users build opening repertoires ("books"), explore
-master-game statistics, and drill their lines. It is a solo project built for a handful of
-users, and it is designed to handle about 50 without changes.
+master-game statistics, and drill their lines. It is a solo project for guests and about 100
+beta testers (`plans/vision.md`).
 
 **Stack:** Next.js 16 (App Router), TypeScript (strict), Tailwind v4, Supabase (Postgres +
 Auth via `@supabase/ssr`), deployed on Vercel. The stack also uses `chess.js` for rules,
@@ -24,12 +24,12 @@ once read. When a choice trades spatial memorability for technical elegance, mem
 wins.
 
 **Status:** The Opening Explorer, the Library (book management), the Treemap opening tree
-(under the Visualizations page) and the Overview page are live, and guests can use all of
-them without an account. The trainer, puzzle and Bookstore pages are placeholder
-scaffolding. The long-term direction is
-not settled. The territory map and hyperbolic panel are the leading candidates for the next
-visualizations, but don't start building them, or shape other work around them, unless the
-user asks. The shared vision and current work are in `plans/`.
+and the Overview page are live, and guests can use all of them without an account. The
+Labyrinth, the region map prototype, is the visualization in active development
+(`plans/region-map.md`), and it is also the first test of the territory map's ideas. The
+territory map and the hyperbolic panel remain candidate designs; don't build them, or shape
+other work around them, unless the user asks. The trainer, puzzle and Bookstore pages are
+placeholders. The shared vision and current work are in `plans/`.
 
 **Names:** the **Treemap** is the live radial opening tree, which was called the Atlas until
 2026-10-02. The **Labyrinth** is the region map prototype, laid out live from explorer data.
@@ -42,17 +42,20 @@ which is not in development.
 |---|---|
 | Dev server | `npm run dev` |
 | Typecheck | `npx tsc --noEmit` (passes; keep it passing) |
-| Lint | `npm run lint` (13 pre-existing React hooks errors remain; don't add new ones) |
-| Tests | `npm test` (Vitest, runs `src/**/*.test.ts`); `npm run test:watch` while working |
+| Lint | `npm run lint` (pre-existing React hooks errors remain, listed in `plans/testing.md`; add none) |
+| Tests while working | `npm run test:changed` (tests affected by uncommitted changes), or `npm run test:related -- <files>` |
+| All tests | `npm run test:agent` (one line per failure, stops at the first); `npm test` for the full report |
+| Agent docs | `npm run docs:check` (`docs/docs.test.ts` alone; `npm test` includes it), `npm run docs:sizes` (token estimates) |
 | Production build | `npm run build` |
 | Rebuild the opening catalog | `npm run catalog:download`, then `npm run catalog:index` |
 | Fill `position_cache` for the catalog | `npm run cache:prefill` (calls Lichess for hours; the user runs it, agents use `-- --dry-run`) |
 | Make beta invite or reset codes | `npm run invites:create` (writes to the live database; the user runs it) |
 | Regenerate DB types | `npm run db:types` (see "Database changes" below) |
 
-To check a change, run the typecheck, the tests, and lint on the files you touched. For UI
-changes, also run the app and look at the result. Tests sit next to the code they test as
-`*.test.ts`; they run in Node, so keep tested code free of browser APIs.
+To check a change, run the typecheck, `npm run test:agent`, and lint on the files you
+touched. For UI changes, also run the app and look at the result. Tests sit next to what they
+test as `*.test.ts` and run in Node, so keep tested code free of browser APIs. Vitest is for
+code that runs without a browser; browser tests will be Playwright's (`plans/testing.md`).
 
 ## Environment
 
@@ -96,7 +99,8 @@ changes, also run the app and look at the result. Tests sit next to the code the
   disjoint, every child region lies inside its parent, and output is byte-identical on
   identical input" can be tested; "make it look good" can't. Layout functions are pure,
   of the form `layout(tree, weightMode) → Map<NodeId, Geometry>`, and ship with property
-  tests of their invariants.
+  tests of their invariants. A property test gathers its violations over every run and
+  asserts once with `expectNoViolations` (`src/lib/regions/testShapes.ts`).
 - **Git is read-only for agents.** `status`, `diff`, `log` and `show` are fine. The user
   makes all commits. Mutating git commands are blocked in `.claude/settings.local.json`.
 - **Don't delete what's kept on purpose** (see the list below). Being unused is not a reason
@@ -104,9 +108,15 @@ changes, also run the app and look at the result. Tests sit next to the code the
   explicit say-so. When something becomes superseded, add it to the list rather than
   deleting it.
 - **Keep the docs true.** When you change code that a `docs/` doc describes, update that
-  doc in the same change and bump its "Last reviewed" date. Don't copy values that live in
-  code (constants, line counts, file lists) into docs; name the constant instead. Only
-  create new docs when the user asks.
+  doc in the same change. State each fact in one place and point to it from elsewhere, and
+  name constants and files instead of copying their values. `docs/docs.test.ts` fails when
+  a doc names a file, route, package or constant that doesn't exist, or a planned one that
+  now does. Docs carry no review dates; git history shows when a doc changed. Only create
+  new docs when the user asks.
+- **When sources disagree:** the code is the truth about what the system does, so fix the
+  doc. The plans are the truth about direction and the user's latest requirements, and they
+  outrank `docs/` there. A plan that contradicts the code may be ahead of it rather than
+  wrong.
 - The harness memory is for how the user likes to work. Architecture decisions go in this
   file or in `docs/`.
 
@@ -134,8 +144,9 @@ edit these files.
 - Every route handler counts its call with `recordUsage` (`src/lib/db/usage.ts`), after the
   auth check.
 - Stockfish runs only in the browser (`src/hooks/useEngine.ts`). Never run engine analysis
-  or drill generation in Vercel functions. Those functions do single-row reads and writes;
-  anything that walks trees or aggregates runs client-side.
+  or drill generation in Vercel functions. Those functions do single-row writes and reads by
+  primary key, of one row or a capped batch (`plans/deployment.md` D1); anything that walks
+  trees, scans or aggregates runs client-side.
 - Books are `MoveNode` trees stored in `opening_books.move_node` (JSONB). Don't store moves
   as relational rows, don't build global `positions` or `edges` tables, and don't move
   `openingCatalogIndex.json` into Supabase.
@@ -147,7 +158,8 @@ edit these files.
   keep business logic out of them. Client components never call the database directly.
 - Use FEN strings to identify positions. `toPositionKey()` (`src/lib/chess/fen.ts`) drops
   the clock fields and is the key for per-position stats and for `position_cache`. Use UCI
-  internally and convert to SAN only in the UI.
+  internally and convert to SAN only in the UI. The formats are compared in
+  `docs/architecture.md` § "Position formats".
 
 **Guests and accounts**
 
@@ -208,9 +220,8 @@ them, unless the user brings it up.
 
 ## Read before working on…
 
-These docs live in `docs/`, which is version controlled and public like this file, so
-keep secrets out of both. They aren't loaded automatically, so read the relevant one before
-you start.
+Docs aren't loaded automatically, so read the relevant one before you start. They are
+public like this file, so keep secrets out of both.
 
 | When you're working on… | Read |
 |---|---|
@@ -219,8 +230,10 @@ you start.
 | Any tree or map visualization | `docs/architecture.md` § "Visualization principles", then the design doc below |
 | The Opening Explorer or the mini tree | `docs/design/explorer.md` |
 | The Treemap page's opening tree | `docs/design/opening-tree.md` |
-| Guest and account access, the sidebar, or sign-in | `docs/architecture.md` § "Auth and API routes" |
+| Guest and account access, or sign-in | `docs/architecture.md` § "Auth and API routes" |
+| The dashboard frame, sidebar, Overview or Visualizations page, or theme colors | `docs/design/dashboard.md` |
 | The territory map (candidate) | `docs/design/territory-map.md` |
 | The hyperbolic panel (candidate) | `docs/design/hyperbolic-panel.md` |
 | The Visualizations page's prototypes: globe, ChessMap, or branch view | `docs/design/lab-prototypes.md` |
 | The Labyrinth (the region map prototype) or `src/lib/regions/` | `docs/design/region-map.md` |
+| The agent docs, plans or the docs test, or their context cost | `docs/README.md`, then `docs/agent-context-map.md` |

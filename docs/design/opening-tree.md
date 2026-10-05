@@ -2,7 +2,6 @@
 
 **Status:** Live, though legacy. The territory map (`territory-map.md`) is the candidate
 successor. This tree stays until a successor ships and the user says otherwise.
-**Last reviewed:** 2026-10-02
 **Files:** `src/app/dashboard/visualizations/treemap/page.tsx` renders
 `src/components/repertoire/DashboardTree.tsx` (the orchestrator), which renders
 `OpeningTreeFull.tsx` (the radial tree) and `TreeNodePanel.tsx` (the side panel, a wrapper

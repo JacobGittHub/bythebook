@@ -1,6 +1,6 @@
 # Vision
 
-Status: living · Updated: 2026-10-01
+Status: living · Updated: 2026-10-03 · Depends on: —
 
 The shared picture of where ByTheBook is going. Every plan in this folder should serve
 something here. Agents propose changes to this file; the user decides them.
@@ -22,19 +22,26 @@ as a place with neighbors, not a move list. The full statement is "Product goal"
 ## Near term
 
 1. Public deployment for guests and beta testers: `deployment.md`.
+2. The Labyrinth as the working demo guests see first: `region-map.md`.
+3. Shared data served from static files and the CDN: `data-delivery.md`.
+4. Automatic checks on every push: `testing.md`.
 
 ## Principles
 
 - Server load stays bounded and predictable. The browser does the heavy work, and the server
-  does single-row reads and writes.
+  does small, bounded reads and writes by key.
+- One TypeScript codebase for the browser, the server and the offline scripts
+  (`data-delivery.md` D1).
 - The project rules in `AGENTS.md` apply to every plan.
 
 > ME:
 
 ## Not decided
 
-- The long-term visualization direction. The territory map and the hyperbolic panel are
-  candidates (`docs/design/`), not commitments.
+- The long-term visualization direction beyond the Labyrinth. The territory map and the
+  hyperbolic panel are candidates (`docs/design/`), not commitments, and the static atlas is
+  a draft (`atlas.md`).
 - What comes after deployment: the trainer, puzzles, or a new visualization.
+- Telemetry, once the storage decisions in `data-delivery.md` settle.
 
 > ME:

@@ -4,7 +4,6 @@
 **not settled**. Nothing has been built yet: `src/components/territory/` doesn't exist, the
 dependencies aren't installed, and there is no geometry table. Don't start building it, or
 shape other work toward it, unless the user asks.
-**Last reviewed:** 2026-10-02
 **Would replace:** `OpeningTreeFull` on `/dashboard/visualizations/treemap` (see
 `opening-tree.md`)
 

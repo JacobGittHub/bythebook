@@ -5,6 +5,7 @@ export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    // docs/docs.test.ts checks the agent docs against the code.
+    include: ["src/**/*.test.ts", "docs/**/*.test.ts"],
   },
 });

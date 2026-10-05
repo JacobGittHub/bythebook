@@ -4,7 +4,6 @@
 they are retained deliberately, and the user may revisit the 3D globe in particular. Don't
 build production work on them. They are not deletion candidates (see "Kept on purpose" in
 `AGENTS.md`).
-**Last reviewed:** 2026-10-02
 **Files:** `src/components/lab/LabHarness.tsx` (the harness: one prototype and its controls
 per `view`), `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`,
 `src/components/lab/LabSpinner.tsx`, `src/components/lab/LabStats.tsx`,

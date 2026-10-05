@@ -1,6 +1,6 @@
 # Atlas
 
-Status: deciding · Updated: 2026-10-02 · Depends on: region-map.md
+Status: deciding · Updated: 2026-10-03 · Depends on: region-map.md
 
 **Goal:** a static, pre-generated region map of master chess that every visitor sees the same
 way, built piece by piece and reproducibly, so a build can stop and resume and a game's path
@@ -19,6 +19,10 @@ steps come once the questions below are settled.)
   and seeded, and the model keeps a set of focuses (`region-map.md` D7).
 - D3. It is built incrementally, like the cache pre-fill, and deterministically: the same
   inputs give the same map, wherever and whenever it is built (from the user's note, Notes).
+- D4. The crawler keeps its working data in a local SQLite file, never in `position_cache`
+  or another Supabase table, and writes each edition's static files from it, through the
+  pipeline in `data-delivery.md` (D2). It is TypeScript, so it lays out with the same code the
+  browser draws with. (Approved by the user on 2026-10-03.)
 
 ## What was found (2026-10-02)
 

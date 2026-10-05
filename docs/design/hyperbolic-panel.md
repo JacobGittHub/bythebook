@@ -3,7 +3,6 @@
 **Status:** This is the leading candidate for the explorer sidebar, but it is **not
 settled**. Nothing has been built yet (`src/components/hyperbolic/` doesn't exist). Don't
 start building it, or shape other work toward it, unless the user asks.
-**Last reviewed:** 2026-09-29
 **Would replace:** `OpeningMiniTree` in the explorer sidebar (see `explorer.md`)
 
 Read `architecture.md` § "Visualization principles" first.

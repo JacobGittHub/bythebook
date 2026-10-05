@@ -1,6 +1,6 @@
 # Public deployment
 
-Status: active · Updated: 2026-10-02 · Depends on: —
+Status: active · Updated: 2026-10-03 · Depends on: —
 
 **Goal:** put ByTheBook on Vercel so guests can use it without an
 account, while up to about 100 beta testers sign in and keep their data.
@@ -12,6 +12,10 @@ Chrome, Safari and Firefox, and the Overview page and explorer work on a phone (
 - D1. The app stays mostly client-side, and server work stays limited to single-row reads
   and writes, so load stays predictable (see "Data and APIs" in `AGENTS.md`).
   > ME: Let me know what the hard limitations of this single row read and writes are, the does need to be usable after all.
+
+  *Amended 2026-10-03 (`data-delivery.md` D4, from the user's approval of a batch route):*
+  a request may also read a capped batch of rows by primary key. What stays ruled out is
+  reading without a bound: scans, aggregates and searches across users or books.
 - D2. Anyone can use the site without an account. Saving to the server needs a beta account.
 - D3. Creating an account needs a beta key, and accounts are capped at about 100, so the
   user controls the load.
@@ -119,20 +123,10 @@ steps are still open:
 
 ### Phase 4. Guest access (D2, D16–D19)
 
-- [x] (agent) `src/lib/auth/access.ts` holds the pages, who may open them, and the guest and
-      account table, with tests.
-- [x] (agent) `/` redirects to `/dashboard`, and `src/proxy.ts` lets guests into every page
-      except the visualization prototypes. The login and register pages send a signed-in
-      visitor to the dashboard.
-- [x] (agent) The sidebar from D18, with sign-in links for guests and Sign out for users.
-      New Overview, Visualizations (with the Atlas and the former Lab's prototypes under
-      it), Library (was Repertoire) and placeholder Bookstore pages. Trainer and Puzzles say
-      "coming soon".
-- [x] (agent) The Overview's tabs and demo window (D19), with a placeholder in the window
-      until the demos exist.
-- [x] (agent) Guests aren't offered what needs an account: no book requests are made for
-      them, and the explorer, the tree and the Library show a sign-in notice in place of the
-      book controls. The explorer says when a position's stats need a beta account.
+- [x] (agent) Done: `access.ts` with tests, the `/` redirect and proxy rules, the D18
+      sidebar and pages, the Overview's tabs and demo window, and sign-in notices in place
+      of account controls. How they work: `docs/design/dashboard.md` and
+      `docs/architecture.md` § "Auth and API routes".
 - [ ] (user) Check in a browser: the guest pages; sign in, close the browser and return to
       `/` still signed in; Sign out; the prototypes open only when signed in; the
       Overview's demo window cycles and follows the pointer.
@@ -150,13 +144,10 @@ steps are still open:
 
 ### Phase 6. Phones and themes (D9, D15, D20)
 
-- [x] (agent) The sidebar stays in view on a wide screen and collapses to a rail; on a phone
-      it is a drawer opened from a top bar.
-- [x] (agent) `100dvh` on the explorer, the Atlas and the prototypes, and an Overview,
-      explorer and Atlas that work at phone width.
-- [x] (agent) Theme button colors (D20) on the explorer, the tree, the book editor, the
-      Library and the sign-in pages. Checked with a headless browser in every background
-      mode for the controls a guest can reach.
+- [x] (agent) Done: the collapsible sidebar and phone drawer, `100dvh` and phone layouts on
+      the Overview, explorer, Treemap and prototypes, and theme button colors (D20), checked
+      in a headless browser in every background mode. How they work:
+      `docs/design/dashboard.md`.
 - [ ] (agent) The trainer and puzzle pages still use `100vh` and a desktop layout. They are
       placeholders, so this waits for the pages themselves.
 - [ ] (agent) A warning when a phone user turns on the heavy engine.
@@ -166,7 +157,8 @@ steps are still open:
 ### Phase 7. Launch
 
 - [ ] (agent) Ceilings as named constants, set from the Phase 1 counts; over the ceiling
-      returns 429.
+      returns 429. A ceiling needs the count before answering, which changes where the
+      count is written (`data-delivery.md` D5).
 - [ ] (user) An uptime ping so the free Supabase project doesn't pause.
 - [ ] (user, agent) Demo animations for the Overview page, and a pass over its text.
 - [ ] (agent) Delete the empty `src/app/api/auth/[...nextauth]/`.
@@ -183,8 +175,8 @@ steps are still open:
   Supabase free gives a 500 MB database and 5 GB of egress.
 - What bites first: the function-call count (one explorer page load fires 10–40 requests)
   and Supabase egress (the book list returns every book's whole tree, fixed in Phase 5).
-  Reading several positions in one request would change D1, so it gets raised with the user
-  if the counts call for it.
+  Reading several positions in one request was raised and accepted on 2026-10-03 (D1, as
+  amended); the batch route and CDN caching are in `data-delivery.md`.
 - D1 rules out anything that needs many rows per request: leaderboards, statistics across
   users, server-side search across books. Nothing in this plan needs those.
 

@@ -11,7 +11,6 @@ the first hands-on prototype of the territory-map idea (`territory-map.md`) and 
 doc's layout questions. It is exempt from the production visualization rules like the other
 lab prototypes, but it is built to them anyway: containment, pure layout functions and
 property tests.
-**Last reviewed:** 2026-10-02
 **Files:** `src/lib/regions/` holds the pure logic, with `*.test.ts` alongside and shared test
 inputs in `testShapes.ts`: `prng`, `geometry`, `bisect`, `pebble`, `layout` (which composes
 bisection and pebbles for one parent), `selection`, `loader`, `store` (the blob tree),
@@ -293,7 +292,8 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
   with Ctrl held and zooms too.
 - **Clicks:** click focuses, Shift+click pins, and clicking "Other" reveals it. Only the
   "Other" click is built so far; `hitTest` finds the deepest drawn blob under the pointer.
-- **Buttons:** "Fit" and "Zoom to focus" animate with d3's `interpolateZoom`.
+- **Buttons (planned, Phase 7):** "Fit" and "Zoom to focus" would animate with d3's
+  `interpolateZoom`. `RegionMap` doesn't import d3 yet.
 - **The pointer handling is written by hand, not with `d3-zoom`,** because `d3-zoom` holds the
   wheel gesture's world point in the old frame, so re-anchoring mid-gesture would jump.
 

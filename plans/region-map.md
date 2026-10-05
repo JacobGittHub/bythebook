@@ -1,6 +1,6 @@
 # Region map (the Labyrinth)
 
-Status: active · Updated: 2026-10-02 · Depends on: —
+Status: active · Updated: 2026-10-03 · Depends on: —
 
 **Goal:** finish the Labyrinth, the region map prototype on the Visualizations page: a
 zoomable 2D map in which every move is a pebble-shaped region inside its parent move's region.
@@ -150,8 +150,9 @@ dashes mean "Other". Settle this before Phase 5 adds focus and pins.
 
 - [ ] The map's controls in the panel's "Map stats and controls" section, Reshuffle, and
       the re-layout spinner.
-- [ ] Final docs pass: `region-map.md`, `lab-prototypes.md`, and the `d3` row under "Kept on
-      purpose" in `AGENTS.md`, since `RegionMap` uses `interpolateZoom`.
+- [ ] Final docs pass: `region-map.md` and `lab-prototypes.md`. If the Fit and Zoom buttons
+      use d3's `interpolateZoom`, also the `d3` row under "Kept on purpose" in `AGENTS.md`,
+      and `interpolateZoom` leaves the planned list in `docs/docs.test.ts`.
 
 ### Manual checks (`npm run dev`, `/dashboard/visualizations`)
 
