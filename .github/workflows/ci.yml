@@ -38,6 +38,9 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
       E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      # Lets the server count calls, and counts guest calls against the test account.
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      E2E_USAGE_USER_ID: ${{ secrets.E2E_USAGE_USER_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -16,12 +16,16 @@ export async function waitForSettledMap(page: Page) {
   await expect(page.locator('canvas[data-settled="true"]')).toBeVisible({ timeout: 30_000 });
 }
 
-/** Zooms in by `steps` wheel notches at a point of the canvas, given as fractions of its size. */
+/**
+ * Zooms in by `steps` wheel notches at a point of the canvas, given as fractions of its size.
+ * The wheel events are dispatched on the canvas, since mobile WebKit has no `mouse.wheel`.
+ */
 export async function zoomAt(page: Page, steps: number, at = { x: 0.5, y: 0.5 }) {
   const box = await labyrinthCanvas(page).boundingBox();
   if (!box) throw new Error("The Labyrinth's canvas isn't on the page.");
-  await page.mouse.move(box.x + box.width * at.x, box.y + box.height * at.y);
+  const clientX = box.x + box.width * at.x;
+  const clientY = box.y + box.height * at.y;
   for (let i = 0; i < steps; i++) {
-    await page.mouse.wheel(0, -120);
+    await labyrinthCanvas(page).dispatchEvent("wheel", { deltaY: -120, clientX, clientY });
   }
 }

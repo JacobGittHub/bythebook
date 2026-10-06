@@ -322,7 +322,9 @@ sizes, and the screenshot specs in `e2e/screens/` in Chromium only. The rest of 
 **CI.** `.github/workflows/ci.yml` runs on every push and pull request: the typecheck, lint
 with no warnings allowed, and Vitest in one job, and in the other the production build and
 `npm run test:e2e`. The second job needs the repository secrets `NEXT_PUBLIC_SUPABASE_URL` and
-`NEXT_PUBLIC_SUPABASE_ANON_KEY`, and optionally `E2E_EMAIL` and `E2E_PASSWORD`. Its report is
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, and optionally `E2E_EMAIL` and `E2E_PASSWORD`, and
+`SUPABASE_SERVICE_ROLE_KEY` with `E2E_USAGE_USER_ID` (the test account's user id), which make
+`recordUsage` count CI's guest calls against the test account. Its report is
 kept for 5 days when a test fails.
 
 These are not wanted: `cytoscape`, `vis-network`, `react-force-graph`, graph layout engines
