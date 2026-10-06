@@ -20,7 +20,7 @@ setup("sign in the test account", async ({ page }) => {
   await page.locator('input[name="password"]').fill(account.password);
   await page.locator('button[type="submit"]').click();
   await page.waitForURL("**/dashboard");
-  await expect(page.getByText("Signed in as")).toBeVisible();
+  await expect(page.getByText(/^Signed in as/)).toBeVisible();
 
   await page.context().storageState({ path: ACCOUNT_STATE });
 });
