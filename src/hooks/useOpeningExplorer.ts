@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { forDisplay } from "@/lib/chess/explorerData";
 import type { ExplorerResponse } from "@/types/chess";
 
@@ -10,18 +10,16 @@ export type OpeningExplorerResult = {
   error: string | null;
 };
 
+/** The answer for one position. Until the answer for the current one arrives, it's loading. */
+type Answer = { fen: string; data: ExplorerResponse | null; error: string | null };
+
 export function useOpeningExplorer(fen: string): OpeningExplorerResult {
-  const [state, setState] = useState<OpeningExplorerResult>({
-    data: null,
-    loading: false,
-    error: null,
-  });
+  const [answer, setAnswer] = useState<Answer | null>(null);
 
   useEffect(() => {
     if (!fen) return;
 
     let cancelled = false;
-    setState({ data: null, loading: true, error: null });
 
     fetch("/api/openings/explorer", {
       method: "POST",
@@ -33,15 +31,11 @@ export function useOpeningExplorer(fen: string): OpeningExplorerResult {
         return res.json() as Promise<ExplorerResponse>;
       })
       .then((data) => {
-        if (!cancelled) setState({ data: forDisplay(data), loading: false, error: null });
+        if (!cancelled) setAnswer({ fen, data: forDisplay(data), error: null });
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setState({
-            data: null,
-            loading: false,
-            error: err instanceof Error ? err.message : "unknown",
-          });
+          setAnswer({ fen, data: null, error: err instanceof Error ? err.message : "unknown" });
         }
       });
 
@@ -50,5 +44,9 @@ export function useOpeningExplorer(fen: string): OpeningExplorerResult {
     };
   }, [fen]);
 
-  return state;
+  return useMemo(() => {
+    if (!fen) return { data: null, loading: false, error: null };
+    if (answer?.fen !== fen) return { data: null, loading: true, error: null };
+    return { data: answer.data, loading: false, error: answer.error };
+  }, [fen, answer]);
 }

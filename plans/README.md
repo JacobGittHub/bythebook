@@ -19,7 +19,7 @@ otherwise)
 | [deployment.md](deployment.md) | active | — | Public Vercel deployment for guests and about 100 beta users |
 | [region-map.md](region-map.md) | active | — | Finish the Labyrinth, the region map prototype |
 | [data-delivery.md](data-delivery.md) | deciding | — | Shared data from static files and the CDN, with fewer function calls |
-| [testing.md](testing.md) | deciding | — | CI on GitHub, with Vitest and Playwright each doing one job |
+| [testing.md](testing.md) | active | — | CI on GitHub, with Vitest and Playwright each doing one job |
 | [atlas.md](atlas.md) | deciding | region-map.md | A static, pre-generated region map built in reproducible editions |
 | [bookstore.md](bookstore.md) | deciding | deployment.md | Default books, repertoires, and library export and import |
 | [game-history.md](game-history.md) | deciding | deployment.md | Import a user's own games and show them on the app's displays |

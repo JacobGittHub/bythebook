@@ -106,3 +106,23 @@ export function centredCamera(
     ty: viewport.height / 2,
   };
 }
+
+/** A camera in the root's frame, as the Labyrinth's `?camera=` address parameter holds it. */
+export type RootCamera = Pick<Camera, "k" | "tx" | "ty">;
+
+/**
+ * Writes a root-frame camera as `k,tx,ty`. The root frame is used because the page can show
+ * it before anything below the root has loaded; the map re-anchors as the data arrives.
+ */
+export function formatRootCamera({ k, tx, ty }: RootCamera): string {
+  return [k, tx, ty].map((n) => String(n)).join(",");
+}
+
+/** Reads `formatRootCamera`'s output. Null for anything else. */
+export function parseRootCamera(param: string | undefined | null): RootCamera | null {
+  const parts = param?.split(",") ?? [];
+  if (parts.length !== 3 || parts.some((part) => part.trim() === "")) return null;
+  const [k, tx, ty] = parts.map(Number);
+  if (![k, tx, ty].every(Number.isFinite) || k <= 0) return null;
+  return { k, tx, ty };
+}

@@ -89,7 +89,7 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
       path.forEach((n) => ids.add(n.id));
     }
     return ids;
-  }, [searchQuery, activeMoveNode]);
+  }, [searchQuery, catalogTree]);
 
   // ── Book switching ───────────────────────────────────────────────────────
 

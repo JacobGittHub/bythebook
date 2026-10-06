@@ -1,7 +1,7 @@
 import { Chess } from "chess.js";
 import { describe, expect, it } from "vitest";
 import { START_FEN } from "./fen";
-import { getOpeningEndingAt, getOpeningForLine } from "./openingCatalog";
+import { getCatalogLineToFen, getOpeningEndingAt, getOpeningForLine } from "./openingCatalog";
 
 /** The positions after each move of a line given in SAN. */
 function fensOf(...sans: string[]) {
@@ -36,5 +36,25 @@ describe("getOpeningForLine", () => {
 
   it("is undefined for no moves", () => {
     expect(getOpeningForLine([])).toBeUndefined();
+  });
+});
+
+describe("getCatalogLineToFen", () => {
+  it("stops at the position, though longer named lines pass through it", () => {
+    const [, sicilian] = fensOf("e4", "c5");
+    expect(getCatalogLineToFen(sicilian).map((move) => move.san)).toEqual(["e4", "c5"]);
+  });
+
+  it("reaches a position from a transposition by a named line's own order", () => {
+    const fens = fensOf("Nf3", "d5", "d4");
+    const line = getCatalogLineToFen(fens[2]);
+    const chess = new Chess();
+    for (const move of line) chess.move(move.san);
+    expect(chess.fen().split(" ").slice(0, 4)).toEqual(fens[2].split(" ").slice(0, 4));
+  });
+
+  it("is empty for the start and for a position no named line reaches", () => {
+    expect(getCatalogLineToFen(START_FEN)).toEqual([]);
+    expect(getCatalogLineToFen(fensOf("a3", "h6", "Ra2", "Rh7")[3])).toEqual([]);
   });
 });

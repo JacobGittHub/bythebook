@@ -19,6 +19,13 @@ covers how they work. The decisions behind them are `plans/deployment.md` D16–
   card's border and, on a phone, the top bar), which board pages subtract from `100dvh`.
 - **The sidebar lists `NAV_ITEMS`** for the viewer, with sign-in links for a guest and Sign
   out for a user.
+- **Debug mode adds "Copy bug report"** (`BugReportButton`) above the account block, for the
+  viewers `canDebug` (`src/lib/auth/debug.ts`) allows: everyone under `next dev` when
+  `DEBUG_MODE=true`, and deployed, only the accounts whose email is on `DEBUG_EMAILS`. It copies
+  `formatBugReport`'s text: the address, time, window size, background mode, guest or signed
+  in, the browser, and a section from each page that adds one through `useBugReportSection`
+  (`src/context/BugReport.tsx`). `BugReportProvider` wraps the whole frame, so the sidebar's
+  button can read the page beside it.
 
 ## Overview
 

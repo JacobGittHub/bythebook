@@ -27,7 +27,7 @@ npm run dev
 
 ## How the project is organized
 
-The project is built with AI coding agents, and its working documents are part of the
+The project is built primaritly with AI coding agents, and its working documents are part of the
 repository:
 
 - [`AGENTS.md`](AGENTS.md): the rules and map every agent session starts from.

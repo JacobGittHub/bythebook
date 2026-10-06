@@ -15,7 +15,7 @@ import {
   type Pebble,
 } from "./pebble";
 import { mulberry32 } from "./prng";
-import { randomRegion } from "./testShapes";
+import { expectNoViolations, randomRegion } from "./testShapes";
 
 const unitSquare: Polygon = [
   { x: 0, y: 0 },
@@ -81,19 +81,25 @@ describe("shapePebble", () => {
 
   it("stays half its gap inside its cell, and keeps the full gap in roomy cells", () => {
     const rng = mulberry32(5);
+    // Gathered and asserted once: an expect per vertex is slow (plans/testing.md, D4).
+    const wrong: string[] = [];
     for (let i = 0; i < 200; i++) {
       // Scale the cell down so some cells are too thin for the gap.
       const scale = Math.pow(10, -2 * rng());
       const cell = randomRegion(rng).map((v) => ({ x: v.x * scale, y: v.y * scale }));
       const { pebble, gap } = shapePebble(cell, options);
 
-      expect(pebble.core.length).toBeGreaterThan(0);
-      expect(gap).toBeLessThanOrEqual(options.siblingGap);
-      if (inradius(cell) >= options.siblingGap) expect(gap).toBe(options.siblingGap);
+      if (pebble.core.length === 0) wrong.push(`run ${i}: empty core`);
+      if (gap > options.siblingGap) wrong.push(`run ${i}: gap ${gap} is over the sibling gap`);
+      if (inradius(cell) >= options.siblingGap && gap !== options.siblingGap) {
+        wrong.push(`run ${i}: a roomy cell got gap ${gap}`);
+      }
       for (const v of pebble.core) {
-        expect(-signedDistance(cell, v)).toBeGreaterThan(gap / 2 + pebble.r - 1e-12);
+        const depth = -signedDistance(cell, v);
+        if (!(depth > gap / 2 + pebble.r - 1e-12)) wrong.push(`run ${i}: a core vertex is only ${depth} inside`);
       }
     }
+    expectNoViolations(wrong);
   });
 });
 

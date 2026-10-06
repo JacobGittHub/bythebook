@@ -67,15 +67,25 @@ user knows whether a match is an exact line or a transposition.
 | `>` | Step one move along the highlighted line |
 | `>\|` | Jump to the end of the highlighted line |
 
+The navigator's state and rules are a pure reducer, `navigatorReducer` in
+`src/lib/chess/explorerNavigator.ts`, with Vitest tests. `OpeningExplorer` dispatches the
+user's clicks and the board's reports to it, and passes its `command` to the board.
+
 - **Forward controls** (`>`, `>|`, Play) act only on the highlighted line. They are disabled
-  when nothing is highlighted (`selectedMatch === null`) or when the board has left the line
-  (`isBoardOnHighlightedLine === false`). In the second case the UI shows "Board is off the
-  highlighted line.", and the user steps back or resets to realign.
-- **Backward controls** (`<`, `|<`) always act on the real board history and are never
-  disabled.
-- **`>|` enqueues the remaining moves in `pendingForwardMoves`.** Each move fires as the
-  board acknowledges the previous scripted command, which keeps the board state and
-  `moveHistory` in sync without timing hacks.
+  when nothing is highlighted or when the board has left the line (`lineIndex` is -1). In
+  the second case the UI shows "Board diverged from highlighted line." with a "Clear line"
+  link, and the user steps back or resets to realign.
+- **Backward controls** (`<`, `|<`) act on the real board history, and are disabled only at
+  the start position.
+- **`>|` queues the remaining moves in the navigator's `pending` list.** Each move is sent
+  as the board reports the one before, which keeps the board and the navigator's `history`
+  in sync without timing hacks.
+- **Jumping to an earlier or different position** (a history node, an alternate, a book
+  line, a move token) resets the board and replays the moves, held in `afterReset` until
+  the board reports the reset.
+- **Opening at a position** (`initialFen`, from "Open in Explorer" on the Treemap and the
+  Labyrinth) replays `getCatalogLineToFen`: the longest named line through the position,
+  cut off at it. That replay is the navigator's initial state, so nothing runs in an effect.
 
 ## Mini tree (`OpeningMiniTree`)
 
@@ -110,8 +120,7 @@ SAN, the ECO name and W/D/B data. Hovering a continuation also draws a board arr
 
 - A history node resets the board and replays to that position.
 - A continuation plays that move.
-- An alternate resets and replays the alternate line via `pendingPostResetMovesRef` and
-  `pendingForwardMoves`.
+- An alternate resets and replays the alternate line, as described in the Navigator section.
 
 **Data flow (all props)**
 

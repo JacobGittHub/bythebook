@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { forDisplay } from "@/lib/chess/explorerData";
 import type { ExplorerResponse } from "@/types/chess";
 
+const NO_RESULTS: Record<string, ExplorerResponse | null> = {};
+
 /**
  * Fetches Lichess explorer data for multiple FEN positions in parallel.
  * Responses are keyed by FEN string. Uses the same proxied route as
@@ -18,10 +20,7 @@ export function useOpeningExplorerMulti(
   const fensKey = fens.join("||");
 
   useEffect(() => {
-    if (fens.length === 0) {
-      setResults({});
-      return;
-    }
+    if (fens.length === 0) return;
 
     let cancelled = false;
 
@@ -49,5 +48,6 @@ export function useOpeningExplorerMulti(
     };
   }, [fensKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return results;
+  // With no positions there is nothing to show, whatever the last answer was.
+  return fens.length === 0 ? NO_RESULTS : results;
 }

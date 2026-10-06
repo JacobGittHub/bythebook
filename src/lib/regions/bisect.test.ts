@@ -9,7 +9,7 @@ import {
   signedDistance,
 } from "./geometry";
 import { mulberry32, rngFor } from "./prng";
-import { randomRegion, randomWeights } from "./testShapes";
+import { expectNoViolations, randomRegion, randomWeights } from "./testShapes";
 
 const JITTER = (25 * Math.PI) / 180;
 const circle = sampleCircle({ x: 0, y: 0 }, 1 / Math.sqrt(Math.PI), 128);
@@ -21,6 +21,8 @@ function itemsFrom(weights: number[]): WeightedItem[] {
 describe("bisect invariants", () => {
   it("gives convex, disjoint cells that fill the region with exact area shares", () => {
     const rng = mulberry32(11);
+    // Gathered and asserted once: an expect per check is slow (plans/testing.md, D4).
+    const wrong: string[] = [];
     for (let run = 0; run < 300; run++) {
       const region = randomRegion(rng);
       const items = itemsFrom(randomWeights(rng, 1 + Math.floor(rng() * 20)));
@@ -30,24 +32,33 @@ describe("bisect invariants", () => {
       const weightSum = items.reduce((sum, item) => sum + item.weight, 0);
       let areaSum = 0;
 
-      expect([...cells.keys()]).toEqual(items.map((item) => item.id));
+      const ids = [...cells.keys()].join(",");
+      if (ids !== items.map((item) => item.id).join(",")) wrong.push(`run ${run}: cells ${ids}`);
       for (const item of items) {
-        const cell = cells.get(item.id)!;
+        const cell = cells.get(item.id);
+        if (!cell) continue;
         const area = polygonArea(cell);
         areaSum += area;
-        expect(isConvex(cell)).toBe(true);
-        expect(Math.abs(area / total - item.weight / weightSum)).toBeLessThan(1e-9);
-        for (const v of cell) expect(signedDistance(region, v)).toBeLessThan(1e-9);
+        if (!isConvex(cell)) wrong.push(`run ${run}: "${item.id}" isn't convex`);
+        const off = Math.abs(area / total - item.weight / weightSum);
+        if (!(off < 1e-9)) wrong.push(`run ${run}: "${item.id}" area share is ${off} off`);
+        for (const v of cell) {
+          const outside = signedDistance(region, v);
+          if (!(outside < 1e-9)) wrong.push(`run ${run}: "${item.id}" has a vertex ${outside} outside`);
+        }
       }
-      expect(Math.abs(areaSum / total - 1)).toBeLessThan(1e-9);
+      if (!(Math.abs(areaSum / total - 1) < 1e-9)) wrong.push(`run ${run}: cells cover ${areaSum / total}`);
 
-      const list = [...cells.values()];
+      const list = [...cells.entries()];
       for (let i = 0; i < list.length; i++) {
         for (let j = i + 1; j < list.length; j++) {
-          expect(convexOverlap(list[i], list[j])).toBe(false);
+          if (convexOverlap(list[i][1], list[j][1])) {
+            wrong.push(`run ${run}: "${list[i][0]}" and "${list[j][0]}" overlap`);
+          }
         }
       }
     }
+    expectNoViolations(wrong);
   });
 });
 

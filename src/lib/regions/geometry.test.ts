@@ -17,7 +17,7 @@ import {
   type Vec,
 } from "./geometry";
 import { mulberry32 } from "./prng";
-import { randomRegion } from "./testShapes";
+import { expectNoViolations, randomRegion } from "./testShapes";
 
 const square = (x: number, y: number, size: number): Polygon => [
   { x, y },
@@ -111,13 +111,17 @@ describe("insetConvex and inradius", () => {
 
   it("leaves every inset vertex at least the inset from the boundary", () => {
     const rng = mulberry32(2);
+    // Gathered and asserted once: an expect per vertex is slow (plans/testing.md, D4).
+    const wrong: string[] = [];
     for (let i = 0; i < 200; i++) {
       const region = randomRegion(rng);
       const d = rng() * inradius(region);
       for (const v of insetConvex(region, d)) {
-        expect(signedDistance(region, v)).toBeLessThan(-d + 1e-12);
+        const distance = signedDistance(region, v);
+        if (!(distance < -d + 1e-12)) wrong.push(`run ${i}: a vertex is ${-distance} in, not ${d}`);
       }
     }
+    expectNoViolations(wrong);
   });
 });
 

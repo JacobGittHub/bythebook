@@ -574,7 +574,9 @@ function Labels({ nodes, nodeSize }: { nodes: TreeNode[]; nodeSize: number }) {
 function AnimationController({ active, speed, onIncrement }: { active: boolean; speed: number; onIncrement: (n: number) => void }) {
   const acc = useRef(0);
   const onIncrementRef = useRef(onIncrement);
-  onIncrementRef.current = onIncrement;
+  useEffect(() => {
+    onIncrementRef.current = onIncrement;
+  }, [onIncrement]);
   useFrame((_, delta) => {
     if (!active) { acc.current = 0; return; }
     acc.current += delta * speed;
@@ -620,20 +622,23 @@ export default function GlobeTest({
     [nodes, config.buildAnimPriority, config.engineBias]
   );
 
-  const [visibleCount, setVisibleCount] = useState(nodes.length);
+  const [visibleCount, setVisibleCount] = useState(config.buildAnim ? 0 : nodes.length);
 
   // Always report actual scene node count so the page stats stay accurate.
   useEffect(() => { onProgress?.(nodes.length, nodes.length); }, [nodes]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Show all when animation disabled; restart from 0 when enabled.
-  useEffect(() => {
+  // Show all when animation is disabled. Restart from 0 when it's enabled, when the nodes
+  // change, or on the external reset token (the Restart button). Adjusted during render,
+  // so the canvas never draws a frame with the old count.
+  const [countFor, setCountFor] = useState({ buildAnim: config.buildAnim, nodes, animResetToken });
+  if (
+    countFor.buildAnim !== config.buildAnim ||
+    countFor.nodes !== nodes ||
+    countFor.animResetToken !== animResetToken
+  ) {
+    setCountFor({ buildAnim: config.buildAnim, nodes, animResetToken });
     setVisibleCount(config.buildAnim ? 0 : nodes.length);
-  }, [config.buildAnim, nodes]);
-
-  // External reset token (Restart button).
-  useEffect(() => {
-    if (config.buildAnim) setVisibleCount(0);
-  }, [animResetToken]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
   const handleIncrement = useCallback((delta: number) => {
     setVisibleCount((prev) => Math.min(prev + delta, nodes.length));
@@ -652,14 +657,15 @@ export default function GlobeTest({
     return nodes.filter((n) => visible.has(n.id));
   }, [config.buildAnim, visibleCount, nodes, buildOrder]);
 
-  // Track per-node entry records (timestamp + animation start position).
-  const entryTimesRef = useRef(new Map<number, NodeEntry>());
+  // Track per-node entry records (timestamp + animation start position). The map is one
+  // object for the component's life; effects fill it and the scene reads it each frame.
+  const [entryTimes] = useState(() => new Map<number, NodeEntry>());
   const prevDisplayIdsRef = useRef(new Set<number>());
 
   useEffect(() => {
     const mode = config.nodeEntryAnim;
     const animOn = config.buildAnim && mode !== "none";
-    if (!animOn) { entryTimesRef.current.clear(); prevDisplayIdsRef.current.clear(); return; }
+    if (!animOn) { entryTimes.clear(); prevDisplayIdsRef.current.clear(); return; }
     const now = performance.now();
     const prev = prevDisplayIdsRef.current;
     displayNodes.forEach((n) => {
@@ -676,16 +682,16 @@ export default function GlobeTest({
           : mode === "split"
           ? (parent?.position ?? [0, 0, 0])
           : [0, 0, 0];
-      entryTimesRef.current.set(n.id, { time: now, startPos });
+      entryTimes.set(n.id, { time: now, startPos });
     });
     prevDisplayIdsRef.current = new Set(displayNodes.map((n) => n.id));
-  }, [displayNodes, config.buildAnim, config.nodeEntryAnim, nodes]);
+  }, [displayNodes, config.buildAnim, config.nodeEntryAnim, nodes, entryTimes]);
 
   // Clear entry times on external reset or node list change.
   useEffect(() => {
-    entryTimesRef.current.clear();
+    entryTimes.clear();
     prevDisplayIdsRef.current.clear();
-  }, [animResetToken, nodes]);
+  }, [animResetToken, nodes, entryTimes]);
 
   const animMode = config.buildAnim ? config.nodeEntryAnim : "none";
 
@@ -713,7 +719,7 @@ export default function GlobeTest({
         scaleByWeight={config.scaleByWeight}
         edgeWidth={config.edgeWidth}
         edgeWidthMax={config.edgeWidthMax}
-        entryTimes={entryTimesRef.current}
+        entryTimes={entryTimes}
         animDuration={config.nodeAnimDuration}
         edgeTick={edgeTick}
       />
@@ -723,7 +729,7 @@ export default function GlobeTest({
         scaleByWeight={config.scaleByWeight}
         animMode={animMode}
         animDuration={config.nodeAnimDuration}
-        entryTimes={entryTimesRef.current}
+        entryTimes={entryTimes}
       />
       {config.showLabels && <Labels nodes={displayNodes} nodeSize={config.nodeSize} />}
       <OrbitControls enablePan={false} enableZoom minDistance={3} maxDistance={16} autoRotate autoRotateSpeed={config.rotateSpeed} />

@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   cameraTransform,
   centredCamera,
+  formatRootCamera,
   frameToFrame,
   panBy,
+  parseRootCamera,
   reanchor,
   screenToAnchor,
   zoomAbout,
@@ -144,5 +146,31 @@ describe("moving the camera", () => {
   it("centres a blob at the share of the smaller side asked for", () => {
     const camera = centredCamera("", 2, VIEWPORT, 0.9);
     expect(camera).toEqual({ anchorId: "", k: (0.9 * 700) / 2, tx: 500, ty: 350 });
+  });
+});
+
+describe("the root camera parameter", () => {
+  it("restores a view from any anchor, through the root frame, with screen points fixed", () => {
+    const rng = mulberry32(12);
+    for (let run = 0; run < 100; run++) {
+      const anchor = pick(rng);
+      const camera = cameraOn(anchor, rng);
+      const param = formatRootCamera(reanchor(camera, anchor, store.root));
+      const parsed = parseRootCamera(param);
+      expect(parsed).not.toBeNull();
+      const restored = reanchor({ anchorId: store.root.id, ...parsed! }, store.root, anchor);
+
+      const local = { x: rng() - 0.5, y: rng() - 0.5 };
+      const before = applySimilarity(cameraTransform(camera), local);
+      const after = applySimilarity(cameraTransform(restored), local);
+      expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeLessThan(1e-6);
+    }
+  });
+
+  it("refuses anything but three finite numbers with a positive scale", () => {
+    for (const bad of [undefined, null, "", "1,2", "1,2,3,4", "a,2,3", "0,2,3", "-1,2,3", "1,,3", "Infinity,0,0"]) {
+      expect(parseRootCamera(bad)).toBeNull();
+    }
+    expect(parseRootCamera("2.5,-10,3e2")).toEqual({ k: 2.5, tx: -10, ty: 300 });
   });
 });

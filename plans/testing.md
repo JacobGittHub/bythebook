@@ -1,12 +1,12 @@
 # Testing and CI
 
-Status: deciding · Updated: 2026-10-03 · Depends on: —
+Status: active · Updated: 2026-10-05 · Depends on: —
 
 **Goal:** every push is checked automatically on GitHub, with each kind of test doing one
 job.
 **Done when:** GitHub Actions runs the typecheck, lint, Vitest and Playwright on every push
-and pull request, `main` only takes changes that pass, and the Explorer, the Overview and the
-Labyrinth each have a browser test.
+and pull request, lint reports no errors, and the Explorer, the Overview and the Labyrinth
+each have a browser test.
 
 ## Decisions
 
@@ -40,72 +40,67 @@ From the user's replies to the architecture review on 2026-10-03.
   `pendingForwardMoves`, autoplay) as a pure reducer with Vitest tests. That also clears its
   two lint errors.
 
-## Open questions
+From the user's answers to Q1–Q4 on 2026-10-05.
 
-### Q1. Fix the lint errors before CI?
-
-Lint has 12 errors and 1 warning today, all React hooks rules: `GlobeTest.tsx` (5),
-`OpeningExplorer.tsx` (2), `useEngine.ts` (2), `BackgroundMode.tsx`, `useOpeningExplorer.ts`
-and `useOpeningExplorerMulti.ts` (1 each), and a warning in `DashboardTree.tsx`. A lint step
-in CI fails until they're gone.
-
-**Recommendation:** fix them before lint blocks a merge: `OpeningExplorer`'s with D5, the
-rest in one pass. Until then CI lints only the files a change touches.
-
-> ME:
-
-### Q2. Push to main, or merge pull requests?
-
-**Recommendation:** work on branches and merge pull requests into `main`, with branch
-protection requiring the CI checks. Vercel already builds a preview of every pushed branch,
-so each pull request has a link to try. Pushing straight to `main` still works, but nothing
-can stop a failing push.
-
-> ME:
-
-### Q3. Which views get screenshot tests?
-
-**Recommendation:** a handful. The Labyrinth at a desktop and a phone size, with the
-explorer route answered from fixture data (its seeded layout draws the same map every time);
-the Overview; and the Explorer at its start position. A baseline is a PNG of tens of
-kilobytes, so a handful stays under a few megabytes.
-
-> ME:
-
-### Q4. How can visual bugs be reported faster?
-
-The user's note: collecting, explaining and testing small visual bugs is slow.
-
-**Recommendation:** a "Copy bug report" button, shown only in development and to the
-user's account, that copies one block of text: the page address, window size, background
-mode, guest or signed in, and for the Labyrinth its camera and settings. The user pastes it
-with a sentence about what's wrong. The agent opens that exact state in Playwright,
-screenshots it before and after the fix, and keeps it as a screenshot test when the bug is
-visual, so it can't come back.
-
-> ME:
+- D6. All lint errors are fixed before CI, so CI lints every file. `OpeningExplorer`'s two go
+  with D5, and the rest go in one pass. There were 12 errors and 1 warning, all React
+  hooks rules.
+- D7. The user handles git and may not use branches yet. CI runs on every push to any
+  branch and on every pull request. Branch protection waits until the user works through
+  pull requests.
+- D8. Screenshot tests start with the experimental visualizations, beginning with the
+  Labyrinth. They are temporary: `npm run screens:flush` lists them and removes a view's tests
+  and baselines once it's finished with. They run locally only, against Windows baselines.
+  CI skips them because Linux renders fonts differently, which would make Windows baselines
+  fail there.
+- D9. Debug mode, which shows a "Copy bug report" button, is set by environment variables
+  on the server. `DEBUG_MODE=true` turns it on. Under `next dev` the flag alone shows it to
+  everyone, guests included. When the app is deployed, it shows only to signed-in accounts
+  whose email is in `DEBUG_EMAILS`. The list is of emails, not usernames, because usernames
+  aren't unique: a tester could register under a listed name. The button copies one block
+  of text: the page address, window size, background mode, guest or signed in, and any
+  state the page adds (the Labyrinth adds its line and camera). The user pastes the block
+  with a sentence about what's wrong. The agent opens that state in Playwright, screenshots
+  it before and after the fix, and keeps a visual bug as a screenshot test so it can't come
+  back.
 
 ## Steps
 
-Drafted in plan mode once Q1–Q4 are answered. D4 is done.
+- Done (2026-10-05): D4, D5 and D6 (lint reports no problems), Playwright in `e2e/` with
+  explorer fixtures and a test account, the screenshot specs and `screens:flush`, the CI
+  workflow, and debug mode (D9) with the Labyrinth's `?camera=`. Vitest covers the explorer
+  route, the navigator, `canDebug` and the report text. Opening the Explorer at a position
+  had replayed the longest named line through it and so went past it; it now stops at the
+  position (`getCatalogLineToFen`). The facts are in `docs/architecture.md` (§ "Browser
+  tests" and "CI"), `docs/design/dashboard.md` and `docs/design/region-map.md`.
+- [ ] Repository secrets (user). Add `NEXT_PUBLIC_SUPABASE_URL` and
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY` on GitHub. The first push then runs CI.
+- [ ] Test account (user). Make an account with an invite code
+  (`npm run invites:create`), then put its email and password in `.env.local` as
+  `E2E_EMAIL` and `E2E_PASSWORD`, and in the repository secrets to run them in CI. Until
+  then the Labyrinth specs, its screenshots and the Reproduce check skip.
+- [ ] Labyrinth fixtures and baselines (agent, once the account exists). Record the map's
+  positions with `E2E_RECORD_EXPLORER=1` and one worker, then run `npm run
+  test:screens:update` and look at each new baseline.
+- [ ] Debug mode on the deployed site (user). Set `DEBUG_MODE=true` and `DEBUG_EMAILS` in
+  Vercel's environment variables when wanted.
 
 ## Notes
 
-- **Where Playwright's files go.** Reports and results go to `playwright-report/` and
-  `test-results/` (gitignored). Baselines go next to their test in a `-snapshots` folder
-  (committed). The planned `test:e2e:clean` script prints the size of the first two, then
-  deletes them.
+- **Why a test account.** The Labyrinth needs an account (`VISUALIZATIONS` in
+  `src/lib/auth/access.ts`), so its specs sign in through the real login page. It's an
+  ordinary beta account, used only for reading; the map's explorer calls are answered from
+  fixtures.
 - **Coverage.** `vitest run --coverage` with `@vitest/coverage-v8` shows what no test
   reaches. Route handlers, `src/lib/db/` and components have no tests today.
-- **Slow tests before CI.** After the `expectNoViolations` change (2026-10-03) the two
-  slowest went from about 4.7 s and 4.0 s to about 0.6 s. The slowest left are in
-  `bisect.test.ts` (about 2.8 s), `geometry.test.ts` and `pebble.test.ts` (about 2 s): safe
-  locally, but CI machines are slower, so convert them the same way when CI is set up.
-- **First test beyond pure logic:** the explorer route's guest rule (a guest's request never
-  reaches Lichess), with Supabase and Lichess mocked.
+- **Slow tests.** The `bisect`, `insetConvex` and `shapePebble` property tests gathered
+  their violations on 2026-10-05, which took each from about 1 s to under 0.5 s. The slowest
+  left is `layoutChildren`'s, at about 1.7 s.
 - **CI needs the Supabase variables to build.** `src/lib/supabase.ts` throws on import
-  without them, so `next build` in CI gets them from GitHub secrets. The tests don't touch
-  the database.
+  without them. Guest specs don't touch the database; the account specs sign in.
+- **Hydration in browser tests.** Typing into a page before React hydrates it is lost when
+  hydration resets the input. The Explorer specs wait for the statistics, which only the
+  browser fetches, before they type.
 - **Why the docs test exists.** Docs drifted while their "Last reviewed" dates were bumped on
   every edit, so the dates claimed reviews that never happened. The dates are gone, and the
   test checks what a date can't: that every name a doc uses still exists.

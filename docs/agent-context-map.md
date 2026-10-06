@@ -19,8 +19,8 @@ current estimate for each agent doc and for the largest source files.
 - `AGENTS.md` loads in every session, so a line there costs more than a line anywhere else.
   A rule goes there in one line, and its reasoning goes in `docs/`.
 - One fact, one place (`README.md` in this folder). A copy costs context twice and drifts.
-- Source files are the largest reads. `OpeningExplorer.tsx` is the biggest; splitting it is
-  in `plans/testing.md`.
+- Source files are the largest reads. `OpeningExplorer.tsx` is the biggest; its move
+  navigator is the separate `src/lib/chess/explorerNavigator.ts`.
 - Prefer the Next.js getting-started pages (1–3k tokens) to the full API references (5–10k).
 - Never read `src/lib/chess/generated/openingCatalogIndex.json` (about 3.5M tokens).
 - Test output: `npm run test:changed` and `npm run test:agent` print one line per failure

@@ -1,0 +1,607 @@
+{
+ "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -": {
+  "moves": [
+   {
+    "san": "Nf3",
+    "uci": "g1f3",
+    "white": 157501,
+    "draws": 215246,
+    "black": 124302
+   },
+   {
+    "san": "Nc3",
+    "uci": "b1c3",
+    "white": 14142,
+    "draws": 18021,
+    "black": 13032
+   },
+   {
+    "san": "c3",
+    "uci": "c2c3",
+    "white": 10781,
+    "draws": 16605,
+    "black": 10500
+   },
+   {
+    "san": "d4",
+    "uci": "d2d4",
+    "white": 869,
+    "draws": 1335,
+    "black": 1181
+   },
+   {
+    "san": "d3",
+    "uci": "d2d3",
+    "white": 1073,
+    "draws": 1070,
+    "black": 1009
+   },
+   {
+    "san": "b3",
+    "uci": "b2b3",
+    "white": 971,
+    "draws": 1036,
+    "black": 1048
+   },
+   {
+    "san": "Ne2",
+    "uci": "g1e2",
+    "white": 1069,
+    "draws": 1068,
+    "black": 742
+   },
+   {
+    "san": "f4",
+    "uci": "f2f4",
+    "white": 751,
+    "draws": 1017,
+    "black": 901
+   },
+   {
+    "san": "g3",
+    "uci": "g2g3",
+    "white": 538,
+    "draws": 637,
+    "black": 549
+   },
+   {
+    "san": "c4",
+    "uci": "c2c4",
+    "white": 318,
+    "draws": 504,
+    "black": 549
+   },
+   {
+    "san": "Be2",
+    "uci": "f1e2",
+    "white": 231,
+    "draws": 500,
+    "black": 144
+   },
+   {
+    "san": "b4",
+    "uci": "b2b4",
+    "white": 187,
+    "draws": 220,
+    "black": 281
+   },
+   {
+    "san": "a3",
+    "uci": "a2a3",
+    "white": 130,
+    "draws": 230,
+    "black": 209
+   },
+   {
+    "san": "Na3",
+    "uci": "b1a3",
+    "white": 138,
+    "draws": 112,
+    "black": 103
+   },
+   {
+    "san": "Bc4",
+    "uci": "f1c4",
+    "white": 48,
+    "draws": 44,
+    "black": 70
+   },
+   {
+    "san": "h3",
+    "uci": "h2h3",
+    "white": 7,
+    "draws": 18,
+    "black": 5
+   },
+   {
+    "san": "a4",
+    "uci": "a2a4",
+    "white": 12,
+    "draws": 8,
+    "black": 9
+   },
+   {
+    "san": "Qh5",
+    "uci": "d1h5",
+    "white": 3,
+    "draws": 1,
+    "black": 7
+   },
+   {
+    "san": "Qe2",
+    "uci": "d1e2",
+    "white": 0,
+    "draws": 1,
+    "black": 3
+   },
+   {
+    "san": "e5",
+    "uci": "e4e5",
+    "white": 0,
+    "draws": 1,
+    "black": 2
+   }
+  ],
+  "opening": {
+   "eco": "B20",
+   "name": "Sicilian Defense"
+  },
+  "totals": {
+   "white": 188770,
+   "draws": 257675,
+   "black": 154647
+  },
+  "movesLimit": 20
+ },
+ "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq -": {
+  "moves": [
+   {
+    "san": "Nf6",
+    "uci": "g8f6",
+    "white": 199853,
+    "draws": 280830,
+    "black": 146115
+   },
+   {
+    "san": "d5",
+    "uci": "d7d5",
+    "white": 84934,
+    "draws": 129216,
+    "black": 51709
+   },
+   {
+    "san": "e6",
+    "uci": "e7e6",
+    "white": 14364,
+    "draws": 17012,
+    "black": 10291
+   },
+   {
+    "san": "f5",
+    "uci": "f7f5",
+    "white": 10297,
+    "draws": 11502,
+    "black": 6599
+   },
+   {
+    "san": "d6",
+    "uci": "d7d6",
+    "white": 10005,
+    "draws": 10300,
+    "black": 8083
+   },
+   {
+    "san": "g6",
+    "uci": "g7g6",
+    "white": 9131,
+    "draws": 8293,
+    "black": 7167
+   },
+   {
+    "san": "c5",
+    "uci": "c7c5",
+    "white": 3683,
+    "draws": 2744,
+    "black": 2345
+   },
+   {
+    "san": "Nc6",
+    "uci": "b8c6",
+    "white": 735,
+    "draws": 505,
+    "black": 439
+   },
+   {
+    "san": "c6",
+    "uci": "c7c6",
+    "white": 545,
+    "draws": 831,
+    "black": 296
+   },
+   {
+    "san": "b6",
+    "uci": "b7b6",
+    "white": 434,
+    "draws": 296,
+    "black": 257
+   },
+   {
+    "san": "b5",
+    "uci": "b7b5",
+    "white": 320,
+    "draws": 187,
+    "black": 159
+   },
+   {
+    "san": "a6",
+    "uci": "a7a6",
+    "white": 51,
+    "draws": 65,
+    "black": 67
+   },
+   {
+    "san": "e5",
+    "uci": "e7e5",
+    "white": 70,
+    "draws": 26,
+    "black": 19
+   },
+   {
+    "san": "Na6",
+    "uci": "b8a6",
+    "white": 16,
+    "draws": 19,
+    "black": 10
+   },
+   {
+    "san": "h6",
+    "uci": "h7h6",
+    "white": 18,
+    "draws": 8,
+    "black": 10
+   },
+   {
+    "san": "a5",
+    "uci": "a7a5",
+    "white": 5,
+    "draws": 3,
+    "black": 0
+   },
+   {
+    "san": "f6",
+    "uci": "f7f6",
+    "white": 4,
+    "draws": 2,
+    "black": 0
+   },
+   {
+    "san": "h5",
+    "uci": "h7h5",
+    "white": 3,
+    "draws": 0,
+    "black": 1
+   },
+   {
+    "san": "g5",
+    "uci": "g7g5",
+    "white": 2,
+    "draws": 1,
+    "black": 0
+   },
+   {
+    "san": "Nh6",
+    "uci": "g8h6",
+    "white": 0,
+    "draws": 0,
+    "black": 1
+   }
+  ],
+  "opening": {
+   "eco": "A40",
+   "name": "Queen's Pawn Game"
+  },
+  "totals": {
+   "white": 334470,
+   "draws": 461840,
+   "black": 233568
+  },
+  "movesLimit": 20
+ },
+ "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq -": {
+  "moves": [
+   {
+    "san": "c5",
+    "uci": "c7c5",
+    "white": 188770,
+    "draws": 257675,
+    "black": 154647
+   },
+   {
+    "san": "e5",
+    "uci": "e7e5",
+    "white": 91760,
+    "draws": 159451,
+    "black": 63241
+   },
+   {
+    "san": "e6",
+    "uci": "e7e6",
+    "white": 53695,
+    "draws": 62726,
+    "black": 36635
+   },
+   {
+    "san": "c6",
+    "uci": "c7c6",
+    "white": 34474,
+    "draws": 45898,
+    "black": 25923
+   },
+   {
+    "san": "d6",
+    "uci": "d7d6",
+    "white": 17050,
+    "draws": 16296,
+    "black": 11704
+   },
+   {
+    "san": "g6",
+    "uci": "g7g6",
+    "white": 12747,
+    "draws": 11489,
+    "black": 10802
+   },
+   {
+    "san": "d5",
+    "uci": "d7d5",
+    "white": 9361,
+    "draws": 9001,
+    "black": 5943
+   },
+   {
+    "san": "Nf6",
+    "uci": "g8f6",
+    "white": 7898,
+    "draws": 7960,
+    "black": 5492
+   },
+   {
+    "san": "Nc6",
+    "uci": "b8c6",
+    "white": 2422,
+    "draws": 2097,
+    "black": 1800
+   },
+   {
+    "san": "b6",
+    "uci": "b7b6",
+    "white": 882,
+    "draws": 564,
+    "black": 494
+   },
+   {
+    "san": "a6",
+    "uci": "a7a6",
+    "white": 222,
+    "draws": 111,
+    "black": 130
+   },
+   {
+    "san": "g5",
+    "uci": "g7g5",
+    "white": 23,
+    "draws": 7,
+    "black": 12
+   },
+   {
+    "san": "h6",
+    "uci": "h7h6",
+    "white": 8,
+    "draws": 7,
+    "black": 7
+   },
+   {
+    "san": "Na6",
+    "uci": "b8a6",
+    "white": 3,
+    "draws": 4,
+    "black": 9
+   },
+   {
+    "san": "h5",
+    "uci": "h7h5",
+    "white": 4,
+    "draws": 1,
+    "black": 3
+   },
+   {
+    "san": "Nh6",
+    "uci": "g8h6",
+    "white": 2,
+    "draws": 2,
+    "black": 3
+   },
+   {
+    "san": "f6",
+    "uci": "f7f6",
+    "white": 4,
+    "draws": 0,
+    "black": 1
+   },
+   {
+    "san": "a5",
+    "uci": "a7a5",
+    "white": 1,
+    "draws": 1,
+    "black": 1
+   },
+   {
+    "san": "f5",
+    "uci": "f7f5",
+    "white": 2,
+    "draws": 0,
+    "black": 1
+   }
+  ],
+  "opening": {
+   "eco": "B00",
+   "name": "King's Pawn Game"
+  },
+  "totals": {
+   "white": 419328,
+   "draws": 573290,
+   "black": 316848
+  },
+  "movesLimit": 20
+ },
+ "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -": {
+  "moves": [
+   {
+    "san": "e4",
+    "uci": "e2e4",
+    "white": 419328,
+    "draws": 573290,
+    "black": 316848
+   },
+   {
+    "san": "d4",
+    "uci": "d2d4",
+    "white": 334470,
+    "draws": 461840,
+    "black": 233568
+   },
+   {
+    "san": "Nf3",
+    "uci": "g1f3",
+    "white": 97528,
+    "draws": 130393,
+    "black": 65036
+   },
+   {
+    "san": "c4",
+    "uci": "c2c4",
+    "white": 67094,
+    "draws": 87549,
+    "black": 44799
+   },
+   {
+    "san": "g3",
+    "uci": "g2g3",
+    "white": 7222,
+    "draws": 8018,
+    "black": 5126
+   },
+   {
+    "san": "b3",
+    "uci": "b2b3",
+    "white": 3694,
+    "draws": 4246,
+    "black": 3295
+   },
+   {
+    "san": "f4",
+    "uci": "f2f4",
+    "white": 1872,
+    "draws": 2537,
+    "black": 2288
+   },
+   {
+    "san": "Nc3",
+    "uci": "b1c3",
+    "white": 1126,
+    "draws": 1625,
+    "black": 1237
+   },
+   {
+    "san": "b4",
+    "uci": "b2b4",
+    "white": 511,
+    "draws": 1041,
+    "black": 658
+   },
+   {
+    "san": "e3",
+    "uci": "e2e3",
+    "white": 285,
+    "draws": 318,
+    "black": 315
+   },
+   {
+    "san": "a3",
+    "uci": "a2a3",
+    "white": 240,
+    "draws": 350,
+    "black": 248
+   },
+   {
+    "san": "d3",
+    "uci": "d2d3",
+    "white": 261,
+    "draws": 260,
+    "black": 279
+   },
+   {
+    "san": "c3",
+    "uci": "c2c3",
+    "white": 96,
+    "draws": 134,
+    "black": 108
+   },
+   {
+    "san": "g4",
+    "uci": "g2g4",
+    "white": 55,
+    "draws": 40,
+    "black": 86
+   },
+   {
+    "san": "h3",
+    "uci": "h2h3",
+    "white": 36,
+    "draws": 46,
+    "black": 50
+   },
+   {
+    "san": "h4",
+    "uci": "h2h4",
+    "white": 18,
+    "draws": 18,
+    "black": 17
+   },
+   {
+    "san": "a4",
+    "uci": "a2a4",
+    "white": 8,
+    "draws": 16,
+    "black": 5
+   },
+   {
+    "san": "Nh3",
+    "uci": "g1h3",
+    "white": 9,
+    "draws": 12,
+    "black": 8
+   },
+   {
+    "san": "Na3",
+    "uci": "b1a3",
+    "white": 7,
+    "draws": 7,
+    "black": 4
+   },
+   {
+    "san": "f3",
+    "uci": "f2f3",
+    "white": 3,
+    "draws": 3,
+    "black": 6
+   }
+  ],
+  "totals": {
+   "white": 933863,
+   "draws": 1271743,
+   "black": 673981
+  },
+  "movesLimit": 20
+ }
+}

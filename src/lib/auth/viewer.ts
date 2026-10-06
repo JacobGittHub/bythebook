@@ -4,7 +4,7 @@ import { getAuthenticatedUser } from "@/lib/supabase";
 /** Who is looking at a page. A guest has no account or is signed out. */
 export type Viewer =
   | { signedIn: false }
-  | { signedIn: true; userId: string; displayName: string };
+  | { signedIn: true; userId: string; displayName: string; email: string | null };
 
 /**
  * The viewer of the current request. It is cached for the length of one render, so the
@@ -21,5 +21,5 @@ export const getViewer = cache(async (): Promise<Viewer> => {
       ? username.trim()
       : (user.email?.split("@")[0] ?? "Player");
 
-  return { signedIn: true, userId: user.id, displayName };
+  return { signedIn: true, userId: user.id, displayName, email: user.email ?? null };
 });

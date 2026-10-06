@@ -51,26 +51,15 @@ export function useEngine(fen: string, mode: EngineMode): UseEngineResult {
   const accumulatedRef = useRef<Record<number, EngineLine>>({});
   const depthRef = useRef(0);
 
-  // Keep currentFenRef in sync even when the mode effect hasn't re-run.
-  currentFenRef.current = fen;
+  // Keep currentFenRef in sync even when the mode effect hasn't re-run. It is declared
+  // first, so the effects below see the new fen.
+  useEffect(() => {
+    currentFenRef.current = fen;
+  }, [fen]);
 
   useEffect(() => {
-    if (mode === "none") {
-      const w = workerRef.current;
-      if (w) {
-        try { w.postMessage("quit"); } catch { /* worker may already be gone */ }
-        w.terminate();
-        workerRef.current = null;
-      }
-      isReadyRef.current = false;
-      isSearchingRef.current = false;
-      pendingStopRef.current = false;
-      accumulatedRef.current = {};
-      setLines([]);
-      setIsReady(false);
-      setIsAnalyzing(false);
-      return;
-    }
+    // The previous mode's cleanup has already stopped its worker and cleared its output.
+    if (mode === "none") return;
 
     const depth = DEPTH[mode];
     const multiPv = MULTIPV[mode];
@@ -152,6 +141,8 @@ export function useEngine(fen: string, mode: EngineMode): UseEngineResult {
       isReadyRef.current = false;
       isSearchingRef.current = false;
       pendingStopRef.current = false;
+      accumulatedRef.current = {};
+      setLines([]);
       setIsReady(false);
       setIsAnalyzing(false);
     };

@@ -25,6 +25,7 @@ zoomable 2D map in which every move is a pebble-shaped region inside its parent 
 - D6. The display depth stays at 3 layers below the frame blob (from the note on D2: the
   test image showed 4 layers in many places, and 3 should keep it readable). The layer past
   it only fades in inside a blob being zoomed into (Notes, "Changes to the design").
+  > ME: I think we should consider trying out a 2 layer version. It is difficult to use the labyrinth effectively with 3 layers of depth. 
 - D7. Vocabulary, from the note under "Open questions". This build is the **labyrinth**: the
   dynamic region map, laid out live from whatever the explorer returns. The **atlas** is a
   later, static version that zooms as deep but behaves like a detailed street map, and may
@@ -70,7 +71,7 @@ past it is sealed, saying an account goes deeper; a signed-in user's falls throu
 route as now; and the page opens to guests (changes `deployment.md` D17 and D18). It is not
 atlas data, which needs a date cutoff (`atlas.md`, Q1).
 
-> ME:
+> ME: Yes
 
 ### Q3. The engine size function: when, and how?
 
@@ -78,15 +79,17 @@ atlas data, which needs a date cutoff (`atlas.md`, Q1).
 
 The loading animation is built (Phase 4). **Thoughts on the rest:** Stockfish runs only in
 the browser, so a locked-in search result could be saved per position in `position_evals`.
+> ME: Yes, lets just make sure we can handle the amount of db calls. Should we consider changing the db schema for position evals to handle this framework?
 Weighting each move by how far it falls below the best, say exp(−loss / T), gives an only
 move nearly all the space and splits it evenly between moves of similar strength, good
 position or bad. Asking for 5 to 8 lines with the rest in "Other" matches the master map.
+> ME: We will not need 8 engine line children per blob. More like 3 children max per layer. I like the blob partitioning function.
 Engine blobs need their own look (`architecture.md`), which Q4 should cover.
 
 **Recommendation:** after Phase 7, in its own plan, starting from a pure share function with
 property tests.
 
-> ME:
+> ME: I like the engine share function. We need to find out how the position cache works and be able to prune unimportant lines from display before implementing.
 
 ### Q4. Which look means what on a blob?
 

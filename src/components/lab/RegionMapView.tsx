@@ -10,11 +10,13 @@ import { LabStats, type LabStatRow, type LabStatValues } from "@/components/lab/
 import type { RegionFrame } from "@/components/lab/RegionMap";
 import { PositionPanel } from "@/components/repertoire/PositionPanel";
 import { SignInPrompt } from "@/components/ui/SignInPrompt";
+import { useBugReportSection } from "@/context/BugReport";
 import { useViewer } from "@/context/Viewer";
 import { summarizeMasterGames } from "@/lib/chess/explorerData";
 import { START_FEN, toPositionKey } from "@/lib/chess/fen";
 import { getNodePathByUciLine, mergeMoveLineIntoTree, removeMoveNodeById } from "@/lib/chess/moveTree";
 import { getOpeningForLine } from "@/lib/chess/openingCatalog";
+import { formatRootCamera, type RootCamera } from "@/lib/regions/camera";
 import type { Move, MoveNode, OpeningBook } from "@/types/chess";
 
 const RegionMap = dynamic(() => import("@/components/lab/RegionMap"), {
@@ -58,6 +60,8 @@ function lastMoveLabel(moves: Move[]) {
 type Props = {
   /** The viewer's books. Empty for a guest. */
   initialBooks: OpeningBook[];
+  /** Where the map opens, from the page's `?camera=` (a bug report's "Reproduce" address). */
+  initialCamera?: RootCamera | null;
 };
 
 /**
@@ -65,10 +69,11 @@ type Props = {
  * is inside, with the position panel beside it. The map tells this component its frame
  * position; nothing here reaches into the map.
  */
-export function RegionMapView({ initialBooks }: Props) {
+export function RegionMapView({ initialBooks, initialCamera }: Props) {
   const router = useRouter();
   const { signedIn } = useViewer();
   const statsRef = useRef<LabStatValues>({});
+  const cameraRef = useRef<RootCamera | null>(null);
   const lineRef = useRef<HTMLParagraphElement>(null);
 
   const [frame, setFrame] = useState<RegionFrame | null>(null);
@@ -95,6 +100,34 @@ export function RegionMapView({ initialBooks }: Props) {
     return getOpeningForLine(moves.map((move) => move.fen ?? ""))?.name ?? "Unnamed opening";
   }, [moves]);
   const line = formatLine(moves);
+
+  // What a bug report says about the map. Its address reopens this exact view.
+  useBugReportSection(() => {
+    const camera = cameraRef.current;
+    const stats = statsRef.current;
+    return {
+      title: "Labyrinth",
+      lines: [
+        ["Line", line || "start position"],
+        ["Frame", frame ? `${frame.id || "root"} (${frame.status})` : "not laid out yet"],
+        ["Camera (root frame)", camera ? formatRootCamera(camera) : "not placed yet"],
+        ["Position panel", panelOpen ? "open" : "closed"],
+        ["Stats panel", statsOpen ? "open" : "closed"],
+        ["Book", activeBook ? activeBook.name : "none"],
+        [
+          "Map stats",
+          REGION_STATS.map(({ key, label, format }) => {
+            const value = stats[key];
+            if (typeof value !== "number") return `${label} ${value ?? "–"}`;
+            return `${label} ${format ? format(value) : Math.round(value * 10) / 10}`;
+          }).join(", "),
+        ],
+      ],
+      reproduce: camera
+        ? `${window.location.pathname}?camera=${formatRootCamera(camera)}`
+        : undefined,
+    };
+  });
 
   // A long line scrolls sideways. Keep its newest moves in view.
   useEffect(() => {
@@ -213,7 +246,12 @@ export function RegionMapView({ initialBooks }: Props) {
         <div className="relative min-h-0 flex-1 overflow-hidden rounded-3xl border border-[var(--border-card)]">
           <div className="absolute inset-0">
             <CanvasErrorBoundary>
-              <RegionMap statsRef={statsRef} onFrame={setFrame} />
+              <RegionMap
+                statsRef={statsRef}
+                onFrame={setFrame}
+                initialCamera={initialCamera}
+                cameraRef={cameraRef}
+              />
             </CanvasErrorBoundary>
           </div>
         </div>

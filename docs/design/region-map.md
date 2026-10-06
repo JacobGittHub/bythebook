@@ -320,6 +320,14 @@ when the position or its load status changes, and nothing in the page reaches in
   controls" section, with the stats and how to move. On a wide screen the panel is open beside
   the map, and on a narrow one it is closed and opens under the map. A closed panel is not
   rendered at all, because the board can't animate inside a hidden element.
+- **Bug reports.** In debug mode the page adds its line, frame, camera, panels, book and map
+  stats to the report (`docs/design/dashboard.md`). The camera is written in the root's frame
+  (`formatRootCamera`) and the report's Reproduce address carries it as `?camera=k,tx,ty`,
+  which the page passes to the map as `initialCamera`. The map starts there anchored at the
+  root and re-anchors as the line's positions load, so a view at any depth reopens without
+  expanding its ancestors first. It needs the same window size as the report.
+- **Settled flag.** The canvas carries `data-settled`, true once nothing on show is loading
+  or waiting for layout. Browser tests wait for it before a screenshot.
 
 ## Lab integration
 

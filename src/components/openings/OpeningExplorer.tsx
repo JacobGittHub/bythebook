@@ -1,21 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { BoardInteractive } from "@/components/board/BoardInteractive";
 import { START_FEN } from "@/lib/chess/fen";
 import {
+  getCatalogLineToFen,
   getCatalogMatchesForFen,
   getCatalogMatchesForUciLine,
   searchCatalogMatches,
 } from "@/lib/chess/openingCatalog";
 import {
-  createMoveCommand,
-  createResetCommand,
-  createUndoCommand,
-  getCurrentLineIndex,
-  getRemainingMovesFromLine,
-  type ScriptedBoardCommand,
-} from "@/lib/chess/linePlayback";
+  createNavigator,
+  lineIndex,
+  navigatorReducer,
+  remainingLineMoves,
+} from "@/lib/chess/explorerNavigator";
 import { useOpeningExplorer } from "@/hooks/useOpeningExplorer";
 import { useOpeningExplorerMulti } from "@/hooks/useOpeningExplorerMulti";
 import { useEngine, type EngineMode } from "@/hooks/useEngine";
@@ -49,6 +48,11 @@ function moveResultsToMoves(moveHistory: MoveResult[]): Move[] {
   }));
 }
 
+/** The navigator for a page opened at `initialFen`: it replays the catalog line that reaches it. */
+function initNavigator(initialFen: string | undefined) {
+  return createNavigator<MoveResult>(initialFen ? getCatalogLineToFen(initialFen) : []);
+}
+
 function formatGames(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
@@ -58,18 +62,19 @@ function formatGames(n: number): string {
 export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [selectedMatch, setSelectedMatch] = useState<CatalogMatch | null>(null);
-  const [moveHistory, setMoveHistory] = useState<MoveResult[]>([]);
-  const [scriptedCommand, setScriptedCommand] = useState<ScriptedBoardCommand | null>(null);
-  const [pendingForwardMoves, setPendingForwardMoves] = useState<Move[]>([]);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [playbackError, setPlaybackError] = useState<string | null>(null);
+  // The move navigator: the highlighted line, queued moves and autoplay (lib/chess/explorerNavigator).
+  const [nav, dispatch] = useReducer(navigatorReducer<MoveResult>, initialFen, initNavigator);
+  const {
+    line: selectedMatch,
+    history: moveHistory,
+    command: scriptedCommand,
+    autoPlaying: isAutoPlaying,
+    error: playbackError,
+  } = nav;
   const [engineMode, setEngineMode] = useState<EngineMode>("none");
   const [showEngineArrow, setShowEngineArrow] = useState(true);
   const [boardOrientation, setBoardOrientation] = useState<"white" | "black">("white");
-  const commandNonceRef = useRef(0);
   const blurTimeoutRef = useRef<number | null>(null);
-  const pendingPostResetMovesRef = useRef<Move[]>([]);
 
   // Opening book integration
   const [explorerBooks, setExplorerBooks] = useState<OpeningBook[]>([]);
@@ -88,19 +93,10 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
       .catch(() => {});
   }, [signedIn]);
 
-  // On mount: if initialFen provided, replay catalog moves to reach that position
-  useEffect(() => {
-    if (!initialFen) return;
-    const matches = getCatalogMatchesForFen(initialFen, 1);
-    if (!matches.length || !matches[0].moves.length) return;
-    const movesToPlay = matches[0].moves.map((m) => ({ san: m.san, uci: m.uci }));
-    const [first, ...rest] = movesToPlay;
-    setPendingForwardMoves(rest);
-    setScriptedCommand(createMoveCommand(first, String(++commandNonceRef.current)));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   const { mode } = useBackgroundMode();
-  const [hoveredMoveUci, setHoveredMoveUci] = useState<string | null>(null);
+  // The hovered move is kept with the position it was hovered in, so it lapses when the
+  // board moves on.
+  const [hover, setHover] = useState<{ uci: string; fen: string } | null>(null);
 
   const arrowColor = useMemo(() => {
     switch (mode) {
@@ -112,6 +108,14 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
     }
   }, [mode]);
 
+  const currentMoves = useMemo(() => moveResultsToMoves(moveHistory), [moveHistory]);
+  const currentUciLine = useMemo(() => currentMoves.map((m) => m.uci), [currentMoves]);
+  const currentFen = currentMoves[currentMoves.length - 1]?.fen ?? START_FEN;
+
+  const hoveredMoveUci = hover?.fen === currentFen ? hover.uci : null;
+  const setHoveredMoveUci = (uci: string | null) =>
+    setHover(uci ? { uci, fen: currentFen } : null);
+
   const hoverArrows = useMemo(
     () =>
       hoveredMoveUci
@@ -119,15 +123,6 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
         : [],
     [hoveredMoveUci, arrowColor],
   );
-
-  const currentMoves = useMemo(() => moveResultsToMoves(moveHistory), [moveHistory]);
-  const currentUciLine = useMemo(() => currentMoves.map((m) => m.uci), [currentMoves]);
-  const currentFen = currentMoves[currentMoves.length - 1]?.fen ?? START_FEN;
-
-  // Clear hover arrow whenever the board position changes.
-  useEffect(() => {
-    setHoveredMoveUci(null);
-  }, [currentFen]);
 
   const engine = useEngine(currentFen, engineMode);
 
@@ -178,23 +173,12 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
     prefixMatches.length > 0 ? "prefix" : fenMatches.length > 0 ? "position" : "none";
   const effectiveMatches = matchMode === "prefix" ? prefixMatches : fenMatches;
 
-  const highlightedLineMoves = useMemo(() => selectedMatch?.moves ?? [], [selectedMatch]);
-  const currentBoardIndexWithinHighlightedLine = selectedMatch
-    ? getCurrentLineIndex(currentMoves, highlightedLineMoves)
-    : -1;
-  const isBoardOnHighlightedLine =
-    selectedMatch ? currentBoardIndexWithinHighlightedLine !== -1 : false;
-  const remainingHighlightedMoves = useMemo(
-    () =>
-      selectedMatch ? getRemainingMovesFromLine(currentMoves, highlightedLineMoves) : [],
-    [currentMoves, highlightedLineMoves, selectedMatch],
-  );
+  const currentBoardIndexWithinHighlightedLine = lineIndex(nav);
+  const isBoardOnHighlightedLine = currentBoardIndexWithinHighlightedLine !== -1;
 
   const canGoToStart = currentMoves.length > 0;
   const canUndo = currentMoves.length > 0;
-  const canGoForward = Boolean(
-    selectedMatch && isBoardOnHighlightedLine && remainingHighlightedMoves.length > 0,
-  );
+  const canGoForward = remainingLineMoves(nav).length > 0;
   const canGoToEnd = canGoForward;
   const canAutoPlay = canGoForward;
 
@@ -241,20 +225,15 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
     });
   }, [moveHistory, historyExplorerData]);
 
-  const nextCommandId = () => {
-    commandNonceRef.current += 1;
-    return String(commandNonceRef.current);
-  };
-
+  // Autoplay sends the next move a moment after each one lands.
   useEffect(() => {
     if (!isAutoPlaying || !canAutoPlay) return;
-    const nextMove = remainingHighlightedMoves[0];
-    if (!nextMove) return;
-    const timeoutId = window.setTimeout(() => {
-      setScriptedCommand(createMoveCommand(nextMove, nextCommandId()));
-    }, AUTO_PLAY_DELAY_MS);
+    const timeoutId = window.setTimeout(
+      () => dispatch({ type: "autoPlayTick" }),
+      AUTO_PLAY_DELAY_MS,
+    );
     return () => window.clearTimeout(timeoutId);
-  }, [canAutoPlay, isAutoPlaying, remainingHighlightedMoves]);
+  }, [canAutoPlay, isAutoPlaying, moveHistory]);
 
   useEffect(() => {
     return () => {
@@ -262,132 +241,40 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
     };
   }, []);
 
-  const handleHighlightMatch = (match: CatalogMatch) => {
-    setSelectedMatch(match);
-    setPendingForwardMoves([]);
-    setIsAutoPlaying(false);
-    setPlaybackError(null);
-  };
-
   const handleHighlightFromSearch = (match: CatalogMatch) => {
-    handleHighlightMatch(match);
+    dispatch({ type: "highlight", line: match });
     setSearchQuery("");
     setIsSearchFocused(false);
   };
 
-  const handleBoardMove = (move: MoveResult) => {
-    const nextMoves = [...currentMoves, { san: move.san, uci: move.uci, fen: move.fen }];
-    setMoveHistory((prev) => [...prev, move]);
-    setPlaybackError(null);
+  const handleBoardMove = (move: MoveResult) => dispatch({ type: "boardMoved", move });
+  const handleBoardUndo = () => dispatch({ type: "boardUndone" });
+  const handleBoardReset = () => dispatch({ type: "boardReset" });
+  const handleIllegalMove = () => dispatch({ type: "illegalMove" });
 
-    if (isAutoPlaying && selectedMatch) {
-      const nextIndex = getCurrentLineIndex(nextMoves, highlightedLineMoves);
-      if (nextIndex === -1 || getRemainingMovesFromLine(nextMoves, highlightedLineMoves).length === 0) {
-        setIsAutoPlaying(false);
-      }
-    }
-
-    if (pendingForwardMoves.length > 0) {
-      const [nextPending, ...rest] = pendingForwardMoves;
-      setPendingForwardMoves(rest);
-      setScriptedCommand(createMoveCommand(nextPending, nextCommandId()));
-    }
-  };
-
-  const handleBoardUndo = () => {
-    setMoveHistory((prev) => prev.slice(0, -1));
-    setPendingForwardMoves([]);
-    setIsAutoPlaying(false);
-    setPlaybackError(null);
-  };
-
-  const handleBoardReset = () => {
-    setMoveHistory([]);
-    setIsAutoPlaying(false);
-    setPlaybackError(null);
-    const postResetMoves = pendingPostResetMovesRef.current;
-    pendingPostResetMovesRef.current = [];
-    if (postResetMoves.length > 0) {
-      const [first, ...rest] = postResetMoves;
-      setPendingForwardMoves(rest);
-      setScriptedCommand(createMoveCommand(first, nextCommandId()));
-    } else {
-      setPendingForwardMoves([]);
-    }
-  };
+  /** Goes to the position after `moves`, through a reset and a replay. */
+  const goToLine = (moves: Move[]) => dispatch({ type: "goToLine", moves });
 
   const handleHistoryAlternateClick = (fullMoveIndex: number, move: ExplorerMove) => {
-    const movesToPlay: Move[] = [
+    goToLine([
       ...moveHistory.slice(0, fullMoveIndex).map((m) => ({ san: m.san, uci: m.uci })),
       { san: move.san, uci: move.uci },
-    ];
-    setPendingForwardMoves([]);
-    setIsAutoPlaying(false);
-    pendingPostResetMovesRef.current = movesToPlay;
-    setScriptedCommand(createResetCommand(nextCommandId()));
+    ]);
   };
 
   const handleHistoryNodeClick = (fullMoveIndex: number) => {
     if (fullMoveIndex === moveHistory.length - 1) return;
-    const movesToPlay: Move[] = moveHistory
-      .slice(0, fullMoveIndex + 1)
-      .map((m) => ({ san: m.san, uci: m.uci }));
-    setPendingForwardMoves([]);
-    setIsAutoPlaying(false);
-    pendingPostResetMovesRef.current = movesToPlay;
-    setScriptedCommand(createResetCommand(nextCommandId()));
+    goToLine(moveHistory.slice(0, fullMoveIndex + 1).map((m) => ({ san: m.san, uci: m.uci })));
   };
 
-  const handleGoToStart = () => {
-    if (!canGoToStart) return;
-    setPendingForwardMoves([]);
-    setIsAutoPlaying(false);
-    setScriptedCommand(createResetCommand(nextCommandId()));
-  };
-
-  const handleUndoMove = () => {
-    if (!canUndo) return;
-    setPendingForwardMoves([]);
-    setIsAutoPlaying(false);
-    setScriptedCommand(createUndoCommand(nextCommandId()));
-  };
-
-  const handleStepForward = () => {
-    if (!canGoForward) return;
-    const nextMove = remainingHighlightedMoves[0];
-    if (!nextMove) return;
-    setPendingForwardMoves([]);
-    setIsAutoPlaying(false);
-    setScriptedCommand(createMoveCommand(nextMove, nextCommandId()));
-  };
-
-  const handleGoToEnd = () => {
-    if (!canGoToEnd) return;
-    const [firstMove, ...rest] = remainingHighlightedMoves;
-    if (!firstMove) return;
-    setPendingForwardMoves(rest);
-    setIsAutoPlaying(false);
-    setScriptedCommand(createMoveCommand(firstMove, nextCommandId()));
-  };
-
-  const handleToggleAutoPlay = () => {
-    if (isAutoPlaying) { setIsAutoPlaying(false); return; }
-    if (!canAutoPlay) return;
-    setPendingForwardMoves([]);
-    setPlaybackError(null);
-    setIsAutoPlaying(true);
-  };
-
-  const handleIllegalMove = () => {
-    setPendingForwardMoves([]);
-    setIsAutoPlaying(false);
-    setPlaybackError("Move could not be applied to the current board state.");
-  };
+  const handleGoToStart = () => dispatch({ type: "goToStart" });
+  const handleUndoMove = () => dispatch({ type: "undo" });
+  const handleStepForward = () => dispatch({ type: "stepForward" });
+  const handleGoToEnd = () => dispatch({ type: "goToEnd" });
+  const handleToggleAutoPlay = () => dispatch({ type: "toggleAutoPlay" });
 
   const handleExplorerMoveClick = (move: ExplorerMove) => {
-    setPendingForwardMoves([]);
-    setIsAutoPlaying(false);
-    setScriptedCommand(createMoveCommand({ san: move.san, uci: move.uci }, nextCommandId()));
+    dispatch({ type: "playMove", move: { san: move.san, uci: move.uci } });
   };
 
   const matchModeLabel =
@@ -443,19 +330,12 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
     if (!lineJson) return;
     const moves: { san: string; uci: string }[] = JSON.parse(lineJson);
     if (!moves.length) return;
-    pendingPostResetMovesRef.current = moves;
-    setPendingForwardMoves([]);
-    setIsAutoPlaying(false);
-    setScriptedCommand(createResetCommand(nextCommandId()));
+    goToLine(moves);
   };
 
   const handleClickMoveToken = (index: number) => {
     if (selectedMatch) {
-      const movesToPlay = selectedMatch.moves.slice(0, index + 1).map((m) => ({ san: m.san, uci: m.uci }));
-      setPendingForwardMoves([]);
-      setIsAutoPlaying(false);
-      pendingPostResetMovesRef.current = movesToPlay;
-      setScriptedCommand(createResetCommand(nextCommandId()));
+      goToLine(selectedMatch.moves.slice(0, index + 1).map((m) => ({ san: m.san, uci: m.uci })));
     } else {
       // Navigate to position after this move in the current board history
       handleHistoryNodeClick(index);
@@ -884,7 +764,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
               <p className="text-xs text-amber-600">Board diverged from highlighted line.</p>
               <button
                 type="button"
-                onClick={() => { setSelectedMatch(null); setPlaybackError(null); }}
+                onClick={() => dispatch({ type: "clearLine" })}
                 className="text-xs font-medium text-amber-600 underline hover:text-amber-700"
               >
                 Clear line

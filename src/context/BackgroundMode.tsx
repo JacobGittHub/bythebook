@@ -4,7 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 
@@ -31,22 +31,58 @@ function applyMode(mode: BackgroundMode) {
   else html.classList.remove("dark");
 }
 
+// The mode is an external store kept in localStorage. The server and the first client
+// render use the default, and the stored mode follows straight after hydration.
+const listeners = new Set<() => void>();
+/** The mode on this page. Null until read from storage, or after another tab changes it. */
+let current: BackgroundMode | null = null;
+
+function notify() {
+  listeners.forEach((listener) => listener());
+}
+
+function onStorage() {
+  current = null;
+  notify();
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  if (listeners.size === 1) window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) window.removeEventListener("storage", onStorage);
+  };
+}
+
+function readMode(): BackgroundMode {
+  if (current === null) {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY) as BackgroundMode | null;
+      current = stored && VALID_MODES.includes(stored) ? stored : DEFAULT_MODE;
+    } catch {
+      current = DEFAULT_MODE;
+    }
+  }
+  return current;
+}
+
+function setMode(mode: BackgroundMode) {
+  current = mode;
+  try {
+    localStorage.setItem(STORAGE_KEY, mode);
+  } catch {
+    // Storage is blocked, so the mode lasts for this page only.
+  }
+  notify();
+}
+
 export function BackgroundModeProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<BackgroundMode>(DEFAULT_MODE);
+  const mode = useSyncExternalStore(subscribe, readMode, () => DEFAULT_MODE);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as BackgroundMode | null;
-    const initial =
-      stored && VALID_MODES.includes(stored) ? stored : DEFAULT_MODE;
-    applyMode(initial);
-    setModeState(initial);
-  }, []);
-
-  function setMode(m: BackgroundMode) {
-    applyMode(m);
-    setModeState(m);
-    localStorage.setItem(STORAGE_KEY, m);
-  }
+    applyMode(mode);
+  }, [mode]);
 
   return (
     <BackgroundModeContext.Provider value={{ mode, setMode }}>

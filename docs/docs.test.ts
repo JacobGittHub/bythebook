@@ -31,7 +31,7 @@ const NOT_BUILT = new Set([
 
 /**
  * Names that aren't in this repository's code: library APIs, removed code the docs record as
- * history, and gitignored local files.
+ * history, gitignored local files and folders, and folders that stay empty until used.
  */
 const NOT_IN_REPO = new Set([
   "InstancedMesh",
@@ -40,6 +40,9 @@ const NOT_IN_REPO = new Set([
   "OpeningTreeGraph",
   "useMoveTreeLayout",
   ".claude/settings.local.json",
+  "test-results/",
+  "playwright-report/",
+  "e2e/screens/bugs/",
 ]);
 
 /** What CI sees: tracked files plus new ones that aren't ignored. */
@@ -69,8 +72,12 @@ const packages = new Set(Object.keys({ ...pkg.dependencies, ...pkg.devDependenci
 
 /** All code the docs may name, in one string. Generated files and data are left out. */
 const sourceText = files
-  .filter((f) => /^(src|scripts|supabase)\//.test(f) && /\.(ts|tsx|mts|mjs|css|sql)$/.test(f))
-  .concat(["next.config.ts", "package.json"])
+  .filter(
+    (f) =>
+      (/^(src|scripts|supabase|e2e)\//.test(f) && /\.(ts|tsx|mts|mjs|css|sql)$/.test(f)) ||
+      /^\.github\/workflows\/.+\.yml$/.test(f),
+  )
+  .concat(["next.config.ts", "playwright.config.ts", "package.json"])
   .map(read)
   .join("\n");
 

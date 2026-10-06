@@ -12,6 +12,11 @@
     "test:agent": "vitest run --reporter=dot --bail=1 --silent=passed-only",
     "test:changed": "vitest run --changed --reporter=dot --silent=passed-only",
     "test:related": "vitest related --run --reporter=dot --silent=passed-only",
+    "test:e2e": "playwright test --project=chromium --project=firefox --project=webkit --project=phone-chromium --project=phone-webkit",
+    "test:e2e:clean": "node scripts/cleanTestOutput.mjs",
+    "test:screens": "playwright test --project=screens",
+    "test:screens:update": "playwright test --project=screens --update-snapshots",
+    "screens:flush": "node scripts/flushScreens.mjs",
     "docs:check": "vitest run docs --reporter=dot",
     "docs:sizes": "node scripts/docSizes.mjs",
     "catalog:download": "node scripts/buildCatalog.mjs",
@@ -38,6 +43,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/d3": "^7.4.3",
     "@types/node": "^22.20.4",

@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BugReportButton } from "@/components/layout/BugReportButton";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { BugReportProvider } from "@/context/BugReport";
 import { ViewerProvider } from "@/context/Viewer";
 import { visibleNavItems } from "@/lib/auth/access";
 import { betaContactEmail, betaKeyMailto } from "@/lib/auth/contact";
+import { canDebug } from "@/lib/auth/debug";
 import { getViewer } from "@/lib/auth/viewer";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
@@ -37,6 +40,7 @@ export default async function DashboardLayout({
 
       {/* Account block */}
       <div className="mt-auto grid gap-1 pt-6">
+        {canDebug(viewer) && <BugReportButton signedIn={viewer.signedIn} className={linkClass} />}
         <div className="grid gap-1 border-t border-white/10 pt-4">
           {viewer.signedIn ? (
             <>
@@ -81,8 +85,11 @@ export default async function DashboardLayout({
   );
 
   return (
-    <DashboardShell sidebar={sidebar}>
-      <ViewerProvider signedIn={viewer.signedIn}>{children}</ViewerProvider>
-    </DashboardShell>
+    // The bug report provider wraps the sidebar too, so its button can read the page.
+    <BugReportProvider>
+      <DashboardShell sidebar={sidebar}>
+        <ViewerProvider signedIn={viewer.signedIn}>{children}</ViewerProvider>
+      </DashboardShell>
+    </BugReportProvider>
   );
 }

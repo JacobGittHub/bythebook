@@ -42,9 +42,11 @@ which is not in development.
 |---|---|
 | Dev server | `npm run dev` |
 | Typecheck | `npx tsc --noEmit` (passes; keep it passing) |
-| Lint | `npm run lint` (pre-existing React hooks errors remain, listed in `plans/testing.md`; add none) |
+| Lint | `npm run lint` (reports no problems; keep it that way, since CI fails on any) |
 | Tests while working | `npm run test:changed` (tests affected by uncommitted changes), or `npm run test:related -- <files>` |
 | All tests | `npm run test:agent` (one line per failure, stops at the first); `npm test` for the full report |
+| Browser tests | `npm run test:e2e` (Playwright, all browsers; starts the dev server or uses a running one), `npm run test:e2e:clean` (deletes run output) |
+| Screenshot tests | `npm run test:screens`, `npm run test:screens:update` (new baselines), `npm run screens:flush` (list or delete them) |
 | Agent docs | `npm run docs:check` (`docs/docs.test.ts` alone; `npm test` includes it), `npm run docs:sizes` (token estimates) |
 | Production build | `npm run build` |
 | Rebuild the opening catalog | `npm run catalog:download`, then `npm run catalog:index` |
@@ -53,9 +55,19 @@ which is not in development.
 | Regenerate DB types | `npm run db:types` (see "Database changes" below) |
 
 To check a change, run the typecheck, `npm run test:agent`, and lint on the files you
-touched. For UI changes, also run the app and look at the result. Tests sit next to what they
-test as `*.test.ts` and run in Node, so keep tested code free of browser APIs. Vitest is for
-code that runs without a browser; browser tests will be Playwright's (`plans/testing.md`).
+touched. For UI changes, also run `npm run test:e2e` and look at the result. Tests sit next to
+what they test as `*.test.ts` and run in Node, so keep tested code free of browser APIs.
+Vitest is for code that runs without a browser; browser tests are Playwright's, in `e2e/`
+(`docs/architecture.md` § "Browser tests"). CI runs both on every push.
+
+**When the user pastes a bug report** (the debug-mode button's text), open its Reproduce
+address, or its page at its window size, in Playwright, and screenshot it before and after the
+fix. Keep a visual bug as a screenshot spec in `e2e/screens/bugs/`.
+
+**Clean up after browser tests.** Run output only goes to `test-results/` and
+`playwright-report/`, and baselines only to `e2e/screens/`. After a session that ran
+Playwright, run `npm run test:e2e:clean`. When a session touched screenshots, run
+`npm run screens:flush` to list them, and offer to delete any whose bug or view is finished.
 
 ## Environment
 
@@ -68,8 +80,10 @@ code that runs without a browser; browser tests will be Playwright's (`plans/tes
 - The React Compiler is not enabled. Don't use it.
 - `.env.local` (never commit it) holds `NEXT_PUBLIC_SUPABASE_URL`,
   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and `LICHESS_API_TOKEN`, and optionally
-  `NEXT_PUBLIC_BETA_CONTACT_EMAIL` (the address behind the beta key and reset code links). Only
-  `NEXT_PUBLIC_*` values may reach client code.
+  `NEXT_PUBLIC_BETA_CONTACT_EMAIL` (the address behind the beta key and reset code links),
+  `DEBUG_MODE` and `DEBUG_EMAILS` (debug mode, `docs/design/dashboard.md`), and `E2E_EMAIL` and
+  `E2E_PASSWORD` (the browser tests' account). Only `NEXT_PUBLIC_*` values may reach client
+  code.
 
 ## Where things live
 

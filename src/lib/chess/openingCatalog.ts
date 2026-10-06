@@ -201,6 +201,17 @@ export function getCatalogMatchesForFen(
   return hydrateMatches(getOpeningIdsForPositionKey(toPositionKey(fen)), maxResults);
 }
 
+/**
+ * The moves that reach this position from the start, taken from the longest named line
+ * through it and cut off at the position. Empty when no named line passes through it.
+ */
+export function getCatalogLineToFen(fen: string): Move[] {
+  const key = toPositionKey(fen);
+  const match = getCatalogMatchesForFen(fen, 1)[0];
+  const end = match?.moves.findIndex((move) => move.fen && toPositionKey(move.fen) === key) ?? -1;
+  return end === -1 ? [] : match.moves.slice(0, end + 1).map(({ san, uci }) => ({ san, uci }));
+}
+
 let openingByFinalPositionKey: Map<string, GeneratedCatalogOpening> | null = null;
 
 /**

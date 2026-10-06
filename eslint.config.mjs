@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Vendored Stockfish build, byte-identical copies of node_modules/stockfish/bin.
     "public/engine/**",
+    // Playwright's run output (scripts/cleanTestOutput.mjs deletes it).
+    "test-results/**",
+    "playwright-report/**",
+    "blob-report/**",
   ]),
 ]);
 

@@ -301,6 +301,30 @@ line still supported, so the types never offer an API that a Node 22 deployment 
 (local development runs Node 24). `tsx` (dev only) runs the TypeScript scripts in `scripts/`
 that import from `src/`, since plain Node can't resolve the `@/*` alias.
 
+**Browser tests.** `@playwright/test` (dev only) runs `e2e/` against the running app
+(`playwright.config.ts`): the functional specs in Chromium, Firefox, WebKit and two phone
+sizes, and the screenshot specs in `e2e/screens/` in Chromium only. The rest of the setup:
+
+- **Explorer data.** Every spec imports `test` from `e2e/fixtures/test.ts`, which answers
+  `/api/openings/explorer` from `e2e/fixtures/explorer.json`, so no test depends on the cache
+  or Lichess. A position that isn't recorded gets the guest's 404. To add positions, run the
+  specs once with `E2E_RECORD_EXPLORER=1` and `--workers=1`; as a guest that reads only the
+  cache.
+- **The test account.** Specs that need an account use the session that `e2e/auth.setup.ts`
+  saves after signing in as `E2E_EMAIL` and `E2E_PASSWORD`. Without them those specs skip.
+- **Screenshots** run locally only, against Windows baselines committed next to their spec.
+  CI leaves them out because Linux renders fonts differently. They are temporary, and
+  `npm run screens:flush` lists and deletes them. Specs made from bug reports go in
+  `e2e/screens/bugs/`.
+- **Run output** goes to `test-results/` and `playwright-report/`, which are gitignored and
+  deleted by `npm run test:e2e:clean`. Traces and videos are kept only for failing tests.
+
+**CI.** `.github/workflows/ci.yml` runs on every push and pull request: the typecheck, lint
+with no warnings allowed, and Vitest in one job, and in the other the production build and
+`npm run test:e2e`. The second job needs the repository secrets `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, and optionally `E2E_EMAIL` and `E2E_PASSWORD`. Its report is
+kept for 5 days when a test fails.
+
 These are not wanted: `cytoscape`, `vis-network`, `react-force-graph`, graph layout engines
 (Cola.js, dagre, Graphviz WASM), physics engines (Cannon, Rapier) and shader libraries.
 Force layouts are incompatible with containment, and nothing here needs a general graph

@@ -10,6 +10,7 @@ import {
   reanchor,
   zoomAbout,
   type Camera,
+  type RootCamera,
   type Viewport,
 } from "@/lib/regions/camera";
 import type { Vec } from "@/lib/regions/geometry";
@@ -61,8 +62,17 @@ export type RegionFrame = {
 export default function RegionMap({
   statsRef,
   onFrame,
+  initialCamera,
+  cameraRef,
 }: {
   statsRef?: RefObject<LabStatValues>;
+  /**
+   * Where the map opens, in the root's frame (the page's `?camera=`). Centred by default. A
+   * new object rebuilds the map, so pass one that stays the same between renders.
+   */
+  initialCamera?: RootCamera | null;
+  /** Kept up to date with the camera in the root's frame, for bug reports. */
+  cameraRef?: RefObject<RootCamera | null>;
   /**
    * Told the frame's position whenever it or its load status changes. Pass a function that
    * stays the same between renders, such as a state setter: a new one rebuilds the map.
@@ -112,6 +122,10 @@ export default function RegionMap({
       scene = buildScene(anchor, camera, viewport);
       // Follow the frame, so the camera's numbers stay small at any depth.
       camera = reanchor(camera, anchor, scene.frame);
+      if (cameraRef) {
+        const { k, tx, ty } = reanchor(camera, scene.frame, store.root);
+        cameraRef.current = { k, tx, ty };
+      }
 
       // Subdivide the blobs whose positions have loaded, and ask for the rest.
       const started = performance.now();
@@ -179,6 +193,9 @@ export default function RegionMap({
         shownPhase = nextPhase;
         setPhase(nextPhase);
       }
+      // Browser tests wait for this before a screenshot: nothing on show is loading or
+      // waiting to be laid out, so the next frame would draw the same picture.
+      canvas.dataset.settled = String(!dirty && load.inFlight + load.queued === 0);
     }
 
     function writeStats() {
@@ -218,7 +235,10 @@ export default function RegionMap({
       camera = camera
         ? // Keep what was at the centre of the view at the centre.
           panBy(camera, (width - viewport.width) / 2, (height - viewport.height) / 2)
-        : centredCamera(store.root.id, 2 * store.root.reach, next, INITIAL_ROOT_SHARE);
+        : initialCamera
+          ? // Nothing below the root has loaded yet; the camera re-anchors as it does.
+            { anchorId: store.root.id, ...initialCamera }
+          : centredCamera(store.root.id, 2 * store.root.reach, next, INITIAL_ROOT_SHARE);
       viewport = next;
       dirty = true;
     });
@@ -369,7 +389,7 @@ export default function RegionMap({
       canvas.removeEventListener("wheel", onWheel);
       loader.dispose();
     };
-  }, [statsRef, onFrame]);
+  }, [statsRef, onFrame, initialCamera, cameraRef]);
 
   return (
     <div className="relative h-full w-full">
