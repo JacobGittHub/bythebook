@@ -4,9 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BoardDisplay } from "@/components/board/BoardDisplay";
-import { SignInPrompt } from "@/components/ui/SignInPrompt";
-import { useViewer } from "@/context/Viewer";
-import { creditLine, type ExampleBook } from "@/lib/books/examples";
+import { useLibraryBook, useLibraryBooks } from "@/context/Library";
+import { EXAMPLE_ID_PREFIX, creditLine, type ExampleBook } from "@/lib/books/examples";
 import { MAX_BOOK_POSITIONS } from "@/lib/books/measures";
 import { BOOK_VIEWS, type BookViewId } from "@/lib/books/views";
 import {
@@ -42,8 +41,6 @@ const formatCount = (n: number) => n.toLocaleString("en-US");
 
 type Props = {
   view: BookViewId;
-  /** The viewer's own books; empty for a guest. */
-  initialBooks: LibraryBook[];
   /** The book named in the address, if any. */
   initialBookId: string | null;
 };
@@ -52,15 +49,17 @@ type Props = {
  * A small visualization page: one book drawn by one of the five book views, with a board for
  * the selected or hovered position and what the book's card will say about it.
  */
-export function BookViewPage({ view: initialView, initialBooks, initialBookId }: Props) {
+export function BookViewPage({ view: initialView, initialBookId }: Props) {
   const router = useRouter();
-  const { signedIn } = useViewer();
   const [view, setView] = useState<BookViewId>(initialView);
   const [bookId, setBookId] = useState<string>(initialBookId ?? FIRST_EXAMPLE);
   const { entries, books: examples, failed } = useExampleBooks(bookId);
+  // The viewer's own books, a guest's included, from the library.
+  const { books: ownBooks } = useLibraryBooks();
+  const isExample = bookId.startsWith(EXAMPLE_ID_PREFIX);
+  const { book: ownBook, status: ownStatus } = useLibraryBook(isExample ? null : bookId);
 
-  const book: LibraryBook | ExampleBook | null =
-    examples.get(bookId) ?? initialBooks.find((candidate) => candidate.id === bookId) ?? null;
+  const book: LibraryBook | ExampleBook | null = isExample ? (examples.get(bookId) ?? null) : ownBook;
   const tree = useMemo(() => (book ? buildViewTree(startTree(book.trees)) : null), [book]);
 
   // The selection belongs to the book it was made in; another book starts down its main line.
@@ -146,9 +145,9 @@ export function BookViewPage({ view: initialView, initialBooks, initialBookId }:
                   </option>
                 ))}
               </optgroup>
-              {initialBooks.length > 0 && (
+              {ownBooks && ownBooks.length > 0 && (
                 <optgroup label="Your books">
-                  {initialBooks.map((own) => (
+                  {ownBooks.map((own) => (
                     <option key={own.id} value={own.id}>
                       {own.name} ({own.color})
                     </option>
@@ -157,7 +156,6 @@ export function BookViewPage({ view: initialView, initialBooks, initialBookId }:
               )}
             </select>
           </label>
-          {!signedIn && <SignInPrompt action="see your own books here" className="text-xs" />}
           <Link href="/dashboard/visualizations" className="btn-ghost shrink-0 rounded-lg px-2 py-1 text-xs">
             All visualizations
           </Link>
@@ -179,7 +177,15 @@ export function BookViewPage({ view: initialView, initialBooks, initialBookId }:
             />
           ) : (
             <p className="m-auto text-sm text-[var(--text-muted)]">
-              {failed ? "The example books didn't load." : "Loading the book…"}
+              {isExample
+                ? failed
+                  ? "The example books didn't load."
+                  : "Loading the book…"
+                : ownStatus === "missing"
+                  ? "This book isn't in your library."
+                  : ownStatus === "failed"
+                    ? "The book couldn't be opened."
+                    : "Loading the book…"}
             </p>
           )}
         </div>

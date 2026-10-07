@@ -8,8 +8,9 @@ import { Chess } from "chess.js";
 import { z } from "zod";
 import { START_FEN } from "@/lib/chess/fen";
 import { buildMoveTreeFromLines } from "@/lib/chess/moveTree";
+import { fitBookName } from "@/lib/library/names";
 import { summarize } from "@/lib/library/summary";
-import type { LibraryBook } from "@/lib/library/types";
+import type { BookDraft, LibraryBook } from "@/lib/library/types";
 import type { Move, MoveNode } from "@/types/chess";
 
 /** Where the example books are served from. */
@@ -132,6 +133,11 @@ export function exampleBookFromFile(file: ExampleBookFile): ExampleBook {
     attribution: file.attribution,
     rules: file.rules,
   };
+}
+
+/** An example book as a book to save: a store book from `EXAMPLE_PUBLISHER`, with its credit (D24). */
+export function exampleDraft(book: ExampleBook): BookDraft {
+  return { name: fitBookName(book.name), color: book.color, origin: book.origin, trees: book.trees };
 }
 
 /** The SAN lines of a tree, one per leaf, the reverse of `exampleBookFromFile`. */

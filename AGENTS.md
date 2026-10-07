@@ -197,7 +197,9 @@ edit these files.
 - Every route handler except `/api/openings/explorer` returns 401 without a user.
 - A component that reads or saves account data checks `useViewer()` (client) or
   `getViewer()` (server) first, so a guest causes no request that is bound to fail and sees
-  `SignInPrompt` in place of the control.
+  `SignInPrompt` in place of the control. Books are not account data: pages read and save
+  them through `useLibrary()` (`src/context/Library.tsx`), which keeps a guest's in the
+  browser.
 
 **Generated files (never hand-edit)**
 

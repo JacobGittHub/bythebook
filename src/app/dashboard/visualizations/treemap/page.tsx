@@ -1,21 +1,17 @@
 import { DashboardTree } from "@/components/repertoire/DashboardTree";
-import { getViewer } from "@/lib/auth/viewer";
-import { listBooksWithTrees } from "@/lib/db/openings";
 
 type Props = {
   searchParams: Promise<{ bookId?: string }>;
 };
 
-// The Treemap: the opening tree, reached from the Visualizations page.
+// The Treemap: the opening tree, reached from the Visualizations page. The viewer's books
+// are read in the browser, from the library.
 export default async function TreemapPage({ searchParams }: Props) {
-  const [viewer, { bookId }] = await Promise.all([getViewer(), searchParams]);
-  // A guest has no books, so the database isn't asked.
-  const books = viewer.signedIn ? await listBooksWithTrees(viewer.userId) : [];
-  const initialBookId = bookId ?? null;
+  const { bookId } = await searchParams;
 
   return (
     <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">
-      <DashboardTree initialBooks={books} initialBookId={initialBookId} />
+      <DashboardTree initialBookId={bookId ?? null} />
     </div>
   );
 }

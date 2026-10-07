@@ -9,16 +9,14 @@ import { LabSpinner } from "@/components/lab/LabSpinner";
 import { LabStats, type LabStatRow, type LabStatValues } from "@/components/lab/LabStats";
 import type { RegionFrame } from "@/components/lab/RegionMap";
 import { PositionPanel } from "@/components/repertoire/PositionPanel";
-import { SignInPrompt } from "@/components/ui/SignInPrompt";
 import { useBugReportSection } from "@/context/BugReport";
-import { useViewer } from "@/context/Viewer";
+import { useLibraryBook, useLibraryBooks } from "@/context/Library";
 import { summarizeMasterGames } from "@/lib/chess/explorerData";
 import { getNodePathByUciLine, mergeMoveLineIntoTree, removeMoveNodeById } from "@/lib/chess/moveTree";
 import { getOpeningForLine } from "@/lib/chess/openingCatalog";
 import { formatRootCamera, type RootCamera } from "@/lib/regions/camera";
-import { STALE_BOOK_MESSAGE, saveStartTree } from "@/lib/library/accountStore";
-import { startTree } from "@/lib/library/trees";
-import type { LibraryBook } from "@/lib/library/types";
+import { STALE_BOOK_MESSAGE, startTree } from "@/lib/library/trees";
+import { libraryErrorMessage } from "@/lib/library/types";
 import type { Move, MoveNode } from "@/types/chess";
 
 const RegionMap = dynamic(() => import("@/components/lab/RegionMap"), {
@@ -60,8 +58,6 @@ function lastMoveLabel(moves: Move[]) {
 }
 
 type Props = {
-  /** The viewer's books. Empty for a guest. */
-  initialBooks: LibraryBook[];
   /** Where the map opens, from the page's `?camera=` (a bug report's "Reproduce" address). */
   initialCamera?: RootCamera | null;
 };
@@ -71,16 +67,16 @@ type Props = {
  * is inside, with the position panel beside it. The map tells this component its frame
  * position; nothing here reaches into the map.
  */
-export function RegionMapView({ initialBooks, initialCamera }: Props) {
+export function RegionMapView({ initialCamera }: Props) {
   const router = useRouter();
-  const { signedIn } = useViewer();
   const statsRef = useRef<LabStatValues>({});
   const cameraRef = useRef<RootCamera | null>(null);
   const lineRef = useRef<HTMLParagraphElement>(null);
 
   const [frame, setFrame] = useState<RegionFrame | null>(null);
-  const [books, setBooks] = useState<LibraryBook[]>(initialBooks);
+  const { books } = useLibraryBooks();
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
+  const { book: activeBook, saveStartTree } = useLibraryBook(activeBookId);
   const [isSaving, setIsSaving] = useState(false);
   /** Null until the viewer chooses: open beside the map on a wide screen, closed under it on a narrow one. */
   const [panelChoice, setPanelChoice] = useState<boolean | null>(null);
@@ -93,7 +89,6 @@ export function RegionMapView({ initialBooks, initialCamera }: Props) {
   const [statsOpen, setStatsOpen] = useState(false);
 
   const moves = useMemo(() => frame?.moves ?? [], [frame]);
-  const activeBook = books.find((book) => book.id === activeBookId) ?? null;
 
   // ── Title ────────────────────────────────────────────────────────────────
 
@@ -150,26 +145,24 @@ export function RegionMapView({ initialBooks, initialCamera }: Props) {
   const inBook = bookPath.length === moves.length + 1;
   const canEditBook = activeBook !== null && moves.length > 0;
 
-  const saveTree = async (book: LibraryBook, tree: MoveNode) => {
+  const saveTree = async (tree: MoveNode) => {
     setIsSaving(true);
     try {
-      const result = await saveStartTree(book, tree);
-      setBooks((prev) => prev.map((b) => (b.id === book.id ? result.book : b)));
-      if (!result.saved) alert(STALE_BOOK_MESSAGE);
-    } catch {
-      // leave state as-is; user can retry
+      if (!(await saveStartTree(tree))) alert(STALE_BOOK_MESSAGE);
+    } catch (error) {
+      alert(libraryErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleAddToBook = () => {
-    if (activeBook && activeTree) void saveTree(activeBook, mergeMoveLineIntoTree(activeTree, moves));
+    if (activeBook && activeTree) void saveTree(mergeMoveLineIntoTree(activeTree, moves));
   };
 
   const handleRemoveFromBook = () => {
     if (activeBook && activeTree && inBook) {
-      void saveTree(activeBook, removeMoveNodeById(activeTree, bookPath[bookPath.length - 1].id));
+      void saveTree(removeMoveNodeById(activeTree, bookPath[bookPath.length - 1].id));
     }
   };
 
@@ -196,10 +189,8 @@ export function RegionMapView({ initialBooks, initialCamera }: Props) {
           </div>
 
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            {/* Book selector, kept small: here the map is the subject. A guest gets a notice. */}
-            {!signedIn ? (
-              <SignInPrompt action="add lines to your books" className="text-xs" />
-            ) : books.length > 0 ? (
+            {/* Book selector, kept small: here the map is the subject. */}
+            {books === null ? null : books.length > 0 ? (
               <label className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--text-muted)]">
                 Book
                 <select

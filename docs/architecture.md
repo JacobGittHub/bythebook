@@ -184,9 +184,11 @@ Supabase Postgres with Row Level Security on every table. Columns are in
 - **A guest's books stay in the browser** (`plans/deployment.md` D12): IndexedDB, through the
   `idb` package (`src/lib/library/browserStore.ts`), under the same rules as the account's
   (`src/lib/library/writes.ts`). Each browser profile and site address keeps its own.
-  `useLibrary()` (`src/context/Library.tsx`) gives a page the browser library or the
-  account's, by the viewer, and shares one book list and the opened books between pages
-  (`src/lib/library/cache.ts`), so moving between pages reads nothing twice.
+  Every page that shows or edits books reads them in the browser through `useLibrary()`
+  (`src/context/Library.tsx`), which gives it the browser library or the account's, by the
+  viewer, and shares one book list and the opened books between pages
+  (`src/lib/library/cache.ts`), so moving between pages reads nothing twice. No server page
+  reads books.
 - **As of 2026-09-29, no application code reads or writes `user_position_stats`,
   `position_evals` or `drills`.** They exist for the trainer.
 

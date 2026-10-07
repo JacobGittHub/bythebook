@@ -85,7 +85,7 @@ describe("the shared library", () => {
     expect(library.state()).not.toBe(state);
   });
 
-  it("opens a book once, and again only when the list shows it changed", async () => {
+  it("serves a saved book without reading it, and reads it again when the list shows it changed", async () => {
     const memory = memoryLibrary();
     const library = cachedLibrary(memory.library);
     await library.reload();
@@ -93,15 +93,15 @@ describe("the shared library", () => {
 
     const first = await library.get(a.id);
     expect(await library.get(a.id)).toBe(first);
-    expect(memory.reads.get).toBe(1);
+    expect(memory.reads.get).toBe(0);
 
     memory.elsewhere(a.id, "Changed elsewhere");
     await library.reload();
     expect((await library.get(a.id))?.name).toBe("Changed elsewhere");
-    expect(memory.reads.get).toBe(2);
+    expect(memory.reads.get).toBe(1);
   });
 
-  it("keeps opened trees through a rename, and reads them back after new trees", async () => {
+  it("keeps the trees it opened or saved, through a rename too", async () => {
     const memory = memoryLibrary();
     const library = cachedLibrary(memory.library);
     await library.reload();
@@ -110,11 +110,13 @@ describe("the shared library", () => {
 
     const renamed = await library.update(a.id, { name: "A2" }, a.updatedAt);
     expect((await library.get(a.id))?.name).toBe("A2");
-    expect(memory.reads.get).toBe(1);
+    expect(memory.reads.get).toBe(0);
 
     await library.update(a.id, { trees: treesOf("e4 e5", "d4") }, renamed.updatedAt);
     expect((await library.get(a.id))?.summary.positions).toBe(3);
-    expect(memory.reads.get).toBe(2);
+    const b = await library.create(draft("B"));
+    expect((await library.get(b.id))?.trees).toEqual(draft("B").trees);
+    expect(memory.reads.get).toBe(0);
   });
 
   it("forgets an opened book that turned out stale or gone", async () => {

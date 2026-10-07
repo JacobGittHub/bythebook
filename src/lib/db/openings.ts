@@ -104,22 +104,6 @@ export async function listBooks(userId: string): Promise<LibraryEntry[]> {
   return data.map((row) => entryOf(row, trees.get(row.id)));
 }
 
-/**
- * The user's books with their trees, for the server pages that still hand whole books to the
- * client. They read through `useLibrary` from Phase 5's step 7, and this goes.
- */
-export async function listBooksWithTrees(userId: string): Promise<LibraryBook[]> {
-  const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("opening_books")
-    .select(BOOK_COLUMNS)
-    .eq("user_id", userId)
-    .order("updated_at", { ascending: false, nullsFirst: false })
-    .limit(MAX_LIBRARY_BOOKS);
-  if (error) failed(error);
-  return data.map(bookOf);
-}
-
 export async function getBook(userId: string, bookId: string): Promise<LibraryBook | null> {
   if (!isBookId(bookId)) return null;
   const supabase = await createServerSupabaseClient();

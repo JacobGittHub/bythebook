@@ -1,18 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useLibrary } from "@/context/Library";
 import { START_FEN } from "@/lib/chess/fen";
 import { createRootMoveNode } from "@/lib/chess/moveTree";
-import { libraryErrorFrom } from "@/lib/library/http";
 import { MAX_BOOK_NAME } from "@/lib/library/names";
-import { LibraryError, type LibraryBook, type LibraryEntry } from "@/lib/library/types";
+import { libraryErrorMessage, type LibraryEntry } from "@/lib/library/types";
 
 type Props = {
-  onCreated: (book: LibraryBook) => void;
+  onCreated: (book: LibraryEntry) => void;
   onCancel?: () => void;
 };
 
 export function BookEditor({ onCreated, onCancel }: Props) {
+  const { library } = useLibrary();
   const [name, setName] = useState("");
   const [color, setColor] = useState<"white" | "black">("white");
   const [submitting, setSubmitting] = useState(false);
@@ -24,18 +25,16 @@ export function BookEditor({ onCreated, onCancel }: Props) {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/openings/books", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // A new book is one empty tree from the starting position.
-        body: JSON.stringify({ name: name.trim(), color, trees: [] }),
+      // A new book is one empty tree from the starting position.
+      const entry = await library.create({
+        name,
+        color,
+        origin: { kind: "own" },
+        trees: [createRootMoveNode(START_FEN)],
       });
-      if (!res.ok) throw await libraryErrorFrom(res);
-      const entry = (await res.json()) as LibraryEntry;
-      onCreated({ ...entry, trees: [createRootMoveNode(START_FEN)] });
+      onCreated(entry);
     } catch (caught) {
-      const full = caught instanceof LibraryError && caught.code === "full";
-      setError(full ? caught.message : "Something went wrong. Please try again.");
+      setError(libraryErrorMessage(caught));
     } finally {
       setSubmitting(false);
     }

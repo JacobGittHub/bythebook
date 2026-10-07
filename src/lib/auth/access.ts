@@ -59,7 +59,7 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     summary: "Your own data: the books you build.",
     details:
-      "Everything that is yours. Create a book for an opening you play, add lines to it from the Explorer or the Treemap, and come back to it later. Repertoires that combine books, and imports of your own games, will live here too. Books need an account for now.",
+      "Everything that is yours. Create a book for an opening you play, add lines to it from the Explorer or the Treemap, and come back to it later. Repertoires that combine books, and imports of your own games, will live here too. As a guest your books are kept in this browser, and you can back them up to a file; an account keeps them on the server.",
   },
   {
     href: "/dashboard/bookstore",
@@ -179,8 +179,8 @@ export const ACCESS_ROWS: AccessRow[] = [
   },
   {
     feature: "Books in your library",
-    guest: "Not yet",
-    account: "Create, edit and keep them between visits",
+    guest: "Kept in this browser, with backup to a file",
+    account: "Saved to your account, on any device",
   },
   {
     feature: "Visualization prototypes",

@@ -34,14 +34,16 @@ The header card has two rows:
 
 1. The title and inline match info on the left, then the flip button and the search bar. On
    a phone the title is hidden and the search bar takes its place.
-2. A book selector, a "View Lines" dropdown and an "Add line" button. On a phone the
-   selector takes a line of its own.
+2. A book selector, a "View Lines" dropdown and an "Add line" button, for guests too: the
+   books come from the viewer's library (`useLibraryBooks`, `useLibraryBook` in
+   `src/context/Library.tsx`), and the chosen book's trees are read when it is chosen. On a
+   phone "View Lines" is left out and "Add line" drops its move count, so the row stays one
+   line and the sticky header never covers the panels under it.
    - "View Lines" lists every leaf path in the active book, and selecting one replays that
      line.
    - "Add line" is always visible. It is disabled when no book is selected or no moves have
-     been played, and lines are capped at 20 moves.
-   - A guest (`useViewer()`) gets a sign-in notice in this row instead, and the book list is
-     not requested, because books belong to accounts.
+     been played, and lines are capped at 20 moves. A book that changed in another tab is
+     reloaded instead of saved (`STALE_BOOK_MESSAGE`).
 
 **The side panels can be resized.** Each panel above the statistics (the engine while it is
 on, the tree window and, at `xl`, the move row) has a `ResizeHandle`

@@ -55,7 +55,7 @@ can't open them.
 **Small visualizations** are the five book views (`explorer.md`, "Book views"), one page each
 at `/dashboard/visualizations/books/<view>` (`BookViewPage`). Guests can open them. A page
 draws one book beside a board: an example book (`src/lib/books/examples.ts`), or one of the
-viewer's own books when signed in. The rail switches views without leaving the page and
+viewer's own books, from their library. The rail switches views without leaving the page and
 keeps the book, and the address follows (`?book=`), so a link reopens the same book. The
 panel shows the selected or hovered position, what a store card will say about the book
 (positions against `MAX_BOOK_POSITIONS`, lines, average line, clashes, the unconnected flag,
@@ -67,6 +67,23 @@ credits.
 one costs no function call. Each file names its method (Wikibooks page titles, the catalog's
 named lines, master statistics from `position_cache`, or the catalog grown from master
 statistics) and, for Wikibooks, its CC BY-SA credit, which the page shows.
+
+## Library page
+
+The viewer's books, from the library (`useLibrary`, `src/context/Library.tsx`): a guest's
+are kept in this browser and a signed-in viewer's in the account, and the page names which
+(`STORE_LABELS`), so the two are never confused (`plans/deployment.md` D23).
+
+- **The list** reads only the summaries. New book makes a book, for guests too, and Delete
+  deletes it.
+- **Back up** downloads every book as the version 1 file (`src/lib/library/backup.ts`).
+  **Restore** reads one into the checklist (`CopyChecklist`, `src/lib/library/copyPlan.ts`),
+  which lists what happens to each book, and lets a book whose name is taken be kept as a
+  second book or skipped.
+- **The empty state** offers New book, Restore, and the example books with Save. A saved
+  example is a store book from `EXAMPLE_PUBLISHER`, with its credit (D24), and a name over
+  the limit is cut to fit (`fitBookName`).
+- Game history keeps its "coming soon" section.
 
 ## Theme colors
 

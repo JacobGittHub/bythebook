@@ -10,6 +10,14 @@ import {
   type ExampleBookEntry,
 } from "@/lib/books/examples";
 
+/** One example book, read from its static file. */
+export async function fetchExampleBook(entry: ExampleBookEntry): Promise<ExampleBook> {
+  const response = await fetch(`${EXAMPLE_BOOKS_PATH}/${entry.file}`);
+  const file = parseExampleFile(response.ok ? await response.json() : null);
+  if (!file) throw new Error("Not an example book.");
+  return exampleBookFromFile(file);
+}
+
 /**
  * The example books' list, and each book once it is asked for. They are static files, so
  * loading them costs no function call; a book is fetched the first time it is shown.
@@ -42,13 +50,8 @@ export function useExampleBooks(wanted: string | null) {
     const entry = entries?.find((candidate) => candidate.id === wanted);
     if (!entry || requested.current.has(entry.id)) return;
     requested.current.add(entry.id);
-    fetch(`${EXAMPLE_BOOKS_PATH}/${entry.file}`)
-      .then((response) => (response.ok ? response.json() : null))
-      .then((body) => {
-        const file = parseExampleFile(body);
-        if (!file) throw new Error("Not an example book.");
-        setBooks((old) => new Map(old).set(file.id, exampleBookFromFile(file)));
-      })
+    fetchExampleBook(entry)
+      .then((book) => setBooks((old) => new Map(old).set(book.id, book)))
       .catch(() => {
         requested.current.delete(entry.id);
         setFailed(true);

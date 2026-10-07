@@ -65,4 +65,10 @@ test.describe("Book routes, signed in", () => {
   test("a book id that isn't one is not found, not an error", async ({ page }) => {
     expect((await page.request.get(`${BOOKS}/not-a-book`)).status()).toBe(404);
   });
+
+  test("the Library names the account as the store it shows", async ({ page }) => {
+    await page.goto("/dashboard/library");
+    await expect(page.getByText("Saved to your account", { exact: true })).toBeVisible();
+    await expect(page.getByText("Kept in this browser", { exact: true })).toHaveCount(0);
+  });
 });

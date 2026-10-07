@@ -4,14 +4,12 @@ import { useMemo, useState } from "react";
 import { OpeningTreeFull, type DisplayNode, type SelectedNodeInfo } from "./OpeningTreeFull";
 import { TreeNodePanel } from "./TreeNodePanel";
 import { BookEditor } from "./BookEditor";
-import { SignInPrompt } from "@/components/ui/SignInPrompt";
-import { useViewer } from "@/context/Viewer";
+import { useLibraryBook, useLibraryBooks } from "@/context/Library";
 import { fenAfterUci } from "@/lib/chess/fen";
 import { buildDefaultCatalogTree, searchCatalogMatches } from "@/lib/chess/openingCatalog";
 import { mergeMoveLineIntoTree, getNodePathByUciLine, removeMoveNodeById } from "@/lib/chess/moveTree";
-import { STALE_BOOK_MESSAGE, saveStartTree } from "@/lib/library/accountStore";
-import { startTree } from "@/lib/library/trees";
-import type { LibraryBook } from "@/lib/library/types";
+import { STALE_BOOK_MESSAGE, startTree } from "@/lib/library/trees";
+import { libraryErrorMessage, type LibraryEntry } from "@/lib/library/types";
 import type { ExplorerMove, MoveNode } from "@/types/chess";
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -44,26 +42,21 @@ function buildGhostNodes(
 // ── Component ────────────────────────────────────────────────────────────────
 
 type Props = {
-  initialBooks: LibraryBook[];
   initialBookId: string | null;
 };
 
-export function DashboardTree({ initialBooks, initialBookId }: Props) {
-  const { signedIn } = useViewer();
-  const [books, setBooks] = useState<LibraryBook[]>(initialBooks);
+export function DashboardTree({ initialBookId }: Props) {
+  // The viewer's books, a guest's included, from the library (src/context/Library.tsx).
+  const { books } = useLibraryBooks();
   const [activeBookId, setActiveBookId] = useState<string | null>(initialBookId);
-  const [activeMoveNode, setActiveMoveNode] = useState<MoveNode | null>(() => {
-    const book = initialBooks.find((b) => b.id === initialBookId);
-    return book ? startTree(book.trees) : null;
-  });
+  const { book: activeBook, saveStartTree } = useLibraryBook(activeBookId);
+  const activeMoveNode = useMemo(() => (activeBook ? startTree(activeBook.trees) : null), [activeBook]);
   const [selectedInfo, setSelectedInfo] = useState<SelectedNodeInfo | null>(null);
   const [expandedNodeId, setExpandedNodeId] = useState<string | null>(null);
   const [ghostExpansions, setGhostExpansions] = useState<Map<string, DisplayNode[]>>(new Map());
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
-  const activeBook = books.find((b) => b.id === activeBookId) ?? null;
 
   // The catalog tree is always visible (computed once, no API calls)
   const catalogTree = useMemo(() => buildDefaultCatalogTree(), []);
@@ -97,14 +90,8 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
 
   // ── Book switching ───────────────────────────────────────────────────────
 
-  const switchBook = (bookId: string) => {
-    const book = books.find((b) => b.id === bookId);
-    if (book) showBook(book);
-  };
-
-  const showBook = (book: LibraryBook) => {
-    setActiveBookId(book.id);
-    setActiveMoveNode(startTree(book.trees));
+  const showBook = (bookId: string) => {
+    setActiveBookId(bookId);
     setSelectedInfo(null);
     setExpandedNodeId(null);
     setGhostExpansions(new Map());
@@ -117,12 +104,9 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
     if (!activeBook) return;
     setIsSaving(true);
     try {
-      const { book, saved } = await saveStartTree(activeBook, updatedNode);
-      setActiveMoveNode(startTree(book.trees));
-      setBooks((prev) => prev.map((b) => (b.id === book.id ? book : b)));
-      if (!saved) alert(STALE_BOOK_MESSAGE);
-    } catch {
-      // leave state as-is; user can retry
+      if (!(await saveStartTree(updatedNode))) alert(STALE_BOOK_MESSAGE);
+    } catch (error) {
+      alert(libraryErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -172,10 +156,9 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
     }
   };
 
-  const handleCreateBook = (book: LibraryBook) => {
-    setBooks((prev) => [book, ...prev]);
+  const handleCreateBook = (book: LibraryEntry) => {
     setShowCreateForm(false);
-    showBook(book);
+    showBook(book.id);
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -187,16 +170,13 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 lg:gap-3">
         {/* Top bar */}
         <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-2.5 lg:gap-3 lg:py-3">
-          {/* Book selector. Books are saved to an account, so a guest gets a notice. */}
-          {!signedIn ? (
-            <SignInPrompt
-              action="build books from this tree"
-              className="basis-full text-xs sm:flex-1 sm:basis-0 sm:text-sm"
-            />
+          {/* Book selector */}
+          {books === null ? (
+            <span className="flex-1 text-sm text-[var(--text-muted)]">Loading books…</span>
           ) : books.length > 0 ? (
             <select
               value={activeBookId ?? ""}
-              onChange={(e) => { if (e.target.value) switchBook(e.target.value); }}
+              onChange={(e) => { if (e.target.value) showBook(e.target.value); }}
               className="min-w-0 flex-1 rounded-xl border border-[var(--border-card)] bg-[var(--bg-card)] py-1.5 pl-2 pr-6 text-sm font-semibold text-[var(--text-primary)] focus:outline-none"
             >
               <option value="">— Select a book —</option>
@@ -225,14 +205,12 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
           )}
 
           {/* New book */}
-          {signedIn && (
-            <button
-              onClick={() => setShowCreateForm((v) => !v)}
-              className="btn-secondary shrink-0 rounded-xl px-3 py-1.5 text-sm"
-            >
-              {showCreateForm ? "Cancel" : "+ New book"}
-            </button>
-          )}
+          <button
+            onClick={() => setShowCreateForm((v) => !v)}
+            className="btn-secondary shrink-0 rounded-xl px-3 py-1.5 text-sm"
+          >
+            {showCreateForm ? "Cancel" : "+ New book"}
+          </button>
         </div>
 
         {/* Create form (inline, dismissible) */}

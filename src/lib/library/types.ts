@@ -107,6 +107,21 @@ export class LibraryError extends Error {
   }
 }
 
+const ERROR_SENTENCES: Record<LibraryErrorCode, string> = {
+  stale: "This book changed in another tab or device.",
+  not_found: "This book no longer exists.",
+  invalid: "The book isn't valid, so it wasn't saved.",
+  over_limit: "The book is over its position limit, so it wasn't saved.",
+  full: `A library holds at most ${MAX_LIBRARY_BOOKS} books.`,
+  failed: "Something went wrong. Please try again.",
+};
+
+/** What to tell the user about a failed library call: the store's own words, or a sentence for its code. */
+export function libraryErrorMessage(error: unknown): string {
+  if (!(error instanceof LibraryError)) return ERROR_SENTENCES.failed;
+  return error.message && error.message !== error.code ? error.message : ERROR_SENTENCES[error.code];
+}
+
 export interface Library {
   /** Which store this is, which the Library names on screen (D23). */
   readonly store: "browser" | "account";

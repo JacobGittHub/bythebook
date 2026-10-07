@@ -22,14 +22,12 @@ import { useOpeningExplorer } from "@/hooks/useOpeningExplorer";
 import { useOpeningExplorerMulti } from "@/hooks/useOpeningExplorerMulti";
 import { useEngine, type EngineMode } from "@/hooks/useEngine";
 import { useBackgroundMode } from "@/context/BackgroundMode";
-import { useViewer } from "@/context/Viewer";
-import { SignInPrompt } from "@/components/ui/SignInPrompt";
+import { useLibraryBook, useLibraryBooks } from "@/context/Library";
 import { formatScore, evalToBarPct } from "@/lib/chess/stockfishUci";
 import { mergeMoveLineIntoTree } from "@/lib/chess/moveTree";
 import type { MoveResult } from "@/hooks/useChessGame";
-import { STALE_BOOK_MESSAGE, accountLibrary, saveStartTree } from "@/lib/library/accountStore";
-import { startTree } from "@/lib/library/trees";
-import type { LibraryBook, LibraryEntry } from "@/lib/library/types";
+import { STALE_BOOK_MESSAGE, startTree } from "@/lib/library/trees";
+import { libraryErrorMessage } from "@/lib/library/types";
 import type { CatalogMatch, ExplorerMatchMode, ExplorerMove, Move, MoveNode } from "@/types/chess";
 
 function collectBookLines(
@@ -115,38 +113,12 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
   const [boardOrientation, setBoardOrientation] = useState<"white" | "black">("white");
   const blurTimeoutRef = useRef<number | null>(null);
 
-  // Opening book integration
-  const [explorerBooks, setExplorerBooks] = useState<LibraryEntry[]>([]);
+  // Opening book integration: the viewer's books, a guest's included (src/context/Library.tsx).
+  // The list has only summaries; the chosen book's trees are loaded when it is chosen.
+  const { books: explorerBooks } = useLibraryBooks();
   const [activeExplorerBookId, setActiveExplorerBookId] = useState<string | null>(null);
-  // The chosen book with its trees, loaded when it is chosen; the list has only summaries.
-  const [loadedBook, setLoadedBook] = useState<LibraryBook | null>(null);
+  const { book: activeExplorerBook, saveStartTree } = useLibraryBook(activeExplorerBookId);
   const [isSavingToBook, setIsSavingToBook] = useState(false);
-
-  const { signedIn } = useViewer();
-
-  // Load user's books for the book selector. A guest has none, so nothing is asked.
-  useEffect(() => {
-    if (!signedIn) return;
-
-    accountLibrary
-      .list()
-      .then(setExplorerBooks)
-      .catch(() => {});
-  }, [signedIn]);
-
-  useEffect(() => {
-    if (!activeExplorerBookId) return;
-    let current = true;
-    accountLibrary
-      .get(activeExplorerBookId)
-      .then((book) => {
-        if (current) setLoadedBook(book);
-      })
-      .catch(() => {});
-    return () => {
-      current = false;
-    };
-  }, [activeExplorerBookId]);
 
   const { mode } = useBackgroundMode();
   // The hovered move is kept with the position it was hovered in, so it lapses when the
@@ -320,7 +292,6 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
 
   // ── Book save ──────────────────────────────────────────────────────────────
 
-  const activeExplorerBook = loadedBook?.id === activeExplorerBookId ? loadedBook : null;
   const activeExplorerTree = useMemo(
     () => (activeExplorerBook ? startTree(activeExplorerBook.trees) : null),
     [activeExplorerBook],
@@ -332,12 +303,9 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
     const updatedTree = mergeMoveLineIntoTree(activeExplorerTree, movesToAdd);
     setIsSavingToBook(true);
     try {
-      const { book, saved } = await saveStartTree(activeExplorerBook, updatedTree);
-      setLoadedBook(book);
-      setExplorerBooks((prev) => prev.map((b) => (b.id === book.id ? book : b)));
-      if (!saved) alert(STALE_BOOK_MESSAGE);
-    } catch {
-      // silent fail — user can retry
+      if (!(await saveStartTree(updatedTree))) alert(STALE_BOOK_MESSAGE);
+    } catch (error) {
+      alert(libraryErrorMessage(error));
     } finally {
       setIsSavingToBook(false);
     }
@@ -459,54 +427,57 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
             </div>
           </div>
 
-          {/* Row 2: book selector (narrow) + View Lines + Add line (always visible).
-              Books are saved to an account, so a guest gets a notice in the same row. */}
-          {!signedIn ? (
-            <SignInPrompt action="save lines to a book" className="text-xs xl:py-1.5 xl:text-sm" />
-          ) : (
-            <div className="flex flex-wrap items-center gap-2">
-              <select
-                value={activeExplorerBookId ?? ""}
-                onChange={(e) => setActiveExplorerBookId(e.target.value || null)}
-                className="min-w-0 basis-full rounded-xl sm:w-44 sm:shrink-0 sm:basis-auto border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none"
-              >
-                <option value="">— No book selected —</option>
-                {explorerBooks.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name} ({b.color})</option>
-                ))}
-              </select>
+          {/* Row 2: book selector + View Lines + Add line. On a phone View Lines is left out,
+              so the row stays one line and the sticky header never covers the panels below. */}
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              aria-label="Book"
+              value={activeExplorerBookId ?? ""}
+              onChange={(e) => setActiveExplorerBookId(e.target.value || null)}
+              className="min-w-0 flex-1 rounded-xl sm:w-44 sm:flex-none sm:shrink-0 border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none"
+            >
+              <option value="">{explorerBooks?.length === 0 ? "— No books yet —" : "— No book selected —"}</option>
+              {(explorerBooks ?? []).map((b) => (
+                <option key={b.id} value={b.id}>{b.name} ({b.color})</option>
+              ))}
+            </select>
 
-              {/* View Lines dropdown */}
-              <select
-                value=""
-                onChange={(e) => handleViewBookLine(e.target.value)}
-                disabled={!activeExplorerBook || bookLines.length === 0}
-                className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <option value="">View Lines</option>
-                {bookLines.map((line, idx) => (
-                  <option key={idx} value={JSON.stringify(line)}>
-                    {line.slice(0, 8).map((m) => m.san).join(" ")}
-                    {line.length > 8 ? "…" : ""}
-                  </option>
-                ))}
-              </select>
+            {/* View Lines dropdown */}
+            <select
+              aria-label="View a line of the book"
+              value=""
+              onChange={(e) => handleViewBookLine(e.target.value)}
+              disabled={!activeExplorerBook || bookLines.length === 0}
+              className="hidden min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 sm:block"
+            >
+              <option value="">View Lines</option>
+              {bookLines.map((line, idx) => (
+                <option key={idx} value={JSON.stringify(line)}>
+                  {line.slice(0, 8).map((m) => m.san).join(" ")}
+                  {line.length > 8 ? "…" : ""}
+                </option>
+              ))}
+            </select>
 
-              {/* Add line — always visible, disabled when no book or no moves */}
-              <button
-                type="button"
-                onClick={handleAddToBook}
-                disabled={!activeExplorerBook || currentMoves.length === 0 || isSavingToBook}
-                className="btn-primary shrink-0 rounded-xl px-3 py-1.5 text-xs font-medium"
-              >
-                {isSavingToBook
-                  ? "Saving…"
-                  : currentMoves.length > 0
-                    ? `Add line (${Math.min(currentMoves.length, 20)} moves)`
-                    : "Add line"}
-              </button>
-            </div>
-          )}
+            {/* Add line — always visible, disabled when no book or no moves */}
+            <button
+              type="button"
+              onClick={handleAddToBook}
+              disabled={!activeExplorerBook || currentMoves.length === 0 || isSavingToBook}
+              className="btn-primary shrink-0 rounded-xl px-3 py-1.5 text-xs font-medium"
+            >
+              {isSavingToBook ? (
+                "Saving…"
+              ) : (
+                <>
+                  Add line
+                  {currentMoves.length > 0 && (
+                    <span className="hidden sm:inline"> ({Math.min(currentMoves.length, 20)} moves)</span>
+                  )}
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Board + right-side eval bar */}

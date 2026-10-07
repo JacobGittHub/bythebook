@@ -1,13 +1,6 @@
-import { BookCard } from "@/components/repertoire/BookCard";
-import { SignInPrompt } from "@/components/ui/SignInPrompt";
-import { getViewer } from "@/lib/auth/viewer";
-import { listBooks } from "@/lib/db/openings";
+import { TrainBookList } from "@/components/training/TrainBookList";
 
-export default async function TrainPage() {
-  const viewer = await getViewer();
-  // Training drills a user's own books, and a guest has none, so the database isn't asked.
-  const books = viewer.signedIn ? await listBooks(viewer.userId) : [];
-
+export default function TrainPage() {
   return (
     <main className="space-y-6">
       <div>
@@ -21,15 +14,8 @@ export default async function TrainPage() {
         <p className="mt-1 text-sm text-slate-500">
           The trainer is still being built. What is here is an early scaffold.
         </p>
-        {!viewer.signedIn && (
-          <SignInPrompt action="build the books that training will drill" className="mt-2 text-sm" />
-        )}
       </div>
-      <section className="grid gap-4 md:grid-cols-2">
-        {books.map((book) => (
-          <BookCard key={book.id} book={book} />
-        ))}
-      </section>
+      <TrainBookList />
     </main>
   );
 }

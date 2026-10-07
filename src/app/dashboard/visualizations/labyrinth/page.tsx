@@ -1,6 +1,4 @@
 import { RegionMapView } from "@/components/lab/RegionMapView";
-import { getViewer } from "@/lib/auth/viewer";
-import { listBooksWithTrees } from "@/lib/db/openings";
 import { parseRootCamera } from "@/lib/regions/camera";
 
 type Props = {
@@ -8,16 +6,14 @@ type Props = {
   searchParams: Promise<{ camera?: string }>;
 };
 
-// The Labyrinth: the region map prototype, reached from the Visualizations page.
+// The Labyrinth: the region map prototype, reached from the Visualizations page. The
+// viewer's books are read in the browser, from the library.
 export default async function LabyrinthPage({ searchParams }: Props) {
-  const viewer = await getViewer();
   const { camera } = await searchParams;
-  // A guest has no books, so the database isn't asked.
-  const books = viewer.signedIn ? await listBooksWithTrees(viewer.userId) : [];
 
   return (
     <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">
-      <RegionMapView initialBooks={books} initialCamera={parseRootCamera(camera)} />
+      <RegionMapView initialCamera={parseRootCamera(camera)} />
     </div>
   );
 }

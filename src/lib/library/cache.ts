@@ -1,6 +1,7 @@
 // One library as the pages share it (deployment.md D1, D12): the book list is read once and
-// kept current by the writes made through it, and a book's trees are kept once opened, until
-// the list shows the book changed. Pages moving between the Explorer, the Library and the
+// kept current by the writes made through it, and a book's trees are kept once opened or
+// saved, until the list shows the book changed. Saved trees are kept as sent: the pages build
+// them with the tree functions, which give what validation would (`validate.ts`). Pages moving between the Explorer, the Library and the
 // views then read nothing twice. `src/context/Library.tsx` gives each page the current one.
 
 import { byNewest, entryOf } from "./writes";
@@ -94,6 +95,7 @@ export function cachedLibrary(base: Library): CachedLibrary {
 
     async create(draft) {
       const entry = await base.create(draft);
+      if (draft.trees.length) opened.set(entry.id, { ...entry, trees: draft.trees });
       place(entry.id, entry);
       return entry;
     },
@@ -109,10 +111,8 @@ export function cachedLibrary(base: Library): CachedLibrary {
         }
         throw error;
       }
-      // New trees are read back when next opened, as the store may have merged or reordered
-      // them; a new name or side keeps the opened trees.
-      const known = opened.get(id);
-      if (known && patch.trees === undefined) opened.set(id, { ...entry, trees: known.trees });
+      const trees = patch.trees ?? opened.get(id)?.trees;
+      if (trees) opened.set(id, { ...entry, trees });
       else opened.delete(id);
       place(id, entry);
       return entry;

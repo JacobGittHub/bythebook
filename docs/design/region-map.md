@@ -310,8 +310,8 @@ when the position or its load status changes, and nothing in the page reaches in
   sit underneath on one line, which scrolls sideways and keeps its newest moves in view
   (the user's design: a 30-move line would make a moving title). At the start position a
   short hint takes that line.
-- **Book selector.** Small, in the title bar, because the map is the subject. A guest sees
-  `SignInPrompt` instead. Showing the chosen book's lines on the map is not built
+- **Book selector.** Small, in the title bar, because the map is the subject. The books come
+  from the viewer's library (`useLibraryBook`). Showing the chosen book's lines on the map is not built
   (`plans/region-map.md`, Q4).
 - **Panel** (`PositionPanel`, as on the Treemap). The frame position's board, whose pieces
   slide as the frame changes; its master games, from the map's own load and measured against

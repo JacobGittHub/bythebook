@@ -15,6 +15,12 @@ export function checkBookName(raw: string): string | null {
   return name.length >= 1 && name.length <= MAX_BOOK_NAME ? name : null;
 }
 
+/** A name from elsewhere, such as an example book's, cut to fit with an ellipsis if it is too long. */
+export function fitBookName(raw: string): string {
+  const name = cleanBookName(raw);
+  return name.length <= MAX_BOOK_NAME ? name : `${name.slice(0, MAX_BOOK_NAME - 1).trimEnd()}…`;
+}
+
 const sameName = (a: string, b: string) => a.toLocaleLowerCase() === b.toLocaleLowerCase();
 
 /** True when a library already has this name, ignoring case. */

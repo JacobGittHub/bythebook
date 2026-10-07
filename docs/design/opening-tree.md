@@ -31,9 +31,9 @@ master stats and book actions.
 ```
 DashboardTree
   ├─ buildDefaultCatalogTree()        local and in-memory, with no API calls (limits in architecture.md)
-  ├─ opening_books (listBooksWithTrees) the user's books → bookFens, a Set of every FEN in the
-  │                                   active book's tree from the starting position
-  │                                   (the page skips this read for a guest, who has no books)
+  ├─ useLibraryBooks, useLibraryBook the viewer's books, a guest's included → bookFens, a Set
+  │                                   of every FEN in the active book's tree from the starting
+  │                                   position (src/context/Library.tsx)
   ├─ useOpeningExplorer(selectedFen)  on click: top master moves for the "ghost" expansion
   │                                   (goes through position_cache; the result isn't persisted)
   └─ ghostExpansions                  local state: Map<nodeId, DisplayNode[]>

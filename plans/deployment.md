@@ -85,7 +85,7 @@ Chrome, Safari and Firefox, and the Overview page and explorer work on a phone (
   | Pages | Every page except the visualization prototypes, which are listed but not opened | Every page |
   | Master stats | Cached positions only; never causes a Lichess call (D7) | Cached, plus live Lichess, counted (D8) |
   | Engine and appearance settings | Yes, in the browser | Yes, in the browser |
-  | Books | None for now; pages that save say an account is needed. Browser storage comes with Phase 5 (D12) | Create, edit and keep |
+  | Books | Create, edit and keep in this browser (D12, amended 2026-10-07 by Phase 5), with Back up and Restore (D23) | Create, edit and keep in the account |
   | API routes other than the explorer | 401 | Yes |
 
 - D18. The sidebar names what each page is for. **Overview** is the info page (D16).
@@ -270,12 +270,15 @@ shadcn/ui pass.
       from the starting position (`startTree`). The account adapter (`accountStore.ts`) came
       early, since three pages save through it. The server pages still read whole books with
       `listBooksWithTrees` until the next step.
-- [ ] (agent) The browser adapter on IndexedDB (`idb`) and `useLibrary()`. Today's pages read and save through it, guests included: the Library
+- [x] (agent) The browser adapter on IndexedDB (`idb`) and `useLibrary()`. Today's pages read and save through it, guests included: the Library
       (list, New book, delete, the empty state with the example books, Back up, Restore),
       the Explorer, the Treemap, the Labyrinth, the book views and both Train pages.
-      Started: the browser library (`browserStore.ts`, with the write rules both stores
-      share in `writes.ts`), the shared list and opened books (`cache.ts`), and
-      `useLibrary()` in the dashboard layout. No page reads through it yet.
+      Done: the browser library (`browserStore.ts`, with the write rules both stores share
+      in `writes.ts`), one shared list and the opened books (`cache.ts`), and
+      `useLibraryBook()` for the pages that edit a book. No server page reads books, and
+      `listBooksWithTrees` is gone. Three example books' names are over 30 characters and
+      are cut with "…" when saved; shorter names in `scripts/buildExampleBooks.ts` need a
+      full `npm run books:examples` (the user's run).
 - [ ] (agent) The copy at sign-in (D22), `persist()` and the backup notice, and debug mode's
       library section (D23).
 - [ ] (agent) `npm run books:migrate`: backs every book row up to a local, git-ignored file,
