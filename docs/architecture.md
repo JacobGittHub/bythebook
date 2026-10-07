@@ -181,6 +181,12 @@ Supabase Postgres with Row Level Security on every table. Columns are in
   count in a single statement. `recordUsage` (`src/lib/db/usage.ts`) calls it from every
   route handler and before every live Lichess request. The counts exist to choose per-user
   ceilings from (`plans/deployment.md`, D8).
+- **A guest's books stay in the browser** (`plans/deployment.md` D12): IndexedDB, through the
+  `idb` package (`src/lib/library/browserStore.ts`), under the same rules as the account's
+  (`src/lib/library/writes.ts`). Each browser profile and site address keeps its own.
+  `useLibrary()` (`src/context/Library.tsx`) gives a page the browser library or the
+  account's, by the viewer, and shares one book list and the opened books between pages
+  (`src/lib/library/cache.ts`), so moving between pages reads nothing twice.
 - **As of 2026-09-29, no application code reads or writes `user_position_stats`,
   `position_evals` or `drills`.** They exist for the trainer.
 
@@ -279,6 +285,7 @@ walks trees or aggregates runs client-side.
 | Call counts | `usage_counters` | On every counted request |
 | User book trees | `opening_books.trees` | Validated and summarized on every write; read when a book opens |
 | A book's summary | `opening_books.summary` | On every write; the book list reads only this |
+| A guest's books | The browser's IndexedDB | On every write, validated and summarized as an account's are |
 | Per-position training stats | `user_position_stats` | Per drill (not built yet) |
 | Engine evaluations | `position_evals` | Lazily, by client Stockfish (not built yet) |
 | Visualization layouts | Client | On config change, memoized |
@@ -313,7 +320,8 @@ The visualization dependencies and what each is for. Removal status is in `AGENT
 from `tsconfig.json`. It needs `@types/node` 22 or newer. The project uses 22, the oldest Node
 line still supported, so the types never offer an API that a Node 22 deployment lacks
 (local development runs Node 24). `tsx` (dev only) runs the TypeScript scripts in `scripts/`
-that import from `src/`, since plain Node can't resolve the `@/*` alias.
+that import from `src/`, since plain Node can't resolve the `@/*` alias. `fake-indexeddb` (dev
+only) gives `src/lib/library/browserStore.test.ts` an IndexedDB in Node.
 
 **Browser tests.** `@playwright/test` (dev only) runs `e2e/` against the running app
 (`playwright.config.ts`): the functional specs in Chromium, Firefox, WebKit and two phone

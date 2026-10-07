@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BugReportButton } from "@/components/layout/BugReportButton";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { BugReportProvider } from "@/context/BugReport";
+import { LibraryProvider } from "@/context/Library";
 import { ViewerProvider } from "@/context/Viewer";
 import { visibleNavItems } from "@/lib/auth/access";
 import { betaContactEmail, betaKeyMailto } from "@/lib/auth/contact";
@@ -88,7 +89,9 @@ export default async function DashboardLayout({
     // The bug report provider wraps the sidebar too, so its button can read the page.
     <BugReportProvider>
       <DashboardShell sidebar={sidebar}>
-        <ViewerProvider signedIn={viewer.signedIn}>{children}</ViewerProvider>
+        <ViewerProvider signedIn={viewer.signedIn}>
+          <LibraryProvider>{children}</LibraryProvider>
+        </ViewerProvider>
       </DashboardShell>
     </BugReportProvider>
   );

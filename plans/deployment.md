@@ -273,6 +273,9 @@ shadcn/ui pass.
 - [ ] (agent) The browser adapter on IndexedDB (`idb`) and `useLibrary()`. Today's pages read and save through it, guests included: the Library
       (list, New book, delete, the empty state with the example books, Back up, Restore),
       the Explorer, the Treemap, the Labyrinth, the book views and both Train pages.
+      Started: the browser library (`browserStore.ts`, with the write rules both stores
+      share in `writes.ts`), the shared list and opened books (`cache.ts`), and
+      `useLibrary()` in the dashboard layout. No page reads through it yet.
 - [ ] (agent) The copy at sign-in (D22), `persist()` and the backup notice, and debug mode's
       library section (D23).
 - [ ] (agent) `npm run books:migrate`: backs every book row up to a local, git-ignored file,

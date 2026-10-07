@@ -24,6 +24,7 @@ import {
 import { sameInstant } from "@/lib/library/time";
 import { startTree } from "@/lib/library/trees";
 import { legacyTrees, validateTrees } from "@/lib/library/validate";
+import { checkedTrees } from "@/lib/library/writes";
 import type { MoveNode } from "@/types/chess";
 import type { Json, Tables } from "@/types/database";
 
@@ -70,16 +71,6 @@ function entryOf(row: EntryRow, trees?: MoveNode[]): LibraryEntry {
 function bookOf(row: FullRow): LibraryBook {
   const trees = treesOf(row);
   return { ...entryOf(row, trees), trees };
-}
-
-/** Validates trees for a write, or throws why they can't be stored. */
-function checkedTrees(input: unknown): MoveNode[] {
-  const result = validateTrees(input);
-  if (result.ok) return result.trees;
-  if (result.reason === "over_limit") {
-    throw new LibraryError("over_limit", `This book has ${result.count} positions; the limit is ${result.limit}.`);
-  }
-  throw new LibraryError("invalid", result.detail);
 }
 
 function failed(error: unknown): never {
