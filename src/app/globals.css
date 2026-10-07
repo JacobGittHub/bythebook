@@ -201,6 +201,130 @@ body {
   }
 }
 
+/* ── Book views (src/components/books/) ───────────────────────────────── */
+/* The five ways of drawing a book share these colors and marks. Family colors tell a
+   book's main lines apart; the hover color previews, the clash ring marks a position where
+   the book's own side has more than one move. */
+
+:root,
+[data-bg="cream"],
+[data-bg="blue"],
+[data-bg="green"],
+[data-bg="red"] {
+  --view-edge: rgba(120, 108, 95, 0.42);
+  --view-path: var(--text-primary);
+  --view-hover: #b45309;
+  --view-clash: #d97706;
+  --view-white: #ece5d8;
+  --view-white-edge: #9c9282;
+  --view-black: #2a2420;
+  --view-black-edge: #2a2420;
+  --view-trunk: #3d3631;
+  --view-on-fam: #ffffff;
+  --fam-0: #2f6aa3;
+  --fam-1: #1f8a7a;
+  --fam-2: #c2622a;
+  --fam-3: #8a6a3f;
+  --fam-4: #7457a8;
+  --fam-5: #6f7f2c;
+  --fam-6: #557086;
+  --fam-7: #b0405f;
+}
+
+[data-bg="dark"] {
+  --view-edge: rgba(170, 165, 200, 0.34);
+  --view-hover: #f0a64a;
+  --view-clash: #f59e0b;
+  --view-white: #d9d4e6;
+  --view-white-edge: #8e8aa3;
+  --view-black: #0b0b10;
+  --view-black-edge: #8e8aa3;
+  --view-trunk: #c9c4d8;
+  --view-on-fam: #111118;
+  --fam-0: #6fa3dc;
+  --fam-1: #4fc0ad;
+  --fam-2: #e88e55;
+  --fam-3: #c19a68;
+  --fam-4: #a68adf;
+  --fam-5: #a8b85a;
+  --fam-6: #8aa6bd;
+  --fam-7: #e07a96;
+}
+
+.bv-svg {
+  display: block;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+.bv-hit { cursor: pointer; }
+.bv-hit-area { fill: transparent; stroke: none; }
+.bv-grid { stroke: var(--border-card); stroke-width: 1; }
+.bv-ruler { font-size: 9px; fill: var(--text-muted); text-anchor: middle; }
+.bv-edge { fill: none; stroke: var(--view-edge); stroke-linecap: round; }
+.bv-edge.on-path { stroke: var(--view-path); }
+.bv-edge.on-hover { stroke: var(--view-hover); }
+.bv-node { stroke-width: 1; }
+.bv-node.wm { fill: var(--view-white); stroke: var(--view-white-edge); }
+.bv-node.bm { fill: var(--view-black); stroke: var(--view-black-edge); }
+.bv-node.root { fill: var(--bg-card); stroke: var(--text-primary); stroke-width: 1.5; }
+.bv-node.clash { stroke: var(--view-clash); stroke-width: 2.2; }
+.bv-node.on-path { stroke: var(--view-path); stroke-width: 1.6; }
+.bv-node.clash.on-path { stroke: var(--view-clash); stroke-width: 2.6; }
+.bv-node.on-hover { stroke: var(--view-hover); stroke-width: 2; }
+.bv-node.is-selected { stroke: var(--view-hover); stroke-width: 3; }
+.bv-label {
+  font-size: 9.5px;
+  fill: var(--text-muted);
+  paint-order: stroke;
+  stroke: var(--bv-label-halo, var(--bg-muted));
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.bv-label.minor { opacity: 0; }
+.bv-label.on-path,
+.bv-label.on-hover { opacity: 1; fill: var(--text-primary); }
+.bv-label.on-hover { fill: var(--view-hover); }
+.bv-label.name { font-family: var(--font-geist-sans), sans-serif; font-size: 10.5px; font-weight: 600; }
+.bv-stub { font-size: 9px; font-weight: 600; fill: var(--text-muted); pointer-events: none; }
+.bv-seg { fill: none; stroke: var(--view-edge); stroke-width: 1.6; }
+.bv-seg.on-path { stroke: var(--view-path); stroke-width: 2.2; }
+.bv-seg.on-hover { stroke: var(--view-hover); stroke-width: 2.2; }
+.bv-seg-hit { fill: none; stroke: transparent; stroke-width: 10; }
+.bv-branch { fill: var(--bg-card); stroke: var(--text-muted); stroke-width: 1.4; }
+.bv-branch.clash { stroke: var(--view-clash); stroke-width: 2.2; }
+.bv-branch.on-path { stroke: var(--view-path); }
+.bv-branch.on-hover { stroke: var(--view-hover); }
+.bv-branch.is-selected { stroke: var(--view-hover); stroke-width: 2.6; }
+.bv-track { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.bv-track.on-path { filter: drop-shadow(0 0 1.5px var(--view-path)); }
+.bv-track.on-hover { filter: drop-shadow(0 0 2px var(--view-hover)); }
+.bv-terminus { stroke-linecap: round; }
+.bv-station { fill: var(--bg-card); stroke-width: 1.6; }
+.bv-station.interchange { stroke: var(--text-primary); stroke-width: 1.8; }
+.bv-station.clash { stroke: var(--view-clash); stroke-width: 2.4; }
+.bv-station.on-path { fill: var(--view-path); }
+.bv-station.on-hover { fill: var(--view-hover); }
+.bv-station.is-selected { stroke: var(--view-hover); stroke-width: 3; }
+.bv-cell { stroke: none; }
+.bv-cell.on-path { stroke: var(--view-path); stroke-width: 1.6; }
+.bv-cell.on-hover { stroke: var(--view-hover); stroke-width: 1.8; }
+.bv-cell.is-selected { stroke: var(--view-hover); stroke-width: 2.4; }
+.bv-cell-label { font-size: 9px; font-weight: 600; pointer-events: none; }
+.bv-cell-label.wm { fill: var(--text-primary); }
+.bv-cell-label.bm { fill: var(--view-on-fam); }
+.bv-spine { stroke: var(--text-primary); stroke-width: 3; stroke-linecap: round; }
+.bv-spine.ahead { stroke: var(--view-edge); stroke-dasharray: 2 5; }
+.bv-rib { fill: none; stroke: var(--view-edge); stroke-width: 1.4; }
+.bv-rib.on-hover { stroke: var(--view-hover); stroke-width: 2; }
+.bv-rib-dot { stroke: var(--bg-muted); stroke-width: 1.5; }
+.bv-rib-dot.on-hover { stroke: var(--view-hover); stroke-width: 2; }
+.bv-rib-label { font-size: 9.5px; fill: var(--text-muted); pointer-events: none; }
+.bv-rib-label.on-hover { fill: var(--view-hover); }
+.bv-rib-count { font-weight: 600; fill: var(--text-primary); }
+.bv-spine-label { font-size: 10px; font-weight: 600; fill: var(--text-primary); text-anchor: middle; pointer-events: none; }
+.bv-spine-label.ahead { fill: var(--text-muted); font-weight: 500; }
+.bv-spine-num { font-size: 8.5px; fill: var(--text-muted); text-anchor: middle; pointer-events: none; }
+
 /* ── Streamed text (the Overview's demo description) ───────────────────── */
 /* Each word fades in after the one before it, so a paragraph writes itself out without
    the layout moving. The delay per word is set inline. */

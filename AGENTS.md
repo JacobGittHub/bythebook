@@ -23,8 +23,9 @@ should come away thinking of the Najdorf as a *place* with neighbors, not a move
 once read. When a choice trades spatial memorability for technical elegance, memorability
 wins.
 
-**Status:** The Opening Explorer, the Library (book management), the Treemap opening tree
-and the Overview page are live, and guests can use all of them without an account. The
+**Status:** The Opening Explorer, the Library (book management), the Treemap opening tree,
+the five book views (small visualizations, also in the Explorer's tree window) and the
+Overview page are live, and guests can use all of them without an account. The
 Labyrinth, the region map prototype, is the visualization in active development
 (`plans/region-map.md`), and it is also the first test of the territory map's ideas. The
 territory map and the hyperbolic panel remain candidate designs; don't build them, or shape
@@ -40,7 +41,7 @@ which is not in development.
 
 | Task | Command |
 |---|---|
-| Dev server | `npm run dev` |
+| Dev server | `npm run dev`; `npm run dev:stop` stops every dev server and watcher on the machine (`-- -List` only lists them) |
 | Typecheck | `npx tsc --noEmit` (passes; keep it passing) |
 | Lint | `npm run lint` (reports no problems; keep it that way, since CI fails on any) |
 | Tests while working | `npm run test:changed` (tests affected by uncommitted changes), or `npm run test:related -- <files>` |
@@ -50,6 +51,7 @@ which is not in development.
 | Agent docs | `npm run docs:check` (`docs/docs.test.ts` alone; `npm test` includes it), `npm run docs:sizes` (token estimates) |
 | Production build | `npm run build` |
 | Rebuild the opening catalog | `npm run catalog:download`, then `npm run catalog:index` |
+| Rebuild the example books | `npm run books:examples` (reads Wikibooks, the catalog and `position_cache`, never Lichess; `-- --skip-masters` keeps the books made from the cache) |
 | Fill `position_cache` for the catalog | `npm run cache:prefill` (calls Lichess for hours; the user runs it, agents use `-- --dry-run`) |
 | Make beta invite or reset codes | `npm run invites:create` (writes to the live database; the user runs it) |
 | Regenerate DB types | `npm run db:types` (see "Database changes" below) |
@@ -66,7 +68,9 @@ fix. Keep a visual bug as a screenshot spec in `e2e/screens/bugs/`.
 
 **Clean up after browser tests.** Run output only goes to `test-results/` and
 `playwright-report/`, and baselines only to `e2e/screens/`. After a session that ran
-Playwright, run `npm run test:e2e:clean`. When a session touched screenshots, run
+Playwright, run `npm run test:e2e:clean`. Before ending a run, stop any dev server you
+started with `npm run dev:stop` (Playwright stops the one it starts itself); stopping its
+shell can leave the server running. When a session touched screenshots, run
 `npm run screens:flush` to list them, and offer to delete any whose bug or view is finished.
 
 ## Environment
@@ -81,20 +85,23 @@ Playwright, run `npm run test:e2e:clean`. When a session touched screenshots, ru
 - `.env.local` (never commit it) holds `NEXT_PUBLIC_SUPABASE_URL`,
   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` and `LICHESS_API_TOKEN`, and optionally
   `NEXT_PUBLIC_BETA_CONTACT_EMAIL` (the address behind the beta key and reset code links),
-  `DEBUG_MODE` and `DEBUG_EMAILS` (debug mode, `docs/design/dashboard.md`), and `E2E_EMAIL` and
-  `E2E_PASSWORD` (the browser tests' account). Only `NEXT_PUBLIC_*` values may reach client
-  code.
+  `DEBUG_MODE` and `DEBUG_EMAILS` (debug mode, `docs/design/dashboard.md`), `E2E_EMAIL` and
+  `E2E_PASSWORD` (the browser tests' account), and `PUBLISHER_EMAIL` and `PUBLISHER_PASSWORD`
+  (the account that publishes the Bookstore's books, for the planned publishing script in
+  `plans/bookstore.md`). Agents never
+  read the file; scripts load it. Only `NEXT_PUBLIC_*` values may reach client code.
 
 ## Where things live
 
 - `src/app/` holds routes, and `src/app/api/` holds route handlers.
 - `src/components/` is organized by feature: `board/`, `openings/`, `repertoire/`,
-  `training/`, `puzzles/`, `overview/`, `layout/` (the dashboard frame), `lab/` (the
-  visualization prototypes).
-- `src/lib/chess/` holds chess logic and the opening catalog. `src/lib/db/` holds all
-  Supabase access. `src/lib/validators/schemas.ts` holds the Zod schemas.
-- `scripts/` holds the catalog build scripts and the cache pre-fill script, and
-  `supabase/migrations/` holds migrations.
+  `books/` (the book views), `training/`, `puzzles/`, `overview/`, `layout/` (the dashboard
+  frame), `lab/` (the visualization prototypes).
+- `src/lib/chess/` holds chess logic and the opening catalog. `src/lib/books/` holds what is
+  worked out about books, the book views' layouts and the example books. `src/lib/db/` holds
+  all Supabase access. `src/lib/validators/schemas.ts` holds the Zod schemas.
+- `scripts/` holds the catalog build scripts, the cache pre-fill script and the example book
+  builder, and `supabase/migrations/` holds migrations.
 
 ## How to work
 
@@ -191,6 +198,7 @@ edit these files.
 **Generated files (never hand-edit)**
 
 - `src/types/database.ts`, which the Supabase CLI generates.
+- `public/books/examples/`, which `npm run books:examples` writes.
 - `src/lib/chess/generated/openingCatalogIndex.json`, which `npm run catalog:index`
   generates.
 
@@ -226,7 +234,7 @@ them, unless the user brings it up.
 | Item | Why it stays | Removable when |
 |---|---|---|
 | `src/components/repertoire/OpeningTreeFull.tsx` | It is the live opening tree on the Treemap page (under Visualizations) | A successor ships and the user says so |
-| `src/components/openings/OpeningMiniTree.tsx` | It is the live explorer sidebar tree, and the user wants it kept as-is | A successor ships and the user says so |
+| `src/components/openings/OpeningMiniTree.tsx` | It was the explorer sidebar tree until the book views replaced it on 2026-10-06, and the user wanted it kept as-is | The user says so |
 | `d3`, `@types/d3` | `OpeningTreeFull` uses them | `OpeningTreeFull` is removed |
 | `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`, `src/components/lab/LabHarness.tsx` | They are prototypes the user may revisit, listed on the Visualizations page as possible future ones | The user says so |
 | `three`, `@react-three/fiber`, `@react-three/drei` | `GlobeTest` uses them | The user says so |
@@ -242,7 +250,7 @@ public like this file, so keep secrets out of both.
 | The data model, catalog, database, caching, engine, dependencies, or any "why is it like this" question | `docs/architecture.md` |
 | The Lichess API route or `position_cache` | `docs/processes/lichess-api-and-caching.md` |
 | Any tree or map visualization | `docs/architecture.md` § "Visualization principles", then the design doc below |
-| The Opening Explorer or the mini tree | `docs/design/explorer.md` |
+| The Opening Explorer, its tree window or the book views (small visualizations) | `docs/design/explorer.md` |
 | The Treemap page's opening tree | `docs/design/opening-tree.md` |
 | Guest and account access, or sign-in | `docs/architecture.md` § "Auth and API routes" |
 | The dashboard frame, sidebar, Overview or Visualizations page, or theme colors | `docs/design/dashboard.md` |

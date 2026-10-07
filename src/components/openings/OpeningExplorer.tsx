@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState, type CSSProperties } from "react";
+import { ExplorerTreeWindow } from "@/components/openings/ExplorerTreeWindow";
+import { ResizeHandle } from "@/components/ui/ResizeHandle";
+import { useStoredString } from "@/hooks/useStoredString";
 import { BoardInteractive } from "@/components/board/BoardInteractive";
 import { START_FEN } from "@/lib/chess/fen";
 import {
@@ -22,7 +25,6 @@ import { useBackgroundMode } from "@/context/BackgroundMode";
 import { useViewer } from "@/context/Viewer";
 import { SignInPrompt } from "@/components/ui/SignInPrompt";
 import { formatScore, evalToBarPct } from "@/lib/chess/stockfishUci";
-import { OpeningMiniTree, type HistoryAltEntry } from "@/components/openings/OpeningMiniTree";
 import { mergeMoveLineIntoTree } from "@/lib/chess/moveTree";
 import type { MoveResult } from "@/hooks/useChessGame";
 import type { CatalogMatch, ExplorerMatchMode, ExplorerMove, Move, MoveNode, OpeningBook } from "@/types/chess";
@@ -39,6 +41,40 @@ function collectBookLines(
 }
 
 const AUTO_PLAY_DELAY_MS = 700;
+
+const NO_MOVES: ExplorerMove[] = [];
+
+/** Where the side panels' heights are kept in the browser. */
+const PANELS_KEY = "bythebook.explorer.panels";
+
+/**
+ * How far each side panel can be dragged, in pixels. A height of null is the panel's own:
+ * the engine and the move row fit their content, the tree window starts at `TREE_HEIGHT`.
+ */
+const PANEL_LIMITS = {
+  engine: { min: 56, max: 360 },
+  tree: { min: 120, max: 560 },
+  moves: { min: 40, max: 220 },
+} as const;
+const TREE_HEIGHT = 240;
+
+type PanelHeights = { engine: number | null; tree: number | null; moves: number | null };
+const NO_HEIGHTS: PanelHeights = { engine: null, tree: null, moves: null };
+
+function parseHeights(stored: string | null): PanelHeights {
+  if (!stored) return NO_HEIGHTS;
+  try {
+    const value = JSON.parse(stored) as Partial<Record<keyof PanelHeights, unknown>>;
+    const pick = (key: keyof PanelHeights) => {
+      const height = value[key];
+      const { min, max } = PANEL_LIMITS[key];
+      return typeof height === "number" && height >= min && height <= max ? height : null;
+    };
+    return { engine: pick("engine"), tree: pick("tree"), moves: pick("moves") };
+  } catch {
+    return NO_HEIGHTS;
+  }
+}
 
 function moveResultsToMoves(moveHistory: MoveResult[]): Move[] {
   return moveHistory.map((move) => ({
@@ -189,41 +225,19 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
     [moveHistory],
   );
   const historyExplorerData = useOpeningExplorerMulti(historyBeforeFens);
-  const historyPlayedFractions = useMemo((): (number | null)[] => {
-    return moveHistory.map((move, i) => {
-      const beforeFen = i === 0 ? START_FEN : moveHistory[i - 1].fen;
-      const data = historyExplorerData[beforeFen];
-      if (!data?.moves?.length) return null;
-      const total = data.moves.reduce((s, m) => s + m.white + m.draws + m.black, 0);
-      if (total === 0) return null;
-      const played = data.moves.find((m) => m.uci === move.uci);
-      if (!played) return null;
-      return (played.white + played.draws + played.black) / total;
-    });
-  }, [moveHistory, historyExplorerData]);
+  // The master moves at the position before each played move, for the tree window.
+  const historyBefore = useMemo(
+    () => historyBeforeFens.map((fen) => historyExplorerData[fen]?.moves ?? null),
+    [historyBeforeFens, historyExplorerData],
+  );
 
-  const historyPlayedGames = useMemo((): (number | null)[] => {
-    return moveHistory.map((move, i) => {
-      const beforeFen = i === 0 ? START_FEN : moveHistory[i - 1].fen;
-      const data = historyExplorerData[beforeFen];
-      if (!data?.moves?.length) return null;
-      const played = data.moves.find((m) => m.uci === move.uci);
-      if (!played) return null;
-      return played.white + played.draws + played.black;
-    });
-  }, [moveHistory, historyExplorerData]);
-
-  const historyAlternates = useMemo((): (HistoryAltEntry | null)[] => {
-    return moveHistory.map((move, i) => {
-      const beforeFen = i === 0 ? START_FEN : moveHistory[i - 1].fen;
-      const data = historyExplorerData[beforeFen];
-      if (!data?.moves?.length) return null;
-      const total = data.moves.reduce((s, m) => s + m.white + m.draws + m.black, 0);
-      if (total === 0) return null;
-      const alts = data.moves.filter((m) => m.uci !== move.uci).slice(0, 6);
-      return alts.length > 0 ? { alts, total } : null;
-    });
-  }, [moveHistory, historyExplorerData]);
+  const [storedHeights, setStoredHeights] = useStoredString(PANELS_KEY);
+  const heights = parseHeights(storedHeights);
+  const setHeight = (key: keyof PanelHeights, height: number | null) =>
+    setStoredHeights(JSON.stringify({ ...heights, [key]: height }));
+  const enginePanelRef = useRef<HTMLDivElement>(null);
+  const treePanelRef = useRef<HTMLDivElement>(null);
+  const movesPanelRef = useRef<HTMLDivElement>(null);
 
   // Autoplay sends the next move a moment after each one lands.
   useEffect(() => {
@@ -255,13 +269,6 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
   /** Goes to the position after `moves`, through a reset and a replay. */
   const goToLine = (moves: Move[]) => dispatch({ type: "goToLine", moves });
 
-  const handleHistoryAlternateClick = (fullMoveIndex: number, move: ExplorerMove) => {
-    goToLine([
-      ...moveHistory.slice(0, fullMoveIndex).map((m) => ({ san: m.san, uci: m.uci })),
-      { san: move.san, uci: move.uci },
-    ]);
-  };
-
   const handleHistoryNodeClick = (fullMoveIndex: number) => {
     if (fullMoveIndex === moveHistory.length - 1) return;
     goToLine(moveHistory.slice(0, fullMoveIndex + 1).map((m) => ({ san: m.san, uci: m.uci })));
@@ -273,7 +280,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
   const handleGoToEnd = () => dispatch({ type: "goToEnd" });
   const handleToggleAutoPlay = () => dispatch({ type: "toggleAutoPlay" });
 
-  const handleExplorerMoveClick = (move: ExplorerMove) => {
+  const handleExplorerMoveClick = (move: Move) => {
     dispatch({ type: "playMove", move: { san: move.san, uci: move.uci } });
   };
 
@@ -346,21 +353,22 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
     "btn-secondary rounded-full p-1.5 transition-colors";
   const playBtnClass =
     "btn-primary rounded-full px-3 py-1.5 text-xs font-semibold transition-opacity";
+  const cardClass = "rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)]";
+  // A move row given a height wraps its moves; left alone it is one line that scrolls sideways.
+  const wrapMoves = heights.moves !== null;
+  const moveTokensWrap = wrapMoves ? "xl:flex-wrap xl:whitespace-normal" : "";
 
   return (
     // The page fits the viewport at every width. Wide: the board beside a panel column.
     // Narrow (a phone or a small window): the board on top, sized from the viewport height,
     // and the panels below it in one column that scrolls on its own.
-    <div className="flex h-[calc(100dvh-var(--dash-offset))] flex-col gap-2 xl:grid xl:grid-cols-[1.1fr_0.9fr] xl:gap-4">
+    <div className="flex h-[calc(100dvh-var(--dash-offset))] flex-col gap-2 xl:grid xl:grid-cols-[1.1fr_0.9fr] xl:gap-3">
       {/* ── Left: board + search ── */}
-      <section
-        className="grid min-w-0 shrink-0 gap-2 rounded-3xl bg-slate-50 p-1.5 xl:h-full xl:gap-3 xl:rounded-[2rem] xl:p-3"
-        style={{ gridTemplateRows: "auto 1fr" }}
-      >
+      <section className="grid min-w-0 shrink-0 gap-2 xl:h-full" style={{ gridTemplateRows: "auto 1fr" }}>
         {/* Header card: title row + book row */}
-        <div className="flex flex-col gap-2 rounded-3xl border border-slate-200 bg-white px-3 py-2.5 xl:gap-2.5 xl:px-5 xl:py-4">
+        <div className={`flex flex-col gap-1.5 px-3 py-2 ${cardClass}`}>
           {/* Row 1: title+subtitle (inline) | flip | search */}
-          <div className="flex items-center gap-2 xl:gap-3">
+          <div className="flex items-center gap-2">
             {/* The title gives way to the search box when there is no room for both. */}
             <div className="hidden min-w-0 flex-1 items-baseline gap-2 sm:flex">
               <h1 className="shrink-0 text-lg font-semibold text-slate-950">Opening Explorer</h1>
@@ -404,7 +412,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
                   }
                 }}
                 placeholder="Search — Sicilian, B12…"
-                className="w-full rounded-2xl border border-[var(--border-card)] bg-[var(--bg-muted)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--text-muted)] focus:bg-[var(--bg-card)]"
+                className="w-full rounded-xl border border-[var(--border-card)] bg-[var(--bg-muted)] px-3 py-1.5 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--text-muted)] focus:bg-[var(--bg-card)]"
               />
 
               {showDropdown && (
@@ -487,7 +495,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
         </div>
 
         {/* Board + right-side eval bar */}
-        <div className="flex min-h-0 justify-center gap-2 rounded-3xl border border-slate-200 bg-white p-2 xl:rounded-[2rem] xl:p-4">
+        <div className={`flex min-h-0 justify-center gap-2 p-1.5 xl:p-2 ${cardClass}`}>
           {/* Narrow: a square as wide as the card, but capped at about half the viewport's
               height (max-w below), so the panels under it always keep some room. Wide: it
               fills the card and the inner square takes the smaller side. */}
@@ -540,11 +548,17 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
         </div>
       </section>
 
-      {/* ── Right: four-section sidebar. Narrow: it sits under the board and scrolls as one
-          column, with the move row first (and pinned) and the statistics next. ── */}
-      <aside className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-y-auto xl:gap-3 xl:overflow-visible">
+      {/* ── Right: four-section sidebar. Wide: each panel but the statistics can be dragged
+          taller or shorter by the handle under it, and the statistics take what is left.
+          Narrow: it sits under the board and scrolls as one column, with the move row first
+          (and pinned) and the statistics next. A handle or a gap follows every panel. ── */}
+      <aside className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
         {/* ① Engine panel */}
-        <div className="order-3 shrink-0 rounded-3xl border border-slate-200 bg-white px-4 py-3 xl:order-none xl:px-5 xl:py-4">
+        <div
+          ref={enginePanelRef}
+          className={`order-3 flex shrink-0 flex-col px-3 py-2 xl:order-none ${cardClass}`}
+          style={engineMode !== "none" && heights.engine ? { height: heights.engine } : undefined}
+        >
           {/* Controls row */}
           <div className="flex items-center gap-2">
             <p className="mr-auto text-xs font-semibold uppercase tracking-widest text-slate-400">
@@ -586,7 +600,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
 
           {/* Engine output */}
           {engineMode !== "none" && (
-            <div className="mt-4 space-y-3">
+            <div className="mt-2 min-h-0 space-y-2 overflow-y-auto">
               {!engine.isReady ? (
                 <p className="text-xs text-slate-400">Loading engine…</p>
               ) : (
@@ -629,31 +643,57 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
           )}
         </div>
 
-        {/* ② Mini look-ahead tree */}
-        <div className="order-4 h-64 shrink-0 overflow-hidden rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-3 py-3 xl:order-none">
-          <OpeningMiniTree
-            moveHistory={moveHistory}
-            explorerMoves={explorerData.data?.moves ?? []}
-            currentFen={currentFen}
-            historyPlayedFractions={historyPlayedFractions}
-            historyPlayedGames={historyPlayedGames}
-            historyAlternates={historyAlternates}
-            boardOrientation={boardOrientation}
-            onMoveClick={handleExplorerMoveClick}
-            onHistoryNodeClick={handleHistoryNodeClick}
-            onHistoryAlternateClick={handleHistoryAlternateClick}
+        {engineMode !== "none" ? (
+          <ResizeHandle
+            className="order-3 xl:order-none"
+            target={enginePanelRef}
+            {...PANEL_LIMITS.engine}
+            onResize={(height) => setHeight("engine", height)}
+            onReset={() => setHeight("engine", null)}
+            label="Resize the engine panel"
+          />
+        ) : (
+          <div className="order-3 h-2 shrink-0 xl:order-none" />
+        )}
+
+        {/* ② The explored line, in the book view the viewer picks */}
+        <div
+          ref={treePanelRef}
+          className={`order-4 shrink-0 overflow-hidden p-1.5 xl:order-none ${cardClass}`}
+          style={{ height: heights.tree ?? TREE_HEIGHT }}
+        >
+          <ExplorerTreeWindow
+            history={moveHistory}
+            before={historyBefore}
+            next={explorerData.data?.moves ?? NO_MOVES}
+            orientation={boardOrientation}
+            onGoToLine={goToLine}
+            onPlayMove={handleExplorerMoveClick}
             onHoverUci={setHoveredMoveUci}
-            hoveredUci={hoveredMoveUci}
           />
         </div>
+        <ResizeHandle
+          className="order-4 xl:order-none"
+          target={treePanelRef}
+          {...PANEL_LIMITS.tree}
+          onResize={(height) => setHeight("tree", height)}
+          onReset={() => setHeight("tree", null)}
+          label="Resize the tree window"
+        />
 
         {/* ③ Move sequence + navigation */}
-        <div className="sticky top-0 z-10 order-1 shrink-0 rounded-3xl border border-slate-200 bg-white px-4 py-2.5 xl:static xl:order-none xl:px-5 xl:py-4">
-          <div className="flex items-center gap-2">
-            {/* Scrollable move tokens */}
-            <div className="min-w-0 flex-1 overflow-x-auto">
+        <div
+          ref={movesPanelRef}
+          className={`sticky top-0 z-10 order-1 flex shrink-0 flex-col px-3 py-2 xl:static xl:order-none ${cardClass} ${
+            wrapMoves ? "xl:h-[var(--moves-h)]" : ""
+          }`}
+          style={wrapMoves ? ({ "--moves-h": `${heights.moves}px` } as CSSProperties) : undefined}
+        >
+          <div className="flex min-h-0 flex-1 items-start gap-2">
+            {/* Move tokens: one line that scrolls sideways, or wrapped when the row is taller */}
+            <div className={`min-w-0 flex-1 overflow-x-auto ${wrapMoves ? "xl:h-full xl:overflow-x-hidden xl:overflow-y-auto" : ""}`}>
               {selectedMatch ? (
-                <div className="flex items-baseline gap-1 whitespace-nowrap pb-0.5">
+                <div className={`flex items-baseline gap-1 whitespace-nowrap pb-0.5 ${moveTokensWrap}`}>
                   {selectedMatch.moves.map((move, index) => {
                     const isPlayed =
                       isBoardOnHighlightedLine &&
@@ -686,7 +726,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
                   })}
                 </div>
               ) : currentMoves.length > 0 ? (
-                <div className="flex items-baseline gap-1 whitespace-nowrap pb-0.5">
+                <div className={`flex items-baseline gap-1 whitespace-nowrap pb-0.5 ${moveTokensWrap}`}>
                   {currentMoves.map((move, index) => (
                     <span key={index} className="inline-flex items-baseline gap-0.5">
                       {index % 2 === 0 && (
@@ -775,9 +815,22 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
             <p className="mt-2 text-xs text-rose-500">{playbackError}</p>
           )}
         </div>
+        {/* The move row's handle is for wide screens, where the row isn't pinned. */}
+        <div className="order-1 shrink-0 xl:order-none">
+          <div className="hidden xl:block">
+            <ResizeHandle
+              target={movesPanelRef}
+              {...PANEL_LIMITS.moves}
+              onResize={(height) => setHeight("moves", height)}
+              onReset={() => setHeight("moves", null)}
+              label="Resize the move row"
+            />
+          </div>
+          <div className="h-2 xl:hidden" />
+        </div>
 
         {/* ④ Opening name + master game stats */}
-        <div className="order-2 flex shrink-0 flex-col rounded-3xl border border-slate-200 bg-white px-4 py-3 xl:order-none xl:min-h-0 xl:flex-1 xl:shrink xl:overflow-y-auto xl:px-5 xl:py-4">
+        <div className={`order-2 flex shrink-0 flex-col px-3 py-2 xl:order-none xl:min-h-32 xl:flex-1 xl:shrink xl:overflow-y-auto ${cardClass}`}>
           {/* Match label + opening name */}
           <div className="shrink-0">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
@@ -793,7 +846,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
           </div>
 
           {/* Divider */}
-          <div className="my-3 shrink-0 border-t border-slate-100" />
+          <div className="my-2 shrink-0 border-t border-[var(--border-card)]" />
 
           {/* Master game move stats */}
           {explorerData.loading && (
@@ -835,7 +888,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
                       onMouseEnter={() => setHoveredMoveUci(move.uci)}
                       onMouseLeave={() => setHoveredMoveUci(null)}
                       onKeyDown={(e) => e.key === "Enter" && handleExplorerMoveClick(move)}
-                      className={`grid cursor-pointer grid-cols-[2rem_1fr_3.5rem] items-center gap-2 rounded-xl px-2 py-2 transition-colors ${
+                      className={`grid cursor-pointer grid-cols-[2rem_1fr_3.5rem] items-center gap-2 rounded-lg px-2 py-1.5 transition-colors ${
                         isHovered || isHighlightedFirst
                           ? "bg-[var(--bg-muted)]"
                           : "hover:bg-[var(--bg-muted)]"
@@ -884,6 +937,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
             <p className="text-xs text-slate-400">Master game data will appear here.</p>
           )}
         </div>
+        <div className="order-2 h-2 shrink-0 xl:hidden" />
       </aside>
     </div>
   );

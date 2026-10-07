@@ -1,6 +1,6 @@
 # Vision
 
-Status: living · Updated: 2026-10-03 · Depends on: —
+Status: living · Updated: 2026-10-07 · Depends on: —
 
 The shared picture of where ByTheBook is going. Every plan in this folder should serve
 something here. Agents propose changes to this file; the user decides them.
@@ -42,6 +42,6 @@ as a place with neighbors, not a move list. The full statement is "Product goal"
   hyperbolic panel are candidates (`docs/design/`), not commitments, and the static atlas is
   a draft (`atlas.md`).
 - What comes after deployment: the trainer, puzzles, or a new visualization.
-- Telemetry, once the storage decisions in `data-delivery.md` settle.
+- Telemetry beyond what load testing needs (`load-testing.md` Q5).
 
 > ME:

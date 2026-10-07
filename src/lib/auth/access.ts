@@ -3,6 +3,8 @@
 // they can't disagree. It has no Supabase or browser imports: the proxy imports it, and the
 // tests run in Node.
 
+import { BOOK_VIEWS } from "@/lib/books/views";
+
 export type PageAccess = "everyone" | "account";
 export type PageStatus = "live" | "coming_soon" | "prototype";
 
@@ -15,6 +17,10 @@ export type PageLink = {
   status: PageStatus;
   /** One line for the page's button. */
   summary: string;
+  /** Shown first, in a larger button, on the page that lists it. */
+  featured?: boolean;
+  /** A small visualization: one book in one of the book views, listed in its own group. */
+  small?: boolean;
 };
 
 /** A sidebar page. `details` is the longer text beside its demo on the Overview page. */
@@ -35,7 +41,7 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     summary: "Board analysis with master-game statistics and an engine.",
     details:
-      "Play moves on the board and the Explorer names the opening you are in, lists what masters played from that position and how those games ended, and draws a small tree of where the game has been and where it usually goes next. Turn on Stockfish, which runs in your own browser, to see the evaluation and the best move.",
+      "Play moves on the board and the Explorer names the opening you are in, lists what masters played from that position and how those games ended, and draws a small tree of where the game has been and where it usually goes next, in whichever of five views you like. Turn on Stockfish, which runs in your own browser, to see the evaluation and the best move.",
   },
   {
     href: "/dashboard/visualizations",
@@ -44,7 +50,7 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     summary: "Experimental ways to see opening theory as a place.",
     details:
-      "The Treemap draws every named opening as one radial tree that you can pan, search and click through, with your own books highlighted on it. Prototypes of other views, a 3D globe, a flat map and the Labyrinth, a zoomable map of regions, are kept here as possible future visualizations.",
+      "The Labyrinth, the view in active development, draws every move as a region inside the move before it, sized by how often masters played it, so zooming in walks you deeper into a line. It needs an account for now. The Treemap, an earlier view, draws every named opening as one radial tree that you can pan, search and click through, with your own books highlighted on it. Five small visualizations each draw one book at a time, an example book or one of your own, beside a board. Prototypes of a 3D globe and a flat map are kept here as possible future visualizations.",
   },
   {
     href: "/dashboard/library",
@@ -95,9 +101,20 @@ export const NAV_ITEMS: NavItem[] = [
 
 /**
  * The pages behind the Visualizations page's buttons. A `prototype` is a possible future
- * visualization, kept from the former Lab.
+ * visualization, kept from the former Lab, except the featured Labyrinth, which is in active
+ * development. The small visualizations are the book views (`src/lib/books/views/`), each
+ * on its own page.
  */
 export const VISUALIZATIONS: PageLink[] = [
+  {
+    href: "/dashboard/visualizations/labyrinth",
+    label: "Labyrinth",
+    access: "account",
+    status: "prototype",
+    featured: true,
+    summary:
+      "Every move as a region inside the move before it, sized by how often masters played it. Zoom in to walk deeper into a line, with the opening's name above the map and its position on a board beside it.",
+  },
   {
     href: "/dashboard/visualizations/treemap",
     label: "Treemap",
@@ -106,6 +123,16 @@ export const VISUALIZATIONS: PageLink[] = [
     summary:
       "Every named opening as one radial tree. Pan, search, and click a position to see its board and master statistics.",
   },
+  ...BOOK_VIEWS.map(
+    (view): PageLink => ({
+      href: `/dashboard/visualizations/books/${view.id}`,
+      label: view.label,
+      access: "everyone",
+      status: "live",
+      small: true,
+      summary: view.summary,
+    }),
+  ),
   {
     href: "/dashboard/visualizations/globe",
     label: "Globe",
@@ -119,14 +146,6 @@ export const VISUALIZATIONS: PageLink[] = [
     access: "account",
     status: "prototype",
     summary: "Openings as branches on a flat map that shows more detail as you zoom.",
-  },
-  {
-    href: "/dashboard/visualizations/labyrinth",
-    label: "Labyrinth",
-    access: "account",
-    status: "prototype",
-    summary:
-      "Every move as a region inside the move before it, sized by how often masters played it. Zoom in to go deeper.",
   },
 ];
 
@@ -149,7 +168,7 @@ export type AccessRow = { feature: string; guest: string; account: string };
 /** The guest and account differences, as shown on the Overview page. */
 export const ACCESS_ROWS: AccessRow[] = [
   {
-    feature: "Explorer, Treemap and the engine",
+    feature: "Explorer, Treemap, the small visualizations and the engine",
     guest: "Yes",
     account: "Yes",
   },

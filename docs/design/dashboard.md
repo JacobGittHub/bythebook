@@ -4,6 +4,7 @@
 **Files:** `src/app/dashboard/layout.tsx` (the frame and Sign out),
 `src/components/layout/DashboardShell.tsx`, `src/components/overview/OverviewShowcase.tsx`,
 `src/app/dashboard/visualizations/page.tsx`, `src/components/ui/RouteCard.tsx`,
+`src/components/books/BookViewPage.tsx` (the small visualizations),
 `src/lib/auth/access.ts` (what the sidebar and both pages list), `src/app/globals.css` (theme
 tokens), `src/context/BackgroundMode.tsx` (the background setting)
 
@@ -46,8 +47,26 @@ The Overview is the info page that a landing page would otherwise be (`/` redire
 ## Visualizations page
 
 A route button (`RouteCard`, tagged "Jump to page") for each entry in `VISUALIZATIONS`: the
-live Treemap first, then the prototypes under "Possible future visualizations". A guest sees
-the prototypes listed but can't open them.
+`featured` entry first, in a larger card (the Labyrinth, while it is in active development),
+then the live Treemap, the `small` visualizations as their own group, and the prototypes
+under "Possible future visualizations". A guest sees the account-only entries listed but
+can't open them.
+
+**Small visualizations** are the five book views (`explorer.md`, "Book views"), one page each
+at `/dashboard/visualizations/books/<view>` (`BookViewPage`). Guests can open them. A page
+draws one book beside a board: an example book (`src/lib/books/examples.ts`), or one of the
+viewer's own books when signed in. The rail switches views without leaving the page and
+keeps the book, and the address follows (`?book=`), so a link reopens the same book. The
+panel shows the selected or hovered position, what a store card will say about the book
+(positions against `MAX_BOOK_POSITIONS`, lines, average line, clashes, the unconnected flag,
+from `src/lib/books/measures.ts`), and, for an example book, how it was made and whom it
+credits.
+
+**Example books** are static files in `public/books/examples/`, written by
+`npm run books:examples` (`scripts/buildExampleBooks.ts`) and served by the CDN, so showing
+one costs no function call. Each file names its method (Wikibooks page titles, the catalog's
+named lines, master statistics from `position_cache`, or the catalog grown from master
+statistics) and, for Wikibooks, its CC BY-SA credit, which the page shows.
 
 ## Theme colors
 

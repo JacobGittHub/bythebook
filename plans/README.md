@@ -23,6 +23,8 @@ otherwise)
 | [atlas.md](atlas.md) | deciding | region-map.md | A static, pre-generated region map built in reproducible editions |
 | [bookstore.md](bookstore.md) | deciding | deployment.md | Default books, repertoires, and library export and import |
 | [game-history.md](game-history.md) | deciding | deployment.md | Import a user's own games and show them on the app's displays |
+| [load-testing.md](load-testing.md) | deciding | deployment.md | Find how many visitors and members the app serves at once, with telemetry |
+| [vibes.md](vibes.md) | deciding | deployment.md | UI vibes and music that follow the opening on the board, assigned from community votes |
 
 Statuses: `deciding` (open questions remain) · `ready` (steps written, not started) ·
 `active` · `done` · `parked` · `living` (never finishes, like the vision).

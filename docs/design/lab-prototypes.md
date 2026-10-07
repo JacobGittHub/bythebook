@@ -18,7 +18,8 @@ them. "Lab" below means these prototypes and `src/components/lab/`.
 
 A third prototype, the Labyrinth (the region map), has its own doc, `region-map.md`, and its
 own page frame, `RegionMapView`, instead of a view of the harness. It uses the shared pieces
-below.
+below. It is in active development, so the Visualizations page features it at the top
+instead of listing it with these.
 
 **What the prototypes share.**
 

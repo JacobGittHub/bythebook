@@ -1,6 +1,6 @@
 # Public deployment
 
-Status: active · Updated: 2026-10-03 · Depends on: —
+Status: active · Updated: 2026-10-07 · Depends on: —
 
 **Goal:** put ByTheBook on Vercel so guests can use it without an
 account, while up to about 100 beta testers sign in and keep their data.
@@ -156,8 +156,8 @@ steps are still open:
 
 ### Phase 7. Launch
 
-- [ ] (agent) Ceilings as named constants, set from the Phase 1 counts; over the ceiling
-      returns 429. A ceiling needs the count before answering, which changes where the
+- [ ] (agent) Ceilings as named constants, set from the Phase 1 counts and the load tests
+      (`load-testing.md`); over the ceiling returns 429. A ceiling needs the count before answering, which changes where the
       count is written (`data-delivery.md` D5).
 - [ ] (user) An uptime ping so the free Supabase project doesn't pause.
 - [ ] (user, agent) Demo animations for the Overview page, and a pass over its text.

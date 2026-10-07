@@ -32,6 +32,11 @@ type MoveNode = {
   crossings or losing region containment, and both candidate visualizations depend on
   containment. If transposition awareness is wanted later, add it as an annotation layer
   ("this position also arises via…") without changing the keying.
+- **What a book's card says about it** is worked out by `src/lib/books/measures.ts` from a
+  list of trees: positions against the limit, the unconnected-lines flag, leaf depths,
+  clashes, and coverage of master games. A book is still one tree today; the list is the
+  shape `plans/bookstore.md` (D16) moves books to. The small visualization pages show the
+  first four; coverage needs master numbers and is called only by tests so far.
 - **Stats are transposition-aware anyway.** `user_position_stats` is keyed by
   `toPositionKey(fen)`, which is the FEN without the clock fields. The same position reached
   by different move orders therefore aggregates into one row.

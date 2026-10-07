@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stopServers.ps1",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -22,6 +23,7 @@
     "catalog:download": "node scripts/buildCatalog.mjs",
     "catalog:index": "node scripts/buildOpeningCatalogIndex.mjs",
     "cache:prefill": "tsx --env-file=.env.local scripts/prefillPositionCache.ts",
+    "books:examples": "tsx --env-file=.env.local scripts/buildExampleBooks.ts",
     "invites:create": "tsx --env-file=.env.local scripts/createInvites.ts",
     "db:types": "supabase gen types typescript --project-id bcpkifxnjfjzfrqvpkby > src/types/database.ts"
   },

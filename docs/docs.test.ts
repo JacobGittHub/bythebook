@@ -27,6 +27,8 @@ const NOT_BUILT = new Set([
   "BRANCH_STEP",
   "@react-spring/three",
   "interpolateZoom",
+  "PUBLISHER_EMAIL",
+  "PUBLISHER_PASSWORD",
 ]);
 
 /**

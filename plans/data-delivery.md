@@ -1,6 +1,6 @@
 # Data delivery
 
-Status: deciding · Updated: 2026-10-03 · Depends on: —
+Status: deciding · Updated: 2026-10-07 · Depends on: —
 
 **Goal:** send the data every visitor shares (the opening catalog, saved master statistics,
 later the guest snapshot and the atlas) as static files and CDN-cached responses, so pages
@@ -32,6 +32,9 @@ From the user's replies to the architecture review on 2026-10-03.
   than before it, because a ceiling needs the count to answer. A CDN hit runs no function,
   so it is neither billed as one nor counted (Notes, "Counting and the CDN").
 - D6. Telemetry waits until these storage decisions settle (`vision.md`).
+
+  *Amended 2026-10-07 (the user, with `load-testing.md` D5):* telemetry starts with load
+  testing. What it measures and where is that plan's Q5.
 
 ## Open questions
 

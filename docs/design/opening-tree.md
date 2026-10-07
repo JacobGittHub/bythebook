@@ -8,7 +8,8 @@ successor. This tree stays until a successor ships and the user says otherwise.
 around `PositionPanel.tsx`).
 
 The Treemap is the one live visualization on the Visualizations page
-(`/dashboard/visualizations`), which has a route button for each visualization. Until
+(`/dashboard/visualizations`), which has a route button for each visualization and features
+the Labyrinth above it. Until
 2026-10-01 the tree was the dashboard's Overview at `/dashboard`, which is now an info page.
 Until 2026-10-02 the page was called the Atlas; that name now belongs to the planned static
 region map (`plans/atlas.md`), and the old addresses redirect here (`next.config.ts`).

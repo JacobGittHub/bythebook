@@ -25,6 +25,10 @@ describe("the page lists", () => {
     }
   });
 
+  it("feature at most one visualization", () => {
+    expect(VISUALIZATIONS.filter((page) => page.featured).length).toBeLessThanOrEqual(1);
+  });
+
   it("keep every visualization under the Visualizations page", () => {
     for (const page of VISUALIZATIONS) {
       expect(page.href.startsWith("/dashboard/visualizations/")).toBe(true);

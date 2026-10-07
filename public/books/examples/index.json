@@ -1,0 +1,93 @@
+{
+ "version": 1,
+ "books": [
+  {
+   "id": "example:queens-gambit",
+   "name": "Queen's Gambit",
+   "color": "white",
+   "method": "wikibooks",
+   "positions": 198,
+   "file": "queens-gambit.json"
+  },
+  {
+   "id": "example:italian-game",
+   "name": "Italian Game",
+   "color": "white",
+   "method": "wikibooks",
+   "positions": 338,
+   "file": "italian-game.json"
+  },
+  {
+   "id": "example:ruy-lopez",
+   "name": "Ruy Lopez",
+   "color": "white",
+   "method": "wikibooks",
+   "positions": 253,
+   "file": "ruy-lopez.json"
+  },
+  {
+   "id": "example:kings-gambit",
+   "name": "King's Gambit",
+   "color": "white",
+   "method": "wikibooks",
+   "positions": 75,
+   "file": "kings-gambit.json"
+  },
+  {
+   "id": "example:english-opening",
+   "name": "English Opening",
+   "color": "white",
+   "method": "wikibooks",
+   "positions": 108,
+   "file": "english-opening.json"
+  },
+  {
+   "id": "example:french-defense",
+   "name": "French Defense",
+   "color": "black",
+   "method": "wikibooks",
+   "positions": 141,
+   "file": "french-defense.json"
+  },
+  {
+   "id": "example:caro-kann-defense",
+   "name": "Caro-Kann Defense",
+   "color": "black",
+   "method": "wikibooks",
+   "positions": 256,
+   "file": "caro-kann-defense.json"
+  },
+  {
+   "id": "example:sicilian-defense",
+   "name": "Sicilian Defense",
+   "color": "black",
+   "method": "wikibooks",
+   "positions": 247,
+   "file": "sicilian-defense.json"
+  },
+  {
+   "id": "example:queens-gambit-catalog",
+   "name": "Queen's Gambit (catalog lines)",
+   "color": "white",
+   "method": "catalog",
+   "positions": 872,
+   "file": "queens-gambit-catalog.json"
+  },
+  {
+   "id": "example:queens-gambit-masters",
+   "name": "Queen's Gambit (master statistics)",
+   "color": "white",
+   "method": "masters",
+   "positions": 214,
+   "file": "queens-gambit-masters.json"
+  },
+  {
+   "id": "example:queens-gambit-catalog-masters",
+   "name": "Queen's Gambit (catalog + masters)",
+   "color": "white",
+   "method": "catalog+masters",
+   "positions": 1000,
+   "file": "queens-gambit-catalog-masters.json"
+  }
+ ]
+}

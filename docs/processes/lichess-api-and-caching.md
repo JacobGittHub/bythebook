@@ -145,7 +145,7 @@ includes a malformed FEN → 400 · anything else → 500
 | Region map (`src/lib/regions/loader.ts`) | For blobs on screen, biggest first, at most `EXPLORER_MAX_IN_FLIGHT` at once, and for the frame's own position, which its panel shows from the same load | A 429 pauses every request for its `Retry-After`. Other failures mark the position failed and it may be asked again after `FAILED_RETRY_MS` |
 
 - **Failures are quiet.** A cold cache combined with a Lichess 429 or an expired token makes
-  the mini tree and ghost expansions render with no moves, and the app stays usable. There
+  the Explorer's tree window and ghost expansions render with no moves, and the app stays usable. There
   is no server-side logging of 429s and no user-facing error beyond the hook's `error`
   state.
 - **Guests reach every consumer except the region map.** `src/proxy.ts` lets guests into

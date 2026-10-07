@@ -1,7 +1,7 @@
 # Region map (the Labyrinth, a lab prototype)
 
-**Status:** A prototype on the Visualizations page, the **Labyrinth**, next to the globe and
-the 2D map (see `lab-prototypes.md` for how the prototypes are shown). The map itself works:
+**Status:** A prototype on the Visualizations page, the **Labyrinth**, featured at the top
+of it, above the Treemap and the other prototypes (`dashboard.md`, "Visualizations page"). The map itself works:
 it lays out, zooms, pans and opens "Other", and its page names the opening the view is inside
 and shows that position in a side panel. Focus, pinning and the map's own controls are not
 built yet, and the sections on them below describe the design, not the code. The name
@@ -266,7 +266,7 @@ defaults are `DEFAULT_LAYOUT_OPTIONS` (`layout.ts`).
 - **One explorer lookup per blob, for its own position,** through `/api/openings/explorer`
   (see `processes/lichess-api-and-caching.md`).
 - **The route returns up to `EXPLORER_MOVES_LIMIT` moves and the position totals.** Old cache
-  rows are refetched lazily. The Explorer page, mini tree and dashboard tree still show 12
+  rows are refetched lazily. The Explorer page, its tree window and the dashboard tree still show 12
   (`EXPLORER_DISPLAY_MOVES`). The process doc has the details.
 - **Child positions** come from `fenAfterUci` in `src/lib/chess/fen.ts`.
 - **The frame's own position is loaded too,** at the highest priority, because the panel
