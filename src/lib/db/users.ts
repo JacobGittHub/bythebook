@@ -46,7 +46,7 @@ export async function getCurrentUser(options: CurrentUserOptions): Promise<AppUs
  * Creates an account that can sign in straight away, and its profile row. The user is
  * created already confirmed because Supabase's built-in email only reaches the project
  * team. Returns the new user's id, and throws if the account can't be created (for example
- * when the email is already registered).
+ * when the email is already registered, or the sign-up trigger refuses the username).
  */
 export async function createConfirmedUser(input: {
   email: string;
@@ -74,6 +74,23 @@ export async function createConfirmedUser(input: {
   }
 
   return data.user.id;
+}
+
+/**
+ * True when a profile already has this username, ignoring case, as the database's unique
+ * index does. Usernames are letters, digits, "_" and "-", so "_" is the only character
+ * `ilike` would read as a pattern, and it is escaped.
+ */
+export async function isUsernameTaken(username: string): Promise<boolean> {
+  const supabase = createAdminSupabaseClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .ilike("username", username.replace(/[\\%_]/g, (c) => `\\${c}`))
+    .limit(1);
+
+  if (error) throw error;
+  return data.length > 0;
 }
 
 export async function setUserPassword(userId: string, password: string): Promise<void> {

@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { isValidFen, normalizeFen } from "@/lib/chess/fen";
+import { cleanBookName, MAX_BOOK_NAME } from "@/lib/library/names";
+import { bookOriginSchema } from "@/lib/library/types";
 
 export const colorSchema = z.enum(["white", "black"]);
 
@@ -56,8 +58,15 @@ export const credentialsInputSchema = z.object({
 // checked here: a code that is wrong in any way simply matches no row.
 const accessCodeSchema = z.string().trim().min(1).max(100);
 
+/** What a new username may be: 3 to 24 letters, digits, "_" or "-". */
+export const USERNAME_PATTERN = /^[A-Za-z0-9_-]{3,24}$/;
+
+// Letters, digits, "_" and "-" only, so a name can't hold an email or imitate the verified
+// mark (plans/bookstore.md, D8 and Q3). Unique without regard to case, in the database.
+export const usernameSchema = z.string().trim().regex(USERNAME_PATTERN);
+
 export const registerInputSchema = z.object({
-  username: z.string().trim().min(1).max(50),
+  username: usernameSchema,
   email: z.string().trim().email(),
   password: z.string().min(8),
   code: accessCodeSchema,
@@ -71,6 +80,34 @@ export const resetPasswordInputSchema = z.object({
 export const updateBookTreeSchema = z.object({
   moveNode: z.unknown(),
 });
+
+// A book's name, trimmed, at most `MAX_BOOK_NAME` characters (plans/bookstore.md D8).
+export const bookNameSchema = z
+  .string()
+  .transform(cleanBookName)
+  .pipe(z.string().min(1).max(MAX_BOOK_NAME));
+
+// A book's trees are checked by `validateTrees` (src/lib/library/validate.ts), which replays
+// every move, so the schemas here only pass them along.
+export const createBookSchema = z.object({
+  name: bookNameSchema,
+  color: colorSchema,
+  origin: bookOriginSchema.default({ kind: "own" }),
+  trees: z.unknown(),
+});
+
+export const patchBookSchema = z
+  .object({
+    name: bookNameSchema.optional(),
+    color: colorSchema.optional(),
+    trees: z.unknown().optional(),
+    /** The `updatedAt` the client read; a book changed since then is refused with 409. */
+    expectedUpdatedAt: z.string().min(1),
+  })
+  .refine(
+    (patch) => patch.name !== undefined || patch.color !== undefined || patch.trees !== undefined,
+    "Nothing to change.",
+  );
 
 export const schemas = {
   openingBook: openingBookInputSchema,

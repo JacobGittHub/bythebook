@@ -24,7 +24,7 @@ export const EXAMPLE_ID_PREFIX = "example:";
 export const EXAMPLE_METHODS = ["wikibooks", "catalog", "masters", "catalog+masters"] as const;
 export type ExampleMethod = (typeof EXAMPLE_METHODS)[number];
 
-const attributionSchema = z.object({
+export const attributionSchema = z.object({
   /** The work's title, as its source names it. */
   title: z.string(),
   url: z.string().url(),

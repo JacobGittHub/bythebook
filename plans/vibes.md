@@ -76,7 +76,7 @@ Libraries that theme at runtime (MUI, Mantine, Chakra) fit worst, since their th
 JavaScript objects and a vibe change re-renders the tree. Either way, the first phase of
 this plan makes every visual value a token.
 
-> ME:
+> ME: shadcn/ui is great.
 
 ### Q2. How are branches voted on?
 

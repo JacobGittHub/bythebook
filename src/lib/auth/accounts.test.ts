@@ -8,6 +8,7 @@ const codes = vi.hoisted(() => ({
 }));
 const users = vi.hoisted(() => ({
   createConfirmedUser: vi.fn(),
+  isUsernameTaken: vi.fn(),
   setUserPassword: vi.fn(),
 }));
 
@@ -15,7 +16,7 @@ vi.mock("@/lib/db/accessCodes", () => codes);
 vi.mock("@/lib/db/users", () => users);
 
 const CODE = "AAAAA-BBBBB-CCCCC-DDDDD";
-const registration = { code: CODE, email: "a@example.com", password: "password1", username: "a" };
+const registration = { code: CODE, email: "a@example.com", password: "password1", username: "alice" };
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -23,6 +24,7 @@ beforeEach(() => {
   codes.releaseAccessCode.mockResolvedValue(undefined);
   codes.setAccessCodeUser.mockResolvedValue(undefined);
   users.setUserPassword.mockResolvedValue(undefined);
+  users.isUsernameTaken.mockResolvedValue(false);
 });
 
 describe("registerWithInvite", () => {
@@ -33,6 +35,19 @@ describe("registerWithInvite", () => {
     expect(codes.claimAccessCode).toHaveBeenCalledWith(CODE, "invite");
     expect(codes.setAccessCodeUser).toHaveBeenCalledWith(CODE, "user-1");
     expect(codes.releaseAccessCode).not.toHaveBeenCalled();
+  });
+
+  it("uses no code when the username is taken", async () => {
+    users.isUsernameTaken.mockResolvedValue(true);
+    expect(await registerWithInvite(registration)).toBe("username_taken");
+    expect(codes.claimAccessCode).not.toHaveBeenCalled();
+    expect(users.createConfirmedUser).not.toHaveBeenCalled();
+  });
+
+  it("uses no code when the username can't be checked", async () => {
+    users.isUsernameTaken.mockRejectedValue(new Error("offline"));
+    expect(await registerWithInvite(registration)).toBe("failed");
+    expect(codes.claimAccessCode).not.toHaveBeenCalled();
   });
 
   it("creates nothing when the code can't be claimed", async () => {
@@ -55,6 +70,14 @@ describe("registerWithInvite", () => {
     expect(await registerWithInvite(registration)).toBe("failed");
     expect(codes.releaseAccessCode).toHaveBeenCalledWith(CODE);
     expect(codes.setAccessCodeUser).not.toHaveBeenCalled();
+  });
+
+  it("asks for another name when it was taken while the account was made", async () => {
+    codes.claimAccessCode.mockResolvedValue({ userId: null });
+    users.isUsernameTaken.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    users.createConfirmedUser.mockRejectedValue(new Error("Database error creating new user"));
+    expect(await registerWithInvite(registration)).toBe("username_taken");
+    expect(codes.releaseAccessCode).toHaveBeenCalledWith(CODE);
   });
 
   it("still succeeds when only the link to the account fails", async () => {

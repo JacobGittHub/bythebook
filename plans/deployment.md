@@ -54,10 +54,15 @@ Chrome, Safari and Firefox, and the Overview page and explorer work on a phone (
   books, repertoires or libraries from a file. Later the library may hold everything a user
   has (game history, books, repertoires and their drill statistics), so drills done as a
   guest can sync into an account. The interface must not rule that out.
+
+  *Amended 2026-10-07 (D22):* the copy is offered at any sign-in, not only at sign-up.
 - D13. The Bookstore, repertoires, export/import and game-history import are built in their
   own plans, `bookstore.md` and `game-history.md`. This plan ships a placeholder Bookstore
   page, and "coming soon" sections in the Library for game history and for export and
   import. Export files carry a version number.
+
+  *Amended 2026-10-07 (D23):* Back up and Restore ship with the Library in place of the
+  export and import prompts. Game history keeps its "coming soon" section.
 - D14. Forgotten passwords are handled with reset codes during the beta and by email later.
   A reset code is an invite code with a different purpose: the user generates one for a
   tester's account, the tester enters it with a new password, and the server sets the
@@ -104,6 +109,107 @@ Chrome, Safari and Firefox, and the Overview page and explorer work on a phone (
   `btn-ghost` in `globals.css`), so a button's text stays readable on it in every
   background mode. Fixed slate or white classes on buttons are how text went missing.
 
+From the user's answers of 2026-10-07 to the Library questions, drawn in
+`plans/mockups/library.html`.
+
+- D21. **The Library has two levels, laid out as mockup A.** The first level is the book list
+  and search: each row carries its book's icicle in miniature, and the selected book opens
+  beside the list in a book view (the icicle by default) with a board and its measures. From
+  it a book goes to its second level, the Explorer or the trainer, and later a full
+  visualizer. The first level may also show general facts about the user's history. The
+  second level is a book's own page: a bigger book view with its options, and the fields one
+  screen can't hold (difficulty, ratings, success rates, and a leaderboard where the book has
+  one). Combine is an option in a book's "⋯" menu, not a header button. New book's
+  recommended start is to open the Explorer and add lines, with pasted moves or PGN second,
+  since few users have PGNs. Direction for later work, from the same notes:
+  - Every visualization gets zoom in and out, so its small parts can be seen.
+  - A book view can show the user's success rate from their game history, from the trainer,
+    or not at all. Color carries it: the edge into a position in ply columns, branch points
+    and spine and ribs; a red-to-green mark on the stretch of line before a station in the
+    metro map; a texture over the block in the icicle.
+  - The trainer page has the same two levels: pick a book with its details beside the list,
+    then a page of success statistics led by difficulty, with session options and a
+    leaderboard where the book has one.
+  - How a publisher is labeled is `bookstore.md` D8.
+
+  > ME: version A looks the best in browser and mobile. I very much like the decision to use the icicle by default for this use case. The only issue is that we may want to allow the user to zoom in and out, on any visual, so that they can see the smaller parts. The combine button is a little strange in the top right, maybe make it a book option instead, like in the 3 dot settings button. It Looks like you think that difficulty rating, other users' ratings, user success rates, leaderboards, and more should come later. Because they are not on the current library you showed. Given the fact that all of this data will be hard to display on one screen, lets make the library a 2 level route. 1st level is the book library and book search: it will allow the user to go to the 2nd level or the visualizer (difficult, could come later), explorer, or trainer. The 2nd level will have a bigger map for visualization (with the options), and more fields like what i was mentioning. We are going to want to think about how the visualization is going to change with user success rate, either with user game history success rate, with user trainer success rate, or no success rate displayed (different options). This will probably best be shown with color: in the case of the graph like displays A,B,E I think the color of the edge to a node would work well for a success rate visualizer; For the C metro, its tough to think of one but I think that some part of the edge leading up to a node could have a red or green success indicator; for the icicle, some sort of area texture could work well to show success rate. I have more to verify so we may want to modufy the mockups with what I've said here.
+
+  > ME: make the verified tag outside of the publisher name highlight to avoid spoofing. Also put unverified next to unverified publishers (try not to make the connotation too negative, but it's true that such a user would be unverified). I control verification on a user by user status for now.
+
+  > ME: If you are wondering, I think that the training page will still be filled out well. 2 tier page again. 1st tier, Users will select a book to train, with details shown in the right. 2nd tier, users will see more detailed success statistics with an emphasis on difficulty, training session options, a leaderboard if the book supports it, and maybe more.
+
+  > ME: when creating a new book, make the default recommended option to jump to explorer and add lines instead of it being to paste a pgn. Im not sure how many people have pgns.
+- D22. **Books in the browser at sign-in.** At sign-up, and at any later sign-in while the
+  browser still holds books, one checklist offers to copy them into the account. Copied books
+  leave the browser, so each book lives in one place; a book that fails the limit or
+  validation stays, with the reason. A name already in the account is kept as a second book
+  or skipped. Otherwise a signed-in user sees only the account library, and nothing syncs in
+  the background.
+
+  > ME: I like it.
+- D23. **Back up and Restore ship with the Library,** for books only, in place of the
+  "coming soon" prompts (amends D13). The backup is the version 1 file format, and it is a
+  guest's only protection from Safari deleting a site's data after 7 days without a visit.
+  Single-book export and Combine stay in `bookstore.md` Phase 5. Testing guests and accounts
+  on one machine must not mix their books up (the user's note):
+  - The Library always names the store it shows ("Kept in this browser" or "Saved to your
+    account"), and a signed-in page reads the browser library only to offer D22's copy.
+  - The browser library belongs to one browser profile and one site address, so local
+    development, each preview deployment and the live site each keep their own. A guest is
+    tested in a private window or a second profile; Playwright gives every test a fresh,
+    empty browser, so an agent's runs never touch the user's.
+  - Debug mode (`docs/design/dashboard.md`) shows what the browser library holds, with
+    buttons to back it up and to empty it, and the bug report names the store and its book
+    count.
+
+  > ME: Yes, but make sure that You and I will not suffer from this browser data misalignment (both us as individuals and us together) when we are testing unauthed and authed users. We are a special case because we are trying many combinations, it could get finnicky.
+- D24. **An empty library** offers New book and the Bookstore, plus Restore for someone
+  arriving from another browser. The example books stand in as the Bookstore's books, so the
+  empty Library's Bookstore column lists them and there is no separate examples column. Every
+  book records where it came from (made by the user, the Bookstore with its publisher, a
+  combination with its sources, or an import) from format version 1, so a Wikibooks credit
+  (CC BY-SA) travels with every copy. Linking a Lichess or Chess.com account may come later
+  (`game-history.md`), with care.
+
+  > ME: I like the "new book" shown in the mockup. Lets have these default books show up in the bookstore column in the library. No more "default" column. Since we plan on making the library a 2 tier route, we may want to put more general information about the users history on this page as well. Potentially in the future, we may want to allow users to link their bythebook acount with their chess.com account or their lichess account. We need to be cautious with this idea though, because the devs at chess.com worry me.
+- D25. **Editing in the Library:** rename, change side, duplicate, delete (through the API),
+  and remove a selected move with every position after it. Lines are added in the Explorer
+  and in New book. Editing inside the book views stays planned (`docs/design/explorer.md`).
+  The Explorer was designed around one line at a time, so showing a whole book there needs
+  its own design later.
+
+  > ME: Agreed, we may have to work on the explorer when viewing a book. Currently, I had designed it with single lines in mind. This will not work when attempting to view a book well. But viewing the entire book in the explorer may also have disadvantages.
+- D26. **The book list reads summaries.** Each book row stores a small summary: the counts
+  and flags from `src/lib/books/measures.ts` and the miniature's blocks down to a minimum
+  share. The browser works it out on save, and the server recomputes it while validating the
+  tree, which it already walks once to parse (bounded by `MAX_BOOK_POSITIONS`), so a client
+  can't misreport it. The list reads summaries in one query, and a tree loads only when its
+  book opens. The second level (D21) shows more per book, and the user's own statistics will
+  join it later.
+
+  > ME: Sounds good. if we change the library to be a two tier page, more info may be displayable per book. But we should keep in mind the other user stats we may want to display in this page as well, mentioned above.
+- D27. **Back end first, then the interface.** The library's code, data, routes and the wiring
+  of today's pages to it are built in one pass, with only the controls those pages need.
+  The shadcn/ui pass (`vibes.md` Q1) follows and builds the Library's two levels (D21) from
+  the mockups. The Bookstore goes the same way: mockups first, with the example books in it,
+  then its back end, then its pages in the shadcn/ui pass. The second round of Library
+  mockups and the Bookstore's are in `plans/mockups/`.
+- D28. **No staging project for the book migration** (Q7, answered 2026-10-07: the user went
+  with the recommendation). A **staging project** is a second Supabase project with the same
+  tables and no real users, where a migration or a test runs before it touches the live one.
+  This migration is made reversible instead: Migration A only adds columns,
+  `npm run books:migrate` backs every book row up to a local file before converting it, and
+  `move_node` is dropped only after the user has checked the books in the app. The schema
+  baseline comes first, because the access rules and foreign keys the migration changes
+  exist only in the live database. Staging comes with the load tests (`load-testing.md` Q2),
+  before the Bookstore's migration.
+
+  > ME: im not sure what you mean by staging project. i do agree with the process of building the backend here in one swoop and coming through in another swoop for shadcn refactoring. I feel like we may want to mock up the bookstore and do a similar process. Adding the newly formatted books sample books we've made to it.
+
+## Open questions
+
+None open.
+
 ## Steps
 
 Every phase ends with the typecheck, tests and lint, then a user check-in and a suggested
@@ -132,15 +238,50 @@ steps are still open:
       Overview's demo window cycles and follows the pointer.
 - [ ] (user) After browsing as a guest, confirm no guest Lichess calls (query in Notes).
 
-### Phase 5. Library (D12, D13)
+### Phase 5. Library (D12, D13, D21–D28)
 
-- [ ] (agent) `src/lib/library/`: the interface, a server adapter over the books API, and a
-      browser adapter on IndexedDB, with tests for the logic they share.
-- [ ] (agent) The four `/api/openings/books` call sites go through the library. The book
-      list returns names only, and a tree loads when its book is opened.
-- [ ] (agent) Sign-up detects a browser library and offers to copy it into the account.
-- [ ] (agent) "Coming soon" export and import prompts in the Library, and the notice to
-      guests that their work is kept in the browser.
+Drafted and approved 2026-10-07. The back end comes first (D27): today's pages are wired to
+the library with only the controls they need, and the two-level Library comes with the
+shadcn/ui pass.
+
+- [x] (agent) `scripts/sql/schemaSnapshot.sql`, a read-only query that prints the public
+      schema as DDL (tables, constraints, indexes, RLS, policies, functions, triggers) and
+      counts the books by the shape of their `move_node`.
+- [x] (user) Run it in the SQL editor and paste the output.
+- [x] (agent) Save the output as the baseline migration, with a header saying a new project
+      runs it and the migrations after it. This is Phase 7's baseline step, moved here (D28).
+- [x] (agent) Migration A, which only adds: `trees`, `summary` and `origin` on
+      `opening_books`, and an index on `(user_id, updated_at)`. The baseline showed the
+      owner policy already covers all four commands, and the foreign keys into books already
+      cascade or set null, so neither changed.
+- [x] (user) Run it, then `npm run db:types`.
+- [x] (agent, user) Profiles without emails, since a username is shown to other people
+      later: `handle_new_user` stops copying the email, and usernames are 3 to 24 letters,
+      digits, `_` or `-`, unique ignoring case. A taken or bad name is refused with no
+      made-up fallback, so sign-up asks again (the user's call, 2026-10-07).
+- [x] (agent) `src/lib/library/`, pure and tested: validation that replays every move, the
+      summary and miniature (D26), the version 1 backup file with its checksum, the checklist
+      the sign-in copy and Restore share, name rules (30 characters), and edits (rename,
+      side, duplicate, remove a move, add a line).
+- [ ] (agent) Books as lists of trees everywhere, and the routes: the list returns summaries
+      only, capped; create, read, update (409 when the book changed since it was loaded) and
+      delete run under RLS instead of the service role. Writes also fill `move_node` until
+      Migration B.
+- [ ] (agent) The browser adapter on IndexedDB (`idb`), the account adapter and
+      `useLibrary()`. Today's pages read and save through it, guests included: the Library
+      (list, New book, delete, the empty state with the example books, Back up, Restore),
+      the Explorer, the Treemap, the Labyrinth, the book views and both Train pages.
+- [ ] (agent) The copy at sign-in (D22), `persist()` and the backup notice, and debug mode's
+      library section (D23).
+- [ ] (agent) `npm run books:migrate`: backs every book row up to a local, git-ignored file,
+      then converts each `move_node` to `trees` with its summary.
+- [ ] (user) Run it, then check as a guest in a private window, signed in, and signing in on a
+      browser that holds guest books, and that the Treemap and the Labyrinth still save.
+- [ ] (agent) Migration B: drop `move_node`, and make `trees` and `summary` required.
+- [ ] (user) Run it, then `npm run db:types`.
+
+Signed-in browser tests use the test account on the live database until staging exists; the
+one that makes a book deletes it again.
 
 ### Phase 6. Phones and themes (D9, D15, D20)
 
@@ -162,7 +303,7 @@ steps are still open:
 - [ ] (user) An uptime ping so the free Supabase project doesn't pause.
 - [ ] (user, agent) Demo animations for the Overview page, and a pass over its text.
 - [ ] (agent) Delete the empty `src/app/api/auth/[...nextauth]/`.
-- [ ] (user, agent) Capture the current schema as a baseline migration.
+- The baseline migration moved to Phase 5 (D28).
 - [ ] (agent) Move the lasting facts into `docs/` and `AGENTS.md`.
 
 ## Notes

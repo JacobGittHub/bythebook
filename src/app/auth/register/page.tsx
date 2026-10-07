@@ -8,7 +8,8 @@ import { registerInputSchema } from "@/lib/validators/schemas";
 
 const errorMessages: Record<string, string> = {
   invalid_registration:
-    "Enter an invite code, a username, a valid email, and a password with at least 8 characters.",
+    "Enter an invite code, a username of 3 to 24 letters, digits, \"_\" or \"-\", a valid email, and a password with at least 8 characters.",
+  username_taken: "That username is taken. Usernames ignore case, so try another one.",
   invalid_code: "That invite code isn't valid, or it has already been used.",
   password_mismatch: "The two passwords don't match.",
 };
@@ -47,9 +48,9 @@ export default async function RegisterPage({
     const outcome = await registerWithInvite(parsedRegistration.data);
 
     if (outcome !== "ok") {
-      redirect(
-        `/auth/register?error=${outcome === "bad_code" ? "invalid_code" : "sign_up_failed"}`,
-      );
+      const reason =
+        outcome === "bad_code" ? "invalid_code" : outcome === "username_taken" ? "username_taken" : "sign_up_failed";
+      redirect(`/auth/register?error=${reason}`);
     }
 
     const supabase = await createServerSupabaseClient();
@@ -105,10 +106,16 @@ export default async function RegisterPage({
             <span className="text-sm font-medium text-slate-700">Username</span>
             <input
               className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none transition-colors focus:border-slate-950"
+              maxLength={24}
               name="username"
+              pattern="[A-Za-z0-9_-]{3,24}"
               placeholder="chesshandle"
+              title="3 to 24 letters, digits, _ or -"
               type="text"
             />
+            <span className="block text-xs text-slate-500">
+              Shown to other players later, so not your email: 3 to 24 letters, digits, _ or -.
+            </span>
           </label>
           <label className="block space-y-2">
             <span className="text-sm font-medium text-slate-700">Email</span>

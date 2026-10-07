@@ -145,6 +145,9 @@ export type Database = {
           is_public: boolean | null
           move_node: Json
           name: string
+          origin: Json
+          summary: Json | null
+          trees: Json | null
           updated_at: string | null
           user_id: string
         }
@@ -155,6 +158,9 @@ export type Database = {
           is_public?: boolean | null
           move_node?: Json
           name: string
+          origin?: Json
+          summary?: Json | null
+          trees?: Json | null
           updated_at?: string | null
           user_id: string
         }
@@ -165,6 +171,9 @@ export type Database = {
           is_public?: boolean | null
           move_node?: Json
           name?: string
+          origin?: Json
+          summary?: Json | null
+          trees?: Json | null
           updated_at?: string | null
           user_id?: string
         }

@@ -55,7 +55,7 @@ lookups (`byEco`, `byUciPrefix`, `byPositionKey`) are rebuilt from it in the bro
 two clocks are worked out from the moves, and the file name carries a content hash so the
 CDN can keep it forever.
 
-> ME:
+> ME: Agreed
 
 ### Q2. How long may the CDN keep a saved position?
 
@@ -65,7 +65,7 @@ kept; a guest's "not saved" answer isn't, so a position saved later shows up. Re
 from POST to GET, with the FEN's clocks fixed, so every move order that reaches a position
 asks for the same address and shares one copy.
 
-> ME:
+> ME: Sounds good, hopefully its ok in all system components handle these potentially slightly dynamic positions.
 
 ### Q3. How big is a batch, and what happens to positions that aren't saved?
 
@@ -75,7 +75,7 @@ browser asks for those one at a time through the single-position route, which ke
 at one request at a time. The Explorer's history (`useOpeningExplorerMulti`) uses it first;
 the Labyrinth's loader can follow.
 
-> ME:
+> ME: Sounds good. Let me know if we should consider adding a slow but real rate limit for anonymous users.
 
 ### Q4. Check the session without a round trip?
 
@@ -87,7 +87,7 @@ session revoked in Supabase stays usable until its token expires (an hour by def
 **Recommendation:** check the setting; if asymmetric keys are on, or can be turned on, switch
 the route handlers to `getClaims()`. The proxy keeps refreshing sessions as it does now.
 
-> ME:
+> ME: Agreed.
 
 ## Steps
 

@@ -153,6 +153,9 @@ edit these files.
 - A plan's Decisions are binding. To change one, raise it with the user first.
 - When you edit a plan, update its `Updated` date and its row in the index. Create a new plan
   only when the user asks.
+- Save every mockup you publish as a standalone HTML file in `plans/mockups/`, named after the
+  page it draws, with a comment at the top naming the plan it serves. When that work ships,
+  move the file to `docs/design/mockups/` and point to it from the design doc.
 
 ## Project rules
 

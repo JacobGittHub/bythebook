@@ -1,6 +1,6 @@
 # Bookstore, repertoires and library files
 
-Status: deciding · Updated: 2026-10-06 · Depends on: deployment.md
+Status: deciding · Updated: 2026-10-07 · Depends on: deployment.md
 
 **Goal:** give users default books to pick from, repertoires that combine books, and files
 that move a library in and out of the app.
@@ -24,6 +24,8 @@ Carried over from `deployment.md` (D10–D13), where the user settled them.
   the back end. Export files carry a version number. A new account can upload earlier
   books, repertoires or libraries.
   > ME: Should we consider allowing users to import/export their session information if the browser doesnt save it? relying on saved browser info with warnings for when browser saved info may be lost could be the correct direction.
+
+  > ME: 10/7, right now I am in favor of session import/export over book level import export. This will be easier for guests to use if they choose. Automaticky, guests will have their info saved in their browser but this method will need a fallback because many users cant/dont want to save data in their browsers. Caveat is that we might not want people to import some GM/IM chess players book success history as their own. So maybe that part cannot be transfered.
 - D3. Shared book codes and publicly uploaded books may follow. They are not in this plan.
 - D4. The library interface comes from `deployment.md` Phase 5. This plan builds on it and
   replaces the "coming soon" prompts that phase ships.
@@ -48,6 +50,11 @@ From the user's answers on 2026-10-06.
   stars, and the card shows the average to one decimal. Opening a card shows the full
   description (at most 200 characters), the book display with a small board, and Save to
   library, which saves into the browser for a guest and into the account for a beta tester.
+
+  *Amended 2026-10-07 (the user's note on `deployment.md` D21):* the verified mark sits
+  outside the publisher's name and its highlight, so no name can imitate it, and a publisher
+  who isn't verified gets a plain "Unverified" label in the same place, worded neutrally. The
+  user verifies accounts one at a time (D13).
 - D9. Difficulty is computed from the number of positions and the average depth of the
   leaves, each leaf counted at its shortest move order. It is shown beside an optional
   difficulty the publisher sets, since some openings are hard in ways a formula can't see.
@@ -79,7 +86,7 @@ From the user's answers on 2026-10-06.
   details in `.env.local` as `PUBLISHER_EMAIL` and `PUBLISHER_PASSWORD`, which scripts load
   and agents never read. Drafts (D7) wait there unpublished. It is the only verified
   publisher and the app's official account. The verified mark is keyed on the account's id,
-  because usernames aren't unique, and only the service role can set it, which the user
+  not its username, and only the service role can set it, which the user
   does in the SQL editor for people they verify personally. A beta tester is not a verified
   publisher. The browser-test account stays a test account.
 - D14. **Guests can browse the Bookstore** and try its books: open one, see its tree and
@@ -180,6 +187,35 @@ each is an example book on the small visualization pages (pick it in the Book me
 root position, so the grouping and names come free and nothing needs crediting; for a
 repertoire book, keep the most played White (or Black) move at each clash; and carry short
 lines on a few plies from master statistics where wanted. Wikibooks fills gaps, credited.
+> ME: Yes, all sounds great. But if we are generating books from catalog, may wnt to take a top p sample in clashes, which will typically result in one move, but could allow a few more to satisfy a slightly more general crowd of users.
+
+The Bookstore is drawn in `plans/mockups/bookstore.html` (2026-10-07): cards to browse, a page
+per book, and the example books as ByTheBook's store books. Drawing it raised Q2–Q4.
+
+### Q2. What limit does a saved copy of a verified publisher's book have?
+
+A verified publisher's book can hold 5,000 positions and a user's book 1,000 (D15), so a
+saved copy of a large store book could already be past what a user may keep.
+
+**Recommendation:** the copy keeps the limit it was published under, shown the same way
+("1,000 / 5,000"). Editing can't take it past that limit. Combine makes a new book of the
+user's own, so the result is held to the user's 1,000.
+
+### Q3. Should display names that imitate the verified mark be refused?
+
+The mark sits outside the name's highlight (D8, as amended), so "ByTheBook ✓" already reads
+as a different publisher from ByTheBook, and its label says Unverified. The mockup draws such
+a card.
+
+**Recommendation:** yes. Refuse check-like symbols (✓ ✔ ☑) and the word "verified" in
+display names, checked at sign-up and rename together with the profanity check (Notes), once
+other people can publish (D3).
+
+### Q4. Can a guest try a store book in the Explorer or the trainer without saving it?
+
+**Recommendation:** no. Saving is one press and costs nothing, since a guest's copy stays in
+the browser (D14). The Explorer and the trainer then always open books from one place, the
+library. A store book's page offers "Open position in Explorer" for a single position.
 
 ## Steps
 
@@ -243,9 +279,10 @@ plan"). Phase 3's script waits on Q1; the rest doesn't.
 - **Ratings stay within `deployment.md` D1.** A rating is one row per user and book, and the
   book's row keeps a running sum and count, updated in the same call, so no card ever
   averages ratings on request.
-- **The publishing account and the test account share the name "ByTheBook".** Only the
-  verified mark tells them apart, so renaming the test account (for example "E2E tests")
-  keeps store cards unambiguous.
+- **Usernames are unique, ignoring case** (since 2026-10-07: letters, digits, `_` and `-`,
+  `USERNAME_PATTERN` in `src/lib/validators/schemas.ts`), so no one else can be named
+  "ByTheBook" once the publishing account takes it, and no name can hold a mark. The test
+  account needs a name of its own.
 - **The book display** (the user's direction, 2026-10-06) is a finished, better version of
   the Explorer's mini tree, close to the Treemap, sharing the screen with a board. Five
   concept mockups were drawn and ranked on 2026-10-06, and all five are now built as the

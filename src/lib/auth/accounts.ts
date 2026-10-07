@@ -6,10 +6,13 @@ import {
   releaseAccessCode,
   setAccessCodeUser,
 } from "@/lib/db/accessCodes";
-import { createConfirmedUser, setUserPassword } from "@/lib/db/users";
+import { createConfirmedUser, isUsernameTaken, setUserPassword } from "@/lib/db/users";
 
 /** `bad_code`: unknown, already used, or the wrong kind. `failed`: something else went wrong, and the code was not used up. */
 export type CodeOutcome = "ok" | "bad_code" | "failed";
+
+/** Registering can also find the username taken, before any code is used. */
+export type RegisterOutcome = CodeOutcome | "username_taken";
 
 /** Claims a code. `null` means it can't be used; `"error"` means the database couldn't be asked. */
 async function claim(code: string, purpose: AccessCodePurpose) {
@@ -31,16 +34,23 @@ async function release(code: string) {
 }
 
 /**
- * Creates an account with a one-time invite code. The code is claimed first, so two people
- * can't both register with it. If the account then can't be created, the code is released
- * and can be tried again.
+ * Creates an account with a one-time invite code. The username is checked first, so a taken
+ * name costs no code. The code is then claimed, so two people can't both register with it.
+ * If the account can't be created, the code is released and can be tried again.
  */
 export async function registerWithInvite(input: {
   code: string;
   email: string;
   password: string;
   username: string;
-}): Promise<CodeOutcome> {
+}): Promise<RegisterOutcome> {
+  try {
+    if (await isUsernameTaken(input.username)) return "username_taken";
+  } catch (error) {
+    console.error("A username could not be checked.", error);
+    return "failed";
+  }
+
   const claimed = await claim(input.code, "invite");
   if (claimed === "error") return "failed";
   if (!claimed) return "bad_code";
@@ -51,7 +61,11 @@ export async function registerWithInvite(input: {
   } catch (error) {
     console.error("Account creation failed after an invite code was claimed.", error);
     await release(input.code);
-    return "failed";
+    // The database refuses a taken name (there is no fallback name), so someone may have
+    // taken it since the check above.
+    return (await isUsernameTaken(input.username).catch(() => false))
+      ? "username_taken"
+      : "failed";
   }
 
   try {

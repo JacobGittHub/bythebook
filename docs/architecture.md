@@ -172,9 +172,11 @@ Supabase Postgres with Row Level Security on every table. Columns are in
   choices, one response per position. The global position graph already exists as the
   in-memory catalog index. At this scale a Supabase `positions`/`edges` model adds round
   trips and no benefit.
-- **The migration history is incomplete.** The first ten tables were created outside
-  migrations, so `supabase/migrations/` holds only the changes made since. From now on every
-  schema change gets a migration (see `AGENTS.md`).
+- **The baseline migration holds the whole schema.** The first ten tables were created outside
+  migrations, so `supabase/migrations/20261007170000_baseline.sql` records the live schema as
+  of 2026-10-07 (`scripts/sql/schemaSnapshot.sql` prints it). A new project runs the baseline
+  and the migrations after it; the earlier ones are history. Every schema change gets a
+  migration (see `AGENTS.md`).
 - **Call counts.** `increment_usage` adds one to a `usage_counters` row and returns the new
   count in a single statement. `recordUsage` (`src/lib/db/usage.ts`) calls it from every
   route handler and before every live Lichess request. The counts exist to choose per-user
