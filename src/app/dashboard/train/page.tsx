@@ -1,12 +1,12 @@
 import { BookCard } from "@/components/repertoire/BookCard";
 import { SignInPrompt } from "@/components/ui/SignInPrompt";
 import { getViewer } from "@/lib/auth/viewer";
-import { listOpeningBooks } from "@/lib/db/openings";
+import { listBooks } from "@/lib/db/openings";
 
 export default async function TrainPage() {
   const viewer = await getViewer();
   // Training drills a user's own books, and a guest has none, so the database isn't asked.
-  const books = viewer.signedIn ? await listOpeningBooks() : [];
+  const books = viewer.signedIn ? await listBooks(viewer.userId) : [];
 
   return (
     <main className="space-y-6">

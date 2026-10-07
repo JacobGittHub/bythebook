@@ -8,7 +8,9 @@ import { Chess } from "chess.js";
 import { z } from "zod";
 import { START_FEN } from "@/lib/chess/fen";
 import { buildMoveTreeFromLines } from "@/lib/chess/moveTree";
-import type { Move, MoveNode, OpeningBook } from "@/types/chess";
+import { summarize } from "@/lib/library/summary";
+import type { LibraryBook } from "@/lib/library/types";
+import type { Move, MoveNode } from "@/types/chess";
 
 /** Where the example books are served from. */
 export const EXAMPLE_BOOKS_PATH = "/books/examples";
@@ -81,8 +83,12 @@ export function parseExampleFile(value: unknown): ExampleBookFile | null {
   return parsed.success ? parsed.data : null;
 }
 
-/** An example book, ready for anything that shows an `OpeningBook`. */
-export type ExampleBook = OpeningBook & {
+/** The publisher example books are credited to when saved (deployment.md D24). */
+export const EXAMPLE_PUBLISHER = "ByTheBook";
+
+/** An example book, ready for anything that shows a library book. */
+export type ExampleBook = LibraryBook & {
+  description: string;
   method: ExampleMethod;
   attribution: Attribution | null;
   rules: string;
@@ -112,14 +118,16 @@ export function replaySanLines(lines: readonly string[]): { lines: Move[][]; rej
 }
 
 export function exampleBookFromFile(file: ExampleBookFile): ExampleBook {
-  const tree: MoveNode = buildMoveTreeFromLines(replaySanLines(file.lines).lines, START_FEN);
+  const trees: MoveNode[] = [buildMoveTreeFromLines(replaySanLines(file.lines).lines, START_FEN)];
   return {
     id: file.id,
     name: file.name,
     color: file.color,
+    origin: { kind: "store", publisher: EXAMPLE_PUBLISHER, sourceId: file.id, credit: file.attribution },
+    summary: summarize(trees, file.color),
+    updatedAt: "",
+    trees,
     description: file.description,
-    rootFen: START_FEN,
-    moveNode: tree,
     method: file.method,
     attribution: file.attribution,
     rules: file.rules,

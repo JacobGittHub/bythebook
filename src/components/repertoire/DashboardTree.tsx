@@ -9,7 +9,10 @@ import { useViewer } from "@/context/Viewer";
 import { fenAfterUci } from "@/lib/chess/fen";
 import { buildDefaultCatalogTree, searchCatalogMatches } from "@/lib/chess/openingCatalog";
 import { mergeMoveLineIntoTree, getNodePathByUciLine, removeMoveNodeById } from "@/lib/chess/moveTree";
-import type { ExplorerMove, MoveNode, OpeningBook } from "@/types/chess";
+import { STALE_BOOK_MESSAGE, saveStartTree } from "@/lib/library/accountStore";
+import { startTree } from "@/lib/library/trees";
+import type { LibraryBook } from "@/lib/library/types";
+import type { ExplorerMove, MoveNode } from "@/types/chess";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -41,17 +44,18 @@ function buildGhostNodes(
 // ── Component ────────────────────────────────────────────────────────────────
 
 type Props = {
-  initialBooks: OpeningBook[];
+  initialBooks: LibraryBook[];
   initialBookId: string | null;
 };
 
 export function DashboardTree({ initialBooks, initialBookId }: Props) {
   const { signedIn } = useViewer();
-  const [books, setBooks] = useState<OpeningBook[]>(initialBooks);
+  const [books, setBooks] = useState<LibraryBook[]>(initialBooks);
   const [activeBookId, setActiveBookId] = useState<string | null>(initialBookId);
-  const [activeMoveNode, setActiveMoveNode] = useState<MoveNode | null>(
-    initialBooks.find((b) => b.id === initialBookId)?.moveNode ?? null,
-  );
+  const [activeMoveNode, setActiveMoveNode] = useState<MoveNode | null>(() => {
+    const book = initialBooks.find((b) => b.id === initialBookId);
+    return book ? startTree(book.trees) : null;
+  });
   const [selectedInfo, setSelectedInfo] = useState<SelectedNodeInfo | null>(null);
   const [expandedNodeId, setExpandedNodeId] = useState<string | null>(null);
   const [ghostExpansions, setGhostExpansions] = useState<Map<string, DisplayNode[]>>(new Map());
@@ -95,9 +99,12 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
 
   const switchBook = (bookId: string) => {
     const book = books.find((b) => b.id === bookId);
-    if (!book) return;
-    setActiveBookId(bookId);
-    setActiveMoveNode(book.moveNode);
+    if (book) showBook(book);
+  };
+
+  const showBook = (book: LibraryBook) => {
+    setActiveBookId(book.id);
+    setActiveMoveNode(startTree(book.trees));
     setSelectedInfo(null);
     setExpandedNodeId(null);
     setGhostExpansions(new Map());
@@ -107,19 +114,13 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
   // ── Save helper ──────────────────────────────────────────────────────────
 
   const saveTree = async (updatedNode: MoveNode) => {
-    if (!activeBookId) return;
+    if (!activeBook) return;
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/openings/books/${activeBookId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ moveNode: updatedNode }),
-      });
-      if (!res.ok) throw new Error("Save failed");
-      setActiveMoveNode(updatedNode);
-      setBooks((prev) =>
-        prev.map((b) => (b.id === activeBookId ? { ...b, moveNode: updatedNode } : b)),
-      );
+      const { book, saved } = await saveStartTree(activeBook, updatedNode);
+      setActiveMoveNode(startTree(book.trees));
+      setBooks((prev) => prev.map((b) => (b.id === book.id ? book : b)));
+      if (!saved) alert(STALE_BOOK_MESSAGE);
     } catch {
       // leave state as-is; user can retry
     } finally {
@@ -171,10 +172,10 @@ export function DashboardTree({ initialBooks, initialBookId }: Props) {
     }
   };
 
-  const handleCreateBook = (book: OpeningBook) => {
+  const handleCreateBook = (book: LibraryBook) => {
     setBooks((prev) => [book, ...prev]);
     setShowCreateForm(false);
-    switchBook(book.id);
+    showBook(book);
   };
 
   // ── Render ───────────────────────────────────────────────────────────────

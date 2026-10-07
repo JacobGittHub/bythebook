@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type { OpeningBook } from "@/types/chess";
+import { START_FEN } from "@/lib/chess/fen";
+import { createRootMoveNode } from "@/lib/chess/moveTree";
+import { libraryErrorFrom } from "@/lib/library/http";
+import { MAX_BOOK_NAME } from "@/lib/library/names";
+import { LibraryError, type LibraryBook, type LibraryEntry } from "@/lib/library/types";
 
 type Props = {
-  onCreated: (book: OpeningBook) => void;
+  onCreated: (book: LibraryBook) => void;
   onCancel?: () => void;
 };
 
@@ -23,13 +27,15 @@ export function BookEditor({ onCreated, onCancel }: Props) {
       const res = await fetch("/api/openings/books", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), color }),
+        // A new book is one empty tree from the starting position.
+        body: JSON.stringify({ name: name.trim(), color, trees: [] }),
       });
-      if (!res.ok) throw new Error("Failed to create book");
-      const book = (await res.json()) as OpeningBook;
-      onCreated(book);
-    } catch {
-      setError("Something went wrong. Please try again.");
+      if (!res.ok) throw await libraryErrorFrom(res);
+      const entry = (await res.json()) as LibraryEntry;
+      onCreated({ ...entry, trees: [createRootMoveNode(START_FEN)] });
+    } catch (caught) {
+      const full = caught instanceof LibraryError && caught.code === "full";
+      setError(full ? caught.message : "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -44,7 +50,7 @@ export function BookEditor({ onCreated, onCancel }: Props) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Ruy Lopez repertoire"
-          maxLength={120}
+          maxLength={MAX_BOOK_NAME}
           required
           className="w-full rounded-xl border border-[var(--border-card)] bg-[var(--bg-muted)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--text-muted)] focus:outline-none"
         />

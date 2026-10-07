@@ -68,15 +68,6 @@ export type Position = {
   moves: Move[];
 };
 
-export type OpeningBook = {
-  id: string;
-  name: string;
-  color: "white" | "black";
-  description?: string;
-  rootFen: string;
-  moveNode: MoveNode;
-};
-
 export type ExplorerMove = {
   san: string;
   uci: string;

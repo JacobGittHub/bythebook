@@ -1,9 +1,11 @@
-import type { OpeningBook } from "@/types/chess";
 import { countMoveTreeLines, countMoveTreeNodes } from "@/lib/chess/moveTree";
+import { startTree } from "@/lib/library/trees";
+import type { LibraryBook } from "@/lib/library/types";
 
-export function MoveTree({ book }: { book: OpeningBook }) {
-  const lineCount = countMoveTreeLines(book.moveNode);
-  const nodeCount = Math.max(countMoveTreeNodes(book.moveNode) - 1, 0);
+export function MoveTree({ book }: { book: LibraryBook }) {
+  const tree = startTree(book.trees);
+  const lineCount = countMoveTreeLines(tree);
+  const nodeCount = Math.max(countMoveTreeNodes(tree) - 1, 0);
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5">
@@ -13,8 +15,8 @@ export function MoveTree({ book }: { book: OpeningBook }) {
       </p>
       <p className="mt-1 text-sm text-slate-500">
         {nodeCount} stored move{nodeCount === 1 ? "" : "s"} across{" "}
-        {book.moveNode.children.length} root branch
-        {book.moveNode.children.length === 1 ? "" : "es"}.
+        {tree.children.length} root branch
+        {tree.children.length === 1 ? "" : "es"}.
       </p>
     </div>
   );

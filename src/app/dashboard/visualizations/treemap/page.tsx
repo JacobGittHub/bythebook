@@ -1,6 +1,6 @@
 import { DashboardTree } from "@/components/repertoire/DashboardTree";
 import { getViewer } from "@/lib/auth/viewer";
-import { listOpeningBooks } from "@/lib/db/openings";
+import { listBooksWithTrees } from "@/lib/db/openings";
 
 type Props = {
   searchParams: Promise<{ bookId?: string }>;
@@ -10,7 +10,7 @@ type Props = {
 export default async function TreemapPage({ searchParams }: Props) {
   const [viewer, { bookId }] = await Promise.all([getViewer(), searchParams]);
   // A guest has no books, so the database isn't asked.
-  const books = viewer.signedIn ? await listOpeningBooks() : [];
+  const books = viewer.signedIn ? await listBooksWithTrees(viewer.userId) : [];
   const initialBookId = bookId ?? null;
 
   return (

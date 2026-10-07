@@ -31,7 +31,8 @@ master stats and book actions.
 ```
 DashboardTree
   ├─ buildDefaultCatalogTree()        local and in-memory, with no API calls (limits in architecture.md)
-  ├─ opening_books (listOpeningBooks) the user's books → bookFens, a Set of every FEN in them
+  ├─ opening_books (listBooksWithTrees) the user's books → bookFens, a Set of every FEN in the
+  │                                   active book's tree from the starting position
   │                                   (the page skips this read for a guest, who has no books)
   ├─ useOpeningExplorer(selectedFen)  on click: top master moves for the "ghost" expansion
   │                                   (goes through position_cache; the result isn't persisted)
@@ -82,7 +83,8 @@ data and buttons. It contains:
 
 - Switching between books
 - Ghost expansion, which fetches the top master continuations once per clicked node
-- Saving through `PATCH /api/openings/books/[bookId]`
+- Saving through `PATCH /api/openings/books/[bookId]` (`saveStartTree`), which reloads the book
+  and says so when it changed in another tab
 - The search bar, which highlights matching ECO paths via `searchCatalogMatches`
 
 **Guests.** Books belong to accounts, so a guest (`useViewer()`) sees a sign-in notice in

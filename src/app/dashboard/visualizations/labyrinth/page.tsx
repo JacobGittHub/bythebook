@@ -1,6 +1,6 @@
 import { RegionMapView } from "@/components/lab/RegionMapView";
 import { getViewer } from "@/lib/auth/viewer";
-import { listOpeningBooks } from "@/lib/db/openings";
+import { listBooksWithTrees } from "@/lib/db/openings";
 import { parseRootCamera } from "@/lib/regions/camera";
 
 type Props = {
@@ -13,7 +13,7 @@ export default async function LabyrinthPage({ searchParams }: Props) {
   const viewer = await getViewer();
   const { camera } = await searchParams;
   // A guest has no books, so the database isn't asked.
-  const books = viewer.signedIn ? await listOpeningBooks() : [];
+  const books = viewer.signedIn ? await listBooksWithTrees(viewer.userId) : [];
 
   return (
     <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">

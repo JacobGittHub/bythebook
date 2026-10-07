@@ -1,43 +1,35 @@
 import { getAuthenticatedUser } from "@/lib/supabase";
-import { createOpeningBook, listOpeningBooks } from "@/lib/db/openings";
-import { openingBookInputSchema } from "@/lib/validators/schemas";
+import { createBook, listBooks } from "@/lib/db/openings";
+import { libraryErrorResponse } from "@/lib/library/http";
+import { createBookSchema } from "@/lib/validators/schemas";
 import { recordUsage } from "@/lib/db/usage";
 
+/** The viewer's books without their trees, newest change first. */
 export async function GET() {
   const user = await getAuthenticatedUser();
-  if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
   await recordUsage(user.id, "books_read");
 
-  return Response.json({ books: await listOpeningBooks() });
+  try {
+    return Response.json({ books: await listBooks(user.id) });
+  } catch (error) {
+    return libraryErrorResponse(error);
+  }
 }
 
 export async function POST(request: Request) {
   const user = await getAuthenticatedUser();
-  if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
   await recordUsage(user.id, "books_write");
 
-  const payload = await request.json();
-  const parsedPayload = openingBookInputSchema.safeParse(payload);
-
-  if (!parsedPayload.success) {
-    return Response.json(
-      { error: "Invalid opening book payload", issues: parsedPayload.error.flatten() },
-      { status: 400 },
-    );
+  const parsed = createBookSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) {
+    return Response.json({ error: "Invalid book.", code: "invalid", issues: parsed.error.flatten() }, { status: 400 });
   }
 
-  const book = await createOpeningBook(user.id, {
-    name: parsedPayload.data.name,
-    color: parsedPayload.data.color,
-  });
-
-  if (!book) {
-    return Response.json({ error: "Failed to create opening book." }, { status: 500 });
+  try {
+    return Response.json(await createBook(user.id, parsed.data), { status: 201 });
+  } catch (error) {
+    return libraryErrorResponse(error);
   }
-
-  return Response.json(book, { status: 201 });
 }

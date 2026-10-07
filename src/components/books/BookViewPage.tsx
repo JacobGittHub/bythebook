@@ -7,13 +7,7 @@ import { BoardDisplay } from "@/components/board/BoardDisplay";
 import { SignInPrompt } from "@/components/ui/SignInPrompt";
 import { useViewer } from "@/context/Viewer";
 import { creditLine, type ExampleBook } from "@/lib/books/examples";
-import {
-  averageLeafDepth,
-  countPositions,
-  findClashes,
-  hasUnconnectedLines,
-  MAX_BOOK_POSITIONS,
-} from "@/lib/books/measures";
+import { MAX_BOOK_POSITIONS } from "@/lib/books/measures";
 import { BOOK_VIEWS, type BookViewId } from "@/lib/books/views";
 import {
   buildViewTree,
@@ -26,7 +20,8 @@ import {
   type ViewNode,
 } from "@/lib/books/viewTree";
 import { getOpeningForLine } from "@/lib/chess/openingCatalog";
-import type { OpeningBook } from "@/types/chess";
+import { startTree } from "@/lib/library/trees";
+import type { LibraryBook } from "@/lib/library/types";
 import { BookView } from "./BookView";
 import { BookViewRail } from "./BookViewRail";
 import { useExampleBooks } from "./useExampleBooks";
@@ -48,7 +43,7 @@ const formatCount = (n: number) => n.toLocaleString("en-US");
 type Props = {
   view: BookViewId;
   /** The viewer's own books; empty for a guest. */
-  initialBooks: OpeningBook[];
+  initialBooks: LibraryBook[];
   /** The book named in the address, if any. */
   initialBookId: string | null;
 };
@@ -64,9 +59,9 @@ export function BookViewPage({ view: initialView, initialBooks, initialBookId }:
   const [bookId, setBookId] = useState<string>(initialBookId ?? FIRST_EXAMPLE);
   const { entries, books: examples, failed } = useExampleBooks(bookId);
 
-  const book: OpeningBook | ExampleBook | null =
+  const book: LibraryBook | ExampleBook | null =
     examples.get(bookId) ?? initialBooks.find((candidate) => candidate.id === bookId) ?? null;
-  const tree = useMemo(() => (book ? buildViewTree(book.moveNode) : null), [book]);
+  const tree = useMemo(() => (book ? buildViewTree(startTree(book.trees)) : null), [book]);
 
   // The selection belongs to the book it was made in; another book starts down its main line.
   const [selection, setSelection] = useState<{ bookId: string; selectedId: string; spineEndId: string } | null>(null);
@@ -112,17 +107,7 @@ export function BookViewPage({ view: initialView, initialBooks, initialBookId }:
     syncAddress(view, next);
   };
 
-  const facts = useMemo(() => {
-    if (!book) return null;
-    const trees = [book.moveNode];
-    return {
-      positions: countPositions(trees),
-      lines: tree?.root.leaves ?? 0,
-      depth: averageLeafDepth(trees),
-      clashes: findClashes(trees, book.color).length,
-      unconnected: hasUnconnectedLines(trees),
-    };
-  }, [book, tree]);
+  const facts = book?.summary ?? null;
 
   const viewInfo = BOOK_VIEWS.find((option) => option.id === view)!;
   const example = examples.get(bookId) ?? null;
@@ -243,7 +228,7 @@ export function BookViewPage({ view: initialView, initialBooks, initialBookId }:
         {book && facts && (
           <div className="shrink-0 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-2.5 text-xs">
             <p className="font-semibold text-[var(--text-primary)]">{book.name}</p>
-            {book.description && <p className="mt-0.5 text-[var(--text-muted)]">{book.description}</p>}
+            {example && <p className="mt-0.5 text-[var(--text-muted)]">{example.description}</p>}
             <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
               <dt className="text-[var(--text-muted)]">Positions</dt>
               <dd className="tabular-nums">
@@ -252,7 +237,7 @@ export function BookViewPage({ view: initialView, initialBooks, initialBookId }:
               <dt className="text-[var(--text-muted)]">Lines</dt>
               <dd className="tabular-nums">{facts.lines}</dd>
               <dt className="text-[var(--text-muted)]">Average line</dt>
-              <dd className="tabular-nums">{facts.depth === null ? "–" : `${facts.depth.toFixed(1)} plies`}</dd>
+              <dd className="tabular-nums">{facts.averageDepth === null ? "–" : `${facts.averageDepth.toFixed(1)} plies`}</dd>
               <dt className="text-[var(--text-muted)]">Clashes</dt>
               <dd className="tabular-nums">{facts.clashes}</dd>
               {facts.unconnected && (

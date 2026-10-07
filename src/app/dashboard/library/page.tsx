@@ -6,12 +6,12 @@ import { BoardDisplay } from "@/components/board/BoardDisplay";
 import { BookEditor } from "@/components/repertoire/BookEditor";
 import { SignInPrompt } from "@/components/ui/SignInPrompt";
 import { useViewer } from "@/context/Viewer";
-import { countMoveTreeLines, countMoveTreeNodes } from "@/lib/chess/moveTree";
-import type { OpeningBook } from "@/types/chess";
+import { START_FEN } from "@/lib/chess/fen";
+import type { LibraryEntry } from "@/lib/library/types";
 
 export default function LibraryPage() {
   const { signedIn } = useViewer();
-  const [books, setBooks] = useState<OpeningBook[]>([]);
+  const [books, setBooks] = useState<LibraryEntry[]>([]);
   // A guest has no books on the server, so nothing is loaded for them.
   const [loading, setLoading] = useState(signedIn);
   const [showCreate, setShowCreate] = useState(false);
@@ -25,15 +25,17 @@ export default function LibraryPage() {
       .finally(() => setLoading(false));
   }, [signedIn]);
 
-  const handleCreated = (book: OpeningBook) => {
+  const handleCreated = (book: LibraryEntry) => {
     setBooks((prev) => [book, ...prev]);
     setShowCreate(false);
   };
 
   const handleDelete = async (bookId: string) => {
     if (!confirm("Delete this book? This cannot be undone.")) return;
-    // API delete not yet implemented — optimistic UI removal
-    setBooks((prev) => prev.filter((b) => b.id !== bookId));
+    const res = await fetch(`/api/openings/books/${bookId}`, { method: "DELETE" });
+    // Already gone is as good as deleted.
+    if (res.ok || res.status === 404) setBooks((prev) => prev.filter((b) => b.id !== bookId));
+    else alert("The book couldn't be deleted. Please try again.");
   };
 
   return (
@@ -89,15 +91,14 @@ export default function LibraryPage() {
 
       <section className="grid gap-4 md:grid-cols-2">
         {books.map((book) => {
-          const lineCount = countMoveTreeLines(book.moveNode);
-          const nodeCount = countMoveTreeNodes(book.moveNode);
+          const { lines: lineCount, positions: nodeCount } = book.summary;
           return (
             <article
               key={book.id}
               className="flex gap-4 rounded-3xl border border-slate-200 bg-white p-5"
             >
               <BoardDisplay
-                fen={book.rootFen}
+                fen={START_FEN}
                 size="sm"
                 orientation={book.color}
               />

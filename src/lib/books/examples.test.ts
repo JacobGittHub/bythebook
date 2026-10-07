@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { countPositions } from "@/lib/books/measures";
-import { EXAMPLE_ID_PREFIX, exampleBookFromFile, parseExampleFile, replaySanLines, sanLinesOf } from "./examples";
+import { EXAMPLE_ID_PREFIX, EXAMPLE_PUBLISHER, exampleBookFromFile, parseExampleFile, replaySanLines, sanLinesOf } from "./examples";
 import { linesFromTitles, titleMoves, wikibooksUrl } from "./wikibooks";
 
 const file = {
@@ -20,9 +20,11 @@ describe("example book files", () => {
     const parsed = parseExampleFile(file);
     expect(parsed).not.toBeNull();
     const book = exampleBookFromFile(parsed!);
-    expect(countPositions([book.moveNode])).toBe(5);
-    expect(sanLinesOf(book.moveNode)).toEqual(file.lines);
-    expect(book.moveNode.children[0].uci).toBe("d2d4");
+    expect(book.trees).toHaveLength(1);
+    expect(countPositions(book.trees)).toBe(5);
+    expect(sanLinesOf(book.trees[0])).toEqual(file.lines);
+    expect(book.trees[0].children[0].uci).toBe("d2d4");
+    expect(book.origin).toEqual({ kind: "store", publisher: EXAMPLE_PUBLISHER, sourceId: file.id, credit: file.attribution });
   });
 
   it("reject a file without the example prefix or without lines", () => {

@@ -281,8 +281,8 @@ plan"). Phase 3's script waits on Q1; the rest doesn't.
   averages ratings on request.
 - **Usernames are unique, ignoring case** (since 2026-10-07: letters, digits, `_` and `-`,
   `USERNAME_PATTERN` in `src/lib/validators/schemas.ts`), so no one else can be named
-  "ByTheBook" once the publishing account takes it, and no name can hold a mark. The test
-  account needs a name of its own.
+  "ByTheBook" (the publishing account's name since 2026-10-07), and no name can hold a mark.
+  The browser tests' account is "testaccount".
 - **The book display** (the user's direction, 2026-10-06) is a finished, better version of
   the Explorer's mini tree, close to the Treemap, sharing the screen with a board. Five
   concept mockups were drawn and ranked on 2026-10-06, and all five are now built as the

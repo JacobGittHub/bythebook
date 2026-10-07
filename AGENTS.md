@@ -171,7 +171,8 @@ edit these files.
   or drill generation in Vercel functions. Those functions do single-row writes and reads by
   primary key, of one row or a capped batch (`plans/deployment.md` D1); anything that walks
   trees, scans or aggregates runs client-side.
-- Books are `MoveNode` trees stored in `opening_books.move_node` (JSONB). Don't store moves
+- A book is a list of `MoveNode` trees stored in `opening_books.trees` (JSONB), with its
+  summary in `opening_books.summary` (`src/lib/library/`). Don't store moves
   as relational rows, don't build global `positions` or `edges` tables, and don't move
   `openingCatalogIndex.json` into Supabase.
 - Opening trees are true trees keyed by move sequence, and transpositions duplicate subtrees

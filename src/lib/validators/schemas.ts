@@ -11,13 +11,6 @@ export const moveSchema = z.object({
   fen: z.string().trim().optional(),
 });
 
-export const openingBookInputSchema = z.object({
-  name: z.string().trim().min(1).max(120),
-  color: colorSchema,
-  moveNode: z.unknown().optional(),
-  isPublic: z.boolean().optional(),
-});
-
 export const sessionInputSchema = z.object({
   bookId: z.string().uuid().nullable().optional(),
   result: z.enum(["pass", "fail", "abandoned"]),
@@ -77,10 +70,6 @@ export const resetPasswordInputSchema = z.object({
   password: z.string().min(8),
 });
 
-export const updateBookTreeSchema = z.object({
-  moveNode: z.unknown(),
-});
-
 // A book's name, trimmed, at most `MAX_BOOK_NAME` characters (plans/bookstore.md D8).
 export const bookNameSchema = z
   .string()
@@ -110,7 +99,8 @@ export const patchBookSchema = z
   );
 
 export const schemas = {
-  openingBook: openingBookInputSchema,
+  createBook: createBookSchema,
+  patchBook: patchBookSchema,
   session: sessionInputSchema,
   userPreferences: userPreferencesSchema,
   explorerQuery: explorerQuerySchema,

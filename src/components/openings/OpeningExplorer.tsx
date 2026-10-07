@@ -27,7 +27,10 @@ import { SignInPrompt } from "@/components/ui/SignInPrompt";
 import { formatScore, evalToBarPct } from "@/lib/chess/stockfishUci";
 import { mergeMoveLineIntoTree } from "@/lib/chess/moveTree";
 import type { MoveResult } from "@/hooks/useChessGame";
-import type { CatalogMatch, ExplorerMatchMode, ExplorerMove, Move, MoveNode, OpeningBook } from "@/types/chess";
+import { STALE_BOOK_MESSAGE, accountLibrary, saveStartTree } from "@/lib/library/accountStore";
+import { startTree } from "@/lib/library/trees";
+import type { LibraryBook, LibraryEntry } from "@/lib/library/types";
+import type { CatalogMatch, ExplorerMatchMode, ExplorerMove, Move, MoveNode } from "@/types/chess";
 
 function collectBookLines(
   node: MoveNode,
@@ -113,8 +116,10 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
   const blurTimeoutRef = useRef<number | null>(null);
 
   // Opening book integration
-  const [explorerBooks, setExplorerBooks] = useState<OpeningBook[]>([]);
+  const [explorerBooks, setExplorerBooks] = useState<LibraryEntry[]>([]);
   const [activeExplorerBookId, setActiveExplorerBookId] = useState<string | null>(null);
+  // The chosen book with its trees, loaded when it is chosen; the list has only summaries.
+  const [loadedBook, setLoadedBook] = useState<LibraryBook | null>(null);
   const [isSavingToBook, setIsSavingToBook] = useState(false);
 
   const { signedIn } = useViewer();
@@ -123,11 +128,25 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
   useEffect(() => {
     if (!signedIn) return;
 
-    fetch("/api/openings/books")
-      .then((r) => r.json())
-      .then((d) => setExplorerBooks(d.books ?? []))
+    accountLibrary
+      .list()
+      .then(setExplorerBooks)
       .catch(() => {});
   }, [signedIn]);
+
+  useEffect(() => {
+    if (!activeExplorerBookId) return;
+    let current = true;
+    accountLibrary
+      .get(activeExplorerBookId)
+      .then((book) => {
+        if (current) setLoadedBook(book);
+      })
+      .catch(() => {});
+    return () => {
+      current = false;
+    };
+  }, [activeExplorerBookId]);
 
   const { mode } = useBackgroundMode();
   // The hovered move is kept with the position it was hovered in, so it lapses when the
@@ -301,26 +320,22 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
 
   // ── Book save ──────────────────────────────────────────────────────────────
 
-  const activeExplorerBook = explorerBooks.find((b) => b.id === activeExplorerBookId) ?? null;
+  const activeExplorerBook = loadedBook?.id === activeExplorerBookId ? loadedBook : null;
+  const activeExplorerTree = useMemo(
+    () => (activeExplorerBook ? startTree(activeExplorerBook.trees) : null),
+    [activeExplorerBook],
+  );
 
   const handleAddToBook = async () => {
-    if (!activeExplorerBook || currentMoves.length === 0) return;
+    if (!activeExplorerBook || !activeExplorerTree || currentMoves.length === 0) return;
     const movesToAdd = currentMoves.slice(0, 20); // 20-move limit
-    const updatedTree = mergeMoveLineIntoTree(activeExplorerBook.moveNode, movesToAdd);
+    const updatedTree = mergeMoveLineIntoTree(activeExplorerTree, movesToAdd);
     setIsSavingToBook(true);
     try {
-      const res = await fetch(`/api/openings/books/${activeExplorerBook.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ moveNode: updatedTree }),
-      });
-      if (res.ok) {
-        setExplorerBooks((prev) =>
-          prev.map((b) =>
-            b.id === activeExplorerBook.id ? { ...b, moveNode: updatedTree } : b,
-          ),
-        );
-      }
+      const { book, saved } = await saveStartTree(activeExplorerBook, updatedTree);
+      setLoadedBook(book);
+      setExplorerBooks((prev) => prev.map((b) => (b.id === book.id ? book : b)));
+      if (!saved) alert(STALE_BOOK_MESSAGE);
     } catch {
       // silent fail — user can retry
     } finally {
@@ -329,8 +344,8 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
   };
 
   const bookLines = useMemo(
-    () => (activeExplorerBook ? collectBookLines(activeExplorerBook.moveNode) : []),
-    [activeExplorerBook],
+    () => (activeExplorerTree ? collectBookLines(activeExplorerTree) : []),
+    [activeExplorerTree],
   );
 
   const handleViewBookLine = (lineJson: string) => {

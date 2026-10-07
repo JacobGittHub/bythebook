@@ -5,14 +5,15 @@ import { PositionPanel } from "@/components/repertoire/PositionPanel";
 import { summarizeMasterGames } from "@/lib/chess/explorerData";
 import { getOpeningForLine } from "@/lib/chess/openingCatalog";
 import { useOpeningExplorer } from "@/hooks/useOpeningExplorer";
-import type { ExplorerMove, OpeningBook } from "@/types/chess";
+import type { LibraryEntry } from "@/lib/library/types";
+import type { ExplorerMove } from "@/types/chess";
 import type { DisplayNode } from "./OpeningTreeFull";
 
 type Props = {
   node: DisplayNode | null;
   /** The positions after each move on the way to the node, which name its opening. */
   pathFens: string[];
-  book: OpeningBook | null;
+  book: LibraryEntry | null;
   isExpanded: boolean;
   onAddToBook: () => void;
   onRemoveFromBook: () => void;

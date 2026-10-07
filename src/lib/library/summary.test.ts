@@ -21,12 +21,13 @@ describe("summarize", () => {
     expect(index?.books.length).toBeGreaterThan(0);
     for (const entry of index!.books) {
       const book = exampleBookFromFile(parseExampleFile(read(entry.file))!);
-      const trees = [book.moveNode];
+      const trees = book.trees;
       const summary = summarize(trees, book.color);
+      expect(book.summary, entry.id).toEqual(summary);
       expect(summary, entry.id).toMatchObject({
         v: 1,
         positions: countPositions(trees),
-        lines: countMoveTreeLines(book.moveNode),
+        lines: countMoveTreeLines(trees[0]),
         trees: 1,
         unconnected: hasUnconnectedLines(trees),
         averageDepth: averageLeafDepth(trees),

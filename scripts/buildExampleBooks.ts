@@ -22,7 +22,7 @@ import {
   type ExampleBookIndex,
 } from "@/lib/books/examples";
 import { growBook, type GrowLookup, type GrowRules } from "@/lib/books/grow";
-import { averageLeafDepth, countPositions, findClashes, MAX_BOOK_POSITIONS } from "@/lib/books/measures";
+import { MAX_BOOK_POSITIONS } from "@/lib/books/measures";
 import { linesFromTitles, WIKIBOOKS_ROOT, wikibooksUrl } from "@/lib/books/wikibooks";
 import { gameCount, normalizeCastling } from "@/lib/chess/explorerData";
 import { buildMoveTreeFromLines } from "@/lib/chess/moveTree";
@@ -285,18 +285,17 @@ async function main() {
       continue;
     }
     const book = exampleBookFromFile(file);
-    const positions = countPositions([book.moveNode]);
+    const { positions, averageDepth: depth, clashes } = book.summary;
     if (positions > MAX_BOOK_POSITIONS) throw new Error(`${config.slug} has ${positions} positions.`);
     if (!skip) writeFileSync(path.join(OUT_DIR, fileName), `${JSON.stringify(file, null, 1)}\n`);
     index.books.push({ id: file.id, name: file.name, color: file.color, method: file.method, positions, file: fileName });
-    const depth = averageLeafDepth([book.moveNode]);
     console.log(
       [
         config.slug.padEnd(30),
         `${positions} positions`.padEnd(15),
         `${file.lines.length} lines`.padEnd(10),
         `avg leaf ${depth?.toFixed(1) ?? "-"} plies`.padEnd(19),
-        `${findClashes([book.moveNode], file.color).length} clashes`,
+        `${clashes} clashes`,
       ].join(" "),
     );
   }

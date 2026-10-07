@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { BookViewPage } from "@/components/books/BookViewPage";
 import { getViewer } from "@/lib/auth/viewer";
 import { isBookViewId } from "@/lib/books/views";
-import { listOpeningBooks } from "@/lib/db/openings";
+import { listBooksWithTrees } from "@/lib/db/openings";
 
 type Props = {
   params: Promise<{ view: string }>;
@@ -16,7 +16,7 @@ export default async function BookViewRoute({ params, searchParams }: Props) {
   const [{ view }, { book }, viewer] = await Promise.all([params, searchParams, getViewer()]);
   if (!isBookViewId(view)) notFound();
   // A guest has no books, so the database isn't asked; the example books are static files.
-  const books = viewer.signedIn ? await listOpeningBooks() : [];
+  const books = viewer.signedIn ? await listBooksWithTrees(viewer.userId) : [];
 
   return (
     <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">

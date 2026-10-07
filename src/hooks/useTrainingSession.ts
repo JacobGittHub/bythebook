@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { findChildMoveNodeByUci, findMoveNodeById } from "@/lib/chess/moveTree";
 import { useChessGame } from "./useChessGame";
 import type { MoveResult } from "./useChessGame";
-import type { OpeningBook } from "@/types/chess";
+import { startTree } from "@/lib/library/trees";
+import type { LibraryBook } from "@/lib/library/types";
 
 type TrainingStatus = "idle" | "active" | "complete";
 
@@ -29,8 +30,10 @@ const initialSessionState: TrainingSessionState = {
  * Checks user moves against the book, tracks accuracy, and manages
  * auto-play of opponent responses.
  */
-export function useTrainingSession(book: OpeningBook) {
-  const chessGame = useChessGame(book.rootFen);
+export function useTrainingSession(book: LibraryBook) {
+  // Training drills the tree from the starting position until it can drill several.
+  const tree = useMemo(() => startTree(book.trees), [book.trees]);
+  const chessGame = useChessGame(tree.fen);
   const [session, setSession] = useState<TrainingSessionState>(initialSessionState);
 
   const start = useCallback(() => {
@@ -43,7 +46,7 @@ export function useTrainingSession(book: OpeningBook) {
       if (session.status !== "active") return;
 
       const currentNode =
-        findMoveNodeById(book.moveNode, session.currentNodeId) ?? book.moveNode;
+        findMoveNodeById(tree, session.currentNodeId) ?? tree;
       const matchingChild = findChildMoveNodeByUci(currentNode, move.uci);
 
       if (!matchingChild) {
@@ -64,7 +67,7 @@ export function useTrainingSession(book: OpeningBook) {
         status: matchingChild.children.length === 0 ? "complete" : prev.status,
       }));
     },
-    [book.moveNode, session.currentNodeId, session.status]
+    [tree, session.currentNodeId, session.status]
   );
 
   const finish = useCallback(() => {
@@ -73,6 +76,7 @@ export function useTrainingSession(book: OpeningBook) {
 
   return {
     chessGame,
+    tree,
     session,
     start,
     handleUserMove,

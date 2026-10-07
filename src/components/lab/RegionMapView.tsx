@@ -13,11 +13,13 @@ import { SignInPrompt } from "@/components/ui/SignInPrompt";
 import { useBugReportSection } from "@/context/BugReport";
 import { useViewer } from "@/context/Viewer";
 import { summarizeMasterGames } from "@/lib/chess/explorerData";
-import { START_FEN, toPositionKey } from "@/lib/chess/fen";
 import { getNodePathByUciLine, mergeMoveLineIntoTree, removeMoveNodeById } from "@/lib/chess/moveTree";
 import { getOpeningForLine } from "@/lib/chess/openingCatalog";
 import { formatRootCamera, type RootCamera } from "@/lib/regions/camera";
-import type { Move, MoveNode, OpeningBook } from "@/types/chess";
+import { STALE_BOOK_MESSAGE, saveStartTree } from "@/lib/library/accountStore";
+import { startTree } from "@/lib/library/trees";
+import type { LibraryBook } from "@/lib/library/types";
+import type { Move, MoveNode } from "@/types/chess";
 
 const RegionMap = dynamic(() => import("@/components/lab/RegionMap"), {
   ssr: false,
@@ -59,7 +61,7 @@ function lastMoveLabel(moves: Move[]) {
 
 type Props = {
   /** The viewer's books. Empty for a guest. */
-  initialBooks: OpeningBook[];
+  initialBooks: LibraryBook[];
   /** Where the map opens, from the page's `?camera=` (a bug report's "Reproduce" address). */
   initialCamera?: RootCamera | null;
 };
@@ -77,7 +79,7 @@ export function RegionMapView({ initialBooks, initialCamera }: Props) {
   const lineRef = useRef<HTMLParagraphElement>(null);
 
   const [frame, setFrame] = useState<RegionFrame | null>(null);
-  const [books, setBooks] = useState<OpeningBook[]>(initialBooks);
+  const [books, setBooks] = useState<LibraryBook[]>(initialBooks);
   const [activeBookId, setActiveBookId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   /** Null until the viewer chooses: open beside the map on a wide screen, closed under it on a narrow one. */
@@ -137,29 +139,23 @@ export function RegionMapView({ initialBooks, initialCamera }: Props) {
 
   // ── Book actions ─────────────────────────────────────────────────────────
 
-  const bookPath = activeBook
+  // The map's lines start from the starting position, so they edit the book's tree from there.
+  const activeTree = useMemo(() => (activeBook ? startTree(activeBook.trees) : null), [activeBook]);
+  const bookPath = activeTree
     ? getNodePathByUciLine(
-        activeBook.moveNode,
+        activeTree,
         moves.map((move) => move.uci),
       )
     : [];
   const inBook = bookPath.length === moves.length + 1;
-  // The map's lines start from the start position, so they only fit a book that does too.
-  const canEditBook =
-    activeBook !== null &&
-    moves.length > 0 &&
-    toPositionKey(activeBook.rootFen) === toPositionKey(START_FEN);
+  const canEditBook = activeBook !== null && moves.length > 0;
 
-  const saveTree = async (book: OpeningBook, moveNode: MoveNode) => {
+  const saveTree = async (book: LibraryBook, tree: MoveNode) => {
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/openings/books/${book.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ moveNode }),
-      });
-      if (!res.ok) throw new Error("Save failed");
-      setBooks((prev) => prev.map((b) => (b.id === book.id ? { ...b, moveNode } : b)));
+      const result = await saveStartTree(book, tree);
+      setBooks((prev) => prev.map((b) => (b.id === book.id ? result.book : b)));
+      if (!result.saved) alert(STALE_BOOK_MESSAGE);
     } catch {
       // leave state as-is; user can retry
     } finally {
@@ -168,12 +164,12 @@ export function RegionMapView({ initialBooks, initialCamera }: Props) {
   };
 
   const handleAddToBook = () => {
-    if (activeBook) void saveTree(activeBook, mergeMoveLineIntoTree(activeBook.moveNode, moves));
+    if (activeBook && activeTree) void saveTree(activeBook, mergeMoveLineIntoTree(activeTree, moves));
   };
 
   const handleRemoveFromBook = () => {
-    if (activeBook && inBook) {
-      void saveTree(activeBook, removeMoveNodeById(activeBook.moveNode, bookPath[bookPath.length - 1].id));
+    if (activeBook && activeTree && inBook) {
+      void saveTree(activeBook, removeMoveNodeById(activeTree, bookPath[bookPath.length - 1].id));
     }
   };
 

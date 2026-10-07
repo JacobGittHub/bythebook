@@ -263,12 +263,14 @@ shadcn/ui pass.
       summary and miniature (D26), the version 1 backup file with its checksum, the checklist
       the sign-in copy and Restore share, name rules (30 characters), and edits (rename,
       side, duplicate, remove a move, add a line).
-- [ ] (agent) Books as lists of trees everywhere, and the routes: the list returns summaries
+- [x] (agent) Books as lists of trees everywhere, and the routes: the list returns summaries
       only, capped; create, read, update (409 when the book changed since it was loaded) and
       delete run under RLS instead of the service role. Writes also fill `move_node` until
-      Migration B.
-- [ ] (agent) The browser adapter on IndexedDB (`idb`), the account adapter and
-      `useLibrary()`. Today's pages read and save through it, guests included: the Library
+      Migration B. Done: `OpeningBook` is gone, and pages use `LibraryBook` and show the tree
+      from the starting position (`startTree`). The account adapter (`accountStore.ts`) came
+      early, since three pages save through it. The server pages still read whole books with
+      `listBooksWithTrees` until the next step.
+- [ ] (agent) The browser adapter on IndexedDB (`idb`) and `useLibrary()`. Today's pages read and save through it, guests included: the Library
       (list, New book, delete, the empty state with the example books, Back up, Restore),
       the Explorer, the Treemap, the Labyrinth, the book views and both Train pages.
 - [ ] (agent) The copy at sign-in (D22), `persist()` and the backup notice, and debug mode's

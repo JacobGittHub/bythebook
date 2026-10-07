@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { BoardDisplay } from "@/components/board/BoardDisplay";
 import type { MasterSummary } from "@/lib/chess/explorerData";
-import type { OpeningBook } from "@/types/chess";
+import type { LibraryEntry } from "@/lib/library/types";
 
 /** How many of the position's moves the panel lists. */
 const LISTED_MOVES = 5;
@@ -23,7 +23,7 @@ type Props = {
   emptyTitle: string;
   /** The body's text when there is no position (wide screens only). */
   emptyHint: string;
-  book: OpeningBook | null;
+  book: LibraryEntry | null;
   masterGames: PanelMasterGames;
   onClose?: () => void;
   /** The buttons in the actions card. */

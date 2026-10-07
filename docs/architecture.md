@@ -150,7 +150,7 @@ Supabase Postgres with Row Level Security on every table. Columns are in
 | Table | Purpose | Access (RLS) |
 |---|---|---|
 | `profiles` | Extends `auth.users` with display info | Own row only |
-| `opening_books` | User repertoires; `move_node` JSONB tree | Own books; public books readable by authenticated users |
+| `opening_books` | User books: `trees` (a list of `MoveNode` trees), `summary` and `origin` (`src/lib/library/types.ts`); `move_node` keeps the tree from the starting position until the old books move (`plans/deployment.md` Phase 5) | Own books; public books readable by authenticated users, so the app's queries also name the user |
 | `training_sessions` | Result of each training run | Private |
 | `position_cache` | Cached Lichess explorer responses, keyed by `position_key` | Read: authenticated · Write: service role. The app itself reads and writes it on the server with the service role, so guests can be served |
 | `usage_counters` | Calls per (user, day, kind), with one shared row for guests | Service role only |
@@ -198,7 +198,7 @@ walks trees or aggregates runs client-side.
 | Fill the cache for the catalog | Local script (`npm run cache:prefill`) | Thousands of Lichess calls, so never on Vercel |
 | Engine analysis | Client (Stockfish Web Worker) | WASM runs in the browser, so the server pays nothing |
 | Report an eval to the DB | Vercel API → upsert `position_evals` | Single-row write with the service role (not built yet) |
-| Generate drills from a book | Client (walks `move_node`, joins `position_evals`) | Light local computation |
+| Generate drills from a book | Client (walks the book's trees, joins `position_evals`) | Light local computation |
 | Store a generated drill | Vercel API → insert `drills` | Single-row write |
 | Pick the weakest drills | Client (one fetch plus an in-memory sort) | Light query |
 | Record a drill result | Vercel API → upsert `user_position_stats` + `drill_attempts` | Single-row writes |
@@ -262,6 +262,12 @@ walks trees or aggregates runs client-side.
   fails. The reasoning is in `plans/deployment.md` (D6, D14).
 - The request path for route handlers is: client `fetch('/api/…')` → route handler (Zod
   validation) → `src/lib/db/*` or `src/lib/chess/*` → response.
+- **The book routes** (`/api/openings/books` and `/api/openings/books/[bookId]`) list the
+  viewer's books as summaries, and create, read, change and delete one book. Writes replay
+  every move (`validateTrees` in `src/lib/library/validate.ts`) and recompute the summary. A
+  change names the `updatedAt` it read, so a stale tab gets a 409 instead of overwriting. A
+  refusal carries a `LibraryError` code (`src/lib/library/http.ts`), and
+  `src/lib/library/accountStore.ts` is the client side.
 
 ## Stored vs computed
 
@@ -271,7 +277,8 @@ walks trees or aggregates runs client-side.
 | ECO tree structure | In-memory module cache | Once per process |
 | Master-game moves at a position | `position_cache` | On demand and by the pre-fill script, kept permanently |
 | Call counts | `usage_counters` | On every counted request |
-| User book tree | `opening_books.move_node` | Read on page load |
+| User book trees | `opening_books.trees` | Validated and summarized on every write; read when a book opens |
+| A book's summary | `opening_books.summary` | On every write; the book list reads only this |
 | Per-position training stats | `user_position_stats` | Per drill (not built yet) |
 | Engine evaluations | `position_evals` | Lazily, by client Stockfish (not built yet) |
 | Visualization layouts | Client | On config change, memoized |
@@ -341,9 +348,9 @@ engine.
 
 ## Known issues and scaling
 
-- **Malformed `move_node`.** The `PATCH /api/openings/books/[bookId]` route validates with
-  `updateBookTreeSchema` and `parseMoveNode`. `DashboardTree` null-checks the tree, and
-  `OpeningTreeFull` renders an empty tree for a null root.
+- **Books from before the library have no `trees` or `summary`** until they are moved
+  (`plans/deployment.md` Phase 5). `src/lib/db/openings.ts` rebuilds them from `move_node`
+  on each read, and every write still stores the starting position's tree there.
 - **Lichess failures** (429 responses, an expired token) degrade silently to "no moves". See
   the Lichess process doc.
 - **The catalog ships inside the client JavaScript.** `openingCatalog.ts` imports the index,
