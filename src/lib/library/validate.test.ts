@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildMoveTreeFromLines } from "@/lib/chess/moveTree";
+import { buildMoveTreeFromLines, createRootMoveNode } from "@/lib/chess/moveTree";
 import { replaySanLines } from "@/lib/books/examples";
 import { MAX_BOOK_POSITIONS, countPositions } from "@/lib/books/measures";
 import { START_FEN } from "@/lib/chess/fen";
@@ -110,5 +110,8 @@ describe("legacyTrees", () => {
     expect(fromLines[0].children[1].fen).toBe(AFTER_E4);
 
     expect(legacyTrees(null)).toEqual([]);
+    // The column's default, and a tree saved without its first position.
+    expect(expectTrees(legacyTrees({})).trees).toEqual([createRootMoveNode(START_FEN)]);
+    expect(expectTrees(legacyTrees({ ...tree, fen: undefined } as never)).trees).toEqual([tree]);
   });
 });

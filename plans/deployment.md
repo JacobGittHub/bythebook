@@ -284,12 +284,20 @@ shadcn/ui pass.
       checklist (`BrowserBooksOffer.tsx`), and a copied book leaves the browser once the
       account has it. The backup notice and debug mode's panel are on the Library page
       (`docs/design/dashboard.md`).
-- [ ] (agent) `npm run books:migrate`: backs every book row up to a local, git-ignored file,
-      then converts each `move_node` to `trees` with its summary.
-- [ ] (user) Run it, then check as a guest in a private window, signed in, and signing in on a
-      browser that holds guest books, and that the Treemap and the Labyrinth still save.
-- [ ] (agent) Migration B: drop `move_node`, and make `trees` and `summary` required.
-- [ ] (user) Run it, then `npm run db:types`.
+- [x] (agent) `npm run books:migrate`: backs every book row up to a local, git-ignored file,
+      then converts each `move_node` to `trees` with its summary. Done: `planMigration`
+      (`src/lib/library/migrate.ts`) decides each row; a row is written only if unchanged since
+      it was read, and keeps its `updated_at`, so the script can run again. A row whose trees
+      and `move_node` disagree is reported (`--rebuild-diverged` rebuilds it from `move_node`).
+      The dry run on 2026-10-07 found 3 books, all converting, none refused.
+- [ ] (user) Once the library code is live (pushed and deployed), run it, then check as a
+      guest in a private window, signed in, and signing in on a browser that holds guest books,
+      and that the Treemap and the Labyrinth still save.
+- [ ] (agent) Migration B: drop `move_node`, and make `trees` and `summary` required, with the
+      code change that stops reading and writing `move_node`. The migration refuses to run
+      while a book has no trees.
+- [ ] (user) Deploy that code first, then run the migration, then `npm run db:types`. The
+      other order breaks saving, since today's code writes `move_node`.
 
 Signed-in browser tests use the test account on the live database until staging exists; the
 one that makes a book deletes it again.

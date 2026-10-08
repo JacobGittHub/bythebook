@@ -126,7 +126,8 @@ export function validateTrees(
 
 /**
  * A stored `opening_books.move_node` as a tree list for `validateTrees`: one tree, or the
- * line arrays the oldest rows hold. Anything else is an empty book.
+ * line arrays the oldest rows hold. A tree without a first position starts from the starting
+ * position, so the column's default `{}` is an empty book, as is anything else.
  */
 export function legacyTrees(stored: Json | undefined): unknown[] {
   if (Array.isArray(stored)) {
@@ -135,5 +136,5 @@ export function legacyTrees(stored: Json | undefined): unknown[] {
       .filter((line): line is Move[] => line.length > 0);
     return [buildMoveTreeFromLines(lines, START_FEN)];
   }
-  return isRecord(stored) ? [stored] : [];
+  return isRecord(stored) ? [{ ...stored, fen: typeof stored.fen === "string" ? stored.fen : START_FEN }] : [];
 }
