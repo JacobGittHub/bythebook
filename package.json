@@ -24,7 +24,6 @@
     "catalog:index": "node scripts/buildOpeningCatalogIndex.mjs",
     "cache:prefill": "tsx --env-file=.env.local scripts/prefillPositionCache.ts",
     "books:examples": "tsx --env-file=.env.local scripts/buildExampleBooks.ts",
-    "books:migrate": "tsx --env-file=.env.local scripts/migrateBooks.ts",
     "invites:create": "tsx --env-file=.env.local scripts/createInvites.ts",
     "db:types": "supabase gen types typescript --project-id bcpkifxnjfjzfrqvpkby > src/types/database.ts"
   },

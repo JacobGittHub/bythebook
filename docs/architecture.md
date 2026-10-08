@@ -150,7 +150,7 @@ Supabase Postgres with Row Level Security on every table. Columns are in
 | Table | Purpose | Access (RLS) |
 |---|---|---|
 | `profiles` | Extends `auth.users` with display info | Own row only |
-| `opening_books` | User books: `trees` (a list of `MoveNode` trees), `summary` and `origin` (`src/lib/library/types.ts`); `move_node` keeps the tree from the starting position until the old books move (`plans/deployment.md` Phase 5) | Own books; public books readable by authenticated users, so the app's queries also name the user |
+| `opening_books` | User books: `trees` (a list of `MoveNode` trees), `summary` and `origin` (`src/lib/library/types.ts`), all required | Own books; public books readable by authenticated users, so the app's queries also name the user |
 | `training_sessions` | Result of each training run | Private |
 | `position_cache` | Cached Lichess explorer responses, keyed by `position_key` | Read: authenticated · Write: service role. The app itself reads and writes it on the server with the service role, so guests can be served |
 | `usage_counters` | Calls per (user, day, kind), with one shared row for guests | Service role only |
@@ -363,9 +363,6 @@ engine.
 
 ## Known issues and scaling
 
-- **Books from before the library have no `trees` or `summary`** until they are moved
-  (`plans/deployment.md` Phase 5). `src/lib/db/openings.ts` rebuilds them from `move_node`
-  on each read, and every write still stores the starting position's tree there.
 - **Lichess failures** (429 responses, an expired token) degrade silently to "no moves". See
   the Lichess process doc.
 - **The catalog ships inside the client JavaScript.** `openingCatalog.ts` imports the index,

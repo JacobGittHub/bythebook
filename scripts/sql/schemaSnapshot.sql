@@ -116,8 +116,9 @@ statements (section, name, stmt) as (
     || coalesce(max(char_length(name)), 0) || ' characters'
   from public.opening_books
   union all
-  select 13, '2', '-- move_node shapes: ' || coalesce(string_agg(shape || ' ' || n, ', ' order by shape), 'none')
-  from (select jsonb_typeof(move_node) as shape, count(*) as n from public.opening_books group by 1) shapes
+  select 13, '2', '-- books by how many trees they hold: '
+    || coalesce(string_agg(trees || ' ' || n, ', ' order by trees), 'none')
+  from (select jsonb_array_length(trees) as trees, count(*) as n from public.opening_books group by 1) counts
   union all
   select 13, '3', '-- rows that point at books: drills ' || (select count(*) from public.drills)
     || ', training_sessions ' || (select count(*) from public.training_sessions)

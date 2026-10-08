@@ -43,7 +43,7 @@ next-env.d.ts
 #supabase
 supabase/.temp/
 
-# Book rows saved by npm run books:migrate before it converts them (real users' data)
+# Book rows saved by the book migration of 2026-10-07 (real users' data)
 /backups/
 
 # Unused full-size Stockfish build (107 MB) — app uses the lite variants

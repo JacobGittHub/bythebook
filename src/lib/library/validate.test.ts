@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildMoveTreeFromLines, createRootMoveNode } from "@/lib/chess/moveTree";
+import { buildMoveTreeFromLines } from "@/lib/chess/moveTree";
 import { replaySanLines } from "@/lib/books/examples";
-import { MAX_BOOK_POSITIONS, countPositions } from "@/lib/books/measures";
+import { MAX_BOOK_POSITIONS } from "@/lib/books/measures";
 import { START_FEN } from "@/lib/chess/fen";
-import { MAX_LINE_MOVES, legacyTrees, validateTrees } from "./validate";
+import { MAX_LINE_MOVES, validateTrees } from "./validate";
 
 const treeOf = (...lines: string[]) => buildMoveTreeFromLines(replaySanLines(lines).lines, START_FEN);
 const AFTER_E4 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
@@ -96,22 +96,5 @@ describe("validateTrees", () => {
     expect(validateTrees(input)).toEqual({ ok: false, reason: "over_limit", count: 1_250, limit: MAX_BOOK_POSITIONS });
     expect(validateTrees(input, { verifiedPublisher: true }).ok).toBe(true);
     expect(validateTrees([line(MAX_LINE_MOVES + 1)])).toMatchObject({ ok: false, reason: "invalid" });
-  });
-});
-
-describe("legacyTrees", () => {
-  it("reads a stored tree and the oldest rows' line arrays", () => {
-    const tree = treeOf("d4 d5 c4");
-    expect(expectTrees(legacyTrees(tree as never)).trees).toEqual([tree]);
-
-    const lines = [[{ san: "d4", uci: "d2d4" }, { san: "d5", uci: "d7d5" }], [{ san: "e4", uci: "e2e4" }]];
-    const fromLines = expectTrees(legacyTrees(lines)).trees;
-    expect(countPositions(fromLines)).toBe(3);
-    expect(fromLines[0].children[1].fen).toBe(AFTER_E4);
-
-    expect(legacyTrees(null)).toEqual([]);
-    // The column's default, and a tree saved without its first position.
-    expect(expectTrees(legacyTrees({})).trees).toEqual([createRootMoveNode(START_FEN)]);
-    expect(expectTrees(legacyTrees({ ...tree, fen: undefined } as never)).trees).toEqual([tree]);
   });
 });

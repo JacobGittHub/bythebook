@@ -3,14 +3,8 @@
 // rules apply, and names the user, since "read public books" also lets anyone read a public
 // one. Writes validate and summarize here, so a client can't store a bad tree or misreport its
 // summary.
-//
-// Until the old books move (deployment.md Phase 5, step 9), a row may lack `trees` and
-// `summary`: reads then rebuild them from `move_node`, and every write also stores the tree
-// from the starting position in `move_node`, so the previous code still reads it.
 
 import { createServerSupabaseClient } from "@/lib/supabase";
-import { START_FEN } from "@/lib/chess/fen";
-import { createRootMoveNode } from "@/lib/chess/moveTree";
 import { summarize } from "@/lib/library/summary";
 import {
   LibraryError,
@@ -22,8 +16,6 @@ import {
   type LibraryEntry,
 } from "@/lib/library/types";
 import { sameInstant } from "@/lib/library/time";
-import { startTree } from "@/lib/library/trees";
-import { legacyTrees, validateTrees } from "@/lib/library/validate";
 import { checkedTrees } from "@/lib/library/writes";
 import type { MoveNode } from "@/types/chess";
 import type { Json, Tables } from "@/types/database";
@@ -31,10 +23,10 @@ import type { Json, Tables } from "@/types/database";
 type BookRow = Tables<"opening_books">;
 
 const ENTRY_COLUMNS = "id, name, color, origin, summary, updated_at";
-const BOOK_COLUMNS = `${ENTRY_COLUMNS}, trees, move_node`;
+const BOOK_COLUMNS = `${ENTRY_COLUMNS}, trees`;
 
 type EntryRow = Pick<BookRow, "id" | "name" | "color" | "origin" | "summary" | "updated_at">;
-type FullRow = EntryRow & Pick<BookRow, "trees" | "move_node">;
+type FullRow = EntryRow & Pick<BookRow, "trees">;
 
 /** Whether `id` could be a book id; any other text names a book that doesn't exist. */
 const isBookId = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -46,32 +38,21 @@ function originOf(value: Json): BookOrigin {
   return parsed.success ? parsed.data : { kind: "own" };
 }
 
-/**
- * A row's trees. Stored trees were validated when written; a row from before the move has only
- * `move_node`, which is replayed here, and is never refused for its size.
- */
-function treesOf(row: Pick<BookRow, "trees" | "move_node">): MoveNode[] {
-  if (Array.isArray(row.trees)) return row.trees as unknown as MoveNode[];
-  const result = validateTrees(legacyTrees(row.move_node), { verifiedPublisher: true });
-  return result.ok ? result.trees : [createRootMoveNode(START_FEN)];
-}
+/** A row's trees and summary, which were validated and worked out when it was written. */
+const treesOf = (row: Pick<BookRow, "trees">) => row.trees as unknown as MoveNode[];
 
-function entryOf(row: EntryRow, trees?: MoveNode[]): LibraryEntry {
-  const color = sideOf(row.color);
+function entryOf(row: EntryRow): LibraryEntry {
   return {
     id: row.id,
     name: row.name,
-    color,
+    color: sideOf(row.color),
     origin: originOf(row.origin),
-    summary: (row.summary as unknown as BookSummary | null) ?? summarize(trees ?? [], color),
+    summary: row.summary as unknown as BookSummary,
     updatedAt: row.updated_at ?? "",
   };
 }
 
-function bookOf(row: FullRow): LibraryBook {
-  const trees = treesOf(row);
-  return { ...entryOf(row, trees), trees };
-}
+const bookOf = (row: FullRow): LibraryBook => ({ ...entryOf(row), trees: treesOf(row) });
 
 function failed(error: unknown): never {
   console.error("A book query failed.", error);
@@ -88,20 +69,7 @@ export async function listBooks(userId: string): Promise<LibraryEntry[]> {
     .order("updated_at", { ascending: false, nullsFirst: false })
     .limit(MAX_LIBRARY_BOOKS);
   if (error) failed(error);
-
-  // Books from before the move have no summary yet: read their trees, a capped batch by id.
-  const missing = data.filter((row) => row.summary === null).map((row) => row.id);
-  const trees = new Map<string, MoveNode[]>();
-  if (missing.length) {
-    const { data: rows, error: treesError } = await supabase
-      .from("opening_books")
-      .select("id, trees, move_node")
-      .eq("user_id", userId)
-      .in("id", missing);
-    if (treesError) failed(treesError);
-    for (const row of rows) trees.set(row.id, treesOf(row));
-  }
-  return data.map((row) => entryOf(row, trees.get(row.id)));
+  return data.map((row) => entryOf(row));
 }
 
 export async function getBook(userId: string, bookId: string): Promise<LibraryBook | null> {
@@ -141,7 +109,6 @@ export async function createBook(userId: string, input: BookInput): Promise<Libr
       origin: input.origin as unknown as Json,
       trees: trees as unknown as Json,
       summary: summarize(trees, input.color) as unknown as Json,
-      move_node: startTree(trees) as unknown as Json,
       is_public: false,
       updated_at: new Date().toISOString(),
     })
@@ -178,7 +145,7 @@ export async function updateBook(
 
   const color = changes.color ?? sideOf(current.color);
   const trees = changes.trees === undefined ? null : checkedTrees(changes.trees);
-  const resummarize = trees !== null || color !== sideOf(current.color) || current.summary === null;
+  const resummarize = trees !== null || color !== sideOf(current.color);
   const finalTrees = trees ?? treesOf(current);
 
   const update = supabase
@@ -186,7 +153,7 @@ export async function updateBook(
     .update({
       ...(changes.name !== undefined ? { name: changes.name } : {}),
       color,
-      ...(trees ? { trees: trees as unknown as Json, move_node: startTree(trees) as unknown as Json } : {}),
+      ...(trees ? { trees: trees as unknown as Json } : {}),
       ...(resummarize ? { summary: summarize(finalTrees, color) as unknown as Json } : {}),
       updated_at: new Date().toISOString(),
     })

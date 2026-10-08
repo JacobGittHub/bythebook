@@ -6,9 +6,8 @@
 import { Chess } from "chess.js";
 import { checkPositionLimit } from "@/lib/books/measures";
 import { START_FEN, isValidFen, normalizeFen, toPositionKey } from "@/lib/chess/fen";
-import { buildMoveTreeFromLines, createMoveNodeId, createRootMoveNode, isMove } from "@/lib/chess/moveTree";
-import type { Json } from "@/types/database";
-import type { Move, MoveNode } from "@/types/chess";
+import { createMoveNodeId, createRootMoveNode } from "@/lib/chess/moveTree";
+import type { MoveNode } from "@/types/chess";
 
 /**
  * The most nodes a tree list may hold before replaying, repeats included: well above any
@@ -122,19 +121,4 @@ export function validateTrees(
   const { count, limit, over } = checkPositionLimit(result, options.verifiedPublisher ?? false);
   if (over) return { ok: false, reason: "over_limit", count, limit };
   return { ok: true, trees: result, positions: count };
-}
-
-/**
- * A stored `opening_books.move_node` as a tree list for `validateTrees`: one tree, or the
- * line arrays the oldest rows hold. A tree without a first position starts from the starting
- * position, so the column's default `{}` is an empty book, as is anything else.
- */
-export function legacyTrees(stored: Json | undefined): unknown[] {
-  if (Array.isArray(stored)) {
-    const lines = stored
-      .map((line) => (Array.isArray(line) ? line.filter(isMove) : []))
-      .filter((line): line is Move[] => line.length > 0);
-    return [buildMoveTreeFromLines(lines, START_FEN)];
-  }
-  return isRecord(stored) ? [{ ...stored, fen: typeof stored.fen === "string" ? stored.fen : START_FEN }] : [];
 }

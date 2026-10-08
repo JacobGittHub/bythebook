@@ -52,7 +52,6 @@ which is not in development.
 | Production build | `npm run build` |
 | Rebuild the opening catalog | `npm run catalog:download`, then `npm run catalog:index` |
 | Rebuild the example books | `npm run books:examples` (reads Wikibooks, the catalog and `position_cache`, never Lichess; `-- --skip-masters` keeps the books made from the cache) |
-| Move old books from `move_node` into `trees` | `npm run books:migrate` (saves every row to a git-ignored backup file first; the user runs it, agents use `-- --dry-run`) |
 | Fill `position_cache` for the catalog | `npm run cache:prefill` (calls Lichess for hours; the user runs it, agents use `-- --dry-run`) |
 | Make beta invite or reset codes | `npm run invites:create` (writes to the live database; the user runs it) |
 | Regenerate DB types | `npm run db:types` (see "Database changes" below) |
