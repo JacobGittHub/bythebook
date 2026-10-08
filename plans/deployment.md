@@ -279,8 +279,11 @@ shadcn/ui pass.
       `listBooksWithTrees` is gone. Three example books' names are over 30 characters and
       are cut with "…" when saved; shorter names in `scripts/buildExampleBooks.ts` need a
       full `npm run books:examples` (the user's run).
-- [ ] (agent) The copy at sign-in (D22), `persist()` and the backup notice, and debug mode's
-      library section (D23).
+- [x] (agent) The copy at sign-in (D22), `persist()` and the backup notice, and debug mode's
+      library section (D23). Done: a notice on every dashboard page links to the Library's
+      checklist (`BrowserBooksOffer.tsx`), and a copied book leaves the browser once the
+      account has it. The backup notice and debug mode's panel are on the Library page
+      (`docs/design/dashboard.md`).
 - [ ] (agent) `npm run books:migrate`: backs every book row up to a local, git-ignored file,
       then converts each `move_node` to `trees` with its summary.
 - [ ] (user) Run it, then check as a guest in a private window, signed in, and signing in on a

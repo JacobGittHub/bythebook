@@ -83,6 +83,19 @@ are kept in this browser and a signed-in viewer's in the account, and the page n
 - **The empty state** offers New book, Restore, and the example books with Save. A saved
   example is a store book from `EXAMPLE_PUBLISHER`, with its credit (D24), and a name over
   the limit is cut to fit (`fitBookName`).
+- **The backup notice** (`backupAdvice`, `src/lib/library/backup.ts`) shows a guest when
+  the library was last backed up and why that matters, whenever the browser hasn't promised
+  to keep the data (`browserKeepsData`) or a book changed since the last backup
+  (`plans/bookstore.md` D12).
+- **Books in the browser at sign-in** (`BrowserBooksOffer.tsx`, D22). When a signed-in
+  viewer's browser still holds books, a notice on every other dashboard page links here,
+  where the checklist copies them into the account and each copied book leaves the
+  browser. "Not now" lasts for the tab's session, after which one line offers the copy
+  again; a book that wasn't copied is offered again next session.
+- **Debug mode** adds a panel with the browser library's book count, "Back up browser
+  library" and "Empty browser library", for guests and accounts alike (D23), and the bug
+  report gains a Library section: the store, its book count and, signed in, the books
+  still in the browser.
 - Game history keeps its "coming soon" section.
 
 ## Theme colors

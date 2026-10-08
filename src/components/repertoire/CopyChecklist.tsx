@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { resolvePlan, type ClashChoice, type ExistingBook, type PlanItem } from "@/lib/library/copyPlan";
+import { resolvePlan, type ClashChoice, type ExistingBook, type IncomingBook, type PlanItem } from "@/lib/library/copyPlan";
 import { MAX_LIBRARY_BOOKS, libraryErrorMessage, type BookDraft } from "@/lib/library/types";
 
 type Props = {
@@ -12,8 +12,13 @@ type Props = {
   existing: ExistingBook[];
   /** Completes "{count} books" on the confirm button, such as "Restore". */
   verb: string;
-  /** Saves one book; a refusal is shown beside it and the rest carry on. */
-  save: (draft: BookDraft) => Promise<unknown>;
+  /**
+   * Saves one book, given as it will be written and as it came; a refusal is shown beside it
+   * and the rest carry on.
+   */
+  save: (draft: BookDraft, source: IncomingBook) => Promise<unknown>;
+  /** The button that closes the checklist without saving; "Cancel" when not given. */
+  cancelLabel?: string;
   /** Called when the checklist is closed, with how many books were saved. */
   onDone: (saved: number) => void;
 };
@@ -27,7 +32,7 @@ const itemName = (item: PlanItem) => (item.status === "rejected" ? item.name : i
  * each incoming book with what will happen to it. A name already in the library is kept as a
  * second book unless the user skips it. Books are saved one at a time.
  */
-export function CopyChecklist({ title, plan, existing, verb, save, onDone }: Props) {
+export function CopyChecklist({ title, plan, existing, verb, save, cancelLabel = "Cancel", onDone }: Props) {
   const [choices, setChoices] = useState<ReadonlyMap<number, ClashChoice>>(new Map());
   const [outcomes, setOutcomes] = useState<ReadonlyMap<number, Outcome> | null>(null);
   const [busy, setBusy] = useState(false);
@@ -40,9 +45,9 @@ export function CopyChecklist({ title, plan, existing, verb, save, onDone }: Pro
   const run = async () => {
     setBusy(true);
     const results = new Map<number, Outcome>();
-    for (const { index, draft } of write) {
+    for (const { index, draft, source } of write) {
       try {
-        await save(draft);
+        await save(draft, source);
         results.set(index, { saved: true });
       } catch (error) {
         results.set(index, { saved: false, message: libraryErrorMessage(error) });
@@ -119,7 +124,7 @@ export function CopyChecklist({ title, plan, existing, verb, save, onDone }: Pro
               disabled={busy}
               className="btn-secondary rounded-xl px-4 py-2 text-sm"
             >
-              Cancel
+              {cancelLabel}
             </button>
           </>
         )}

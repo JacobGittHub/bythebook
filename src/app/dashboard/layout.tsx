@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BugReportButton } from "@/components/layout/BugReportButton";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { BrowserBooksNotice } from "@/components/repertoire/BrowserBooksOffer";
 import { BugReportProvider } from "@/context/BugReport";
 import { LibraryProvider } from "@/context/Library";
 import { ViewerProvider } from "@/context/Viewer";
@@ -28,6 +29,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const viewer = await getViewer();
+  const debug = canDebug(viewer);
 
   const sidebar = (
     <>
@@ -41,7 +43,7 @@ export default async function DashboardLayout({
 
       {/* Account block */}
       <div className="mt-auto grid gap-1 pt-6">
-        {canDebug(viewer) && <BugReportButton signedIn={viewer.signedIn} className={linkClass} />}
+        {debug && <BugReportButton signedIn={viewer.signedIn} className={linkClass} />}
         <div className="grid gap-1 border-t border-white/10 pt-4">
           {viewer.signedIn ? (
             <>
@@ -89,8 +91,11 @@ export default async function DashboardLayout({
     // The bug report provider wraps the sidebar too, so its button can read the page.
     <BugReportProvider>
       <DashboardShell sidebar={sidebar}>
-        <ViewerProvider signedIn={viewer.signedIn}>
-          <LibraryProvider>{children}</LibraryProvider>
+        <ViewerProvider signedIn={viewer.signedIn} debug={debug}>
+          <LibraryProvider>
+            {children}
+            <BrowserBooksNotice />
+          </LibraryProvider>
         </ViewerProvider>
       </DashboardShell>
     </BugReportProvider>

@@ -106,3 +106,28 @@ export async function readBackup(text: string): Promise<BackupRead> {
   }
   return { ok: true, exportedAt: body.exportedAt, books: body.books.map(toCandidate) };
 }
+
+/** What the backup notice says about a browser library (bookstore.md D12, deployment.md D23). */
+export type BackupAdvice = {
+  lastBackupAt: string | null;
+  /** A book changed since the last backup, or there has been none. */
+  changed: boolean;
+  /** The browser hasn't promised to keep the site's data, or can't say. */
+  mayBeDeleted: boolean;
+};
+
+/**
+ * Whether a browser library with `bookCount` books needs the backup notice, and what it says:
+ * it shows when the browser won't promise to keep the data, or a book changed since the last
+ * backup. `kept` is the browser's answer (`browserKeepsData`), null when it can't say.
+ */
+export function backupAdvice(
+  bookCount: number,
+  state: { lastBackupAt: string | null; changedSinceBackup: boolean },
+  kept: boolean | null,
+): BackupAdvice | null {
+  if (bookCount === 0) return null;
+  const changed = state.changedSinceBackup || state.lastBackupAt === null;
+  const mayBeDeleted = kept !== true;
+  return changed || mayBeDeleted ? { lastBackupAt: state.lastBackupAt, changed, mayBeDeleted } : null;
+}

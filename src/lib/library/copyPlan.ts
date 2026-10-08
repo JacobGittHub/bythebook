@@ -84,7 +84,8 @@ export type ClashChoice = "keep_both" | "skip";
 
 /** What a resolved plan writes, by plan index, and what found no room. */
 export type CopyWrites = {
-  write: { index: number; draft: BookDraft }[];
+  /** Each book to write, with the book it came from (whose id is in the library it left). */
+  write: { index: number; draft: BookDraft; source: IncomingBook }[];
   /** Plan indexes that would take the library past `MAX_LIBRARY_BOOKS`. */
   noRoom: number[];
 };
@@ -112,7 +113,7 @@ export function resolvePlan(
     const { name, color, origin, trees } = item.book;
     const finalName = nameTaken(name, names) ? copyName(name, names) : name;
     names.push(finalName);
-    result.write.push({ index, draft: { name: finalName, color, origin, trees } });
+    result.write.push({ index, draft: { name: finalName, color, origin, trees }, source: item.book });
   });
   return result;
 }

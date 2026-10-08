@@ -6,6 +6,10 @@
 // Three stores: `books` holds each book without its trees, so the list reads little;
 // `trees` holds the trees by book id; `meta` holds when the library was last backed up and
 // whether it changed since. A write tells this browser's other tabs (`onBrowserLibraryChange`).
+//
+// A guest's first save asks the browser to keep the data (`navigator.storage.persist()`); a
+// browser that won't promise it may delete the library, which Safari does after 7 days without
+// a visit, so the Library shows the backup notice (`backupAdvice`, `backup.ts`).
 
 import { openDB, type DBSchema, type IDBPDatabase, type IDBPTransaction } from "idb";
 import type { MoveNode } from "@/types/chess";
@@ -35,6 +39,8 @@ export type BrowserLibrary = Library & {
   backupState(): Promise<BackupState>;
   /** Notes a backup made at `at`, which holds every book as of then. */
   recordBackup(at: Date): Promise<void>;
+  /** Deletes every book, and forgets the last backup (debug mode, D23). */
+  empty(): Promise<void>;
 };
 
 /** Any failure that isn't the library's own, as one the page can show. */
@@ -129,6 +135,7 @@ export function browserLibraryNamed(name: string): BrowserLibrary {
         return entry;
       });
       changed();
+      askToKeepData();
       return entry;
     },
 
@@ -175,7 +182,39 @@ export function browserLibraryNamed(name: string): BrowserLibrary {
         await db.put("meta", { lastBackupAt: at.toISOString(), changedSinceBackup: false }, "backup");
       });
     },
+
+    async empty() {
+      await run(async (db) => {
+        const tx = db.transaction(["books", "trees", "meta"], "readwrite");
+        await Promise.all([tx.objectStore("books").clear(), tx.objectStore("trees").clear(), tx.objectStore("meta").clear()]);
+        await tx.done;
+      });
+      changed();
+    },
   };
+}
+
+let askedToKeep = false;
+
+/**
+ * Asks the browser, once per page load, to keep this site's data instead of deleting it when
+ * space runs low or the site goes unvisited. Chromium decides by itself, and Firefox may ask
+ * the visitor. The answer is read with `browserKeepsData`.
+ */
+function askToKeepData() {
+  if (askedToKeep || typeof navigator === "undefined" || !navigator.storage?.persist) return;
+  askedToKeep = true;
+  navigator.storage.persist().catch(() => {});
+}
+
+/** Whether this browser promised to keep the site's data; null when it can't say. */
+export async function browserKeepsData(): Promise<boolean | null> {
+  if (typeof navigator === "undefined" || !navigator.storage?.persisted) return null;
+  try {
+    return await navigator.storage.persisted();
+  } catch {
+    return null;
+  }
 }
 
 /** This browser's library. */
@@ -190,7 +229,8 @@ function announceChange(name: string) {
 
 /**
  * Calls `listener` when another tab of this browser changes its library, and returns the
- * function that stops it. A tab isn't told of its own changes.
+ * function that stops it. The tab that made the change is told too, since each write announces
+ * on a channel of its own; that costs only a second read.
  */
 export function onBrowserLibraryChange(listener: () => void, name: string = BROWSER_LIBRARY_DB): () => void {
   if (typeof BroadcastChannel === "undefined") return () => {};

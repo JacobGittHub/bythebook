@@ -1,4 +1,4 @@
-import { ACCOUNT_STATE, NO_ACCOUNT_REASON, testAccount } from "./fixtures/account";
+import { ACCOUNT_STATE, NO_ACCOUNT_REASON, signIn, testAccount } from "./fixtures/account";
 import { expect, test } from "./fixtures/test";
 
 // The book routes against the live database, as the test account (plans/deployment.md
@@ -70,5 +70,44 @@ test.describe("Book routes, signed in", () => {
     await page.goto("/dashboard/library");
     await expect(page.getByText("Saved to your account", { exact: true })).toBeVisible();
     await expect(page.getByText("Kept in this browser", { exact: true })).toHaveCount(0);
+  });
+});
+
+test.describe("Books in the browser at sign-in", () => {
+  test.skip(!testAccount(), NO_ACCOUNT_REASON);
+  test.skip(({ browserName, isMobile }) => browserName !== "chromium" || isMobile, "It writes to the live database; one browser is enough.");
+
+  const name = `e2e-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+
+  test.afterEach(async ({ page }) => {
+    const list = await (await page.request.get(BOOKS)).json();
+    for (const book of list.books ?? []) {
+      if (book.name === name) await page.request.delete(`${BOOKS}/${book.id}`);
+    }
+  });
+
+  test("a guest's book is offered at sign-in, and copied into the account leaves the browser", async ({ page }) => {
+    await page.goto("/dashboard/library");
+    await page.getByRole("button", { name: "+ New book" }).click();
+    await page.getByPlaceholder(/Ruy Lopez/).fill(name);
+    await page.getByRole("button", { name: "Create book" }).click();
+    await expect(page.getByRole("heading", { name, level: 3 })).toBeVisible();
+
+    await signIn(page, testAccount()!);
+    const notice = page.getByRole("complementary", { name: "Books in this browser" });
+    await expect(notice).toContainText("This browser holds 1 book from browsing as a guest.");
+    await notice.getByRole("link", { name: "Open the Library to copy" }).click();
+
+    const checklist = page.getByRole("region", { name: "Copy this browser's book into your account" });
+    await expect(checklist).toContainText(name);
+    await checklist.getByRole("button", { name: "Copy 1 book" }).click();
+    await checklist.getByRole("button", { name: "Done" }).click();
+    await expect(page.getByRole("heading", { name, level: 3 })).toBeVisible();
+    await expect(page.getByText("Saved to your account", { exact: true })).toBeVisible();
+
+    // The book left the browser, so nothing is offered any more.
+    await page.goto("/dashboard");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(notice).toHaveCount(0);
   });
 });

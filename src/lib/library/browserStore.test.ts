@@ -97,6 +97,17 @@ describe("the browser library", () => {
     expect(await library.backupState()).toEqual({ lastBackupAt: at.toISOString(), changedSinceBackup: true });
   });
 
+  it("empties every book and forgets the last backup", async () => {
+    const library = fresh();
+    const book = await library.create(draft("Book"));
+    await library.create(draft("Another"));
+    await library.recordBackup(new Date("2026-10-07T12:00:00.000Z"));
+    await library.empty();
+    expect(await library.list()).toEqual([]);
+    expect(await library.get(book.id)).toBeNull();
+    expect(await library.backupState()).toEqual({ lastBackupAt: null, changedSinceBackup: false });
+  });
+
   it("tells other tabs when it changes", async () => {
     const name = `test-library-${++count}`;
     const library = browserLibraryNamed(name);

@@ -189,6 +189,11 @@ Supabase Postgres with Row Level Security on every table. Columns are in
   viewer, and shares one book list and the opened books between pages
   (`src/lib/library/cache.ts`), so moving between pages reads nothing twice. No server page
   reads books.
+- **Keeping a guest's books.** The first save asks the browser to keep the site's data
+  (`navigator.storage.persist()`). A signed-in page reads the browser library only to offer
+  copying its books into the account (`plans/deployment.md` D22); a copied book leaves the
+  browser once the account has it, so each book lives in one place. Both show on the
+  Library page (`docs/design/dashboard.md` § "Library page").
 - **As of 2026-09-29, no application code reads or writes `user_position_stats`,
   `position_evals` or `drills`.** They exist for the trainer.
 

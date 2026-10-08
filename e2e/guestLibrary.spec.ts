@@ -56,13 +56,16 @@ test.describe("Library, as a guest", () => {
   test("backs up to a file that restores in another browser", async ({ page, browser }) => {
     await openLibrary(page);
     await createBook(page, "Backed up");
+    await expect(page.getByText(/haven.t been backed up yet/)).toBeVisible();
 
     const downloading = page.waitForEvent("download");
-    await page.getByRole("button", { name: "Back up" }).click();
+    await page.getByRole("button", { name: "Back up", exact: true }).click();
     const download = await downloading;
     expect(download.suggestedFilename()).toMatch(/^bythebook-library-\d{4}-\d{2}-\d{2}\.json$/);
     const file = test.info().outputPath("backup.json");
     await download.saveAs(file);
+    // A headless browser makes no promise to keep the data, so the notice stays, with the date.
+    await expect(page.getByText(/^Last backed up .+\. This browser hasn.t promised/)).toBeVisible();
 
     const other = await browser.newContext({ baseURL: new URL(page.url()).origin });
     try {

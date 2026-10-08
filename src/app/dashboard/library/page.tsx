@@ -1,18 +1,27 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { BoardDisplay } from "@/components/board/BoardDisplay";
 import { fetchExampleBook, useExampleBooks } from "@/components/books/useExampleBooks";
 import { BookEditor } from "@/components/repertoire/BookEditor";
+import { BrowserBooksCopy } from "@/components/repertoire/BrowserBooksOffer";
 import { CopyChecklist } from "@/components/repertoire/CopyChecklist";
-import { useLibrary, useLibraryBooks } from "@/context/Library";
+import { useBrowserBooksOffer, useLibrary, useLibraryBooks } from "@/context/Library";
+import { useViewer } from "@/context/Viewer";
 import { exampleDraft, type ExampleBookEntry } from "@/lib/books/examples";
 import { START_FEN } from "@/lib/chess/fen";
-import { MAX_BACKUP_BYTES, readBackup, writeBackup, type BackupProblem } from "@/lib/library/backup";
-import { browserLibrary } from "@/lib/library/browserStore";
+import {
+  MAX_BACKUP_BYTES,
+  backupAdvice,
+  readBackup,
+  writeBackup,
+  type BackupAdvice,
+  type BackupProblem,
+} from "@/lib/library/backup";
+import { browserKeepsData, browserLibrary } from "@/lib/library/browserStore";
 import { planCopy, type ExistingBook, type PlanItem } from "@/lib/library/copyPlan";
-import { LibraryError, libraryErrorMessage, type LibraryBook } from "@/lib/library/types";
+import { LibraryError, libraryErrorMessage, type Library, type LibraryBook } from "@/lib/library/types";
 
 const BACKUP_PROBLEMS: Record<BackupProblem, string> = {
   too_large: "That file is too large to be a library backup.",
@@ -31,9 +40,32 @@ function download(text: string, fileName: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1_000);
 }
 
+/** The backup notice's text (bookstore.md D12): when the library was last backed up, and why it matters. */
+function adviceText(advice: BackupAdvice): string {
+  const when = advice.lastBackupAt
+    ? new Date(advice.lastBackupAt).toLocaleDateString(undefined, { dateStyle: "medium" })
+    : null;
+  const sentences = [
+    when
+      ? advice.changed
+        ? `Last backed up ${when}, and books have changed since.`
+        : `Last backed up ${when}.`
+      : "These books haven't been backed up yet.",
+  ];
+  if (advice.mayBeDeleted) {
+    sentences.push(
+      "This browser hasn't promised to keep them: some browsers, Safari among them, delete a site's data after 7 days without a visit.",
+    );
+  }
+  sentences.push(advice.changed ? "Back up to keep a copy in a file." : "Your backup file holds them all.");
+  return sentences.join(" ");
+}
+
 export default function LibraryPage() {
   const { library, store, label } = useLibrary();
   const { books, error, reload } = useLibraryBooks();
+  const { debug } = useViewer();
+  const offer = useBrowserBooksOffer();
   const { entries: examples } = useExampleBooks(null);
   const [showCreate, setShowCreate] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -41,6 +73,23 @@ export default function LibraryPage() {
   const [savingExample, setSavingExample] = useState<string | null>(null);
   const [restore, setRestore] = useState<{ plan: PlanItem[]; existing: ExistingBook[] } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const [advice, setAdvice] = useState<BackupAdvice | null>(null);
+  const [backups, setBackups] = useState(0);
+
+  // The backup notice for a browser library, read again after every change and backup.
+  useEffect(() => {
+    if (store !== "browser" || books === null) return;
+    let current = true;
+    Promise.all([browserLibrary.backupState(), browserKeepsData()]).then(
+      ([state, kept]) => {
+        if (current) setAdvice(backupAdvice(books.length, state, kept));
+      },
+      () => {},
+    );
+    return () => {
+      current = false;
+    };
+  }, [store, books, backups]);
 
   const handleDelete = async (bookId: string) => {
     if (!confirm("Delete this book? This cannot be undone.")) return;
@@ -52,18 +101,22 @@ export default function LibraryPage() {
     }
   };
 
-  const backUp = async () => {
+  /** Downloads every book in `source`: the viewer's library, or in debug mode this browser's. */
+  const backUp = async (source: Library) => {
     setBusy("backup");
     setNotice(null);
     try {
       const full: LibraryBook[] = [];
-      for (const entry of await library.list()) {
-        const book = await library.get(entry.id);
+      for (const entry of await source.list()) {
+        const book = await source.get(entry.id);
         if (book) full.push(book);
       }
       const now = new Date();
       download(await writeBackup(full, now), `bythebook-library-${now.toISOString().slice(0, 10)}.json`);
-      if (store === "browser") await browserLibrary.recordBackup(now);
+      if (source.store === "browser") {
+        await browserLibrary.recordBackup(now);
+        setBackups((count) => count + 1);
+      }
       setNotice(`Backed up ${full.length} ${full.length === 1 ? "book" : "books"}.`);
     } catch (caught) {
       setNotice(libraryErrorMessage(caught));
@@ -108,7 +161,23 @@ export default function LibraryPage() {
     }
   };
 
+  /** Debug mode: deletes every book kept in this browser (D23). */
+  const emptyBrowserLibrary = async () => {
+    if (!confirm("Delete every book kept in this browser? Back it up first if you need it.")) return;
+    setNotice(null);
+    try {
+      await browserLibrary.empty();
+      if (store === "browser") await reload();
+      else await offer?.recount();
+      setBackups((count) => count + 1);
+      setNotice("Emptied the browser library.");
+    } catch (caught) {
+      setNotice(libraryErrorMessage(caught));
+    }
+  };
+
   const empty = books !== null && books.length === 0;
+  const browserBookCount = store === "browser" ? (books?.length ?? null) : (offer?.count ?? null);
 
   return (
     <main className="space-y-6">
@@ -130,7 +199,7 @@ export default function LibraryPage() {
             {showCreate ? "Cancel" : "+ New book"}
           </button>
           <button
-            onClick={backUp}
+            onClick={() => void backUp(library)}
             disabled={busy !== null || !books?.length}
             className="btn-secondary rounded-2xl px-4 py-2 text-sm"
           >
@@ -157,8 +226,46 @@ export default function LibraryPage() {
       {store === "browser" && (
         <p className="text-sm text-slate-500">
           These books are kept in this browser only, so another browser or device won&apos;t see them, and
-          clearing this site&apos;s data deletes them. Back up to a file to keep a copy.
+          clearing this site&apos;s data deletes them.
         </p>
+      )}
+
+      {store === "browser" && advice && (
+        <p
+          className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-page)] px-4 py-2 text-sm text-[var(--text-primary)]"
+        >
+          {adviceText(advice)}
+        </p>
+      )}
+
+      {store === "account" && <BrowserBooksCopy />}
+
+      {debug && (
+        <section aria-label="Debug: browser library" className="rounded-2xl border border-dashed border-slate-300 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Debug: browser library</p>
+          <p className="mt-1 text-sm text-slate-600">
+            This browser holds {browserBookCount === null ? "an unknown number of" : browserBookCount}{" "}
+            {browserBookCount === 1 ? "book" : "books"}.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void backUp(browserLibrary)}
+              disabled={busy !== null || !browserBookCount}
+              className="btn-secondary rounded-xl px-3 py-1.5 text-xs"
+            >
+              Back up browser library
+            </button>
+            <button
+              type="button"
+              onClick={() => void emptyBrowserLibrary()}
+              disabled={busy !== null || !browserBookCount}
+              className="btn-secondary rounded-xl px-3 py-1.5 text-xs"
+            >
+              Empty browser library
+            </button>
+          </div>
+        </section>
       )}
 
       {notice && (

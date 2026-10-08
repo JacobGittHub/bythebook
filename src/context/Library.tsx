@@ -5,8 +5,14 @@
 // through `useLibrary()`, so they work the same for both: `useLibraryBooks()` gives them the
 // shared book list (`src/lib/library/cache.ts`), and `useLibraryBook()` one book to show and
 // edit.
+//
+// A signed-in viewer's browser may still hold books from browsing as a guest. The provider
+// counts them, and `useBrowserBooksOffer()` gives the offer to copy them into the account
+// (D22, `BrowserBooksOffer.tsx`); that offer is the only reason a signed-in page reads the
+// browser library.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useBugReportSection } from "@/context/BugReport";
 import { useViewer } from "@/context/Viewer";
 import { accountLibrary } from "@/lib/library/accountStore";
 import { browserLibrary, onBrowserLibraryChange } from "@/lib/library/browserStore";
@@ -23,9 +29,90 @@ export const STORE_LABELS: Record<Library["store"], string> = {
 
 const LibraryContext = createContext<CachedLibrary | null>(null);
 
+/** The offer to copy this browser's books into the account (D22). */
+export type BrowserBooksOffer = {
+  /** How many books this browser holds; null until counted. */
+  count: number | null;
+  /** "Not now" was chosen in this tab's session. */
+  dismissed: boolean;
+  dismiss: () => void;
+  /** Shows the offer again after "Not now". */
+  reopen: () => void;
+  /** Counts this browser's books again, after some left it, and returns the count. */
+  recount: () => Promise<number>;
+};
+
+const BrowserBooksContext = createContext<BrowserBooksOffer | null>(null);
+
+/** Where "Not now" is kept, so it lasts for the tab's session. */
+const OFFER_DISMISSED_KEY = "bythebook-copy-offer-dismissed";
+
+function readDismissed(): boolean {
+  try {
+    return sessionStorage.getItem(OFFER_DISMISSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeDismissed(dismissed: boolean) {
+  try {
+    if (dismissed) sessionStorage.setItem(OFFER_DISMISSED_KEY, "1");
+    else sessionStorage.removeItem(OFFER_DISMISSED_KEY);
+  } catch {
+    // Without session storage, "Not now" lasts until the page reloads.
+  }
+}
+
 export function LibraryProvider({ children }: { children: ReactNode }) {
   const { signedIn } = useViewer();
   const library = useMemo(() => cachedLibrary(signedIn ? accountLibrary : browserLibrary), [signedIn]);
+  const [browserBooks, setBrowserBooks] = useState<number | null>(null);
+  const [dismissed, setDismissed] = useState(readDismissed);
+
+  // A browser that can't keep books holds none to copy.
+  const recount = useCallback(async () => {
+    const count = await browserLibrary.list().then((books) => books.length, () => 0);
+    setBrowserBooks(count);
+    return count;
+  }, []);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    browserLibrary.list().then((books) => setBrowserBooks(books.length), () => setBrowserBooks(0));
+    return onBrowserLibraryChange(() => void recount());
+  }, [signedIn, recount]);
+
+  const offer = useMemo<BrowserBooksOffer | null>(
+    () =>
+      signedIn
+        ? {
+            count: browserBooks,
+            dismissed,
+            dismiss: () => {
+              writeDismissed(true);
+              setDismissed(true);
+            },
+            reopen: () => {
+              writeDismissed(false);
+              setDismissed(false);
+            },
+            recount,
+          }
+        : null,
+    [signedIn, browserBooks, dismissed, recount],
+  );
+
+  // What a bug report says about the library: which store, and how many books (D23).
+  useBugReportSection(() => {
+    const books = library.state().books;
+    const lines: [string, string][] = [
+      ["Store", STORE_LABELS[library.store]],
+      ["Books", books ? String(books.length) : "not read yet"],
+    ];
+    if (signedIn) lines.push(["Books in this browser", browserBooks === null ? "not counted yet" : String(browserBooks)]);
+    return { title: "Library", lines };
+  });
 
   // Another tab's change to this browser's library shows here too. An account's books change
   // only through this tab or another device, which a stale save reports (`LibraryError`).
@@ -34,7 +121,16 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     return onBrowserLibraryChange(() => void library.reload());
   }, [library]);
 
-  return <LibraryContext.Provider value={library}>{children}</LibraryContext.Provider>;
+  return (
+    <LibraryContext.Provider value={library}>
+      <BrowserBooksContext.Provider value={offer}>{children}</BrowserBooksContext.Provider>
+    </LibraryContext.Provider>
+  );
+}
+
+/** The offer to copy this browser's books into the account; null for a guest. */
+export function useBrowserBooksOffer(): BrowserBooksOffer | null {
+  return useContext(BrowserBooksContext);
 }
 
 function useCachedLibrary(): CachedLibrary {

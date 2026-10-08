@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { replaySanLines } from "@/lib/books/examples";
 import { START_FEN } from "@/lib/chess/fen";
 import { buildMoveTreeFromLines } from "@/lib/chess/moveTree";
-import { BACKUP_KIND, canonicalJson, readBackup, writeBackup } from "./backup";
+import { BACKUP_KIND, backupAdvice, canonicalJson, readBackup, writeBackup } from "./backup";
 import { summarize } from "./summary";
 import type { LibraryBook } from "./types";
 
@@ -64,5 +64,28 @@ describe("the backup file", () => {
     const read = await readBackup(forged);
     expect(read.ok && read.books.map((book) => book.ok)).toEqual([true, false]);
     expect(read.ok && read.books[1]).toMatchObject({ ok: false, name: "Italian", problem: "invalid" });
+  });
+});
+
+describe("backupAdvice", () => {
+  const backedUp = { lastBackupAt: "2026-10-07T12:00:00.000Z", changedSinceBackup: false };
+
+  it("says nothing for an empty library, or a kept one backed up since its last change", () => {
+    expect(backupAdvice(0, { lastBackupAt: null, changedSinceBackup: true }, false)).toBeNull();
+    expect(backupAdvice(3, backedUp, true)).toBeNull();
+  });
+
+  it("speaks up when a book changed since the last backup, or there was none", () => {
+    expect(backupAdvice(3, { ...backedUp, changedSinceBackup: true }, true)).toEqual({
+      lastBackupAt: backedUp.lastBackupAt,
+      changed: true,
+      mayBeDeleted: false,
+    });
+    expect(backupAdvice(1, { lastBackupAt: null, changedSinceBackup: false }, true)).toMatchObject({ changed: true });
+  });
+
+  it("speaks up when the browser won't promise to keep the data, or can't say", () => {
+    expect(backupAdvice(3, backedUp, false)).toEqual({ lastBackupAt: backedUp.lastBackupAt, changed: false, mayBeDeleted: true });
+    expect(backupAdvice(3, backedUp, null)).toMatchObject({ mayBeDeleted: true });
   });
 });

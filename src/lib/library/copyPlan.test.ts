@@ -41,10 +41,10 @@ describe("planCopy and resolvePlan", () => {
 
   it("keeps a clash under a copy's name unless it is skipped", () => {
     const kept = resolvePlan(plan, new Map(), existing);
-    expect(kept.write.map(({ index, draft }) => [index, draft.name])).toEqual([
-      [0, "london (copy)"],
-      [1, "Caro-Kann"],
-      [3, "Caro-Kann (copy)"],
+    expect(kept.write.map(({ index, draft, source }) => [index, draft.name, source.id])).toEqual([
+      [0, "london (copy)", "a"],
+      [1, "Caro-Kann", "b"],
+      [3, "Caro-Kann (copy)", "c"],
     ]);
     const skipped = resolvePlan(plan, new Map([[0, "skip"], [3, "skip"]]), existing);
     expect(skipped.write.map(({ index }) => index)).toEqual([1]);
