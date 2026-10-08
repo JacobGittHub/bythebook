@@ -26,6 +26,7 @@ import { useLibraryBook, useLibraryBooks } from "@/context/Library";
 import { formatScore, evalToBarPct } from "@/lib/chess/stockfishUci";
 import { mergeMoveLineIntoTree } from "@/lib/chess/moveTree";
 import type { MoveResult } from "@/hooks/useChessGame";
+import { replayUciLine } from "@/lib/library/links";
 import { STALE_BOOK_MESSAGE, startTree } from "@/lib/library/trees";
 import { libraryErrorMessage } from "@/lib/library/types";
 import type { CatalogMatch, ExplorerMatchMode, ExplorerMove, Move, MoveNode } from "@/types/chess";
@@ -85,8 +86,13 @@ function moveResultsToMoves(moveHistory: MoveResult[]): Move[] {
   }));
 }
 
-/** The navigator for a page opened at `initialFen`: it replays the catalog line that reaches it. */
-function initNavigator(initialFen: string | undefined) {
+/**
+ * The navigator for a page opened with a line (`initialLine`, UCI moves from the starting
+ * position, as a book's "Open in Explorer" sends) or at `initialFen`, for which it replays the
+ * catalog line that reaches it.
+ */
+function initNavigator({ initialFen, initialLine }: { initialFen?: string; initialLine?: readonly string[] }) {
+  if (initialLine?.length) return createNavigator<MoveResult>(replayUciLine(initialLine));
   return createNavigator<MoveResult>(initialFen ? getCatalogLineToFen(initialFen) : []);
 }
 
@@ -96,11 +102,19 @@ function formatGames(n: number): string {
   return String(n);
 }
 
-export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
+type Props = {
+  initialFen?: string;
+  /** A line to play on opening, as UCI moves from the starting position. */
+  initialLine?: readonly string[];
+  /** The book chosen on opening, such as the one New book just made. */
+  initialBookId?: string;
+};
+
+export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Props = {}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   // The move navigator: the highlighted line, queued moves and autoplay (lib/chess/explorerNavigator).
-  const [nav, dispatch] = useReducer(navigatorReducer<MoveResult>, initialFen, initNavigator);
+  const [nav, dispatch] = useReducer(navigatorReducer<MoveResult>, { initialFen, initialLine }, initNavigator);
   const {
     line: selectedMatch,
     history: moveHistory,
@@ -116,7 +130,7 @@ export function OpeningExplorer({ initialFen }: { initialFen?: string } = {}) {
   // Opening book integration: the viewer's books, a guest's included (src/context/Library.tsx).
   // The list has only summaries; the chosen book's trees are loaded when it is chosen.
   const { books: explorerBooks } = useLibraryBooks();
-  const [activeExplorerBookId, setActiveExplorerBookId] = useState<string | null>(null);
+  const [activeExplorerBookId, setActiveExplorerBookId] = useState<string | null>(initialBookId ?? null);
   const { book: activeExplorerBook, saveStartTree } = useLibraryBook(activeExplorerBookId);
   const [isSavingToBook, setIsSavingToBook] = useState(false);
 

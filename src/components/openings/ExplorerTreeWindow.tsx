@@ -4,11 +4,13 @@ import { useMemo, useState } from "react";
 import { BookView } from "@/components/books/BookView";
 import { BookViewRail } from "@/components/books/BookViewRail";
 import { PositionTooltip } from "@/components/books/PositionTooltip";
+import { ZoomControls } from "@/components/books/ZoomControls";
 import { useStoredString } from "@/hooks/useStoredString";
 import { explorerTree } from "@/lib/books/explorerTree";
 import { buildViewTree, heavyLeaf, pathTo, type ViewNode } from "@/lib/books/viewTree";
 import { BOOK_VIEWS, DEFAULT_EXPLORER_VIEW, isBookViewId } from "@/lib/books/views";
 import type { Point } from "@/lib/books/views/common";
+import { FIT_ZOOM } from "@/lib/books/views/zoom";
 import type { ExplorerMove, Move } from "@/types/chess";
 
 /** Where the chosen view is kept in the browser. */
@@ -38,6 +40,7 @@ export function ExplorerTreeWindow({ history, before, next, orientation, onGoToL
   const [stored, setStored] = useStoredString(VIEW_KEY);
   const view = isBookViewId(stored) ? stored : DEFAULT_EXPLORER_VIEW;
   const [hover, setHover] = useState<{ node: ViewNode; pointer: Point } | null>(null);
+  const [zoom, setZoom] = useState<number>(FIT_ZOOM);
 
   const { tree, currentId, stats } = useMemo(() => {
     const built = explorerTree({ history, before, next });
@@ -58,21 +61,30 @@ export function ExplorerTreeWindow({ history, before, next, orientation, onGoToL
   return (
     <div className="flex h-full min-h-0 gap-1.5">
       <BookViewRail view={view} onChange={setStored} />
-      <BookView
-        tree={tree}
-        view={view}
-        selectedId={currentId}
-        spineEndId={heavyLeaf(tree.root).id}
-        side={null}
-        weight="games"
-        onSelect={select}
-        onHover={(node, pointer) => {
-          setHover(node && pointer ? { node, pointer } : null);
-          onHoverUci(node && node.parent?.id === currentId ? node.uci : null);
-        }}
-        label={`${label} of the explored line`}
-        className="flex-1 rounded-lg bg-[var(--bg-muted)] [--bv-label-halo:var(--bg-muted)]"
-      />
+      <div className="relative flex min-h-0 min-w-0 flex-1">
+        <BookView
+          tree={tree}
+          view={view}
+          selectedId={currentId}
+          spineEndId={heavyLeaf(tree.root).id}
+          side={null}
+          weight="games"
+          onSelect={select}
+          onHover={(node, pointer) => {
+            setHover(node && pointer ? { node, pointer } : null);
+            onHoverUci(node && node.parent?.id === currentId ? node.uci : null);
+          }}
+          label={`${label} of the explored line`}
+          zoom={zoom}
+          onZoomChange={setZoom}
+          className="flex-1 rounded-lg bg-[var(--bg-muted)] [--bv-label-halo:var(--bg-muted)]"
+        />
+        <ZoomControls
+          zoom={zoom}
+          onChange={setZoom}
+          className="absolute right-3.5 bottom-3.5 rounded-md border bg-card/90"
+        />
+      </div>
       {hover && (
         <PositionTooltip node={hover.node} pointer={hover.pointer} stats={stats.get(hover.node.id)} orientation={orientation} />
       )}

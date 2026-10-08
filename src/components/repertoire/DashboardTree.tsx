@@ -114,6 +114,14 @@ export function DashboardTree({ initialBookId }: Props) {
 
   // ── Node actions ─────────────────────────────────────────────────────────
 
+  // The selected position's line in the book: the tree draws the catalog, so a catalog
+  // position may or may not be in the book, and its id is the catalog's, not the book's.
+  const bookPath = useMemo(
+    () => (selectedInfo && activeMoveNode ? getNodePathByUciLine(activeMoveNode, selectedInfo.pathMoves.map((m) => m.uci)) : null),
+    [selectedInfo, activeMoveNode],
+  );
+  const inBook = Boolean(selectedInfo && bookPath && bookPath.length === selectedInfo.pathMoves.length + 1);
+
   const handleNodeSelect = (info: SelectedNodeInfo) => {
     setSelectedInfo(info);
   };
@@ -135,8 +143,8 @@ export function DashboardTree({ initialBookId }: Props) {
   };
 
   const handleRemoveFromBook = async () => {
-    if (!selectedInfo || !activeMoveNode) return;
-    const updated = removeMoveNodeById(activeMoveNode, selectedInfo.id);
+    if (!selectedInfo || !activeMoveNode || !bookPath || !inBook) return;
+    const updated = removeMoveNodeById(activeMoveNode, bookPath[bookPath.length - 1].id);
     setSelectedInfo(null);
     await saveTree(updated);
   };
@@ -238,6 +246,7 @@ export function DashboardTree({ initialBookId }: Props) {
         node={selectedInfo?.node ?? null}
         pathFens={selectedInfo?.pathMoves.map((move) => move.fen) ?? []}
         book={activeBook}
+        inBook={inBook}
         isExpanded={expandedNodeId === selectedInfo?.id}
         onAddToBook={handleAddToBook}
         onRemoveFromBook={handleRemoveFromBook}

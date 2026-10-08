@@ -143,11 +143,10 @@ export type Database = {
           created_at: string | null
           id: string
           is_public: boolean | null
-          move_node: Json
           name: string
           origin: Json
-          summary: Json | null
-          trees: Json | null
+          summary: Json
+          trees: Json
           updated_at: string | null
           user_id: string
         }
@@ -156,11 +155,10 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_public?: boolean | null
-          move_node?: Json
           name: string
           origin?: Json
-          summary?: Json | null
-          trees?: Json | null
+          summary: Json
+          trees: Json
           updated_at?: string | null
           user_id: string
         }
@@ -169,11 +167,10 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_public?: boolean | null
-          move_node?: Json
           name?: string
           origin?: Json
-          summary?: Json | null
-          trees?: Json | null
+          summary?: Json
+          trees?: Json
           updated_at?: string | null
           user_id?: string
         }

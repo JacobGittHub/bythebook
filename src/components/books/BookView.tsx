@@ -10,6 +10,7 @@ import type { BookViewId } from "@/lib/books/views";
 import { metroLayout } from "@/lib/books/views/metro";
 import { plyColumnsLayout } from "@/lib/books/views/plyColumns";
 import { spineLayout } from "@/lib/books/views/spine";
+import { FIT_ZOOM, pinchZoom, zoomIn, zoomOut } from "@/lib/books/views/zoom";
 import { getOpeningForLine } from "@/lib/chess/openingCatalog";
 import { BranchPointsView } from "./BranchPointsView";
 import { IcicleView } from "./IcicleView";
@@ -39,6 +40,10 @@ type Props = {
   onHover?: (node: ViewNode | null, pointer?: Point) => void;
   /** Names the drawing for screen readers. */
   label: string;
+  /** How far the drawing is zoomed (`ZOOM_STEPS`); Fit by default. */
+  zoom?: number;
+  /** Asked for a new zoom by ctrl+wheel or a two-finger pinch; without it, those do nothing. */
+  onZoomChange?: (zoom: number) => void;
   className?: string;
 };
 
@@ -127,6 +132,8 @@ export function BookView({
   onSelect,
   onHover,
   label,
+  zoom = FIT_ZOOM,
+  onZoomChange,
   className = "",
 }: Props) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -154,26 +161,37 @@ export function BookView({
   const names = useMemo(() => (view === "metro" ? familyNames(tree) : new Map<string, string>()), [tree, view]);
   const keepKey = view === "branch-points" ? selected.id : "";
 
+  // Zoomed, the icicle is laid out again in a bigger box, so thin blocks grow until their moves
+  // fit; the other views keep their layout and are drawn bigger. Either way the drawing
+  // scrolls inside the same box, so nothing around the view moves.
+  const relayout = view === "icicle";
+  const scale = relayout ? 1 : zoom;
   const computed = useMemo(() => {
     if (!box || box.width < 40 || box.height < 40) return null;
     const keep = new Set(keepKey ? pathTo(tree.byId.get(keepKey)!).map((node) => node.id) : []);
     const run = (b: Box) => computeLayout(view, tree, b, keep, spineEnd, weight, names);
+    const grow = relayout ? zoom : 1;
+    const target = { width: box.width * grow, height: box.height * grow };
     // A scrollbar in one direction takes room from the other, so lay out again without it.
-    let result = run(box);
-    const wide = result.layout.width > box.width + 0.5;
-    const tall = result.layout.height > box.height + 0.5;
+    let result = run(target);
+    const wide = result.layout.width * scale > box.width + 0.5;
+    const tall = result.layout.height * scale > box.height + 0.5;
     if (wide || tall) {
-      result = run({ width: box.width - (tall ? SCROLLBAR : 0), height: box.height - (wide ? SCROLLBAR : 0) });
+      result = run({
+        width: target.width - (tall ? SCROLLBAR / scale : 0),
+        height: target.height - (wide ? SCROLLBAR / scale : 0),
+      });
     }
     return result;
-  }, [box, view, tree, keepKey, spineEnd, weight, names]);
+  }, [box, view, tree, keepKey, spineEnd, weight, names, relayout, zoom, scale]);
 
   // Keep the selection in view when it changes, never on hover.
   useEffect(() => {
     const scroller = scrollRef.current;
     if (!computed || !scroller) return;
-    const point = pointOf(computed, selectedId);
-    if (!point) return;
+    const unscaled = pointOf(computed, selectedId);
+    if (!unscaled) return;
+    const point = { x: unscaled.x * scale, y: unscaled.y * scale };
     const margin = 48;
     const { scrollLeft, scrollTop, clientWidth, clientHeight } = scroller;
     if (point.x < scrollLeft + margin || point.x > scrollLeft + clientWidth - margin) {
@@ -182,7 +200,65 @@ export function BookView({
     if (point.y < scrollTop + margin || point.y > scrollTop + clientHeight - margin) {
       scroller.scrollTop = point.y - clientHeight / 2;
     }
-  }, [computed, selectedId]);
+  }, [computed, selectedId, scale]);
+
+  // ctrl+wheel (a trackpad pinch arrives as one) and a two-finger touch pinch step the zoom.
+  // The wheel listener can't be passive, since it stops the page zooming instead.
+  const zoomRef = useRef({ zoom, onZoomChange });
+  useEffect(() => {
+    zoomRef.current = { zoom, onZoomChange };
+  });
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    let wheelAt = -Infinity;
+    const onWheel = (event: WheelEvent) => {
+      const { zoom: current, onZoomChange: change } = zoomRef.current;
+      if (!change || !event.ctrlKey) return;
+      event.preventDefault();
+      // One step per burst of wheel events, not one per event.
+      if (event.timeStamp - wheelAt < 150) return;
+      wheelAt = event.timeStamp;
+      change(event.deltaY < 0 ? zoomIn(current) : zoomOut(current));
+    };
+    const touches = new Map<number, { x: number; y: number }>();
+    let pinchFrom = 0;
+    const spread = () => {
+      const [a, b] = [...touches.values()];
+      return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType !== "touch") return;
+      touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (touches.size === 2) pinchFrom = spread();
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (!touches.has(event.pointerId)) return;
+      touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      const { zoom: current, onZoomChange: change } = zoomRef.current;
+      if (touches.size !== 2 || !change) return;
+      const next = pinchZoom(current, pinchFrom, spread());
+      if (next === null) return;
+      if (next !== current) change(next);
+      pinchFrom = spread();
+    };
+    const onPointerEnd = (event: PointerEvent) => {
+      touches.delete(event.pointerId);
+      pinchFrom = spread();
+    };
+    scroller.addEventListener("wheel", onWheel, { passive: false });
+    scroller.addEventListener("pointerdown", onPointerDown);
+    scroller.addEventListener("pointermove", onPointerMove);
+    scroller.addEventListener("pointerup", onPointerEnd);
+    scroller.addEventListener("pointercancel", onPointerEnd);
+    return () => {
+      scroller.removeEventListener("wheel", onWheel);
+      scroller.removeEventListener("pointerdown", onPointerDown);
+      scroller.removeEventListener("pointermove", onPointerMove);
+      scroller.removeEventListener("pointerup", onPointerEnd);
+      scroller.removeEventListener("pointercancel", onPointerEnd);
+    };
+  }, []);
 
   const hovered = hoveredId ? (tree.byId.get(hoveredId) ?? null) : null;
   const marks: ViewMarks = useMemo(
@@ -219,11 +295,16 @@ export function BookView({
 
   return (
     <div ref={boxRef} className={`relative min-h-0 min-w-0 ${className}`}>
-      <div ref={scrollRef} className="absolute inset-0 overflow-auto [scrollbar-width:thin]">
+      <div
+        ref={scrollRef}
+        // With zoom on, two fingers zoom the view instead of the page; one finger still scrolls.
+        className={`absolute inset-0 overflow-auto [scrollbar-width:thin] ${onZoomChange ? "touch-pan-x touch-pan-y" : ""}`}
+      >
         {computed && (
           <svg
-            width={computed.layout.width}
-            height={computed.layout.height}
+            width={computed.layout.width * scale}
+            height={computed.layout.height * scale}
+            viewBox={`0 0 ${computed.layout.width} ${computed.layout.height}`}
             className="bv-svg"
             role="img"
             aria-label={label}

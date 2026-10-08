@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CopyChecklist } from "@/components/repertoire/CopyChecklist";
+import { Button } from "@/components/shadcn/button";
 import { useBrowserBooksOffer, useLibrary } from "@/context/Library";
 import { browserLibrary } from "@/lib/library/browserStore";
 import { planCopy, toCandidate, type ExistingBook, type IncomingBook, type PlanItem } from "@/lib/library/copyPlan";
@@ -28,19 +29,19 @@ export function BrowserBooksNotice() {
   return (
     <aside
       aria-label="Books in this browser"
-      className="fixed inset-x-3 bottom-3 z-20 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-4 shadow-lg sm:left-auto sm:max-w-sm"
+      className="fixed inset-x-3 bottom-3 z-20 rounded-md border bg-card p-3 shadow-lg sm:left-auto sm:max-w-sm"
     >
-      <p className="text-sm text-[var(--text-primary)]">
+      <p className="text-sm text-foreground">
         This browser holds {booksText(offer.count)} from browsing as a guest. Copy{" "}
         {offer.count === 1 ? "it" : "them"} into your account?
       </p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Link href={LIBRARY} className="btn-primary rounded-xl px-3 py-1.5 text-sm font-medium">
-          Open the Library to copy
-        </Link>
-        <button type="button" onClick={offer.dismiss} className="btn-secondary rounded-xl px-3 py-1.5 text-sm">
+      <div className="mt-2.5 flex flex-wrap gap-2">
+        <Button asChild size="sm">
+          <Link href={LIBRARY}>Open the Library to copy</Link>
+        </Button>
+        <Button size="sm" variant="outline" onClick={offer.dismiss}>
           Not now
-        </button>
+        </Button>
       </div>
     </aside>
   );
@@ -86,24 +87,24 @@ export function BrowserBooksCopy() {
 
   if (offer.dismissed && offer.count) {
     return (
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-muted-foreground">
         This browser also holds {booksText(offer.count)} from browsing as a guest.{" "}
-        <button type="button" onClick={offer.reopen} className="btn-ghost rounded-lg px-1 py-0.5 text-sm underline">
+        <Button variant="link" size="sm" onClick={offer.reopen} className="h-auto p-0">
           Copy into your account
-        </button>
+        </Button>
       </p>
     );
   }
 
   if (error) {
     return (
-      <p role="status" className="rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-600">
+      <p role="status" className="rounded-md border px-3 py-2 text-sm text-muted-foreground">
         The books in this browser couldn&apos;t be read: {error}
       </p>
     );
   }
 
-  if (!checklist) return <p className="text-sm text-slate-400">Reading the books in this browser…</p>;
+  if (!checklist) return <p className="text-sm text-muted-foreground">Reading the books in this browser…</p>;
 
   // The account saves its copy first, so a book leaves the browser only once it is safe.
   const copy = async (draft: BookDraft, source: IncomingBook) => {
@@ -120,6 +121,7 @@ export function BrowserBooksCopy() {
   return (
     <CopyChecklist
       title={`Copy this browser's ${checklist.plan.length === 1 ? "book" : "books"} into your account`}
+      description="You made these as a guest on this browser. Copied books are saved to your account and leave the browser, so each book lives in one place."
       plan={checklist.plan}
       existing={checklist.existing}
       verb="Copy"

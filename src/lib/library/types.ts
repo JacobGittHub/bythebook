@@ -57,9 +57,9 @@ export type BookSummary = {
   trees: number;
   /** More than one tree, or one that starts elsewhere (bookstore.md D16). */
   unconnected: boolean;
-  /** The average line length in moves, each leaf at its shortest move order (D9); null without moves. */
+  /** The average line length in plies, each leaf at its shortest move order (D9); null without moves. */
   averageDepth: number | null;
-  /** The longest line, in moves. */
+  /** The longest line, in plies. */
   maxDepth: number;
   /** Positions where the book's side has more than one move (bookstore.md D6). */
   clashes: number;

@@ -3,39 +3,25 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BoardDisplay } from "@/components/board/BoardDisplay";
 import { useLibraryBook, useLibraryBooks } from "@/context/Library";
-import { EXAMPLE_ID_PREFIX, creditLine, type ExampleBook } from "@/lib/books/examples";
+import { EXAMPLE_ID_PREFIX, EXAMPLE_METHOD_NOTES, creditLine, type ExampleBook } from "@/lib/books/examples";
 import { MAX_BOOK_POSITIONS } from "@/lib/books/measures";
 import { BOOK_VIEWS, type BookViewId } from "@/lib/books/views";
-import {
-  buildViewTree,
-  heavyLeaf,
-  isAncestorOrSelf,
-  isClash,
-  lineText,
-  moveLabel,
-  pathTo,
-  type ViewNode,
-} from "@/lib/books/viewTree";
-import { getOpeningForLine } from "@/lib/chess/openingCatalog";
+import { FIT_ZOOM } from "@/lib/books/views/zoom";
+import { buildViewTree, pathTo } from "@/lib/books/viewTree";
+import { explorerHref } from "@/lib/library/links";
 import { startTree } from "@/lib/library/trees";
 import type { LibraryBook } from "@/lib/library/types";
 import { BookView } from "./BookView";
 import { BookViewRail } from "./BookViewRail";
+import { SelectedPosition } from "./SelectedPosition";
+import { useBookSelection } from "./useBookSelection";
 import { useExampleBooks } from "./useExampleBooks";
+import { ZoomControls } from "./ZoomControls";
 
 /** The first book a visitor sees. */
 const FIRST_EXAMPLE = "example:queens-gambit";
-/** A new book opens this many moves down its main line, so the board starts somewhere. */
-const OPENING_DEPTH = 6;
 
-const METHOD_NOTES: Record<ExampleBook["method"], string> = {
-  wikibooks: "Made from the page titles of Wikibooks' Chess Opening Theory.",
-  catalog: "Made from the opening catalog's named lines (lichess-org/chess-openings, public domain).",
-  masters: "Grown from Lichess's master game statistics, as saved by ByTheBook.",
-  "catalog+masters": "The opening catalog's named lines, carried on from Lichess's master game statistics.",
-};
 
 const formatCount = (n: number) => n.toLocaleString("en-US");
 
@@ -62,22 +48,8 @@ export function BookViewPage({ view: initialView, initialBookId }: Props) {
   const book: LibraryBook | ExampleBook | null = isExample ? (examples.get(bookId) ?? null) : ownBook;
   const tree = useMemo(() => (book ? buildViewTree(startTree(book.trees)) : null), [book]);
 
-  // The selection belongs to the book it was made in; another book starts down its main line.
-  const [selection, setSelection] = useState<{ bookId: string; selectedId: string; spineEndId: string } | null>(null);
-  const [hovered, setHovered] = useState<ViewNode | null>(null);
-  const mainLine = tree ? pathTo(heavyLeaf(tree.root)) : [];
-  const current =
-    selection && selection.bookId === bookId && tree?.byId.has(selection.selectedId)
-      ? selection
-      : tree
-        ? {
-            bookId,
-            selectedId: mainLine[Math.min(OPENING_DEPTH, mainLine.length - 1)].id,
-            spineEndId: mainLine[mainLine.length - 1].id,
-          }
-        : null;
-  const selected = current && tree ? tree.byId.get(current.selectedId)! : null;
-  const shown = hovered ?? selected;
+  const { selectedId, spineEndId, selected, hovered, shown, select, setHovered } = useBookSelection(tree, bookId);
+  const [zoom, setZoom] = useState<number>(FIT_ZOOM);
 
   const syncAddress = (nextView: BookViewId, nextBook: string) => {
     window.history.replaceState(
@@ -85,14 +57,6 @@ export function BookViewPage({ view: initialView, initialBookId }: Props) {
       "",
       `/dashboard/visualizations/books/${nextView}?book=${encodeURIComponent(nextBook)}`,
     );
-  };
-
-  const select = (node: ViewNode) => {
-    if (!tree || !current) return;
-    const spineEnd = tree.byId.get(current.spineEndId)!;
-    // A position off the spine re-routes it down that position's main line.
-    const spineEndId = isAncestorOrSelf(node, spineEnd) ? spineEnd.id : heavyLeaf(node).id;
-    setSelection({ bookId, selectedId: node.id, spineEndId });
   };
 
   const changeView = (next: BookViewId) => {
@@ -110,13 +74,6 @@ export function BookViewPage({ view: initialView, initialBookId }: Props) {
 
   const viewInfo = BOOK_VIEWS.find((option) => option.id === view)!;
   const example = examples.get(bookId) ?? null;
-  const openingName = shown
-    ? getOpeningForLine(
-        pathTo(shown)
-          .slice(1)
-          .map((node) => node.fen),
-      )?.name
-    : undefined;
 
   return (
     // Wide: the view beside the panel. Narrow: the panel under the view, so a hover that
@@ -163,18 +120,27 @@ export function BookViewPage({ view: initialView, initialBookId }: Props) {
 
         <div className="flex min-h-[16rem] flex-1 gap-1.5 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-muted)] p-1.5">
           <BookViewRail view={view} onChange={changeView} />
-          {tree && current ? (
-            <BookView
-              tree={tree}
-              view={view}
-              selectedId={current.selectedId}
-              spineEndId={current.spineEndId}
-              side={book?.color ?? null}
-              onSelect={select}
-              onHover={(node) => setHovered(node)}
-              label={`${viewInfo.label} of ${book?.name ?? "the book"}`}
-              className="flex-1"
-            />
+          {tree && selectedId && spineEndId ? (
+            <div className="relative flex min-h-0 min-w-0 flex-1">
+              <BookView
+                tree={tree}
+                view={view}
+                selectedId={selectedId}
+                spineEndId={spineEndId}
+                side={book?.color ?? null}
+                onSelect={select}
+                onHover={(node) => setHovered(node)}
+                label={`${viewInfo.label} of ${book?.name ?? "the book"}`}
+                zoom={zoom}
+                onZoomChange={setZoom}
+                className="flex-1"
+              />
+              <ZoomControls
+                zoom={zoom}
+                onChange={setZoom}
+                className="absolute right-3.5 bottom-3.5 rounded-md border bg-card/90"
+              />
+            </div>
           ) : (
             <p className="m-auto text-sm text-[var(--text-muted)]">
               {isExample
@@ -192,44 +158,25 @@ export function BookViewPage({ view: initialView, initialBookId }: Props) {
       </div>
 
       <aside className="flex max-h-[45%] w-full shrink-0 flex-col gap-2 overflow-y-auto lg:max-h-none lg:w-72">
-        <div className="shrink-0 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-2.5">
-          <p className="truncate text-xs font-medium uppercase tracking-widest text-[var(--text-muted)]">
-            {hovered ? "Preview" : "Selected"}
-          </p>
-          <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
-            {shown ? moveLabel(shown) : "…"}
-            {openingName && <span className="font-normal text-[var(--text-muted)]"> · {openingName}</span>}
-          </p>
-          <div className="mx-auto mt-2 w-full max-w-60">
-            <BoardDisplay fen={shown?.fen} size="md" orientation={book?.color ?? "white"} animate={!hovered} />
-          </div>
-          {/* A fixed height, so a long line scrolls instead of moving what is below it. */}
-          <p className="mt-2 h-10 overflow-y-auto font-mono text-xs leading-5 text-[var(--text-primary)]">
-            {shown ? lineText(pathTo(shown)) || "Starting position" : ""}
-          </p>
-          {shown && (
-            <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
-              <dt className="text-[var(--text-muted)]">Positions after</dt>
-              <dd className="tabular-nums">{shown.size - (shown.depth > 0 ? 1 : 0)}</dd>
-              <dt className="text-[var(--text-muted)]">Lines through</dt>
-              <dd className="tabular-nums">{shown.leaves}</dd>
-              <dt className="col-span-2 h-4 font-medium text-[var(--view-clash)]">
-                {book && isClash(shown, book.color)
-                  ? `${book.color === "white" ? "White" : "Black"} has ${shown.children.length} book moves here.`
-                  : ""}
-              </dt>
-            </dl>
-          )}
+        <SelectedPosition
+          node={shown}
+          preview={hovered !== null}
+          side={book?.color ?? "white"}
+          boardClassName="max-w-60"
+          className="shrink-0 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-2.5"
+        >
           {selected && (
             <button
               type="button"
-              onClick={() => router.push(`/dashboard/explorer?fen=${encodeURIComponent(selected.fen)}`)}
-              className="btn-secondary mt-2 w-full rounded-lg px-3 py-1.5 text-xs"
+              onClick={() =>
+                router.push(explorerHref({ bookId: isExample ? null : bookId, line: pathTo(selected) }))
+              }
+              className="btn-secondary w-full rounded-lg px-3 py-1.5 text-xs"
             >
               Open the selected position in the Explorer
             </button>
           )}
-        </div>
+        </SelectedPosition>
 
         {book && facts && (
           <div className="shrink-0 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-2.5 text-xs">
@@ -252,7 +199,7 @@ export function BookViewPage({ view: initialView, initialBookId }: Props) {
             </dl>
             {example && (
               <div className="mt-2 border-t border-[var(--border-card)] pt-2 text-[var(--text-muted)]">
-                <p>{METHOD_NOTES[example.method]}</p>
+                <p>{EXAMPLE_METHOD_NOTES[example.method]}</p>
                 {example.attribution && (
                   <p className="mt-1">
                     Source:{" "}

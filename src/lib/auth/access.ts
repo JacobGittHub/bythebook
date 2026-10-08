@@ -59,16 +59,16 @@ export const NAV_ITEMS: NavItem[] = [
     status: "live",
     summary: "Your own data: the books you build.",
     details:
-      "Everything that is yours. Create a book for an opening you play, add lines to it from the Explorer or the Treemap, and come back to it later. Repertoires that combine books, and imports of your own games, will live here too. As a guest your books are kept in this browser, and you can back them up to a file; an account keeps them on the server.",
+      "Everything that is yours. Create a book for an opening you play, add lines to it from the Explorer or the Treemap or paste them in, and open each book on a page of its own. Repertoires that combine books, and imports of your own games, will live here too. As a guest your books are kept in this browser, and you can back them up to a file; an account keeps them on the server.",
   },
   {
     href: "/dashboard/bookstore",
     label: "Bookstore",
     access: "everyone",
-    status: "coming_soon",
+    status: "live",
     summary: "Ready-made books to add to your library.",
     details:
-      "A public shelf of ready-made books, such as the Queen's Gambit or a collection of gambits, that you will be able to copy into your library and edit as your own. It is not built yet.",
+      "A shelf of ready-made books, such as the Queen's Gambit or the Caro-Kann, each drawn by its shape beside a board. Save one and it is copied into your library, to edit as your own. For now every book is ByTheBook's, made from Wikibooks, the opening catalog and master statistics; ratings and books from other players come later.",
   },
   {
     href: "/dashboard/train",

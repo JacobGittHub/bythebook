@@ -322,6 +322,16 @@ The visualization dependencies and what each is for. Removal status is in `AGENT
 | `@xyflow/react` | Nothing | 100 KB | Its only intended consumer (`BookBranchView`) was never built |
 | `framer-motion` | Nothing | 30 KB | Was intended for globe↔branch transitions |
 
+**Interface.** shadcn/ui (`plans/vibes.md` D12) isn't a package: `npx shadcn@latest add`
+copies its components into `src/components/shadcn/` (`components.json`), and they are the
+project's own code from then on. They need `radix-ui` (the accessible primitives behind
+dialogs, menus, selects and toggles), `class-variance-authority`, `clsx` and `tailwind-merge`
+(class names, joined by `cn` in `src/lib/utils.ts`), `lucide-react` (icons), `sonner`
+(toasts) and `tw-animate-css` (their open and close animations). The CLI also adds a `cn`
+package and an import from it, which is a mistake: point the import at `@/lib/utils` and
+uninstall the package. Its toaster used `next-themes`, which the app doesn't use; it follows
+`BackgroundMode` instead.
+
 **Tooling.** `vitest` (dev only) runs the unit and property tests and the docs test
 (`docs/docs.test.ts`); its config resolves the `@/*` alias
 from `tsconfig.json`. It needs `@types/node` 22 or newer. The project uses 22, the oldest Node

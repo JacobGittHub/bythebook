@@ -4,7 +4,7 @@
 import { START_FEN, toPositionKey } from "@/lib/chess/fen";
 import { createRootMoveNode } from "@/lib/chess/moveTree";
 import type { MoveNode } from "@/types/chess";
-import { LibraryError, type Library, type LibraryBook } from "./types";
+import { LibraryError, type BookPatch, type Library, type LibraryBook } from "./types";
 
 const START_KEY = toPositionKey(START_FEN);
 
@@ -23,23 +23,31 @@ export function withStartTree(trees: readonly MoveNode[], tree: MoveNode): MoveN
 export const STALE_BOOK_MESSAGE = "This book changed in another tab or device, so it was reloaded. Please make your change again.";
 
 /**
- * Saves `tree` as the book's tree from the starting position. If the book changed elsewhere
- * since it was read, nothing is saved and the current book comes back with `saved: false`,
- * so the page can show it rather than keep a copy that can't save.
+ * Saves `patch` to the book. If the book changed elsewhere since it was read, nothing is
+ * saved and the current book comes back with `saved: false`, so the page can show it rather
+ * than keep a copy that can't save.
  */
-export async function saveStartTree(
+export async function saveBook(
   library: Library,
   book: LibraryBook,
-  tree: MoveNode,
+  patch: BookPatch,
 ): Promise<{ book: LibraryBook; saved: boolean }> {
-  const trees = withStartTree(book.trees, tree);
   try {
-    const entry = await library.update(book.id, { trees }, book.updatedAt);
-    return { book: { ...entry, trees }, saved: true };
+    const entry = await library.update(book.id, patch, book.updatedAt);
+    return { book: { ...entry, trees: patch.trees ?? book.trees }, saved: true };
   } catch (error) {
     if (!(error instanceof LibraryError && error.code === "stale")) throw error;
     const current = await library.get(book.id);
     if (!current) throw new LibraryError("not_found");
     return { book: current, saved: false };
   }
+}
+
+/** Saves `tree` as the book's tree from the starting position, as `saveBook` does. */
+export function saveStartTree(
+  library: Library,
+  book: LibraryBook,
+  tree: MoveNode,
+): Promise<{ book: LibraryBook; saved: boolean }> {
+  return saveBook(library, book, { trees: withStartTree(book.trees, tree) });
 }

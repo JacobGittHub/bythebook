@@ -73,7 +73,9 @@ data and buttons. It contains:
   failing that, at the nearest position before it on the selected path
 - Master-game stats, via `useOpeningExplorer`, added up from the listed moves
   (`summarizeMasterGames`)
-- Add/Remove book actions
+- "Add line to book" when the book lacks the line to the node, else "Remove from book". The
+  tree draws the catalog, so the panel looks the line up in the book's own tree
+  (`getNodePathByUciLine`), and Remove takes the book's node, not the catalog's
 - "Open in Explorer", which goes to `/dashboard/explorer?fen=…`
 - "Train this book"
 
@@ -87,10 +89,9 @@ data and buttons. It contains:
   and says so when it changed in another tab
 - The search bar, which highlights matching ECO paths via `searchCatalogMatches`
 
-**Guests.** Books belong to accounts, so a guest (`useViewer()`) sees a sign-in notice in
-place of the book selector and "+ New book", and the panel has no book actions. The tree,
-the search and the master stats work the same. For a position the server hasn't saved, the
-panel says a live lookup needs a beta account.
+**Guests.** A guest's books come from the browser library (`useLibrary`), so the book
+selector, "+ New book" and the book actions work as they do signed in. For a position the
+server hasn't saved, the panel says a live lookup needs a beta account.
 
 ## Limits
 

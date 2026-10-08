@@ -57,9 +57,12 @@ the browser (`useStoredString`), per viewer.
 (see `processes/lichess-api-and-caching.md`). The move list then says that a live lookup
 needs a beta account; it is not shown as a failure.
 
-**`initialFen` prop.** When the explorer opens with a `?fen=` URL parameter (for example
-from "Open in Explorer" in the Treemap or the Labyrinth), it replays the catalog moves to reach that position
-on mount.
+**Opening at a position or a book.** With a `?fen=` URL parameter (for example from "Open in
+Explorer" in the Treemap or the Labyrinth), the explorer replays the catalog moves that reach
+that position on mount. With `?line=` (UCI moves from the start, `parseLineParam`) it replays
+those moves instead, up to the first illegal one (`replayUciLine`), and `?book=` chooses a
+book. The Library, the Bookstore, the small visualizations and New book send these
+(`explorerHref`, `src/lib/library/links.ts`), so a position off the catalog opens too.
 
 ## Hybrid matching
 
@@ -183,6 +186,12 @@ pages (`dashboard.md`) show them. They came from concept mockups the user ranked
   first `FAMILY_COLORS` get their own color.
 - **A drawing bigger than its box scrolls,** and the selected position is scrolled into view
   when the selection changes.
+- **Every view zooms** (`plans/deployment.md` D21) in the steps of `ZOOM_STEPS`
+  (`src/lib/books/views/zoom.ts`), from −, Fit and + (`ZoomControls`), ctrl+wheel, or a
+  two-finger pinch on a touch screen. Zoomed, the icicle is laid out again in a box that many
+  times larger, so thin blocks grow until their moves fit; the other views keep their layout
+  and are drawn bigger. Either way the drawing scrolls inside the same box, so nothing around
+  it moves.
 
 ## Planned
 

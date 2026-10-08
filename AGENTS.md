@@ -23,14 +23,15 @@ should come away thinking of the Najdorf as a *place* with neighbors, not a move
 once read. When a choice trades spatial memorability for technical elegance, memorability
 wins.
 
-**Status:** The Opening Explorer, the Library (book management), the Treemap opening tree,
-the five book views (small visualizations, also in the Explorer's tree window) and the
-Overview page are live, and guests can use all of them without an account. The
-Labyrinth, the region map prototype, is the visualization in active development
-(`plans/region-map.md`), and it is also the first test of the territory map's ideas. The
-territory map and the hyperbolic panel remain candidate designs; don't build them, or shape
-other work around them, unless the user asks. The trainer, puzzle and Bookstore pages are
-placeholders. The shared vision and current work are in `plans/`.
+**Status:** The Opening Explorer, the Library (a book list and a page per book), the
+Bookstore, the Treemap opening tree, the five book views (small visualizations, also in the
+Explorer's tree window) and the Overview page are live, and guests can use all of them
+without an account. Until the Bookstore has its back end (`plans/bookstore.md`), its books
+are the example books. The Labyrinth, the region map prototype, is the visualization in
+active development (`plans/region-map.md`), and it is also the first test of the territory
+map's ideas. The territory map and the hyperbolic panel remain candidate designs; don't
+build them, or shape other work around them, unless the user asks. The trainer and puzzle
+pages are placeholders. The shared vision and current work are in `plans/`.
 
 **Names:** the **Treemap** is the live radial opening tree, which was called the Atlas until
 2026-10-02. The **Labyrinth** is the region map prototype, laid out live from explorer data.
@@ -95,10 +96,14 @@ shell can leave the server running. When a session touched screenshots, run
 
 - `src/app/` holds routes, and `src/app/api/` holds route handlers.
 - `src/components/` is organized by feature: `board/`, `openings/`, `repertoire/`,
-  `books/` (the book views), `training/`, `puzzles/`, `overview/`, `layout/` (the dashboard
-  frame), `lab/` (the visualization prototypes).
+  `books/` (the book views), `library/` (the Library and Bookstore pages), `training/`,
+  `puzzles/`, `overview/`, `layout/` (the dashboard frame), `lab/` (the visualization
+  prototypes). `shadcn/` holds shadcn/ui's components, added with `npx shadcn@latest add`
+  and owned from then on (`docs/architecture.md` § "Dependencies").
 - `src/lib/chess/` holds chess logic and the opening catalog. `src/lib/books/` holds what is
-  worked out about books, the book views' layouts and the example books. `src/lib/db/` holds
+  worked out about books, the book views' layouts and the example books. `src/lib/library/`
+  holds the library: validation, summaries, backups, the two stores and their write rules.
+  `src/lib/db/` holds
   all Supabase access. `src/lib/validators/schemas.ts` holds the Zod schemas.
 - `scripts/` holds the catalog build scripts, the cache pre-fill script and the example book
   builder, and `supabase/migrations/` holds migrations.
@@ -223,9 +228,16 @@ edit these files.
   scroll internally. Such a page is `h-[calc(100dvh-var(--dash-offset))]` tall; the offset
   is set by `DashboardShell` (`src/components/layout/`), so don't hardcode one, and don't
   use `100vh`.
-- Color anything that is pressed with `btn-primary`, `btn-secondary` or `btn-ghost`
-  (`src/app/globals.css`), or with the theme variables. Fixed `slate-*` and `white` classes
-  on a button make its text unreadable in some background modes, most often on hover.
+- Build new controls from shadcn/ui's components (`src/components/shadcn/`): Button, Dialog,
+  AlertDialog, DropdownMenu, Select, ToggleGroup and the rest. Their colors are the theme
+  tokens, so every background mode, and later every vibe (`plans/vibes.md`), restyles them.
+  Such a control asks with an AlertDialog before anything that can't be undone and reports
+  with a toast (`sonner`), not with `confirm()` or `alert()`. The other pages move over in
+  `plans/vibes.md`'s first phase.
+- Until then, color anything that is pressed outside shadcn/ui with `btn-primary`,
+  `btn-secondary` or `btn-ghost` (`src/app/globals.css`), or with the theme variables. Fixed
+  `slate-*` and `white` classes on a button make its text unreadable in some background
+  modes, most often on hover.
 - `BoardBase` is the only component that wraps `react-chessboard`. `BoardDisplay` (static)
   and `BoardInteractive` (playable, through `useChessGame`) wrap `BoardBase`. Feature pages
   compose those two and never define their own board components.
@@ -259,7 +271,7 @@ public like this file, so keep secrets out of both.
 | The Opening Explorer, its tree window or the book views (small visualizations) | `docs/design/explorer.md` |
 | The Treemap page's opening tree | `docs/design/opening-tree.md` |
 | Guest and account access, or sign-in | `docs/architecture.md` § "Auth and API routes" |
-| The dashboard frame, sidebar, Overview or Visualizations page, or theme colors | `docs/design/dashboard.md` |
+| The dashboard frame, sidebar, Overview, Visualizations, Library or Bookstore page, or theme colors | `docs/design/dashboard.md` |
 | The territory map (candidate) | `docs/design/territory-map.md` |
 | The hyperbolic panel (candidate) | `docs/design/hyperbolic-panel.md` |
 | The Visualizations page's prototypes: globe, ChessMap, or branch view | `docs/design/lab-prototypes.md` |

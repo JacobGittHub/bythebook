@@ -14,6 +14,8 @@ type Props = {
   /** The positions after each move on the way to the node, which name its opening. */
   pathFens: string[];
   book: LibraryEntry | null;
+  /** Whether the book holds the line to the node, which decides between Add and Remove. */
+  inBook: boolean;
   isExpanded: boolean;
   onAddToBook: () => void;
   onRemoveFromBook: () => void;
@@ -26,6 +28,7 @@ export function TreeNodePanel({
   node,
   pathFens,
   book,
+  inBook,
   isExpanded,
   onAddToBook,
   onRemoveFromBook,
@@ -37,7 +40,6 @@ export function TreeNodePanel({
   const openingName = node ? getOpeningForLine(pathFens)?.name : undefined;
 
   const isRoot = node?.id === "root";
-  const isGhost = Boolean(node?.isGhost);
 
   const moves = explorerData.data?.moves ?? [];
 
@@ -67,9 +69,9 @@ export function TreeNodePanel({
           <>
             {book &&
               !isRoot &&
-              (isGhost ? (
+              (!inBook ? (
                 <button onClick={onAddToBook} className="btn-primary w-full rounded-2xl px-3 py-2 text-sm font-medium">
-                  Add to book
+                  Add line to book
                 </button>
               ) : (
                 <button onClick={onRemoveFromBook} className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm">

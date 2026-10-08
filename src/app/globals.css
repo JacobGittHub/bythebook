@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 /* Wire the Tailwind `dark:` variant to the `.dark` class on <html> */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -126,17 +127,76 @@
   color: var(--text-muted);
 }
 
-/* ── Legacy vars (used by body/html) ── */
+/* ── shadcn/ui tokens (src/components/shadcn/) ─────────────────────────── */
+/* shadcn/ui's components read these names. Each points at a background-mode token above, so
+   every mode restyles them with no change to the components, and a later vibe layer
+   (plans/vibes.md) can do the same. Only the destructive color is new. */
+
 :root {
   --background: var(--bg-page);
   --foreground: var(--text-primary);
+  --card: var(--bg-card);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-card);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--text-primary);
+  --primary-foreground: var(--bg-card);
+  --secondary: var(--bg-muted);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-muted);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--bg-muted);
+  --accent-foreground: var(--text-primary);
+  --destructive: #b42318;
+  --border: var(--border-card);
+  --input: var(--border-card);
+  --ring: var(--text-muted);
+  /* Tailwind's own rounded-md, which the components use; the toasts read it. Tailwind's radius
+     scale isn't remapped, so the older components keep their corners. */
+  --radius: 0.375rem;
+}
+
+[data-bg="red"] {
+  --destructive: #8f1d12;
+}
+
+[data-bg="dark"] {
+  --destructive: #e5534b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+/* A bare `border` takes the theme's border color, as shadcn/ui expects, instead of Tailwind's
+   default of the text color. Every older border names its own color, so none of them changes. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border);
+  }
 }
 
 * {

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { BugReportButton } from "@/components/layout/BugReportButton";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { BrowserBooksNotice } from "@/components/repertoire/BrowserBooksOffer";
+import { Toaster } from "@/components/shadcn/sonner";
+import { TooltipProvider } from "@/components/shadcn/tooltip";
 import { BugReportProvider } from "@/context/BugReport";
 import { LibraryProvider } from "@/context/Library";
 import { ViewerProvider } from "@/context/Viewer";
@@ -93,8 +95,11 @@ export default async function DashboardLayout({
       <DashboardShell sidebar={sidebar}>
         <ViewerProvider signedIn={viewer.signedIn} debug={debug}>
           <LibraryProvider>
-            {children}
-            <BrowserBooksNotice />
+            <TooltipProvider delayDuration={300}>
+              {children}
+              <BrowserBooksNotice />
+              <Toaster position="bottom-right" />
+            </TooltipProvider>
           </LibraryProvider>
         </ViewerProvider>
       </DashboardShell>

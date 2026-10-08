@@ -17,8 +17,8 @@ import { useViewer } from "@/context/Viewer";
 import { accountLibrary } from "@/lib/library/accountStore";
 import { browserLibrary, onBrowserLibraryChange } from "@/lib/library/browserStore";
 import { cachedLibrary, type CachedLibrary, type LibraryListState } from "@/lib/library/cache";
-import { saveStartTree } from "@/lib/library/trees";
-import type { Library, LibraryBook } from "@/lib/library/types";
+import { saveBook, withStartTree } from "@/lib/library/trees";
+import type { BookPatch, Library, LibraryBook } from "@/lib/library/types";
 import type { MoveNode } from "@/types/chess";
 
 /** How the Library names the store it shows, so a guest's and an account's books are never confused. */
@@ -171,6 +171,8 @@ export function useLibraryBook(bookId: string | null): {
    * (`STALE_BOOK_MESSAGE`). Other failures throw a `LibraryError`.
    */
   saveStartTree: (tree: MoveNode) => Promise<boolean>;
+  /** Saves a change of name, side or trees, as `saveStartTree` does. */
+  save: (patch: BookPatch) => Promise<boolean>;
 } {
   const library = useCachedLibrary();
   const { books } = useSyncExternalStore(library.subscribe, library.state, () => NOT_READ);
@@ -206,14 +208,18 @@ export function useLibraryBook(bookId: string | null): {
           : "missing";
 
   const save = useCallback(
-    async (tree: MoveNode) => {
+    async (patch: BookPatch) => {
       if (!book) return false;
-      const result = await saveStartTree(library, book, tree);
+      const result = await saveBook(library, book, patch);
       setOpened({ library, id: book.id, book: result.book, failed: false });
       return result.saved;
     },
     [library, book],
   );
+  const saveStart = useCallback(
+    (tree: MoveNode) => (book ? save({ trees: withStartTree(book.trees, tree) }) : Promise.resolve(false)),
+    [book, save],
+  );
 
-  return { book, status, saveStartTree: save };
+  return { book, status, saveStartTree: saveStart, save };
 }

@@ -48,35 +48,19 @@ From the user's message of 2026-10-07.
 - D11. **The visualization windows don't change, for now** (carried from 2026-10-06). Vibes
   restyle the surroundings: the frame, buttons, fonts, sidebar and cards. The book views,
   the Treemap and the Labyrinth keep their own colors.
+- D12. **shadcn/ui is the base UI** (was Q1, answered 2026-10-07: "shadcn/ui is great"). Vibes
+  need a change of vibe to cost a style update, not a re-render, since it lands many times a
+  minute; every visual property reachable from CSS so layers can fade by depth; ornaments
+  added to buttons, cards and the sidebar without each component knowing; and nothing that
+  moves. shadcn/ui's components are source files in the repo, every part carries a
+  `data-slot` attribute, and every color, radius and shadow is a CSS variable, so a vibe is a
+  stylesheet keyed on attributes of `<html>` that targets those slots, and switching is one
+  attribute write. The old UI hard-codes many classes and marks no parts. Runtime-themed
+  libraries (MUI, Mantine, Chakra) fit worst, since a theme change re-renders the tree. The
+  Library and the Bookstore moved first (`deployment.md` Phase 5b); the rest moves in this
+  plan's first phase, which also makes every visual value a token.
 
 ## Open questions
-
-### Q1. Which UI framework is the base?
-
-The user's question (2026-10-07): the current UI or shadcn/ui, judged by how well each
-takes changes that come and go with the position. What vibes need from it:
-
-- Changes land many times a minute as the user steps through a line, so a change must cost
-  a style update, not a re-render of the page.
-- Layers fade in and out by depth, so every visual property must be reachable from CSS and
-  able to transition.
-- Vibes add ornaments (borders, corner pieces, textures) to buttons, cards and the sidebar
-  without each component knowing about vibes.
-- Nothing may move. A vibe that changes a panel's padding shifts the board under the
-  pointer, the same kind of loop as the Spine view's hover jitter.
-
-**Recommendation:** shadcn/ui. Its components are source files in the repo, every part
-carries a `data-slot` attribute (`card`, `card-header`, `button`), and every color, radius
-and shadow is a CSS variable. A vibe is then a stylesheet keyed on attributes of `<html>`
-(the vibe, the subvibe and the depth) that targets those slots, with no change to the
-components, and switching vibes is one attribute write. The current UI uses the same
-mechanism (Tailwind plus tokens) only in part: many classes are hard-coded and nothing marks
-a component's parts for a stylesheet to find, so it would need the same retrofit by hand.
-Libraries that theme at runtime (MUI, Mantine, Chakra) fit worst, since their themes are
-JavaScript objects and a vibe change re-renders the tree. Either way, the first phase of
-this plan makes every visual value a token.
-
-> ME: shadcn/ui is great.
 
 ### Q2. How are branches voted on?
 
@@ -209,11 +193,11 @@ of the Books, Librarian-King.
 
 ## Steps
 
-Drafted in plan mode once Q1–Q9 are answered. The likely phases are in Notes.
+Drafted in plan mode once Q2–Q9 are answered. The likely phases are in Notes.
 
 ## Notes
 
-**Layers without layout shift (Q1).**
+**Layers without layout shift (D12).**
 
 - A vibe changes paint, never size: colors, borders drawn inside boxes, backgrounds,
   ornaments laid over the frame, and fonts with matched metrics so text keeps its width. A
@@ -238,7 +222,7 @@ costs the server nothing. `load-testing.md` covers the ballot route's load.
 
 **Likely phases.**
 
-1. The base UI on the chosen framework, with every visual value a token (Q1).
+1. The rest of the base UI on shadcn/ui, with every visual value a token (D12).
 2. The vibe engine: anchors, finding the vibe (Q4), the attribute writer, two hand-built
    vibes on a fixed assignment, and the layout-shift test.
 3. Music: the loop engine and one vibe's tracks.

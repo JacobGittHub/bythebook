@@ -29,6 +29,8 @@ Carried over from `deployment.md` (D10–D13), where the user settled them.
 - D3. Shared book codes and publicly uploaded books may follow. They are not in this plan.
 - D4. The library interface comes from `deployment.md` Phase 5. This plan builds on it and
   replaces the "coming soon" prompts that phase ships.
+  *Amended 2026-10-07 (`deployment.md` D23):* Back up and Restore shipped with the Library
+  instead, so no export or import prompt is left to replace.
 
 From the user's answers on 2026-10-06.
 
@@ -108,8 +110,8 @@ From the user's answers on 2026-10-06.
   gambit can come up from many move orders. Each tree stays a true tree keyed by move
   sequence (`AGENTS.md`). The trainer sets up each tree's first position, and the Explorer
   and the maps match a later tree by its first position. The export format carries the list
-  from version 1. It changes the shape of `move_node`, so it lands with the library work in
-  `deployment.md` Phase 5, before there are many books to convert.
+  from version 1. It landed with the library work in `deployment.md` Phase 5, which moved
+  every book into `opening_books.trees` on 2026-10-07.
 
 ## Open questions
 
@@ -189,7 +191,7 @@ repertoire book, keep the most played White (or Black) move at each clash; and c
 lines on a few plies from master statistics where wanted. Wikibooks fills gaps, credited.
 > ME: Yes, all sounds great. But if we are generating books from catalog, may wnt to take a top p sample in clashes, which will typically result in one move, but could allow a few more to satisfy a slightly more general crowd of users.
 
-The Bookstore is drawn in `plans/mockups/bookstore.html` (2026-10-07): cards to browse, a page
+The Bookstore is drawn in `docs/design/mockups/bookstore.html` (2026-10-07): cards to browse, a page
 per book, and the example books as ByTheBook's store books. Drawing it raised Q2–Q4.
 
 ### Q2. What limit does a saved copy of a verified publisher's book have?
@@ -228,12 +230,11 @@ plan"). Phase 3's script waits on Q1; the rest doesn't.
       (D15), the "unconnected lines" flag (D16), leaf depths at the shortest move order (D9),
       clashes (D6), and coverage from master numbers (D11).
 
-### Phase 2. Library (`deployment.md` Phase 5)
+### Done: Phase 2. Library (`deployment.md` Phase 5)
 
-- [ ] (agent) Books as a list of trees (D16): the type, a migration that wraps each
-      `move_node`, and the version 1 export format (D12).
-- [ ] (agent) `deployment.md` Phase 5 as written there, with the limit (D15) checked on save
-      and import.
+Done 2026-10-07: books as lists of trees (D16), the version 1 backup file (D12), and the
+limit (D15) checked on save, restore and the copy at sign-in, all in `src/lib/library/`
+(`docs/architecture.md` § "Storage and database").
 
 ### Phase 3. Publishing
 
@@ -248,16 +249,22 @@ plan"). Phase 3's script waits on Q1; the rest doesn't.
 
 ### Phase 4. Bookstore page
 
-- [ ] (agent) The two cached guest routes (D14), the cards (D8), the detail view with a board
-      and the book views, Save to library, and rating for accounts.
+- [x] (agent) The pages, on the example books (the user's choice, 2026-10-07): the cards
+      (D8) without ratings or saves, the detail view with a board and the book views, and
+      Save to library. Done in `deployment.md` Phase 5b (`docs/design/dashboard.md`
+      § "Bookstore").
+- [ ] (agent) The store's back end under the pages: the two cached guest routes (D14) in
+      place of the static files, ratings and saves on the cards, sorting by saves, and
+      rating for accounts. Waits on Phase 3.
 - [ ] (user) Check-in, as a guest and signed in.
 
 ### Phase 5. Combine, backup and restore
 
 - [ ] (agent) Combine (D11) with clash marks (D6) and the limit (D15).
-- [ ] (agent) Back up and Restore, single-book export and import, `persist()` and the
-      backup notice (D12).
-- [ ] (user) Check-in: back up in one browser, restore in another.
+- [x] (agent) Back up and Restore, `persist()` and the backup notice (D12). Done in
+      `deployment.md` Phase 5 (its D23), and the user restored one browser's backup in
+      another on 2026-10-07.
+- [ ] (agent) Single-book export and import.
 
 ## Notes
 

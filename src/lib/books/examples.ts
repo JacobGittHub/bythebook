@@ -84,6 +84,14 @@ export function parseExampleFile(value: unknown): ExampleBookFile | null {
   return parsed.success ? parsed.data : null;
 }
 
+/** How each method made its books, in a sentence, for the pages that show where a book came from. */
+export const EXAMPLE_METHOD_NOTES: Record<ExampleMethod, string> = {
+  wikibooks: "Made from the page titles of Wikibooks' Chess Opening Theory.",
+  catalog: "Made from the opening catalog's named lines (lichess-org/chess-openings, public domain).",
+  masters: "Grown from Lichess's master game statistics, as saved by ByTheBook.",
+  "catalog+masters": "The opening catalog's named lines, carried on from Lichess's master game statistics.",
+};
+
 /** The publisher example books are credited to when saved (deployment.md D24). */
 export const EXAMPLE_PUBLISHER = "ByTheBook";
 

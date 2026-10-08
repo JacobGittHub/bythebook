@@ -1,4 +1,5 @@
 import { ACCOUNT_STATE, NO_ACCOUNT_REASON, signIn, testAccount } from "./fixtures/account";
+import { LIBRARY, bookList, createPastedBook } from "./fixtures/library";
 import { expect, test } from "./fixtures/test";
 
 // The book routes against the live database, as the test account (plans/deployment.md
@@ -87,11 +88,8 @@ test.describe("Books in the browser at sign-in", () => {
   });
 
   test("a guest's book is offered at sign-in, and copied into the account leaves the browser", async ({ page }) => {
-    await page.goto("/dashboard/library");
-    await page.getByRole("button", { name: "+ New book" }).click();
-    await page.getByPlaceholder(/Ruy Lopez/).fill(name);
-    await page.getByRole("button", { name: "Create book" }).click();
-    await expect(page.getByRole("heading", { name, level: 3 })).toBeVisible();
+    await page.goto(LIBRARY);
+    await createPastedBook(page, name);
 
     await signIn(page, testAccount()!);
     const notice = page.getByRole("complementary", { name: "Books in this browser" });
@@ -102,7 +100,7 @@ test.describe("Books in the browser at sign-in", () => {
     await expect(checklist).toContainText(name);
     await checklist.getByRole("button", { name: "Copy 1 book" }).click();
     await checklist.getByRole("button", { name: "Done" }).click();
-    await expect(page.getByRole("heading", { name, level: 3 })).toBeVisible();
+    await expect(bookList(page).getByRole("button", { name: new RegExp(name) })).toBeVisible();
     await expect(page.getByText("Saved to your account", { exact: true })).toBeVisible();
 
     // The book left the browser, so nothing is offered any more.

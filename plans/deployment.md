@@ -110,7 +110,7 @@ Chrome, Safari and Firefox, and the Overview page and explorer work on a phone (
   background mode. Fixed slate or white classes on buttons are how text went missing.
 
 From the user's answers of 2026-10-07 to the Library questions, drawn in
-`plans/mockups/library.html`.
+`docs/design/mockups/library.html`.
 
 - D21. **The Library has two levels, laid out as mockup A.** The first level is the book list
   and search: each row carries its book's icicle in miniature, and the selected book opens
@@ -193,7 +193,12 @@ From the user's answers of 2026-10-07 to the Library questions, drawn in
   The shadcn/ui pass (`vibes.md` Q1) follows and builds the Library's two levels (D21) from
   the mockups. The Bookstore goes the same way: mockups first, with the example books in it,
   then its back end, then its pages in the shadcn/ui pass. The second round of Library
-  mockups and the Bookstore's are in `plans/mockups/`.
+  mockups and the Bookstore's are in `docs/design/mockups/`, moved there once the pages
+  shipped.
+
+  *Amended 2026-10-07 (the user's choice at the shadcn/ui pass):* the Bookstore's pages came
+  before its back end, reading the example books, so the back end swaps their source later
+  (Phase 5b).
 - D28. **No staging project for the book migration** (Q7, answered 2026-10-07: the user went
   with the recommendation). A **staging project** is a second Supabase project with the same
   tables and no real users, where a migration or a test runs before it touches the live one.
@@ -238,70 +243,36 @@ steps are still open:
       Overview's demo window cycles and follows the pointer.
 - [ ] (user) After browsing as a guest, confirm no guest Lichess calls (query in Notes).
 
-### Phase 5. Library (D12, D13, D21–D28)
+### Done: Phase 5. Library's back end (D12, D13, D22–D28)
 
-Drafted and approved 2026-10-07. The back end comes first (D27): today's pages are wired to
-the library with only the controls they need, and the two-level Library comes with the
-shadcn/ui pass.
+Done 2026-10-07: the schema baseline and Migrations A and B (books live in
+`opening_books.trees` with their `summary` and `origin`), profiles without emails,
+`src/lib/library/`, the routes under RLS, the browser library and `useLibrary()` for every
+page that reads books, the copy at sign-in, Back up and Restore, `persist()` and the backup
+notice, and debug mode's library section. How they work: `docs/architecture.md` § "Storage
+and database" and `docs/design/dashboard.md` § "Library page". The book rows saved before
+the conversion stay in the git-ignored `backups/` folder. Signed-in browser tests use the
+test account on the live database until staging exists; the one that makes a book deletes it
+again. The two-level Library (D21), the editing controls of D25 and the Treemap's Add line,
+which the user's check found missing, came in Phase 5b.
 
-- [x] (agent) `scripts/sql/schemaSnapshot.sql`, a read-only query that prints the public
-      schema as DDL (tables, constraints, indexes, RLS, policies, functions, triggers) and
-      counts the books by the shape of their `move_node`.
-- [x] (user) Run it in the SQL editor and paste the output.
-- [x] (agent) Save the output as the baseline migration, with a header saying a new project
-      runs it and the migrations after it. This is Phase 7's baseline step, moved here (D28).
-- [x] (agent) Migration A, which only adds: `trees`, `summary` and `origin` on
-      `opening_books`, and an index on `(user_id, updated_at)`. The baseline showed the
-      owner policy already covers all four commands, and the foreign keys into books already
-      cascade or set null, so neither changed.
-- [x] (user) Run it, then `npm run db:types`.
-- [x] (agent, user) Profiles without emails, since a username is shown to other people
-      later: `handle_new_user` stops copying the email, and usernames are 3 to 24 letters,
-      digits, `_` or `-`, unique ignoring case. A taken or bad name is refused with no
-      made-up fallback, so sign-up asks again (the user's call, 2026-10-07).
-- [x] (agent) `src/lib/library/`, pure and tested: validation that replays every move, the
-      summary and miniature (D26), the version 1 backup file with its checksum, the checklist
-      the sign-in copy and Restore share, name rules (30 characters), and edits (rename,
-      side, duplicate, remove a move, add a line).
-- [x] (agent) Books as lists of trees everywhere, and the routes: the list returns summaries
-      only, capped; create, read, update (409 when the book changed since it was loaded) and
-      delete run under RLS instead of the service role. Writes also fill `move_node` until
-      Migration B. Done: `OpeningBook` is gone, and pages use `LibraryBook` and show the tree
-      from the starting position (`startTree`). The account adapter (`accountStore.ts`) came
-      early, since three pages save through it. The server pages still read whole books with
-      `listBooksWithTrees` until the next step.
-- [x] (agent) The browser adapter on IndexedDB (`idb`) and `useLibrary()`. Today's pages read and save through it, guests included: the Library
-      (list, New book, delete, the empty state with the example books, Back up, Restore),
-      the Explorer, the Treemap, the Labyrinth, the book views and both Train pages.
-      Done: the browser library (`browserStore.ts`, with the write rules both stores share
-      in `writes.ts`), one shared list and the opened books (`cache.ts`), and
-      `useLibraryBook()` for the pages that edit a book. No server page reads books, and
-      `listBooksWithTrees` is gone. Three example books' names are over 30 characters and
-      are cut with "…" when saved; shorter names in `scripts/buildExampleBooks.ts` need a
-      full `npm run books:examples` (the user's run).
-- [x] (agent) The copy at sign-in (D22), `persist()` and the backup notice, and debug mode's
-      library section (D23). Done: a notice on every dashboard page links to the Library's
-      checklist (`BrowserBooksOffer.tsx`), and a copied book leaves the browser once the
-      account has it. The backup notice and debug mode's panel are on the Library page
-      (`docs/design/dashboard.md`).
-- [x] (agent) `npm run books:migrate`: backs every book row up to a local, git-ignored file,
-      then converts each `move_node` to `trees` with its summary. Done: it moved all 3 books
-      on 2026-10-07, and was removed with Migration B, since it reads `move_node` (git history
-      has it, in the commit "Library back end, part 6").
-- [x] (user) Once the library code is live (pushed and deployed), run it, then check as a
-      guest in a private window, signed in, and signing in on a browser that holds guest books,
-      and that the Treemap and the Labyrinth still save. Done 2026-10-07: backups made by
-      several accounts restored as a guest in another browser, and delete worked. The Treemap
-      has no Add line (only the Explorer adds lines), for the shadcn/ui pass.
-- [x] (agent) Migration B: drop `move_node`, and make `trees` and `summary` required, with the
-      code change that stops reading and writing `move_node`. The migration refuses to run
-      while a book has no trees. Done: `20261007220000_books_trees_required.sql`, which also
-      checks that `trees` is a list and `summary` an object.
-- [ ] (user) Deploy that code first, then run the migration, then `npm run db:types`. The
-      other order breaks saving, since today's code writes `move_node`.
+### Phase 5b. The Library's and the Bookstore's pages: the shadcn/ui pass (D21, D24, D25, D27)
 
-Signed-in browser tests use the test account on the live database until staging exists; the
-one that makes a book deletes it again.
+Drafted and approved 2026-10-07, with the user's choices: the Bookstore reads the example
+books until its back end exists, panels without real data (success rates, weakest lines,
+leaderboards, history, difficulty) are left out until it exists, zoom ships for the book
+views, and shadcn/ui reaches only the Library, the Bookstore and their dialogs for now
+(`vibes.md` D12).
+
+- [x] (agent) shadcn/ui on the app's tokens, the Library's two levels, New book with pasted
+      moves or PGN, the "⋯" menu and Remove move, zoom on every book view, the Explorer
+      opening a book and a line, the Bookstore's two levels, and the Treemap's Add line.
+      Done: `docs/design/dashboard.md` § "Library page" and § "Bookstore", and
+      `docs/design/explorer.md` (zoom, `?book=` and `?line=`).
+- [ ] (user) Check as a guest and signed in, in each background mode and at phone width: New
+      book through the Explorer and through a pasted PGN, rename, change side, duplicate,
+      Remove move, zoom, saving a store book, and the Treemap's Add line on a catalog
+      position.
 
 ### Phase 6. Phones and themes (D9, D15, D20)
 
@@ -323,7 +294,7 @@ one that makes a book deletes it again.
 - [ ] (user) An uptime ping so the free Supabase project doesn't pause.
 - [ ] (user, agent) Demo animations for the Overview page, and a pass over its text.
 - [ ] (agent) Delete the empty `src/app/api/auth/[...nextauth]/`.
-- The baseline migration moved to Phase 5 (D28).
+- The baseline migration was made in Phase 5 (D28).
 - [ ] (agent) Move the lasting facts into `docs/` and `AGENTS.md`.
 
 ## Notes
