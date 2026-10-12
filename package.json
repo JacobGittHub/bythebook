@@ -15,6 +15,7 @@
     "test:related": "vitest related --run --reporter=dot --silent=passed-only",
     "test:e2e": "playwright test --project=chromium --project=firefox --project=webkit --project=phone-chromium --project=phone-webkit",
     "test:e2e:clean": "node scripts/cleanTestOutput.mjs",
+    "review:prepare": "node scripts/prepareReview.mjs",
     "test:screens": "playwright test --project=screens",
     "test:screens:update": "playwright test --project=screens --update-snapshots",
     "screens:flush": "node scripts/flushScreens.mjs",
@@ -25,7 +26,8 @@
     "cache:prefill": "tsx --env-file=.env.local scripts/prefillPositionCache.ts",
     "books:examples": "tsx --env-file=.env.local scripts/buildExampleBooks.ts",
     "invites:create": "tsx --env-file=.env.local scripts/createInvites.ts",
-    "db:types": "supabase gen types typescript --project-id bcpkifxnjfjzfrqvpkby > src/types/database.ts"
+    "db:types": "supabase gen types typescript --project-id bcpkifxnjfjzfrqvpkby > src/types/database.ts",
+    "demos:record": "tsx --env-file=.env.local scripts/demos/recordDemos.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

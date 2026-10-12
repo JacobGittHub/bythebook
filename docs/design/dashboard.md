@@ -42,7 +42,10 @@ The Overview is the info page that a landing page would otherwise be (`/` redire
   touch and keyboard all work this way. On a phone the tabs are a row of chips.
 - **The description writes itself out a word at a time** (`.stream-word` in `globals.css`,
   paced by `STREAM_WORD_MS`).
-- **The window shows a placeholder** until the demo animations exist (deployment Phase 7).
+- **The window plays the page's demo**, a looping GIF named by its `NAV_ITEMS` entry's `demo`
+  and recorded from the running app by `npm run demos:record` (`scripts/demos/recordDemos.ts`)
+  into `public/demos/`. A page without one shows a placeholder. The demos are first drafts
+  (deployment Phase 7).
 - **The guest and account table** comes from `ACCESS_ROWS`.
 
 ## Visualizations page

@@ -42,12 +42,13 @@ which is not in development.
 
 | Task | Command |
 |---|---|
-| Dev server | `npm run dev`; `npm run dev:stop` stops every dev server and watcher on the machine (`-- -List` only lists them) |
+| Dev server | `npm run dev`; `npm run dev:stop` stops every dev server and watcher on the machine (`-- -List` only lists them, `-- -Here` stops only this folder's) |
 | Typecheck | `npx tsc --noEmit` (passes; keep it passing) |
 | Lint | `npm run lint` (reports no problems; keep it that way, since CI fails on any) |
 | Tests while working | `npm run test:changed` (tests affected by uncommitted changes), or `npm run test:related -- <files>` |
 | All tests | `npm run test:agent` (one line per failure, stops at the first); `npm test` for the full report |
 | Browser tests | `npm run test:e2e` (Playwright, all browsers; starts the dev server or uses a running one), `npm run test:e2e:clean` (deletes run output) |
+| Review a commit | the `test-reviewer` agent, which runs `npm run review:prepare` in its worktree (see "Reviews" below) |
 | Screenshot tests | `npm run test:screens`, `npm run test:screens:update` (new baselines), `npm run screens:flush` (list or delete them) |
 | Agent docs | `npm run docs:check` (`docs/docs.test.ts` alone; `npm test` includes it), `npm run docs:sizes` (token estimates) |
 | Production build | `npm run build` |
@@ -55,10 +56,12 @@ which is not in development.
 | Rebuild the example books | `npm run books:examples` (reads Wikibooks, the catalog and `position_cache`, never Lichess; `-- --skip-masters` keeps the books made from the cache) |
 | Fill `position_cache` for the catalog | `npm run cache:prefill` (calls Lichess for hours; the user runs it, agents use `-- --dry-run`) |
 | Make beta invite or reset codes | `npm run invites:create` (writes to the live database; the user runs it) |
+| Record the Overview's demo GIFs | `npm run demos:record` (with the dev server running; `-- <name>` for one demo) |
 | Regenerate DB types | `npm run db:types` (see "Database changes" below) |
 
 To check a change, run the typecheck, `npm run test:agent`, and lint on the files you
-touched. For UI changes, also run `npm run test:e2e` and look at the result. Tests sit next to
+touched. For UI changes, the browser tests also run, in a review (below); running one spec
+in Chromium yourself, for a quick look or a bug report, is fine. Tests sit next to
 what they test as `*.test.ts` and run in Node, so keep tested code free of browser APIs.
 Vitest is for code that runs without a browser; browser tests are Playwright's, in `e2e/`
 (`docs/architecture.md` § "Browser tests"). CI runs both on every push.
@@ -70,9 +73,19 @@ fix. Keep a visual bug as a screenshot spec in `e2e/screens/bugs/`.
 **Clean up after browser tests.** Run output only goes to `test-results/` and
 `playwright-report/`, and baselines only to `e2e/screens/`. After a session that ran
 Playwright, run `npm run test:e2e:clean`. Before ending a run, stop any dev server you
-started with `npm run dev:stop` (Playwright stops the one it starts itself); stopping its
-shell can leave the server running. When a session touched screenshots, run
-`npm run screens:flush` to list them, and offer to delete any whose bug or view is finished.
+started with `npm run dev:stop -- -Here` (Playwright stops the one it starts itself); stopping
+its shell can leave the server running, and the plain form would also stop a review's. When a
+session touched screenshots, run `npm run screens:flush` to list them, and offer to delete any
+whose bug or view is finished.
+
+**Reviews.** The `test-reviewer` agent (`.claude/agents/test-reviewer.md`) runs browser tests
+against one commit in a git worktree, a second checkout in the sibling folder
+`bythebook-review`, while you keep working. Its tests use their own port (`E2E_PORT`), so they
+never reuse your dev server. A worktree holds only committed files, so a review starts after
+the user commits. When a change needs its browser tests, tell the user which specs and
+browsers you want run; once they commit and approve, start the agent in the background with
+the commit hash, the specs and what the change does. Run one review at a time, and treat a
+failure in its report like any failing test.
 
 ## Environment
 
@@ -127,8 +140,11 @@ shell can leave the server running. When a session touched screenshots, run
   of the form `layout(tree, weightMode) → Map<NodeId, Geometry>`, and ship with property
   tests of their invariants. A property test gathers its violations over every run and
   asserts once with `expectNoViolations` (`src/lib/regions/testShapes.ts`).
-- **Git is read-only for agents.** `status`, `diff`, `log` and `show` are fine. The user
-  makes all commits. Mutating git commands are blocked in `.claude/settings.local.json`.
+- **Git is read-only for agents, with one exception.** `status`, `diff`, `log` and `show` are
+  fine. The user makes all commits. Mutating git commands are blocked in
+  `.claude/settings.local.json`. The exception is the review worktree ("Reviews" above):
+  `git worktree add --detach`, `git worktree list` and `git worktree remove` are allowed, for
+  that folder only. Never run `git worktree prune`, and never `remove` with `--force`.
 - **Don't delete what's kept on purpose** (see the list below). Being unused is not a reason
   to remove something. Removing anything on that list, or any agent doc, needs the user's
   explicit say-so. When something becomes superseded, add it to the list rather than

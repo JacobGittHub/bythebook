@@ -1,0 +1,154 @@
+<!-- Mockup for plans/deployment.md: the tech stack drawn three ways (this page, tech-stack-mermaid.md, tech-stack.excalidraw). The SVG is generated from one layout shared with the Excalidraw file. -->
+<title>ByTheBook Tech Stack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: header, a row of path buttons with a one-line caption, then the diagram in a scroll container. */
+:root {
+  --bg: #f3f4f1;
+  --panel: #ffffff;
+  --ink: #1d2320;
+  --ink-soft: #59625d;
+  --line: #cdd2cd;
+  --line-strong: #8d968f;
+  --accent: #2f6b55;
+  --accent-ink: #ffffff;
+  --accent-wash: #e1efe8;
+  --zone: #eceee9;
+  --display: "Geist", "Segoe UI", system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121614; --panel: #1d2320; --ink: #e6ebe7; --ink-soft: #a4ada7; --line: #333c36;
+    --line-strong: #6b766f; --accent: #6cc4a0; --accent-ink: #0f1713; --accent-wash: #1f3329; --zone: #171c19;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121614; --panel: #1d2320; --ink: #e6ebe7; --ink-soft: #a4ada7; --line: #333c36;
+  --line-strong: #6b766f; --accent: #6cc4a0; --accent-ink: #0f1713; --accent-wash: #1f3329; --zone: #171c19;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--display); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin-inline: auto; padding-inline: 16px; padding-block: 24px 40px; display: flex; flex-direction: column; gap: 16px; }
+h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+.lede { margin: 4px 0 0; color: var(--ink-soft); max-width: 65ch; }
+.flows { display: flex; flex-wrap: wrap; gap: 6px; }
+.flows button {
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--panel); border: 1px solid var(--line-strong);
+  border-radius: 3px; padding: 5px 10px; cursor: pointer; min-width: 0;
+}
+.flows button:hover { border-color: var(--accent); }
+.flows button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.flows button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.caption { margin: 0; min-height: 3em; padding: 8px 12px; background: var(--accent-wash); border-left: 3px solid var(--accent); max-width: 80ch; }
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); }
+figure { margin: 0; }
+figcaption { padding: 8px 12px 12px; color: var(--ink-soft); font-size: 12px; }
+svg { display: block; width: 100%; min-width: 820px; height: auto; font-family: var(--display); }
+.zone rect { fill: var(--zone); stroke: var(--line-strong); stroke-width: 1; }
+.zone.dashed rect { stroke-dasharray: 5 4; }
+.zl { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; fill: var(--ink-soft); }
+.node rect { fill: var(--panel); stroke: var(--line-strong); stroke-width: 1; }
+.node.ext rect { stroke-dasharray: 4 3; }
+.nt { font-size: 12px; font-weight: 600; fill: var(--ink); }
+.ns { font-size: 11px; fill: var(--ink-soft); }
+.edge path { fill: none; stroke: var(--ink-soft); stroke-width: 1.5; marker-end: url(#arrow); }
+.edge.dashed path { stroke-dasharray: 5 4; }
+.el { font-size: 10.5px; fill: var(--ink-soft); }
+.node, .edge { transition: opacity 0.15s; }
+.dim { opacity: 0.2; }
+.node.on rect { stroke: var(--accent); stroke-width: 2; }
+.edge.on path { stroke: var(--accent); stroke-width: 2.25; marker-end: url(#arrowOn); }
+.edge.on .el { fill: var(--accent); font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { .node, .edge { transition: none; } }
+</style>
+<div class="wrap">
+  <header>
+    <h1>ByTheBook tech stack</h1>
+    <p class="lede">What runs where, and which calls cross a boundary. Pick a path to follow one request through the system.</p>
+  </header>
+  <div class="flows" role="group" aria-label="Follow a path">
+    <button type="button" id="b-all" data-flow="all" aria-pressed="true">All paths</button>
+    <button type="button" id="b-ex-signed" data-flow="ex-signed" aria-pressed="false">Signed-in explorer request</button>
+    <button type="button" id="b-ex-guest" data-flow="ex-guest" aria-pressed="false">Guest explorer request</button>
+    <button type="button" id="b-bk-guest" data-flow="bk-guest" aria-pressed="false">Guest opens a book</button>
+    <button type="button" id="b-bk-account" data-flow="bk-account" aria-pressed="false">Signed-in saves a book</button>
+    <button type="button" id="b-prefill" data-flow="prefill" aria-pressed="false">Cache pre-fill</button>
+  </div>
+  <p class="caption" id="caption" aria-live="polite"></p>
+  <figure class="scroll">
+    <svg viewBox="0 0 960 594" role="img" aria-label="ByTheBook's tech stack: the browser talks to Vercel route handlers through a proxy, the handlers talk to Supabase and, on a cache miss for a signed-in user, to Lichess. Scripts on the developer's machine fill the cache and build the catalog.">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 L10 5 L0 10 z" style="fill:var(--ink-soft);stroke:none"/></marker>
+        <marker id="arrowOn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0 L10 5 L0 10 z" style="fill:var(--accent);stroke:none"/></marker>
+      </defs>
+<g class="zone"><rect x="16" y="16" width="330" height="434" rx="4"/><text x="28" y="35" class="zl">BROWSER</text></g>
+<g class="zone"><rect x="426" y="16" width="230" height="286" rx="4"/><text x="438" y="35" class="zl">VERCEL · NEXT.JS 16</text></g>
+<g class="zone"><rect x="726" y="16" width="218" height="376" rx="4"/><text x="738" y="35" class="zl">SUPABASE · POSTGRES + RLS</text></g>
+<g class="zone dashed"><rect x="16" y="482" width="928" height="96" rx="4"/><text x="28" y="501" class="zl">YOUR MACHINE · npm scripts, run locally</text></g>
+<text x="440" y="366" class="zl">EXTERNAL</text>
+<g class="edge" data-f="ex-signed ex-guest"><path d="M332 70 L440 70"/><text class="el" x="386" y="64" text-anchor="middle"><tspan x="386" dy="0">pages, /api/*</tspan></text></g>
+<g class="edge" data-f="bk-account"><path d="M332 346 L386 346 L386 94 L440 94"/><text class="el" x="378" y="220" text-anchor="middle" transform="rotate(-90 378 220)"><tspan x="378" dy="0">books (account)</tspan></text></g>
+<g class="edge" data-f="bk-guest"><path d="M181 368 L181 378"/></g>
+<g class="edge" data-f="ex-signed ex-guest bk-account"><path d="M541 104 L541 120"/></g>
+<g class="edge" data-f="ex-signed ex-guest bk-account"><path d="M541 170 L541 184"/></g>
+<g class="edge" data-f="ex-signed ex-guest bk-account"><path d="M541 228 L541 242"/></g>
+<g class="edge" data-f="ex-signed ex-guest bk-account"><path d="M642 264 L726 264"/><text class="el" x="684" y="246" text-anchor="middle"><tspan x="684" dy="0">single-row</tspan><tspan x="684" dy="12">reads, writes</tspan></text></g>
+<g class="edge" data-f="ex-signed"><path d="M541 286 L541 372"/><text class="el" x="548" y="334" text-anchor="start"><tspan x="548" dy="0">cache miss,</tspan><tspan x="548" dy="12">signed-in only</tspan></text></g>
+<g class="edge dashed" data-f="prefill"><path d="M361 514 L361 466 L541 466 L541 424"/><text class="el" x="451" y="461" text-anchor="middle"><tspan x="451" dy="0">thousands of calls</tspan></text></g>
+<g class="edge dashed" data-f="prefill"><path d="M541 466 L790 466 L790 392"/><text class="el" x="784" y="430" text-anchor="end"><tspan x="784" dy="0">writes cache</tspan></text></g>
+<g class="edge dashed" data-f=""><path d="M870 514 L870 392"/><text class="el" x="876" y="430" text-anchor="start"><tspan x="876" dy="0">makes codes</tspan></text></g>
+<g class="edge dashed" data-f=""><path d="M135 514 L135 450"/><text class="el" x="141" y="474" text-anchor="start"><tspan x="141" dy="0">bundled at build</tspan></text></g>
+<g class="node" data-f="ex-signed ex-guest bk-guest bk-account"><rect x="30" y="54" width="302" height="44" rx="3"/><text class="nt" x="42" y="73">App UI</text><text class="ns" x="42" y="88">Next.js 16 · React 19 · Tailwind v4 · shadcn/ui</text></g>
+<g class="node" data-f=""><rect x="30" y="108" width="302" height="44" rx="3"/><text class="nt" x="42" y="127">Board</text><text class="ns" x="42" y="142">react-chessboard · chess.js</text></g>
+<g class="node" data-f=""><rect x="30" y="162" width="302" height="44" rx="3"/><text class="nt" x="42" y="181">Visualizations</text><text class="ns" x="42" y="196">d3 Treemap · Labyrinth · book views</text></g>
+<g class="node" data-f=""><rect x="30" y="216" width="302" height="44" rx="3"/><text class="nt" x="42" y="235">Stockfish (WASM)</text><text class="ns" x="42" y="250">Web Worker, no server cost</text></g>
+<g class="node" data-f=""><rect x="30" y="270" width="302" height="44" rx="3"/><text class="nt" x="42" y="289">Opening catalog</text><text class="ns" x="42" y="304">bundled JSON index, held in memory</text></g>
+<g class="node" data-f="bk-guest bk-account"><rect x="30" y="324" width="302" height="44" rx="3"/><text class="nt" x="42" y="343">useLibrary()</text><text class="ns" x="42" y="358">one book list for guest or account</text></g>
+<g class="node" data-f="bk-guest"><rect x="30" y="378" width="302" height="44" rx="3"/><text class="nt" x="42" y="397">Guest books</text><text class="ns" x="42" y="412">IndexedDB via idb</text></g>
+<g class="node" data-f="ex-signed ex-guest bk-account"><rect x="440" y="54" width="202" height="50" rx="3"/><text class="nt" x="452" y="76">proxy.ts</text><text class="ns" x="452" y="91">guest gate, session refresh</text></g>
+<g class="node" data-f="ex-signed ex-guest bk-account"><rect x="440" y="120" width="202" height="50" rx="3"/><text class="nt" x="452" y="142">Route handlers /api/*</text><text class="ns" x="452" y="157">Zod → src/lib → response</text></g>
+<g class="node" data-f="ex-signed ex-guest bk-account"><rect x="440" y="184" width="202" height="44" rx="3"/><text class="nt" x="452" y="203">recordUsage</text><text class="ns" x="452" y="218">counts every call</text></g>
+<g class="node" data-f="ex-signed ex-guest bk-account"><rect x="440" y="242" width="202" height="44" rx="3"/><text class="nt" x="452" y="261">Supabase clients</text><text class="ns" x="452" y="276">@supabase/ssr · service role</text></g>
+<g class="node" data-f="ex-signed bk-account"><rect x="740" y="54" width="190" height="44" rx="3"/><text class="nt" x="752" y="73">Auth</text><text class="ns" x="752" y="88">invite-only accounts</text></g>
+<g class="node" data-f="bk-account"><rect x="740" y="108" width="190" height="44" rx="3"/><text class="nt" x="752" y="127">opening_books</text><text class="ns" x="752" y="142">trees JSONB + summary</text></g>
+<g class="node" data-f="ex-signed ex-guest bk-account"><rect x="740" y="162" width="190" height="44" rx="3"/><text class="nt" x="752" y="181">usage_counters</text><text class="ns" x="752" y="196">calls per user per day</text></g>
+<g class="node" data-f=""><rect x="740" y="216" width="190" height="44" rx="3"/><text class="nt" x="752" y="235">access_codes, profiles</text><text class="ns" x="752" y="250">hashed invite codes</text></g>
+<g class="node" data-f=""><rect x="740" y="270" width="190" height="44" rx="3"/><text class="nt" x="752" y="289">Trainer tables</text><text class="ns" x="752" y="304">puzzles, drills · not wired yet</text></g>
+<g class="node" data-f="ex-signed ex-guest prefill"><rect x="740" y="324" width="190" height="44" rx="3"/><text class="nt" x="752" y="343">position_cache</text><text class="ns" x="752" y="358">Lichess responses by FEN key</text></g>
+<g class="node ext" data-f="ex-signed prefill"><rect x="440" y="372" width="202" height="52" rx="3"/><text class="nt" x="452" y="395">Lichess Opening Explorer</text><text class="ns" x="452" y="410">masters endpoint · API token</text></g>
+<g class="node" data-f=""><rect x="30" y="514" width="210" height="48" rx="3"/><text class="nt" x="42" y="535">catalog:download, :index</text><text class="ns" x="42" y="550">builds the bundled catalog</text></g>
+<g class="node" data-f="prefill"><rect x="256" y="514" width="210" height="48" rx="3"/><text class="nt" x="268" y="535">cache:prefill</text><text class="ns" x="268" y="550">thousands of Lichess calls</text></g>
+<g class="node" data-f=""><rect x="482" y="514" width="210" height="48" rx="3"/><text class="nt" x="494" y="535">books:examples</text><text class="ns" x="494" y="550">writes public/books/examples</text></g>
+<g class="node" data-f=""><rect x="708" y="514" width="210" height="48" rx="3"/><text class="nt" x="720" y="535">invites:create</text><text class="ns" x="720" y="550">makes beta invite codes</text></g>
+
+    </svg>
+    <figcaption>Solid lines are runtime calls. Dashed lines are work you run on your own machine. Drawn from docs/architecture.md and AGENTS.md.</figcaption>
+  </figure>
+</div>
+<script>
+var FLOWS = {
+  'all': 'All the paths at once. Solid lines are runtime calls; dashed lines are scripts you run locally. Pick a path to follow it.',
+  'ex-signed': 'Signed-in explorer request: the proxy checks the session, the route handler counts the call and reads position_cache. Only a cache miss goes on to Lichess.',
+  'ex-guest': 'Guest explorer request: the same route, but it reads position_cache only. The Lichess line stays dark because a guest request must never reach Lichess.',
+  'bk-guest': 'Guest opens a book: useLibrary() reads IndexedDB in the browser. No request leaves the page.',
+  'bk-account': 'Signed-in user saves a book: useLibrary() calls /api/openings/books, the handler replays every move to validate it, and one row in opening_books is written.',
+  'prefill': 'Cache pre-fill: a script on your machine calls Lichess for the whole catalog and writes position_cache directly. It never runs on Vercel.'
+};
+var caption = document.getElementById('caption');
+var buttons = document.querySelectorAll('.flows button');
+function setFlow(id) {
+  document.querySelectorAll('svg [data-f]').forEach(function (el) {
+    var inFlow = id === 'all' || el.getAttribute('data-f').split(' ').indexOf(id) !== -1;
+    el.classList.toggle('dim', !inFlow);
+    el.classList.toggle('on', id !== 'all' && inFlow);
+  });
+  buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-flow') === id)); });
+  caption.textContent = FLOWS[id];
+}
+buttons.forEach(function (b) { b.addEventListener('click', function () { setFlow(b.getAttribute('data-flow')); }); });
+setFlow('all');
+</script>

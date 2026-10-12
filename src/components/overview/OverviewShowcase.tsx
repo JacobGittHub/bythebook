@@ -117,10 +117,21 @@ export function OverviewShowcase({ items }: { items: NavItem[] }) {
 
       {/* Demo window */}
       <div className="flex min-w-0 flex-col">
-        <div className="flex aspect-video flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border-card)] bg-[var(--bg-card)] text-center">
-          <p className="text-lg font-semibold text-[var(--text-primary)]">{active.label}</p>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">Demo animation coming soon</p>
-        </div>
+        {active.demo ? (
+          // A looping GIF, which next/image would only pass through unoptimized.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={active.demo}
+            src={active.demo}
+            alt={`${active.label} in use`}
+            className="aspect-video w-full rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] object-cover"
+          />
+        ) : (
+          <div className="flex aspect-video flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border-card)] bg-[var(--bg-card)] text-center">
+            <p className="text-lg font-semibold text-[var(--text-primary)]">{active.label}</p>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">Demo animation coming soon</p>
+          </div>
+        )}
         <div className="mt-3 min-h-[12.5rem] sm:min-h-[8rem]">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-[var(--text-primary)]">{active.label}</h3>

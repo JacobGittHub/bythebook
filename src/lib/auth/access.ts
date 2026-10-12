@@ -23,8 +23,11 @@ export type PageLink = {
   small?: boolean;
 };
 
-/** A sidebar page. `details` is the longer text beside its demo on the Overview page. */
-export type NavItem = PageLink & { details?: string };
+/**
+ * A sidebar page. `details` is the longer text beside its demo on the Overview page, and
+ * `demo` is that demo, a looping GIF recorded by `npm run demos:record` into `public/demos/`.
+ */
+export type NavItem = PageLink & { details?: string; demo?: string };
 
 export const NAV_ITEMS: NavItem[] = [
   {
@@ -36,6 +39,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/explorer",
+    demo: "/demos/explorer.gif",
     label: "Explorer",
     access: "everyone",
     status: "live",
@@ -45,6 +49,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/visualizations",
+    demo: "/demos/visualizations.gif",
     label: "Visualizations",
     access: "everyone",
     status: "live",
@@ -54,6 +59,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/library",
+    demo: "/demos/library.gif",
     label: "Library",
     access: "everyone",
     status: "live",
@@ -63,6 +69,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/bookstore",
+    demo: "/demos/bookstore.gif",
     label: "Bookstore",
     access: "everyone",
     status: "live",
@@ -90,6 +97,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/settings",
+    demo: "/demos/settings.gif",
     label: "Settings",
     access: "everyone",
     status: "live",

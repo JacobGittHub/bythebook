@@ -357,6 +357,10 @@ sizes, and the screenshot specs in `e2e/screens/` in Chromium only. The rest of 
   `e2e/screens/bugs/`.
 - **Run output** goes to `test-results/` and `playwright-report/`, which are gitignored and
   deleted by `npm run test:e2e:clean`. Traces and videos are kept only for failing tests.
+- **The server.** Locally the tests reuse a dev server already running on their port, or start
+  one. The port is the default in `playwright.config.ts` unless `E2E_PORT` sets another; a
+  review worktree sets it (`scripts/prepareReview.mjs`, AGENTS.md § "Reviews"), so its tests
+  start their own server rather than test the main folder's.
 
 **CI.** `.github/workflows/ci.yml` runs on every push and pull request: the typecheck, lint
 with no warnings allowed, and Vitest in one job, and in the other the production build and

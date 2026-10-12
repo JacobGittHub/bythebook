@@ -12,12 +12,20 @@
 .PARAMETER List
   Shows what would be stopped, and stops nothing.
 
+.PARAMETER Here
+  Stops only the processes whose command line names this project's folder, so a review
+  worktree's tests (another folder) keep running.
+
 .EXAMPLE
   npm run dev:stop
   npm run dev:stop -- -List
+  npm run dev:stop -- -Here
   powershell -ExecutionPolicy Bypass -File C:\path\to\stopServers.ps1
 #>
-param([switch]$List)
+param([switch]$List, [switch]$Here)
+
+# The folder above scripts/, with a trailing \ so "bythebook\" doesn't match "bythebook-review\".
+$root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path.TrimEnd('\') + '\'
 
 # The processes that started this script (npm, its shell): stopping them would stop it too.
 $ancestors = @()
@@ -36,7 +44,8 @@ $targets = @(Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" | Where-O
   $commandLine = "$($_.CommandLine)"
   ($ports.ContainsKey([int]$_.ProcessId) -or $commandLine -match 'node_modules') -and
     $commandLine -notmatch 'claude' -and
-    $ancestors -notcontains $_.ProcessId
+    $ancestors -notcontains $_.ProcessId -and
+    (-not $Here -or $commandLine.Replace('/', '\').IndexOf($root, [StringComparison]::OrdinalIgnoreCase) -ge 0)
 })
 
 if ($targets.Count -eq 0) {

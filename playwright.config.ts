@@ -12,7 +12,9 @@ try {
 }
 
 const CI = Boolean(process.env.CI);
-const PORT = 3000;
+// A review worktree sets E2E_PORT (`npm run review:prepare`), so its tests start their own
+// server instead of reusing the main folder's on 3000.
+const PORT = Number(process.env.E2E_PORT ?? 3000);
 
 /** Signs the test account in once, for the specs that need an account (e2e/fixtures/account.ts). */
 const setup = { name: "setup", testMatch: /auth\.setup\.ts/ };
@@ -63,7 +65,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: CI ? "npm run start" : "npm run dev",
+    command: `${CI ? "npm run start" : "npm run dev"} -- --port ${PORT}`,
     url: `http://localhost:${PORT}/dashboard`,
     // Locally, a dev server that is already running is used as it is.
     reuseExistingServer: !CI,
