@@ -15,7 +15,7 @@ import { getViewer } from "@/lib/auth/viewer";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
 const linkClass =
-  "rounded-2xl px-3 py-2.5 text-left text-sm text-[var(--bg-sidebar-text)] transition-colors hover:bg-white/10";
+  "rounded-md px-2 py-1.5 text-left text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent";
 
 async function signOutAction() {
   "use server";
@@ -35,7 +35,7 @@ export default async function DashboardLayout({
 
   const sidebar = (
     <>
-      <nav className="mt-6 grid gap-1">
+      <nav className="mt-4 grid gap-0.5">
         {visibleNavItems(viewer.signedIn).map((item) => (
           <Link key={item.href} href={item.href} className={linkClass}>
             {item.label}
@@ -44,14 +44,14 @@ export default async function DashboardLayout({
       </nav>
 
       {/* Account block */}
-      <div className="mt-auto grid gap-1 pt-6">
+      <div className="mt-auto grid gap-0.5 pt-4">
         {debug && <BugReportButton signedIn={viewer.signedIn} className={linkClass} />}
-        <div className="grid gap-1 border-t border-white/10 pt-4">
+        <div className="grid gap-0.5 border-t border-sidebar-border pt-3">
           {viewer.signedIn ? (
             <>
-              <p className="truncate px-3 text-xs text-[var(--bg-sidebar-muted)]">
+              <p className="truncate px-2 text-xs text-sidebar-muted-foreground">
                 Signed in as{" "}
-                <span className="text-[var(--bg-sidebar-text)]">{viewer.displayName}</span>
+                <span className="text-sidebar-foreground">{viewer.displayName}</span>
               </p>
               <form action={signOutAction} className="grid">
                 <button className={linkClass} type="submit">
@@ -61,7 +61,7 @@ export default async function DashboardLayout({
             </>
           ) : (
             <>
-              <p className="px-3 text-xs text-[var(--bg-sidebar-muted)]">Browsing as a guest</p>
+              <p className="px-2 text-xs text-sidebar-muted-foreground">Browsing as a guest</p>
               <Link className={linkClass} href="/auth/login">
                 Sign in
               </Link>
@@ -71,11 +71,11 @@ export default async function DashboardLayout({
               {betaKeyMailto ? (
                 // The address is the link's own text, so a visitor whose mailto link does
                 // nothing can still read and copy it.
-                <div className="mt-2 rounded-2xl border border-white/15 px-3 py-2.5 text-xs text-[var(--bg-sidebar-muted)]">
-                  <p className="font-medium text-[var(--bg-sidebar-text)]">Need a beta key?</p>
+                <div className="mt-2 rounded-md border border-sidebar-border px-2 py-2 text-xs text-sidebar-muted-foreground">
+                  <p className="font-medium text-sidebar-foreground">Need a beta key?</p>
                   <p className="mt-1">Send an email asking for one to:</p>
                   <a
-                    className="mt-1 block break-all text-[var(--bg-sidebar-text)] underline"
+                    className="mt-1 block break-all text-sidebar-foreground underline"
                     href={betaKeyMailto}
                   >
                     {betaContactEmail}

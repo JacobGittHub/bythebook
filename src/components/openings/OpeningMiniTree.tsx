@@ -211,7 +211,7 @@ export function OpeningMiniTree({
         >
           {/* Cap indicator */}
           {hasMoreHistory && (
-            <text x={startX - 14} y={CY + 4} fontSize={11} fill="var(--text-muted)" opacity={0.35} textAnchor="middle">···</text>
+            <text x={startX - 14} y={CY + 4} fontSize={11} fill="var(--muted-foreground)" opacity={0.35} textAnchor="middle">···</text>
           )}
 
           {/* ── Edges ─────────────────────────────────────────────────── */}
@@ -225,7 +225,7 @@ export function OpeningMiniTree({
               <line
                 key={`he-${i}`}
                 x1={x1} y1={CY} x2={x2} y2={CY}
-                stroke="var(--border-card)"
+                stroke="var(--border)"
                 strokeWidth={calcEdgeWidth(historyPlayedGames?.[fIdx] ?? null)}
               />
             );
@@ -244,7 +244,7 @@ export function OpeningMiniTree({
                 key={`ae-${fIdx}-${alt.uci}`}
                 x1={bx} y1={CY}
                 x2={positions[j].x} y2={positions[j].y}
-                stroke="var(--text-muted)"
+                stroke="var(--muted-foreground)"
                 strokeWidth={calcEdgeWidth(alt.white + alt.draws + alt.black)}
                 strokeOpacity={0.4}
                 strokeLinecap="round"
@@ -258,7 +258,7 @@ export function OpeningMiniTree({
               key={`ce-${m.uci}`}
               x1={curX} y1={CY}
               x2={contX} y2={contYs[i]}
-              stroke="var(--text-muted)"
+              stroke="var(--muted-foreground)"
               strokeWidth={contEdgeWidth(m)}
               strokeOpacity={0.5}
             />
@@ -291,8 +291,8 @@ export function OpeningMiniTree({
                   onClick={() => onHistoryAlternateClick?.(fIdx, alt)}
                 >
                   <circle cx={pos.x} cy={pos.y} r={ALT_R} fill={altFill} stroke={altStroke} strokeWidth={1.2} strokeDasharray="2 2" />
-                  <text x={pos.x} y={altSanLabelY(pos.y)} textAnchor="middle" fontSize={7.5} fill="var(--text-muted)" opacity={0.8}>{alt.san}</text>
-                  <text x={pos.x} y={altPctLabelY(pos.y)} textAnchor="middle" fontSize={7} fill="var(--text-muted)" opacity={0.6}>{pct}%</text>
+                  <text x={pos.x} y={altSanLabelY(pos.y)} textAnchor="middle" fontSize={7.5} fill="var(--muted-foreground)" opacity={0.8}>{alt.san}</text>
+                  <text x={pos.x} y={altPctLabelY(pos.y)} textAnchor="middle" fontSize={7} fill="var(--muted-foreground)" opacity={0.6}>{pct}%</text>
                 </g>
               );
             });
@@ -307,10 +307,10 @@ export function OpeningMiniTree({
             const isWhite = h.color === "w";
             const r = isCurrentNode ? CURR_R : HIST_R;
             const fill = isCurrentNode
-              ? "var(--bg-sidebar)"
+              ? "var(--sidebar)"
               : isWhite ? WHITE_MOVE_FILL : BLACK_MOVE_FILL;
             const stroke = isCurrentNode
-              ? "var(--border-card)"
+              ? "var(--border)"
               : isWhite ? WHITE_MOVE_STROKE : BLACK_MOVE_STROKE;
 
             return (
@@ -323,16 +323,16 @@ export function OpeningMiniTree({
               >
                 {/* Ring on current node */}
                 {isCurrentNode && (
-                  <circle cx={histXs[i]} cy={CY} r={r + 3} fill="none" stroke="var(--border-card)" strokeWidth={1} opacity={0.4} />
+                  <circle cx={histXs[i]} cy={CY} r={r + 3} fill="none" stroke="var(--border)" strokeWidth={1} opacity={0.4} />
                 )}
                 <circle cx={histXs[i]} cy={CY} r={r} fill={fill} stroke={stroke} strokeWidth={1.5} />
                 {/* SAN label above */}
-                <text x={histXs[i]} y={CY - r - 5} textAnchor="middle" fontSize={7.5} fill="var(--text-muted)">
+                <text x={histXs[i]} y={CY - r - 5} textAnchor="middle" fontSize={7.5} fill="var(--muted-foreground)">
                   {h.san}
                 </text>
                 {/* % of players who took this path — below node */}
                 {fraction !== null && (
-                  <text x={histXs[i]} y={CY + r + 10} textAnchor="middle" fontSize={6.5} fill="var(--text-muted)" opacity={0.55}>
+                  <text x={histXs[i]} y={CY + r + 10} textAnchor="middle" fontSize={6.5} fill="var(--muted-foreground)" opacity={0.55}>
                     {Math.round(fraction * 100)}%
                   </text>
                 )}
@@ -345,12 +345,12 @@ export function OpeningMiniTree({
             onMouseEnter={(e) => show(startFen, null, null, null, e)}
             onMouseLeave={hide}
           >
-            <circle cx={startX} cy={CY} r={START_R} fill="var(--bg-muted)" stroke="var(--border-card)" strokeWidth={1.5} />
+            <circle cx={startX} cy={CY} r={START_R} fill="var(--muted)" stroke="var(--border)" strokeWidth={1.5} />
           </g>
 
           {/* No-data indicator */}
           {!hasCont && (
-            <text x={curX + 20} y={CY + 4} fontSize={11} fill="var(--text-muted)" opacity={0.35}>···</text>
+            <text x={curX + 20} y={CY + 4} fontSize={11} fill="var(--muted-foreground)" opacity={0.35}>···</text>
           )}
 
           {/* Continuation nodes */}
@@ -366,12 +366,12 @@ export function OpeningMiniTree({
               >
                 <circle
                   cx={contX} cy={contYs[i]} r={CONT_R}
-                  fill={isHov ? "var(--bg-muted)" : "var(--bg-card)"}
-                  stroke={isHov ? "var(--text-primary)" : "var(--border-card)"}
+                  fill={isHov ? "var(--muted)" : "var(--card)"}
+                  stroke={isHov ? "var(--foreground)" : "var(--border)"}
                   strokeWidth={1.5}
                 />
                 <text x={contX} y={contYs[i] - 9} textAnchor="middle" fontSize={7.5}
-                  fill={isHov ? "var(--text-primary)" : "var(--text-muted)"}
+                  fill={isHov ? "var(--foreground)" : "var(--muted-foreground)"}
                   fontWeight={isHov ? "600" : "400"}
                 >
                   {m.san}

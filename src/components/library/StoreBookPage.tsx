@@ -115,7 +115,7 @@ export function StoreBookPage({ storeId }: { storeId: string }) {
 
       <BookMeasures summary={book.summary} className="rounded-md border bg-card px-3 py-2" />
 
-      <div className="rounded-md border bg-card p-3">
+      <div data-slot="panel" className="relative rounded-md border bg-card p-3">
         <BookReader
           book={book}
           size="large"
@@ -127,7 +127,7 @@ export function StoreBookPage({ storeId }: { storeId: string }) {
         />
       </div>
 
-      <section aria-label="Where this book came from" className="flex flex-col gap-1.5 rounded-md border bg-card p-3 text-xs text-muted-foreground sm:max-w-xl">
+      <section aria-label="Where this book came from" data-slot="panel" className="relative flex flex-col gap-1.5 rounded-md border bg-card p-3 text-xs text-muted-foreground sm:max-w-xl">
         <h2 className="text-[11px] font-medium uppercase tracking-wide">How it was made</h2>
         <p>{EXAMPLE_METHOD_NOTES[book.method]}</p>
         {book.attribution ? (

@@ -1,7 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { X } from "lucide-react";
 import { BoardDisplay } from "@/components/board/BoardDisplay";
+import { Button } from "@/components/shadcn/button";
+import { Panel, PanelLabel } from "@/components/ui/Panel";
 import type { MasterSummary } from "@/lib/chess/explorerData";
 import type { LibraryEntry } from "@/lib/library/types";
 
@@ -26,9 +29,9 @@ type Props = {
   book: LibraryEntry | null;
   masterGames: PanelMasterGames;
   onClose?: () => void;
-  /** The buttons in the actions card. */
+  /** The buttons in the actions panel. */
   actions: ReactNode;
-  /** Cards under the actions card. */
+  /** Panels under the actions panel. */
   children?: ReactNode;
 };
 
@@ -57,67 +60,57 @@ export function PositionPanel({
 
   return (
     // Narrow: a strip under the view that grows to at most half the page once it has a position.
-    <aside className="flex max-h-[50%] w-full shrink-0 flex-col gap-2 overflow-y-auto lg:h-full lg:max-h-none lg:w-72 lg:gap-3">
+    <aside className="flex max-h-[50%] w-full shrink-0 flex-col gap-2 overflow-y-auto lg:h-full lg:max-h-none lg:w-72">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-3">
+      <Panel className="flex shrink-0 items-center justify-between px-2.5 py-2">
         <div className="min-w-0">
-          {book && (
-            <p className="truncate text-xs font-medium uppercase tracking-widest text-[var(--text-muted)]">
-              {book.name}
-            </p>
-          )}
-          <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">
+          {book && <PanelLabel className="truncate">{book.name}</PanelLabel>}
+          <p className="truncate font-heading text-sm font-semibold">
             {position ? position.title : emptyTitle}
           </p>
         </div>
         {position && onClose && (
-          <button
-            onClick={onClose}
-            className="ml-2 shrink-0 rounded-full p-1 text-[var(--text-muted)] hover:bg-[var(--bg-muted)]"
-            aria-label="Close"
-          >
-            ✕
-          </button>
+          <Button variant="ghost" size="icon-xs" className="ml-2" onClick={onClose} aria-label="Close">
+            <X aria-hidden="true" />
+          </Button>
         )}
-      </div>
+      </Panel>
 
       {/* Empty state */}
       {!position && (
-        <div className="hidden flex-1 items-center justify-center rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] p-6 text-center lg:flex">
-          <p className="text-sm text-[var(--text-muted)] opacity-60">{emptyHint}</p>
-        </div>
+        <Panel className="hidden flex-1 items-center justify-center p-4 text-center lg:flex">
+          <p className="text-sm text-muted-foreground">{emptyHint}</p>
+        </Panel>
       )}
 
       {position && (
         <>
           {/* Board */}
-          <div className="shrink-0 overflow-hidden rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] p-3">
+          <Panel className="shrink-0 overflow-hidden p-1.5">
             <BoardDisplay fen={position.fen} size="md" orientation={book?.color ?? "white"} animate />
-          </div>
+          </Panel>
 
           {/* Master game stats */}
-          <div className="shrink-0 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-3">
-            <p className="text-xs font-medium uppercase tracking-widest text-[var(--text-muted)]">
-              Master games
-            </p>
-            {loading && <p className="mt-2 text-xs text-[var(--text-muted)] opacity-50">Loading…</p>}
+          <Panel className="shrink-0 px-2.5 py-2">
+            <PanelLabel>Master games</PanelLabel>
+            {loading && <p className="mt-1 text-xs text-muted-foreground">Loading…</p>}
             {hasGames && (
               <>
-                <p className="mt-1 text-sm font-semibold text-slate-900">{fmtGames(summary.games)} games</p>
-                <div className="mt-1.5 flex h-1.5 overflow-hidden rounded-full">
-                  <div style={{ width: `${summary.whitePct}%`, backgroundColor: "var(--bar-white)" }} />
-                  <div style={{ width: `${summary.drawPct}%`, backgroundColor: "var(--bar-draw)" }} />
-                  <div style={{ width: `${summary.blackPct}%`, backgroundColor: "var(--bar-black)" }} />
+                <p className="mt-0.5 text-sm font-semibold">{fmtGames(summary.games)} games</p>
+                <div data-slot="move-bar" className="mt-1 flex h-1.5 overflow-hidden rounded-xs">
+                  <div className="bg-bar-white" style={{ width: `${summary.whitePct}%` }} />
+                  <div className="bg-bar-draw" style={{ width: `${summary.drawPct}%` }} />
+                  <div className="bg-bar-black" style={{ width: `${summary.blackPct}%` }} />
                 </div>
-                <p className="mt-1 text-xs text-[var(--text-muted)]">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {summary.whitePct}% W · {summary.drawPct}% D · {summary.blackPct}% B
                 </p>
                 {summary.moves.length > 0 && (
-                  <div className="mt-2 space-y-1 border-t border-[var(--border-card)] pt-2">
+                  <div className="mt-1.5 space-y-0.5 border-t pt-1.5">
                     {summary.moves.slice(0, LISTED_MOVES).map((m) => (
                       <div key={m.uci} className="flex items-center justify-between text-xs">
-                        <span className="font-mono text-slate-800">{m.san}</span>
-                        <span className="text-[var(--text-muted)]">
+                        <span className="font-mono">{m.san}</span>
+                        <span className="tabular-nums text-muted-foreground">
                           {m.pct}% · {fmtGames(m.games)}
                         </span>
                       </div>
@@ -127,20 +120,18 @@ export function PositionPanel({
               </>
             )}
             {!loading && !hasGames && (
-              <p className="mt-2 text-xs text-[var(--text-muted)] opacity-50">{masterGames.emptyText}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{masterGames.emptyText}</p>
             )}
-          </div>
+          </Panel>
 
           {/* Training stats placeholder */}
-          <div className="shrink-0 rounded-3xl border border-dashed border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-3">
-            <p className="text-xs font-medium uppercase tracking-widest text-[var(--text-muted)]">Your stats</p>
-            <p className="mt-1 text-xs text-[var(--text-muted)] opacity-50">Coming soon</p>
-          </div>
+          <Panel className="shrink-0 border-dashed px-2.5 py-2">
+            <PanelLabel>Your stats</PanelLabel>
+            <p className="mt-0.5 text-xs text-muted-foreground">Coming soon</p>
+          </Panel>
 
           {/* Actions */}
-          <div className="shrink-0 space-y-2 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-3">
-            {actions}
-          </div>
+          <Panel className="grid shrink-0 gap-1.5 p-2">{actions}</Panel>
         </>
       )}
 

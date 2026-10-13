@@ -15,7 +15,7 @@ export type BugReportInput = {
   url: string;
   time: Date;
   window: { width: number; height: number; pixelRatio: number };
-  background: string;
+  appearance: { theme: string; themeChoice: string; vibes: boolean };
   signedIn: boolean;
   browser: string;
   sections: BugReportSection[];
@@ -30,7 +30,9 @@ export function formatBugReport(input: BugReportInput): string {
     ...(reproduce ? [`Reproduce: ${new URL(reproduce, input.url).href}`] : []),
     `Time: ${input.time.toISOString()}`,
     `Window: ${input.window.width}×${input.window.height}, pixel ratio ${input.window.pixelRatio}`,
-    `Background: ${input.background}`,
+    `Theme: ${input.appearance.theme}${
+      input.appearance.themeChoice === input.appearance.theme ? "" : ` (${input.appearance.themeChoice})`
+    }, vibes ${input.appearance.vibes ? "on" : "off"}`,
     `Viewer: ${input.signedIn ? "signed in" : "guest"}`,
     `Browser: ${input.browser}`,
   ];

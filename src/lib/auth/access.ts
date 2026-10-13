@@ -101,9 +101,9 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Settings",
     access: "everyone",
     status: "live",
-    summary: "The background style used across the app.",
+    summary: "Light or dark, and whether vibes are on.",
     details:
-      "Choose the background style used across the app. The choice is saved in this browser, so it works the same for guests and accounts.",
+      "Choose a light or dark theme, or follow your device, and turn vibes on or off. The choices are saved in this browser, so they work the same for guests and accounts.",
   },
 ];
 

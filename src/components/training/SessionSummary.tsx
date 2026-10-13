@@ -1,12 +1,13 @@
+import { Panel } from "@/components/ui/Panel";
 import type { SessionResult } from "@/types/training";
 
 export function SessionSummary({ result }: { result: SessionResult }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5">
-      <h3 className="text-lg font-semibold text-slate-900">Latest summary</h3>
-      <p className="mt-2 text-sm text-slate-600">
+    <Panel className="px-3 py-2">
+      <h3 className="font-heading font-semibold">Latest summary</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
         Accuracy {result.accuracy}% across {result.completedLines} completed lines.
       </p>
-    </div>
+    </Panel>
   );
 }

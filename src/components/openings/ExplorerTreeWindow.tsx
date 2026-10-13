@@ -77,7 +77,7 @@ export function ExplorerTreeWindow({ history, before, next, orientation, onGoToL
           label={`${label} of the explored line`}
           zoom={zoom}
           onZoomChange={setZoom}
-          className="flex-1 rounded-lg bg-[var(--bg-muted)] [--bv-label-halo:var(--bg-muted)]"
+          className="flex-1 rounded-sm bg-muted [--bv-label-halo:var(--muted)]"
         />
         <ZoomControls
           zoom={zoom}

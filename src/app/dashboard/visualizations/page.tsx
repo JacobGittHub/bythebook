@@ -1,12 +1,11 @@
 import { BookViewIcon } from "@/components/books/BookViewRail";
+import { Badge } from "@/components/shadcn/badge";
+import { PanelLabel } from "@/components/ui/Panel";
 import { RouteCard } from "@/components/ui/RouteCard";
 import { SignInPrompt } from "@/components/ui/SignInPrompt";
 import { VISUALIZATIONS, type PageLink } from "@/lib/auth/access";
 import { getViewer } from "@/lib/auth/viewer";
 import { isBookViewId } from "@/lib/books/views";
-
-const sectionHeadingClass =
-  "mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]";
 
 /** A small visualization's card shows a drawing of its view; its address ends with the view. */
 function iconFor(page: PageLink) {
@@ -48,39 +47,39 @@ export default async function VisualizationsPage() {
   };
 
   return (
-    <main className="space-y-8">
+    <main className="space-y-6">
       <div>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-semibold text-[var(--text-primary)]">Visualizations</h1>
-          <span className="rounded-full border border-[var(--border-card)] px-2 py-0.5 text-xs text-[var(--text-muted)]">
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="font-heading text-2xl font-semibold">Visualizations</h1>
+          <Badge variant="outline" className="font-normal text-muted-foreground">
             Experimental
-          </span>
+          </Badge>
         </div>
-        <p className="mt-2 max-w-3xl text-[var(--text-muted)]">
+        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           Different ways to see opening theory as a place you can move around in. These are
           experiments: they change often, and some may be replaced.
         </p>
       </div>
 
       <section>
-        <h2 className={sectionHeadingClass}>Featured, in active development</h2>
-        <div className="grid gap-4">{featured.map(card)}</div>
+        <PanelLabel as="h2" className="mb-1.5">Featured, in active development</PanelLabel>
+        <div className="grid gap-2">{featured.map(card)}</div>
       </section>
 
       <section>
-        <h2 className={sectionHeadingClass}>Available now</h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{live.map(card)}</div>
-        <h3 className="mb-1 mt-6 text-sm font-semibold text-[var(--text-primary)]">Small visualizations</h3>
-        <p className="mb-3 max-w-3xl text-sm text-[var(--text-muted)]">
+        <PanelLabel as="h2" className="mb-1.5">Available now</PanelLabel>
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">{live.map(card)}</div>
+        <h3 className="mt-4 font-heading text-sm font-semibold">Small visualizations</h3>
+        <p className="mb-2 max-w-3xl text-sm text-muted-foreground">
           Five ways to draw one book at a time beside a board: an example book, or one of your
           own once you have an account. The Explorer&apos;s side window can show any of them.
         </p>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{small.map(card)}</div>
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">{small.map(card)}</div>
       </section>
 
       <section>
-        <h2 className={sectionHeadingClass}>Possible future visualizations</h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{prototypes.map(card)}</div>
+        <PanelLabel as="h2" className="mb-1.5">Possible future visualizations</PanelLabel>
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">{prototypes.map(card)}</div>
       </section>
     </main>
   );

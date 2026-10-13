@@ -78,8 +78,10 @@ export function BookViewRail({
             aria-label={option.label}
             title={option.label}
             onClick={() => onChange(option.id)}
-            className={`flex h-7 w-7 items-center justify-center rounded-md transition-colors ${
-              active ? "btn-primary" : "btn-ghost"
+            className={`flex size-7 items-center justify-center rounded-md transition-colors ${
+              active
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             }`}
           >
             <BookViewIcon view={option.id} />

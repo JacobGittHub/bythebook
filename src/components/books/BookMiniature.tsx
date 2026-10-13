@@ -39,7 +39,7 @@ export function BookMiniature({ miniature, width, height, className }: Props) {
           width={1}
           height={span}
           fill={familyColor(family)}
-          stroke={outlineColumns && (span / units) * height >= MIN_OUTLINED.height ? "var(--bg-card)" : "none"}
+          stroke={outlineColumns && (span / units) * height >= MIN_OUTLINED.height ? "var(--card)" : "none"}
           strokeWidth={1}
           vectorEffect="non-scaling-stroke"
         />
@@ -51,7 +51,7 @@ export function BookMiniature({ miniature, width, height, className }: Props) {
           x2={columns}
           y1={start}
           y2={start}
-          stroke="var(--text-primary)"
+          stroke="var(--foreground)"
           strokeWidth={1.5}
           vectorEffect="non-scaling-stroke"
         />

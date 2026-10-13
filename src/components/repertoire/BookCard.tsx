@@ -6,8 +6,9 @@ import type { LibraryEntry } from "@/lib/library/types";
 export function BookCard({ book }: { book: LibraryEntry }) {
   return (
     <Link
+      data-slot="panel"
       href={`/dashboard/train/${book.id}`}
-      className="flex items-center gap-4 rounded-3xl border border-slate-200 bg-white p-5 transition-transform hover:-translate-y-0.5"
+      className="relative flex items-center gap-3 rounded-md border bg-card p-3 transition-colors hover:border-foreground"
     >
       <BoardDisplay
         fen={START_FEN}
@@ -15,8 +16,8 @@ export function BookCard({ book }: { book: LibraryEntry }) {
         orientation={book.color === "black" ? "black" : "white"}
       />
       <div>
-        <h3 className="text-lg font-semibold text-slate-900">{book.name}</h3>
-        <p className="mt-2 text-sm text-slate-600">
+        <h3 className="font-heading font-semibold">{book.name}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
           {book.summary.lines} line{book.summary.lines === 1 ? "" : "s"}, {book.summary.positions} position
           {book.summary.positions === 1 ? "" : "s"}
         </p>

@@ -44,7 +44,7 @@ export function LibraryEmpty({ onNewBook, onRestore, restoreBusy }: Props) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <section className="flex flex-col gap-3 rounded-md border bg-card p-4">
+      <section data-slot="panel" className="relative flex flex-col gap-3 rounded-md border bg-card p-4">
         <div>
           <h2 className="text-base font-semibold text-foreground">Your library is empty</h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -73,7 +73,7 @@ export function LibraryEmpty({ onNewBook, onRestore, restoreBusy }: Props) {
         </div>
       </section>
 
-      <section className="flex flex-col gap-2 rounded-md border bg-card p-4">
+      <section data-slot="panel" className="relative flex flex-col gap-2 rounded-md border bg-card p-4">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="flex-1 text-base font-semibold text-foreground">From the Bookstore</h2>
           <Button asChild size="sm" variant="outline">

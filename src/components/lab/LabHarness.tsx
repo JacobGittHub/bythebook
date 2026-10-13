@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { GlobeConfig, RendererStats } from "@/components/lab/GlobeTest";
 import type { ChessMapConfig } from "@/components/lab/ChessMap";
 import { CanvasErrorBoundary } from "@/components/lab/CanvasErrorBoundary";
@@ -71,15 +72,15 @@ const DEFAULT_CONFIG: GlobeConfig = {
 // ── Sidebar primitives ────────────────────────────────────────────────────────
 
 function Divider() {
-  return <div className="border-t border-white/10" />;
+  return <div className="border-t border-sidebar-border" />;
 }
 
 function SideLabel({ children }: { children: ReactNode }) {
-  return <span className="text-[var(--bg-sidebar-muted)] text-xs">{children}</span>;
+  return <span className="text-sidebar-muted-foreground text-xs">{children}</span>;
 }
 
 function SideValue({ children }: { children: ReactNode }) {
-  return <span className="font-mono tabular-nums text-[var(--bg-sidebar-text)] text-xs">{children}</span>;
+  return <span className="font-mono tabular-nums text-sidebar-foreground text-xs">{children}</span>;
 }
 
 function Slider({
@@ -96,8 +97,8 @@ function Slider({
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full accent-emerald-500" />
-      {note && <p className="text-[10px] text-[var(--bg-sidebar-muted)] opacity-60">{note}</p>}
+        className="w-full accent-sidebar-foreground" />
+      {note && <p className="text-[10px] text-sidebar-muted-foreground opacity-60">{note}</p>}
     </div>
   );
 }
@@ -107,7 +108,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
     <label className="flex cursor-pointer items-center justify-between">
       <SideLabel>{label}</SideLabel>
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 accent-emerald-500" />
+        className="h-4 w-4 accent-sidebar-foreground" />
     </label>
   );
 }
@@ -120,13 +121,13 @@ function Segments<T extends string>({
   return (
     <div className="flex flex-col gap-0.5">
       {label && <SideLabel>{label}</SideLabel>}
-      <div className="flex overflow-hidden rounded-lg border border-white/10 text-[11px]">
+      <div className="flex overflow-hidden rounded-sm border border-sidebar-border text-[11px]">
         {options.map((o) => (
           <button key={o.value} onClick={() => onChange(o.value)}
             className={`flex-1 py-1.5 transition-colors ${
               value === o.value
-                ? "bg-emerald-600 text-white"
-                : "text-[var(--bg-sidebar-muted)] hover:text-[var(--bg-sidebar-text)]"
+                ? "bg-sidebar-foreground text-sidebar"
+                : "text-sidebar-muted-foreground hover:text-sidebar-foreground"
             }`}
           >{o.label}</button>
         ))}
@@ -142,10 +143,10 @@ function Section({ title, defaultOpen = false, children }: { title: string; defa
     <div className="flex flex-col gap-0">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center justify-between py-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--bg-sidebar-muted)] hover:text-[var(--bg-sidebar-text)]"
+        className="flex items-center justify-between py-1 text-[10px] font-semibold uppercase tracking-widest text-sidebar-muted-foreground hover:text-sidebar-foreground"
       >
         {title}
-        <span className="text-[9px]">{open ? "▲" : "▼"}</span>
+        {open ? <ChevronUp aria-hidden="true" className="size-3" /> : <ChevronDown aria-hidden="true" className="size-3" />}
       </button>
       {open && <div className="flex flex-col gap-2 pb-1">{children}</div>}
     </div>
@@ -200,21 +201,21 @@ export function LabHarness({ view }: { view: LabView }) {
       {/* Header */}
       <div className="flex items-center gap-4 pb-3">
         <div>
-          <h1 className="text-lg font-semibold">{VIEW_TITLES[view]} · prototype</h1>
-          <p className="text-xs text-[var(--text-muted)]">{VIEW_NOTES[view]}</p>
+          <h1 className="font-heading text-base font-semibold">{VIEW_TITLES[view]} · prototype</h1>
+          <p className="text-xs text-muted-foreground">{VIEW_NOTES[view]}</p>
         </div>
         <Link
           href="/dashboard/visualizations"
-          className="ml-auto rounded-lg px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-muted)] hover:text-[var(--text-primary)]"
+          className="ml-auto rounded-md px-2.5 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           ← All visualizations
         </Link>
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 gap-3 overflow-hidden">
+      <div className="flex flex-1 gap-2 overflow-hidden">
         {/* Canvas */}
-        <div className="flex-1 overflow-hidden rounded-xl">
+        <div data-slot="panel" className="relative flex-1 overflow-hidden rounded-md border">
           {view === "globe" && (
             <CanvasErrorBoundary>
               <GlobeTest config={config} onStats={handleStats} animResetToken={animResetToken} onProgress={handleProgress} />
@@ -229,7 +230,7 @@ export function LabHarness({ view }: { view: LabView }) {
 
         {/* Sidebar — 2D Map view */}
         {view === "map" && (
-          <div className="flex w-52 flex-col gap-3 overflow-y-auto rounded-xl bg-[var(--bg-sidebar)] p-3 text-[var(--bg-sidebar-text)]">
+          <div className="flex w-52 flex-col gap-2.5 overflow-y-auto rounded-md bg-sidebar p-2.5 text-sidebar-foreground">
             <Section title="Layout" defaultOpen>
               <Slider label="Nodes at 1×" value={mapConfig.maxNodes} min={50} max={800} step={50}
                 onChange={(v) => setMapConfig((c) => ({ ...c, maxNodes: v }))}
@@ -259,7 +260,7 @@ export function LabHarness({ view }: { view: LabView }) {
             <Divider />
             <button
               onClick={() => setMapConfig(DEFAULT_MAP_CONFIG)}
-              className="rounded-lg bg-white/5 px-3 py-2 text-xs text-[var(--bg-sidebar-muted)] transition-colors hover:text-[var(--bg-sidebar-text)]"
+              className="rounded-md bg-sidebar-accent px-2.5 py-1.5 text-xs text-sidebar-muted-foreground transition-colors hover:text-sidebar-foreground"
             >
               Reset defaults
             </button>
@@ -268,7 +269,7 @@ export function LabHarness({ view }: { view: LabView }) {
 
         {/* Sidebar — Globe view only */}
         {view === "globe" && (
-          <div className="flex w-52 flex-col gap-3 overflow-y-auto rounded-xl bg-[var(--bg-sidebar)] p-3 text-[var(--bg-sidebar-text)]">
+          <div className="flex w-52 flex-col gap-2.5 overflow-y-auto rounded-md bg-sidebar p-2.5 text-sidebar-foreground">
 
             {/* ── Always-visible quick controls ─────────────────────────── */}
             <Segments
@@ -324,7 +325,7 @@ export function LabHarness({ view }: { view: LabView }) {
                 <SideLabel>Entry animation</SideLabel>
                 <select value={config.nodeEntryAnim}
                   onChange={(e) => setConfig((c) => ({ ...c, nodeEntryAnim: e.target.value as typeof config.nodeEntryAnim }))}
-                  className="rounded-lg bg-white/10 px-2 py-1.5 text-xs text-[var(--bg-sidebar-text)]"
+                  className="rounded-sm bg-sidebar-accent px-2 py-1 text-xs text-sidebar-foreground"
                 >
                   <option value="none">Off</option>
                   <option value="scale">Scale in</option>
@@ -355,7 +356,7 @@ export function LabHarness({ view }: { view: LabView }) {
                   <div className="flex items-center justify-between">
                     <SideValue>{animProgress.visible} / {animProgress.total}</SideValue>
                     <button onClick={() => setAnimResetToken((t) => t + 1)}
-                      className="rounded px-2 py-1 text-[10px] text-[var(--bg-sidebar-muted)] ring-1 ring-white/10 hover:text-[var(--bg-sidebar-text)]">
+                      className="rounded-sm border border-sidebar-border px-2 py-1 text-[10px] text-sidebar-muted-foreground hover:text-sidebar-foreground">
                       ↺ Restart
                     </button>
                   </div>
@@ -373,7 +374,7 @@ export function LabHarness({ view }: { view: LabView }) {
             <Divider />
 
             <button onClick={() => { setConfig(DEFAULT_CONFIG); setAnimResetToken(0); }}
-              className="rounded-lg bg-white/5 px-3 py-2 text-xs text-[var(--bg-sidebar-muted)] transition-colors hover:text-[var(--bg-sidebar-text)]">
+              className="rounded-md bg-sidebar-accent px-2.5 py-1.5 text-xs text-sidebar-muted-foreground transition-colors hover:text-sidebar-foreground">
               Reset defaults
             </button>
           </div>

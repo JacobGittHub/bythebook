@@ -76,7 +76,7 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
       )}
       {entry && <BookMeasures summary={entry.summary} className="rounded-md border bg-card px-3 py-2" />}
       {book ? (
-        <div className="rounded-md border bg-card p-3">
+        <div data-slot="panel" className="relative rounded-md border bg-card p-3">
           <BookReader
             book={book}
             size="large"

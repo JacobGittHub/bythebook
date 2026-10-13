@@ -101,7 +101,7 @@ export function CopyChecklist({ title, description, plan, existing, verb, save, 
   };
 
   return (
-    <section className="rounded-md border bg-card p-4" aria-label={title}>
+    <section data-slot="panel" className="relative rounded-md border bg-card p-4" aria-label={title}>
       <h2 className="text-sm font-semibold text-foreground">{title}</h2>
       {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
       <ul className="mt-2 divide-y">

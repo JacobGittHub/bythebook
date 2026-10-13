@@ -32,7 +32,7 @@ export function BookDetail({ entry, onBack, onDeleted, onDuplicated, className }
   const { book, status, save } = useLibraryBook(entry.id);
 
   return (
-    <section aria-label={entry.name} className={cn("flex min-w-0 flex-col gap-3 rounded-md border bg-card p-3", className)}>
+    <section aria-label={entry.name} data-slot="panel" className={cn("relative flex min-w-0 flex-col gap-3 rounded-md border bg-card p-3", className)}>
       <Button variant="ghost" size="sm" onClick={onBack} className="-ml-1 self-start md:hidden">
         <ChevronLeft /> Library
       </Button>

@@ -1,57 +1,38 @@
 import { AppearancePanel } from "@/components/settings/AppearancePanel";
+import { Panel, PanelLabel } from "@/components/ui/Panel";
 
 export default function SettingsPage() {
   return (
-    <main className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-semibold text-[var(--text-primary)]">
-          Settings
-        </h1>
-        <p className="mt-2 text-[var(--text-muted)]">
-          User profile, board preferences, engine defaults, and notification
-          options.
+    <main className="grid max-w-3xl gap-4">
+      <header>
+        <h1 className="font-heading text-2xl font-semibold">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          User profile, board preferences, engine defaults, and notification options.
         </p>
-      </div>
+      </header>
 
-      {/* Appearance */}
-      <section>
-        <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
-          Appearance
-        </h2>
-        <div className="rounded-3xl border border-[var(--border-card)] bg-[var(--bg-muted)] p-6">
-          <h3 className="font-semibold text-[var(--text-primary)]">
-            Background style
-          </h3>
-          <p className="mb-6 mt-1 text-sm text-[var(--text-muted)]">
-            Choose a background across all pages. Board colors are set
-            separately.
-          </p>
+      <section className="grid gap-1.5">
+        <PanelLabel as="h2">Appearance</PanelLabel>
+        <Panel className="p-3">
           <AppearancePanel />
-        </div>
+        </Panel>
       </section>
 
-      {/* Board & play */}
-      <section>
-        <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
-          Board &amp; play
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <article className="rounded-3xl border border-[var(--border-card)] bg-[var(--bg-muted)] p-5">
-            <h3 className="font-semibold text-[var(--text-primary)]">
-              Board preferences
-            </h3>
-            <p className="mt-2 text-sm text-[var(--text-muted)]">
+      <section className="grid gap-1.5">
+        <PanelLabel as="h2">Board &amp; play</PanelLabel>
+        <div className="grid gap-2 md:grid-cols-2">
+          <Panel as="article" className="p-3">
+            <h3 className="text-sm font-medium">Board preferences</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
               Coordinates, move highlights, and flip behavior.
             </p>
-          </article>
-          <article className="rounded-3xl border border-[var(--border-card)] bg-[var(--bg-muted)] p-5">
-            <h3 className="font-semibold text-[var(--text-primary)]">
-              Account
-            </h3>
-            <p className="mt-2 text-sm text-[var(--text-muted)]">
+          </Panel>
+          <Panel as="article" className="p-3">
+            <h3 className="text-sm font-medium">Account</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
               Profile details, export settings, and linked auth providers.
             </p>
-          </article>
+          </Panel>
         </div>
       </section>
     </main>

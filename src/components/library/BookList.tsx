@@ -27,7 +27,7 @@ export function BookList({ books, selectedId, onSelect, className }: Props) {
   const shown = filterBooks(books, query, side);
 
   return (
-    <div className={cn("flex min-w-0 flex-col rounded-md border bg-card", className)}>
+    <div data-slot="panel" className={cn("relative flex min-w-0 flex-col rounded-md border bg-card", className)}>
       <div className="flex items-center gap-2 border-b p-2">
         <div className="relative min-w-0 flex-1">
           <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -70,7 +70,7 @@ export function BookList({ books, selectedId, onSelect, className }: Props) {
                 aria-current={selected ? "true" : undefined}
                 className={cn(
                   "flex w-full items-center gap-2.5 px-2.5 py-2 text-left transition-colors hover:bg-muted",
-                  selected && "bg-muted shadow-[inset_2px_0_0_var(--text-primary)]",
+                  selected && "bg-muted shadow-[inset_2px_0_0_var(--foreground)]",
                 )}
               >
                 <BookMiniature miniature={book.summary.miniature} width={52} height={34} />

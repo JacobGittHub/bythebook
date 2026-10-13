@@ -244,16 +244,18 @@ edit these files.
   scroll internally. Such a page is `h-[calc(100dvh-var(--dash-offset))]` tall; the offset
   is set by `DashboardShell` (`src/components/layout/`), so don't hardcode one, and don't
   use `100vh`.
-- Build new controls from shadcn/ui's components (`src/components/shadcn/`): Button, Dialog,
-  AlertDialog, DropdownMenu, Select, ToggleGroup and the rest. Their colors are the theme
-  tokens, so every background mode, and later every vibe (`plans/vibes.md`), restyles them.
-  Such a control asks with an AlertDialog before anything that can't be undone and reports
-  with a toast (`sonner`), not with `confirm()` or `alert()`. The other pages move over in
-  `plans/vibes.md`'s first phase.
-- Until then, color anything that is pressed outside shadcn/ui with `btn-primary`,
-  `btn-secondary` or `btn-ghost` (`src/app/globals.css`), or with the theme variables. Fixed
-  `slate-*` and `white` classes on a button make its text unreadable in some background
-  modes, most often on hover.
+- Build controls from shadcn/ui's components (`src/components/shadcn/`): Button, Dialog,
+  AlertDialog, DropdownMenu, NativeSelect, ToggleGroup and the rest. A control asks with an
+  AlertDialog before anything that can't be undone and reports with a toast (`sonner`), not
+  with `confirm()` or `alert()`.
+- Every color, corner and font comes from the theme tokens in `src/app/globals.css`, so
+  light, dark and later every vibe (`plans/vibes.md`) restyle the page without touching it.
+  Don't use fixed palette classes (`slate-*`, `white`, `amber-*` and the like) or corners
+  larger than `rounded-lg`, and change paint, never size, per theme. A box that holds a
+  page's content is a `Panel` (`src/components/ui/Panel.tsx`). Elements marked with
+  `data-slot` leave their `::before` and `::after` to vibes (`docs/design/dashboard.md`
+  § "Theme and vibe areas"). The board's squares and pieces and the visualizations keep
+  their own colors.
 - `BoardBase` is the only component that wraps `react-chessboard`. `BoardDisplay` (static)
   and `BoardInteractive` (playable, through `useChessGame`) wrap `BoardBase`. Feature pages
   compose those two and never define their own board components.

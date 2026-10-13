@@ -8,16 +8,16 @@ import {
   TriangleAlertIcon,
 } from "lucide-react"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { useBackgroundMode } from "@/context/BackgroundMode"
+import { useAppearance } from "@/context/Appearance"
 
-// Changed from shadcn/ui's file: the theme follows the app's background mode
-// (`src/context/BackgroundMode.tsx`) instead of next-themes.
+// Changed from shadcn/ui's file: the theme follows the app's appearance settings
+// (`src/context/Appearance.tsx`) instead of next-themes.
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { mode } = useBackgroundMode()
+  const { theme } = useAppearance()
 
   return (
     <Sonner
-      theme={mode === "dark" ? "dark" : "light"}
+      theme={theme}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,

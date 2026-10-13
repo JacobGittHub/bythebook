@@ -57,7 +57,7 @@ export function ResizeHandle({ target, min, max, onResize, onReset, label, class
       title={`${label}. Drag, or use the arrow keys; double-click to reset.`}
       className={`group flex h-2 shrink-0 cursor-row-resize touch-none items-center justify-center outline-none ${className}`}
     >
-      <span className="h-0.5 w-10 rounded-full bg-[var(--border-card)] transition-colors group-hover:bg-[var(--text-muted)] group-focus-visible:bg-[var(--text-primary)]" />
+      <span className="h-0.5 w-10 rounded-xs bg-border transition-colors group-hover:bg-muted-foreground group-focus-visible:bg-foreground" />
     </div>
   );
 }

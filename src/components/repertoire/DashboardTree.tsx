@@ -1,6 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/shadcn/button";
+import { Input } from "@/components/shadcn/input";
+import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { Panel } from "@/components/ui/Panel";
 import { OpeningTreeFull, type DisplayNode, type SelectedNodeInfo } from "./OpeningTreeFull";
 import { TreeNodePanel } from "./TreeNodePanel";
 import { BookEditor } from "./BookEditor";
@@ -104,9 +110,9 @@ export function DashboardTree({ initialBookId }: Props) {
     if (!activeBook) return;
     setIsSaving(true);
     try {
-      if (!(await saveStartTree(updatedNode))) alert(STALE_BOOK_MESSAGE);
+      if (!(await saveStartTree(updatedNode))) toast.error(STALE_BOOK_MESSAGE);
     } catch (error) {
-      alert(libraryErrorMessage(error));
+      toast.error(libraryErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -173,63 +179,74 @@ export function DashboardTree({ initialBookId }: Props) {
 
   return (
     // Wide: the tree beside the node panel. Narrow: the panel sits under the tree.
-    <div className="flex h-full min-h-0 flex-col gap-2 lg:flex-row lg:gap-3">
+    <div className="flex h-full min-h-0 flex-col gap-2 lg:flex-row">
       {/* ── Left: controls + tree ── */}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 lg:gap-3">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
         {/* Top bar */}
-        <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-2.5 lg:gap-3 lg:py-3">
+        <Panel className="flex shrink-0 flex-wrap items-center gap-2 px-2.5 py-2">
           {/* Book selector */}
           {books === null ? (
-            <span className="flex-1 text-sm text-[var(--text-muted)]">Loading books…</span>
+            <span className="flex-1 text-sm text-muted-foreground">Loading books…</span>
           ) : books.length > 0 ? (
-            <select
+            <NativeSelect
+              aria-label="Book"
+              size="sm"
               value={activeBookId ?? ""}
               onChange={(e) => { if (e.target.value) showBook(e.target.value); }}
-              className="min-w-0 flex-1 rounded-xl border border-[var(--border-card)] bg-[var(--bg-card)] py-1.5 pl-2 pr-6 text-sm font-semibold text-[var(--text-primary)] focus:outline-none"
+              wrapperClassName="min-w-0 flex-1"
+              className="h-7 pl-2 pr-7 font-medium"
             >
-              <option value="">— Select a book —</option>
+              <NativeSelectOption value="">— Select a book —</NativeSelectOption>
               {books.map((b) => (
-                <option key={b.id} value={b.id}>
+                <NativeSelectOption key={b.id} value={b.id}>
                   {b.name} ({b.color})
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           ) : (
-            <span className="flex-1 text-sm text-[var(--text-muted)]">No books yet</span>
+            <span className="flex-1 text-sm text-muted-foreground">No books yet</span>
           )}
 
           {/* Search */}
-          <input
+          <Input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search opening…"
-            className="min-w-0 flex-1 rounded-xl border border-[var(--border-card)] bg-[var(--bg-muted)] px-3 py-1.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none sm:w-44 sm:flex-none"
+            aria-label="Search openings"
+            className="h-7 min-w-0 flex-1 px-2 sm:w-44 sm:flex-none"
           />
 
           {/* Save indicator */}
           {isSaving && (
-            <span className="shrink-0 text-xs text-[var(--text-muted)]">Saving…</span>
+            <span className="shrink-0 text-xs text-muted-foreground">Saving…</span>
           )}
 
           {/* New book */}
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 shrink-0 px-2.5 text-xs"
             onClick={() => setShowCreateForm((v) => !v)}
-            className="btn-secondary shrink-0 rounded-xl px-3 py-1.5 text-sm"
           >
-            {showCreateForm ? "Cancel" : "+ New book"}
-          </button>
-        </div>
+            {showCreateForm ? "Cancel" : (
+              <>
+                <Plus aria-hidden="true" />
+                New book
+              </>
+            )}
+          </Button>
+        </Panel>
 
         {/* Create form (inline, dismissible) */}
         {showCreateForm && (
-          <div className="shrink-0 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] p-4">
+          <Panel className="shrink-0 p-3">
             <BookEditor onCreated={handleCreateBook} onCancel={() => setShowCreateForm(false)} />
-          </div>
+          </Panel>
         )}
 
         {/* Tree */}
-        <div className="flex-1 min-h-0 overflow-hidden rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)]">
+        <Panel className="min-h-0 flex-1 overflow-hidden">
           <OpeningTreeFull
             moveNode={catalogTree}
             ghostExpansions={ghostExpansions}
@@ -238,7 +255,7 @@ export function DashboardTree({ initialBookId }: Props) {
             bookFens={bookFens}
             onNodeSelect={handleNodeSelect}
           />
-        </div>
+        </Panel>
       </div>
 
       {/* ── Right: node panel (always visible) ── */}

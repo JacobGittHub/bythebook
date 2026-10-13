@@ -92,8 +92,9 @@ export function BookReader({ book, size, positionActions, className }: Props) {
           <ZoomControls zoom={zoom} onChange={setZoom} />
         </div>
         <div
+          data-slot="panel"
           className={cn(
-            "flex min-h-0 rounded-md border bg-muted p-1 [--bv-label-halo:var(--bg-muted)]",
+            "relative flex min-h-0 rounded-md border bg-muted p-1 [--bv-label-halo:var(--muted)]",
             size === "compact" ? "h-80 md:h-[26rem]" : "h-96 md:h-[34rem]",
           )}
         >

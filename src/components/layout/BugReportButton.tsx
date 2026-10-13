@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useBackgroundMode } from "@/context/BackgroundMode";
+import { useAppearance } from "@/context/Appearance";
 import { useBugReportSections } from "@/context/BugReport";
 import { formatBugReport } from "@/lib/debug/bugReport";
 
@@ -10,7 +10,7 @@ import { formatBugReport } from "@/lib/debug/bugReport";
  * debug mode (`canDebug`, plans/testing.md D9).
  */
 export function BugReportButton({ signedIn, className }: { signedIn: boolean; className?: string }) {
-  const { mode } = useBackgroundMode();
+  const { theme, themeChoice, vibes } = useAppearance();
   const readSections = useBugReportSections();
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
 
@@ -23,7 +23,7 @@ export function BugReportButton({ signedIn, className }: { signedIn: boolean; cl
         height: window.innerHeight,
         pixelRatio: window.devicePixelRatio,
       },
-      background: mode,
+      appearance: { theme, themeChoice, vibes },
       signedIn,
       browser: navigator.userAgent,
       sections: readSections(),

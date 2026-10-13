@@ -395,7 +395,7 @@ export default function RegionMap({
     <div className="relative h-full w-full">
       <canvas ref={canvasRef} className="block h-full w-full cursor-grab touch-none" />
       {phase !== "ready" && (
-        <div className="absolute inset-0 bg-[var(--bg-muted)]">
+        <div className="absolute inset-0 bg-muted">
           <LabSpinner
             label={
               phase === "failed"

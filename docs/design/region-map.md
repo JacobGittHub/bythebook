@@ -316,7 +316,7 @@ when the position or its load status changes, and nothing in the page reaches in
 - **Panel** (`PositionPanel`, as on the Treemap). The frame position's board, whose pieces
   slide as the frame changes; its master games, from the map's own load and measured against
   the position's totals (`summarizeMasterGames`); Add to book or Remove from book for the
-  line to the frame; Open in Explorer; and Train this book. Last comes a closed "Map stats and
+  line to the frame, Remove asking first (`RemoveFromBookButton`); Open in Explorer; and Train this book. Last comes a closed "Map stats and
   controls" section, with the stats and how to move. On a wide screen the panel is open beside
   the map, and on a narrow one it is closed and opens under the map. A closed panel is not
   rendered at all, because the board can't animate inside a hidden element.

@@ -26,7 +26,8 @@ function StoreCard({ book }: { book: ExampleBook }) {
     <li>
       <Link
         href={storeBookHref(book.id)}
-        className="flex h-full flex-col gap-2 rounded-md border bg-card p-3 transition-colors hover:border-foreground/40 hover:bg-muted/40"
+        data-slot="panel"
+        className="relative flex h-full flex-col gap-2 rounded-md border bg-card p-3 transition-colors hover:border-foreground/40 hover:bg-muted/40"
       >
         <BookMiniature miniature={book.summary.miniature} width={320} height={56} className="h-14 w-full" />
         <div className="flex min-w-0 flex-col gap-1">

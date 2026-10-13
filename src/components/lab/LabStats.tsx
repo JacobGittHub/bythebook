@@ -43,8 +43,8 @@ export function LabStats({
     <>
       {rows.map((row) => (
         <div key={row.key} className="flex justify-between">
-          <span className="text-xs text-[var(--bg-sidebar-muted)]">{row.label}</span>
-          <span className="font-mono text-xs tabular-nums text-[var(--bg-sidebar-text)]">
+          <span className="text-xs text-sidebar-muted-foreground">{row.label}</span>
+          <span className="font-mono text-xs tabular-nums text-sidebar-foreground">
             {show(values[row.key], row.format)}
           </span>
         </div>

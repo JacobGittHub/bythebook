@@ -330,7 +330,8 @@ dialogs, menus, selects and toggles), `class-variance-authority`, `clsx` and `ta
 (toasts) and `tw-animate-css` (their open and close animations). The CLI also adds a `cn`
 package and an import from it, which is a mistake: point the import at `@/lib/utils` and
 uninstall the package. Its toaster used `next-themes`, which the app doesn't use; it follows
-`BackgroundMode` instead.
+`useAppearance` instead. A file changed from shadcn/ui's says so in a comment at the change,
+so a later `add` that overwrites it doesn't lose the change unnoticed.
 
 **Tooling.** `vitest` (dev only) runs the unit and property tests and the docs test
 (`docs/docs.test.ts`); its config resolves the `@/*` alias

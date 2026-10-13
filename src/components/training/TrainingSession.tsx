@@ -10,8 +10,8 @@ export function TrainingSession({ bookId }: { bookId: string }) {
   if (!book) {
     return (
       <main className="space-y-2">
-        <h1 className="text-3xl font-semibold text-slate-950">Training</h1>
-        <p className="text-sm text-slate-500">
+        <h1 className="font-heading text-2xl font-semibold">Training</h1>
+        <p className="text-sm text-muted-foreground">
           {status === "missing"
             ? "This book isn't in your library."
             : status === "failed"
@@ -23,10 +23,10 @@ export function TrainingSession({ bookId }: { bookId: string }) {
   }
 
   return (
-    <main className="space-y-6">
+    <main className="space-y-4">
       <div>
-        <h1 className="text-3xl font-semibold text-slate-950">{book.name}</h1>
-        <p className="mt-2 text-slate-600">
+        <h1 className="font-heading text-2xl font-semibold">{book.name}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Active training session scaffold for book id <code>{book.id}</code>.
         </p>
       </div>

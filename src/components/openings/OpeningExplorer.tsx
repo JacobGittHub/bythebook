@@ -1,7 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useReducer, useRef, useState, type CSSProperties } from "react";
+import {
+  ArrowUpDown,
+  ChevronFirst,
+  ChevronLast,
+  ChevronLeft,
+  ChevronRight,
+  MoveUpRight,
+  Pause,
+  Play,
+} from "lucide-react";
+import { toast } from "sonner";
 import { ExplorerTreeWindow } from "@/components/openings/ExplorerTreeWindow";
+import { Button } from "@/components/shadcn/button";
+import { Input } from "@/components/shadcn/input";
+import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { Separator } from "@/components/shadcn/separator";
+import { Toggle } from "@/components/shadcn/toggle";
+import { ToggleGroup, ToggleGroupItem } from "@/components/shadcn/toggle-group";
+import { Panel, PanelLabel } from "@/components/ui/Panel";
 import { ResizeHandle } from "@/components/ui/ResizeHandle";
 import { useStoredString } from "@/hooks/useStoredString";
 import { BoardInteractive } from "@/components/board/BoardInteractive";
@@ -20,8 +38,8 @@ import {
 } from "@/lib/chess/explorerNavigator";
 import { useOpeningExplorer } from "@/hooks/useOpeningExplorer";
 import { useOpeningExplorerMulti } from "@/hooks/useOpeningExplorerMulti";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { useEngine, type EngineMode } from "@/hooks/useEngine";
-import { useBackgroundMode } from "@/context/BackgroundMode";
 import { useLibraryBook, useLibraryBooks } from "@/context/Library";
 import { formatScore, evalToBarPct } from "@/lib/chess/stockfishUci";
 import { mergeMoveLineIntoTree } from "@/lib/chess/moveTree";
@@ -134,20 +152,12 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
   const { book: activeExplorerBook, saveStartTree } = useLibraryBook(activeExplorerBookId);
   const [isSavingToBook, setIsSavingToBook] = useState(false);
 
-  const { mode } = useBackgroundMode();
   // The hovered move is kept with the position it was hovered in, so it lapses when the
   // board moves on.
   const [hover, setHover] = useState<{ uci: string; fen: string } | null>(null);
 
-  const arrowColor = useMemo(() => {
-    switch (mode) {
-      case "dark":  return "rgba(140, 130, 220, 0.55)";
-      case "blue":  return "rgba(40,  80,  200, 0.55)";
-      case "green": return "rgba(40,  130, 60,  0.55)";
-      case "red":   return "rgba(170, 50,  40,  0.55)";
-      default:      return "rgba(80,  60,  20,  0.50)";
-    }
-  }, [mode]);
+  const arrowColor = useThemeColor("--board-arrow", "rgb(80 60 20 / 0.5)");
+  const engineArrowColor = useThemeColor("--engine-arrow", "rgb(230 140 40 / 0.7)");
 
   const currentMoves = useMemo(() => moveResultsToMoves(moveHistory), [moveHistory]);
   const currentUciLine = useMemo(() => currentMoves.map((m) => m.uci), [currentMoves]);
@@ -174,9 +184,9 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
     return [{
       startSquare: top.pv[0].slice(0, 2),
       endSquare: top.pv[0].slice(2, 4),
-      color: "rgba(230, 140, 40, 0.70)",
+      color: engineArrowColor,
     }];
-  }, [showEngineArrow, engine.lines]);
+  }, [showEngineArrow, engine.lines, engineArrowColor]);
 
   // Deduplicate arrows by square pair — hover takes priority, engine fills gaps.
   const combinedArrows = useMemo(() => {
@@ -317,9 +327,9 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
     const updatedTree = mergeMoveLineIntoTree(activeExplorerTree, movesToAdd);
     setIsSavingToBook(true);
     try {
-      if (!(await saveStartTree(updatedTree))) alert(STALE_BOOK_MESSAGE);
+      if (!(await saveStartTree(updatedTree))) toast.error(STALE_BOOK_MESSAGE);
     } catch (error) {
-      alert(libraryErrorMessage(error));
+      toast.error(libraryErrorMessage(error));
     } finally {
       setIsSavingToBook(false);
     }
@@ -346,11 +356,6 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
     }
   };
 
-  const navBtnClass =
-    "btn-secondary rounded-full p-1.5 transition-colors";
-  const playBtnClass =
-    "btn-primary rounded-full px-3 py-1.5 text-xs font-semibold transition-opacity";
-  const cardClass = "rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)]";
   // A move row given a height wraps its moves; left alone it is one line that scrolls sideways.
   const wrapMoves = heights.moves !== null;
   const moveTokensWrap = wrapMoves ? "xl:flex-wrap xl:whitespace-normal" : "";
@@ -359,36 +364,37 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
     // The page fits the viewport at every width. Wide: the board beside a panel column.
     // Narrow (a phone or a small window): the board on top, sized from the viewport height,
     // and the panels below it in one column that scrolls on its own.
-    <div className="flex h-[calc(100dvh-var(--dash-offset))] flex-col gap-2 xl:grid xl:grid-cols-[1.1fr_0.9fr] xl:gap-3">
+    <div className="flex h-[calc(100dvh-var(--dash-offset))] flex-col gap-2 xl:grid xl:grid-cols-[1.1fr_0.9fr]">
       {/* ── Left: board + search ── */}
       <section className="grid min-w-0 shrink-0 gap-2 xl:h-full" style={{ gridTemplateRows: "auto 1fr" }}>
-        {/* Header card: title row + book row */}
-        <div className={`flex flex-col gap-1.5 px-3 py-2 ${cardClass}`}>
+        {/* Header: title row + book row */}
+        <Panel className="flex flex-col gap-1.5 px-2.5 py-2">
           {/* Row 1: title+subtitle (inline) | flip | search */}
           <div className="flex items-center gap-2">
             {/* The title gives way to the search box when there is no room for both. */}
             <div className="hidden min-w-0 flex-1 items-baseline gap-2 sm:flex">
-              <h1 className="shrink-0 text-lg font-semibold text-slate-950">Opening Explorer</h1>
-              <p className="truncate text-sm text-slate-400">
+              <h1 className="shrink-0 font-heading text-base font-semibold">Opening Explorer</h1>
+              <p className="truncate text-xs text-muted-foreground">
                 {selectedMatch
                   ? `${selectedMatch.eco} · ${selectedMatch.name}`
                   : "Play moves or search."}
               </p>
             </div>
 
-            {/* Flip board button */}
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 shrink-0 px-2 text-xs"
               onClick={() => setBoardOrientation((o) => (o === "white" ? "black" : "white"))}
               title="Flip board"
-              className="btn-secondary shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
             >
-              ⇅ {boardOrientation === "white" ? "White" : "Black"}
-            </button>
+              <ArrowUpDown aria-hidden="true" />
+              {boardOrientation === "white" ? "White" : "Black"}
+            </Button>
 
             {/* Search input */}
             <div className="relative order-first min-w-0 flex-1 sm:order-none sm:w-52 sm:flex-none">
-              <input
+              <Input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -409,11 +415,12 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
                   }
                 }}
                 placeholder="Search — Sicilian, B12…"
-                className="w-full rounded-xl border border-[var(--border-card)] bg-[var(--bg-muted)] px-3 py-1.5 text-sm text-[var(--text-primary)] outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--text-muted)] focus:bg-[var(--bg-card)]"
+                aria-label="Search openings"
+                className="h-7 px-2"
               />
 
               {showDropdown && (
-                <div className="absolute left-0 right-0 top-full z-20 mt-1.5 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-y-auto rounded-md border bg-popover text-popover-foreground shadow-md">
                   {searchResults.map((result) => (
                     <button
                       key={`${result.eco}-${result.name}-${result.pgn}`}
@@ -422,16 +429,16 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
                         e.preventDefault();
                         handleHighlightFromSearch(result);
                       }}
-                      className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left last:border-0 hover:bg-[var(--bg-muted)]"
+                      className="flex w-full items-center gap-2.5 border-b px-2.5 py-1.5 text-left last:border-0 hover:bg-accent"
                     >
-                      <span className="w-10 shrink-0 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                      <span className="w-9 shrink-0 font-mono text-xs font-semibold text-muted-foreground">
                         {result.eco}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-slate-900">{result.name}</p>
-                        <p className="truncate text-xs text-slate-400">{result.pgn}</p>
+                        <p className="truncate text-sm font-medium">{result.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{result.pgn}</p>
                       </div>
-                      <span className="shrink-0 text-xs text-slate-400">
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                         {result.moves.length}m
                       </span>
                     </button>
@@ -444,41 +451,49 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
           {/* Row 2: book selector + View Lines + Add line. On a phone View Lines is left out,
               so the row stays one line and the sticky header never covers the panels below. */}
           <div className="flex flex-wrap items-center gap-2">
-            <select
+            <NativeSelect
               aria-label="Book"
+              size="sm"
               value={activeExplorerBookId ?? ""}
               onChange={(e) => setActiveExplorerBookId(e.target.value || null)}
-              className="min-w-0 flex-1 rounded-xl sm:w-44 sm:flex-none sm:shrink-0 border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none"
+              wrapperClassName="min-w-0 flex-1 sm:w-44 sm:flex-none sm:shrink-0"
+              className="h-7 pl-2 pr-7"
             >
-              <option value="">{explorerBooks?.length === 0 ? "— No books yet —" : "— No book selected —"}</option>
+              <NativeSelectOption value="">
+                {explorerBooks?.length === 0 ? "— No books yet —" : "— No book selected —"}
+              </NativeSelectOption>
               {(explorerBooks ?? []).map((b) => (
-                <option key={b.id} value={b.id}>{b.name} ({b.color})</option>
+                <NativeSelectOption key={b.id} value={b.id}>
+                  {b.name} ({b.color})
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
 
             {/* View Lines dropdown */}
-            <select
+            <NativeSelect
               aria-label="View a line of the book"
+              size="sm"
               value=""
               onChange={(e) => handleViewBookLine(e.target.value)}
               disabled={!activeExplorerBook || bookLines.length === 0}
-              className="hidden min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-2 pr-6 text-sm text-slate-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 sm:block"
+              wrapperClassName="hidden min-w-0 flex-1 sm:block"
+              className="h-7 pl-2 pr-7"
             >
-              <option value="">View Lines</option>
+              <NativeSelectOption value="">View Lines</NativeSelectOption>
               {bookLines.map((line, idx) => (
-                <option key={idx} value={JSON.stringify(line)}>
+                <NativeSelectOption key={idx} value={JSON.stringify(line)}>
                   {line.slice(0, 8).map((m) => m.san).join(" ")}
                   {line.length > 8 ? "…" : ""}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
 
             {/* Add line — always visible, disabled when no book or no moves */}
-            <button
-              type="button"
+            <Button
+              size="sm"
+              className="h-7 shrink-0 px-2.5 text-xs"
               onClick={handleAddToBook}
               disabled={!activeExplorerBook || currentMoves.length === 0 || isSavingToBook}
-              className="btn-primary shrink-0 rounded-xl px-3 py-1.5 text-xs font-medium"
             >
               {isSavingToBook ? (
                 "Saving…"
@@ -490,15 +505,15 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
                   )}
                 </>
               )}
-            </button>
+            </Button>
           </div>
-        </div>
+        </Panel>
 
         {/* Board + right-side eval bar */}
-        <div className={`flex min-h-0 justify-center gap-2 p-1.5 xl:p-2 ${cardClass}`}>
-          {/* Narrow: a square as wide as the card, but capped at about half the viewport's
+        <Panel className="flex min-h-0 justify-center gap-1.5 p-1.5">
+          {/* Narrow: a square as wide as the panel, but capped at about half the viewport's
               height (max-w below), so the panels under it always keep some room. Wide: it
-              fills the card and the inner square takes the smaller side. */}
+              fills the panel and the inner square takes the smaller side. */}
           <div
             className="aspect-square min-h-0 w-full max-w-[52dvh] flex-1 xl:aspect-auto xl:max-w-none"
             style={{ containerType: "size" }}
@@ -518,21 +533,18 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
             </div>
           </div>
           {/* Vertical eval bar — always present; fill only when engine is active */}
-          <div
-            className="relative w-3 self-stretch overflow-hidden rounded-full border border-[var(--border-card)]"
-            style={{ backgroundColor: "var(--bar-black)" }}
-          >
+          <div className="relative w-2.5 self-stretch overflow-hidden rounded-sm border bg-bar-black">
             {/* Decorative tick marks */}
             {[25, 50, 75].map((pct) => (
               <div
                 key={pct}
-                className="absolute left-0 right-0 z-10 h-px"
-                style={{ top: `${pct}%`, backgroundColor: "rgba(128,128,128,0.25)" }}
+                className="absolute left-0 right-0 z-10 h-px bg-muted-foreground/25"
+                style={{ top: `${pct}%` }}
               />
             ))}
             {/* Eval fill */}
             <div
-              className="absolute w-full transition-all duration-500"
+              className="absolute w-full bg-bar-white transition-all duration-500"
               style={{
                 ...(boardOrientation === "black" ? { top: 0 } : { bottom: 0 }),
                 height:
@@ -541,11 +553,10 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
                     : engineMode !== "none"
                       ? "50%"
                       : "0%",
-                backgroundColor: "var(--bar-white)",
               }}
             />
           </div>
-        </div>
+        </Panel>
       </section>
 
       {/* ── Right: four-section sidebar. Wide: each panel but the statistics can be dragged
@@ -554,83 +565,83 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
           (and pinned) and the statistics next. A handle or a gap follows every panel. ── */}
       <aside className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
         {/* ① Engine panel */}
-        <div
+        <Panel
           ref={enginePanelRef}
-          className={`order-3 flex shrink-0 flex-col px-3 py-2 xl:order-none ${cardClass}`}
+          className="order-3 flex shrink-0 flex-col px-2.5 py-1.5 xl:order-none"
           style={engineMode !== "none" && heights.engine ? { height: heights.engine } : undefined}
         >
           {/* Controls row */}
-          <div className="flex items-center gap-2">
-            <p className="mr-auto text-xs font-semibold uppercase tracking-widest text-slate-400">
-              Engine
-            </p>
+          <div className="flex items-center gap-1.5">
+            <PanelLabel className="mr-auto">Engine</PanelLabel>
             {/* Arrow toggle — invisible when engine is off so the pills never shift */}
-            <button
-              type="button"
-              onClick={() => setShowEngineArrow((v) => !v)}
+            <Toggle
+              variant="outline"
+              size="sm"
+              pressed={showEngineArrow}
+              onPressedChange={setShowEngineArrow}
               title={showEngineArrow ? "Hide engine arrow" : "Show engine arrow"}
-              className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
-                engineMode === "none"
-                  ? "invisible"
-                  : showEngineArrow
-                    ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                    : "border-[var(--border-card)] bg-[var(--bg-muted)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              className={`h-6 min-w-0 px-2 text-xs data-[state=on]:border-warning/50 data-[state=on]:bg-transparent data-[state=on]:text-warning ${
+                engineMode === "none" ? "invisible" : ""
               }`}
             >
-              ↗ Arrow
-            </button>
-            {/* Mode pills */}
-            <div className="flex rounded-full border border-slate-200 bg-slate-50 p-0.5">
+              <MoveUpRight aria-hidden="true" className="size-3" />
+              Arrow
+            </Toggle>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              aria-label="Engine"
+              value={engineMode}
+              onValueChange={(value) => {
+                if (value) setEngineMode(value as EngineMode);
+              }}
+            >
               {(["none", "light", "heavy"] as const).map((m) => (
-                <button
+                <ToggleGroupItem
                   key={m}
-                  type="button"
-                  onClick={() => setEngineMode(m)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
-                    engineMode === m
-                      ? "bg-[var(--text-primary)] text-[var(--bg-card)]"
-                      : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                  }`}
+                  value={m}
+                  className="h-6 min-w-0 px-2 text-xs capitalize data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                 >
                   {m}
-                </button>
+                </ToggleGroupItem>
               ))}
-            </div>
+            </ToggleGroup>
           </div>
 
           {/* Engine output */}
           {engineMode !== "none" && (
-            <div className="mt-2 min-h-0 space-y-2 overflow-y-auto">
+            <div className="mt-1.5 min-h-0 space-y-1.5 overflow-y-auto">
               {!engine.isReady ? (
-                <p className="text-xs text-slate-400">Loading engine…</p>
+                <p className="text-xs text-muted-foreground">Loading engine…</p>
               ) : (
                 <>
                   {/* Score + depth */}
                   <div className="flex items-baseline gap-3">
-                    <span className="text-2xl font-semibold tabular-nums text-slate-900">
+                    <span className="font-mono text-xl font-semibold tabular-nums">
                       {engine.lines[0]
                         ? formatScore(engine.lines[0].score, engine.lines[0].mate)
                         : "—"}
                     </span>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-muted-foreground">
                       {engine.isAnalyzing
                         ? `depth ${engine.lines[0]?.depth ?? "…"}`
                         : `depth ${engine.lines[0]?.depth ?? "—"}`}
                     </span>
                     {engine.isAnalyzing && (
-                      <span className="ml-auto animate-pulse text-xs text-slate-300">●</span>
+                      <span className="ml-auto animate-pulse text-xs text-muted-foreground/60">●</span>
                     )}
                   </div>
 
                   {/* PV lines */}
                   {engine.lines.length > 0 && (
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       {engine.lines.map((line) => (
                         <div key={line.multipv} className="flex items-baseline gap-2">
-                          <span className="w-9 shrink-0 text-xs font-semibold tabular-nums text-slate-900">
+                          <span className="w-9 shrink-0 font-mono text-xs font-semibold tabular-nums">
                             {formatScore(line.score, line.mate)}
                           </span>
-                          <span className="truncate text-xs text-slate-500">
+                          <span className="truncate text-xs text-muted-foreground">
                             {line.pvSan.slice(0, 6).join(" ")}
                           </span>
                         </div>
@@ -641,7 +652,7 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
               )}
             </div>
           )}
-        </div>
+        </Panel>
 
         {engineMode !== "none" ? (
           <ResizeHandle
@@ -657,9 +668,9 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
         )}
 
         {/* ② The explored line, in the book view the viewer picks */}
-        <div
+        <Panel
           ref={treePanelRef}
-          className={`order-4 shrink-0 overflow-hidden p-1.5 xl:order-none ${cardClass}`}
+          className="order-4 shrink-0 overflow-hidden p-1 xl:order-none"
           style={{ height: heights.tree ?? TREE_HEIGHT }}
         >
           <ExplorerTreeWindow
@@ -671,7 +682,7 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
             onPlayMove={handleExplorerMoveClick}
             onHoverUci={setHoveredMoveUci}
           />
-        </div>
+        </Panel>
         <ResizeHandle
           className="order-4 xl:order-none"
           target={treePanelRef}
@@ -682,18 +693,18 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
         />
 
         {/* ③ Move sequence + navigation */}
-        <div
+        <Panel
           ref={movesPanelRef}
-          className={`sticky top-0 z-10 order-1 flex shrink-0 flex-col px-3 py-2 xl:static xl:order-none ${cardClass} ${
+          className={`sticky top-0 z-10 order-1 flex shrink-0 flex-col px-2.5 py-1.5 xl:static xl:order-none ${
             wrapMoves ? "xl:h-[var(--moves-h)]" : ""
           }`}
           style={wrapMoves ? ({ "--moves-h": `${heights.moves}px` } as CSSProperties) : undefined}
         >
           <div className="flex min-h-0 flex-1 items-start gap-2">
             {/* Move tokens: one line that scrolls sideways, or wrapped when the row is taller */}
-            <div className={`min-w-0 flex-1 overflow-x-auto ${wrapMoves ? "xl:h-full xl:overflow-x-hidden xl:overflow-y-auto" : ""}`}>
+            <div className={`min-w-0 flex-1 self-center overflow-x-auto ${wrapMoves ? "xl:h-full xl:self-auto xl:overflow-x-hidden xl:overflow-y-auto" : ""}`}>
               {selectedMatch ? (
-                <div className={`flex items-baseline gap-1 whitespace-nowrap pb-0.5 ${moveTokensWrap}`}>
+                <div className={`flex items-baseline gap-1 whitespace-nowrap ${moveTokensWrap}`}>
                   {selectedMatch.moves.map((move, index) => {
                     const isPlayed =
                       isBoardOnHighlightedLine &&
@@ -704,19 +715,19 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
                     return (
                       <span key={index} className="inline-flex items-baseline gap-0.5">
                         {index % 2 === 0 && (
-                          <span className="text-xs text-slate-300">
+                          <span className="text-xs text-muted-foreground/60">
                             {Math.floor(index / 2) + 1}.
                           </span>
                         )}
                         <button
                           type="button"
                           onClick={() => handleClickMoveToken(index)}
-                          className={`cursor-pointer rounded px-0.5 text-sm transition-colors hover:bg-[var(--bg-muted)] ${
+                          className={`cursor-pointer rounded-xs px-0.5 text-sm transition-colors hover:bg-muted ${
                             isPlayed
-                              ? "font-semibold text-slate-700"
+                              ? "font-semibold"
                               : isNext
-                                ? "font-semibold text-slate-950 underline decoration-slate-400 underline-offset-2"
-                                : "text-slate-400"
+                                ? "font-semibold underline decoration-muted-foreground underline-offset-2"
+                                : "text-muted-foreground"
                           }`}
                         >
                           {move.san}
@@ -726,18 +737,18 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
                   })}
                 </div>
               ) : currentMoves.length > 0 ? (
-                <div className={`flex items-baseline gap-1 whitespace-nowrap pb-0.5 ${moveTokensWrap}`}>
+                <div className={`flex items-baseline gap-1 whitespace-nowrap ${moveTokensWrap}`}>
                   {currentMoves.map((move, index) => (
                     <span key={index} className="inline-flex items-baseline gap-0.5">
                       {index % 2 === 0 && (
-                        <span className="text-xs text-slate-300">
+                        <span className="text-xs text-muted-foreground/60">
                           {Math.floor(index / 2) + 1}.
                         </span>
                       )}
                       <button
                         type="button"
                         onClick={() => handleClickMoveToken(index)}
-                        className="cursor-pointer rounded px-0.5 text-sm font-semibold text-slate-700 hover:bg-[var(--bg-muted)]"
+                        className="cursor-pointer rounded-xs px-0.5 text-sm font-semibold hover:bg-muted"
                       >
                         {move.san}
                       </button>
@@ -745,76 +756,52 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-slate-400">No moves yet.</p>
+                <p className="text-sm text-muted-foreground">No moves yet.</p>
               )}
             </div>
 
             {/* Nav buttons */}
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                type="button"
-                onClick={handleGoToStart}
-                disabled={!canGoToStart}
-                className={navBtnClass}
-                title="Go to start"
-              >
-                <span className="text-xs font-semibold">|&lt;</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleUndoMove}
-                disabled={!canUndo}
-                className={navBtnClass}
-                title="Undo move"
-              >
-                <span className="text-xs font-semibold">&lt;</span>
-              </button>
-              <button
-                type="button"
+            <div className="flex shrink-0 items-center gap-0.5">
+              <Button variant="ghost" size="icon-sm" className="size-7" onClick={handleGoToStart} disabled={!canGoToStart} title="Go to start">
+                <ChevronFirst aria-hidden="true" />
+              </Button>
+              <Button variant="ghost" size="icon-sm" className="size-7" onClick={handleUndoMove} disabled={!canUndo} title="Undo move">
+                <ChevronLeft aria-hidden="true" />
+              </Button>
+              <Button
+                size="icon-sm"
+                className="size-7"
                 onClick={handleToggleAutoPlay}
                 disabled={!canAutoPlay && !isAutoPlaying}
-                className={playBtnClass}
                 title={isAutoPlaying ? "Pause" : "Play"}
               >
-                {isAutoPlaying ? "⏸" : "▶"}
-              </button>
-              <button
-                type="button"
-                onClick={handleStepForward}
-                disabled={!canGoForward}
-                className={navBtnClass}
-                title="Step forward"
-              >
-                <span className="text-xs font-semibold">&gt;</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleGoToEnd}
-                disabled={!canGoToEnd}
-                className={navBtnClass}
-                title="Go to end"
-              >
-                <span className="text-xs font-semibold">&gt;|</span>
-              </button>
+                {isAutoPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+              </Button>
+              <Button variant="ghost" size="icon-sm" className="size-7" onClick={handleStepForward} disabled={!canGoForward} title="Step forward">
+                <ChevronRight aria-hidden="true" />
+              </Button>
+              <Button variant="ghost" size="icon-sm" className="size-7" onClick={handleGoToEnd} disabled={!canGoToEnd} title="Go to end">
+                <ChevronLast aria-hidden="true" />
+              </Button>
             </div>
           </div>
 
           {selectedMatch && !isBoardOnHighlightedLine && currentMoves.length > 0 && (
-            <div className="mt-2 flex items-center gap-2">
-              <p className="text-xs text-amber-600">Board diverged from highlighted line.</p>
+            <div className="mt-1.5 flex items-center gap-2 text-xs text-warning">
+              <p>Board diverged from highlighted line.</p>
               <button
                 type="button"
                 onClick={() => dispatch({ type: "clearLine" })}
-                className="text-xs font-medium text-amber-600 underline hover:text-amber-700"
+                className="font-medium underline hover:no-underline"
               >
                 Clear line
               </button>
             </div>
           )}
           {playbackError && (
-            <p className="mt-2 text-xs text-rose-500">{playbackError}</p>
+            <p className="mt-1.5 text-xs text-destructive">{playbackError}</p>
           )}
-        </div>
+        </Panel>
         {/* The move row's handle is for wide screens, where the row isn't pinned. */}
         <div className="order-1 shrink-0 xl:order-none">
           <div className="hidden xl:block">
@@ -830,30 +817,27 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
         </div>
 
         {/* ④ Opening name + master game stats */}
-        <div className={`order-2 flex shrink-0 flex-col px-3 py-2 xl:order-none xl:min-h-32 xl:flex-1 xl:shrink xl:overflow-y-auto ${cardClass}`}>
+        <Panel className="order-2 flex shrink-0 flex-col px-2.5 py-2 xl:order-none xl:min-h-32 xl:flex-1 xl:shrink xl:overflow-y-auto">
           {/* Match label + opening name */}
           <div className="shrink-0">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
-              {matchModeLabel}
-            </p>
+            <PanelLabel>{matchModeLabel}</PanelLabel>
             {positionName ? (
-              <p className="mt-1 text-sm font-semibold text-slate-900">{positionName}</p>
+              <p className="mt-0.5 text-sm font-semibold">{positionName}</p>
             ) : (
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-0.5 text-sm text-muted-foreground">
                 {selectedMatch ? selectedMatch.name : "Play moves to identify the opening."}
               </p>
             )}
           </div>
 
-          {/* Divider */}
-          <div className="my-2 shrink-0 border-t border-[var(--border-card)]" />
+          <Separator className="my-2 shrink-0" />
 
           {/* Master game move stats */}
           {explorerData.loading && (
-            <p className="text-xs text-slate-400">Loading master games…</p>
+            <p className="text-xs text-muted-foreground">Loading master games…</p>
           )}
           {!explorerData.loading && explorerData.error && (
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-muted-foreground">
               {/* A 404 is the route's answer to a guest for a position it hasn't saved. */}
               {explorerData.error === "404"
                 ? "Master statistics for this position aren't saved yet. Live lookups need a beta account."
@@ -862,12 +846,12 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
           )}
           {explorerData.data && explorerData.data.moves.length > 0 && (
             <div className="min-h-0 flex-1">
-              <div className="mb-2 grid grid-cols-[2rem_1fr_3.5rem] gap-2 text-xs font-semibold uppercase tracking-widest text-slate-300">
+              <div className="mb-1 grid grid-cols-[2rem_1fr_3.5rem] gap-2 px-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                 <span>Mv</span>
                 <span>W / D / B</span>
                 <span className="text-right">Games</span>
               </div>
-              <div className="space-y-0.5" onMouseLeave={() => setHoveredMoveUci(null)}>
+              <div onMouseLeave={() => setHoveredMoveUci(null)}>
                 {explorerData.data.moves.map((move) => {
                   const total = move.white + move.draws + move.black;
                   if (total === 0) return null;
@@ -888,36 +872,35 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
                       onMouseEnter={() => setHoveredMoveUci(move.uci)}
                       onMouseLeave={() => setHoveredMoveUci(null)}
                       onKeyDown={(e) => e.key === "Enter" && handleExplorerMoveClick(move)}
-                      className={`grid cursor-pointer grid-cols-[2rem_1fr_3.5rem] items-center gap-2 rounded-lg px-2 py-1.5 transition-colors ${
-                        isHovered || isHighlightedFirst
-                          ? "bg-[var(--bg-muted)]"
-                          : "hover:bg-[var(--bg-muted)]"
+                      className={`grid cursor-pointer grid-cols-[2rem_1fr_3.5rem] items-center gap-2 rounded-sm px-1.5 py-1 transition-colors ${
+                        isHovered || isHighlightedFirst ? "bg-muted" : "hover:bg-muted"
                       }`}
                     >
                       <span
                         className={`text-sm font-semibold ${
-                          isHighlightedFirst
-                            ? "text-[var(--text-primary)] underline decoration-[var(--text-muted)] underline-offset-2"
-                            : "text-[var(--text-primary)]"
+                          isHighlightedFirst ? "underline decoration-muted-foreground underline-offset-2" : ""
                         }`}
                       >
                         {move.san}
                       </span>
-                      <div className="flex h-2 overflow-hidden rounded-full">
+                      <div data-slot="move-bar" className="flex h-2 overflow-hidden rounded-xs">
                         <div
-                          style={{ width: `${wPct}%`, backgroundColor: "var(--bar-white)" }}
+                          className="bg-bar-white"
+                          style={{ width: `${wPct}%` }}
                           title={`White ${Math.round(wPct)}%`}
                         />
                         <div
-                          style={{ width: `${dPct}%`, backgroundColor: "var(--bar-draw)" }}
+                          className="bg-bar-draw"
+                          style={{ width: `${dPct}%` }}
                           title={`Draw ${Math.round(dPct)}%`}
                         />
                         <div
-                          style={{ width: `${bPct}%`, backgroundColor: "var(--bar-black)" }}
+                          className="bg-bar-black"
+                          style={{ width: `${bPct}%` }}
                           title={`Black ${Math.round(bPct)}%`}
                         />
                       </div>
-                      <span className="text-right text-xs text-[var(--text-muted)]">
+                      <span className="text-right text-xs tabular-nums text-muted-foreground">
                         {formatGames(total)}
                       </span>
                     </div>
@@ -929,14 +912,14 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
           {explorerData.data &&
             explorerData.data.moves.length === 0 &&
             !explorerData.loading && (
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 No master games found for this position.
               </p>
             )}
           {!explorerData.data && !explorerData.loading && !explorerData.error && (
-            <p className="text-xs text-slate-400">Master game data will appear here.</p>
+            <p className="text-xs text-muted-foreground">Master game data will appear here.</p>
           )}
-        </div>
+        </Panel>
         <div className="order-2 h-2 shrink-0 xl:hidden" />
       </aside>
     </div>

@@ -224,7 +224,7 @@ export function LibraryPage() {
       </header>
 
       {store === "browser" && advice && !empty && (
-        <div className="flex flex-wrap items-center gap-2 rounded-md border bg-card px-3 py-2">
+        <div data-slot="panel" className="relative flex flex-wrap items-center gap-2 rounded-md border bg-card px-3 py-2">
           <p className="min-w-0 flex-1 basis-80 text-sm text-foreground">{adviceText(advice)}</p>
           {advice.changed && (
             <Button size="sm" onClick={() => void backUp(library)} disabled={busy !== null}>

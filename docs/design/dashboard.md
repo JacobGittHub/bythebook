@@ -6,11 +6,13 @@
 `src/app/dashboard/visualizations/page.tsx`, `src/components/ui/RouteCard.tsx`,
 `src/components/books/BookViewPage.tsx` (the small visualizations), `src/components/library/`
 (the Library and the Bookstore), `src/lib/auth/access.ts` (what the sidebar and both pages
-list), `src/app/globals.css` (theme tokens), `src/context/BackgroundMode.tsx` (the background
-setting)
+list), `src/app/globals.css` (theme tokens), `src/context/Appearance.tsx` and
+`src/lib/appearance.ts` (the theme and vibes settings), `src/components/ui/Panel.tsx`,
+`src/components/settings/AppearancePanel.tsx`
 
 The rules for these pieces are under "UI" and "Guests and accounts" in `AGENTS.md`. This doc
-covers how they work. The decisions behind them are `plans/deployment.md` D16–D20.
+covers how they work. The decisions behind them are `plans/deployment.md` D16–D19 and
+`plans/vibes.md` D2, D12 and D13.
 
 ## The frame
 
@@ -18,14 +20,17 @@ covers how they work. The decisions behind them are `plans/deployment.md` D16–
   view while the page scrolls and can collapse to a rail; on a phone it is a drawer opened
   from a top bar.
 - **It sets `--dash-offset`,** the height of everything around the content (padding, the
-  card's border and, on a phone, the top bar), which board pages subtract from `100dvh`.
+  frame's border and, on a phone, the top bar), which board pages subtract from `100dvh`.
+- **It draws the vibe areas around the page** (`plans/vibes.md` D13): the backdrop layer
+  behind everything, the sidebar (and the phone's top bar) and the frame that holds the page.
+  The auth pages (`src/app/auth/layout.tsx`) have the same backdrop and one panel.
 - **The sidebar lists `NAV_ITEMS`** for the viewer, with sign-in links for a guest and Sign
   out for a user.
 - **Debug mode adds "Copy bug report"** (`BugReportButton`) above the account block, for the
   viewers `canDebug` (`src/lib/auth/debug.ts`) allows: everyone under `next dev` when
   `DEBUG_MODE=true`, and deployed, only the accounts whose email is on `DEBUG_EMAILS`. It copies
-  `formatBugReport`'s text: the address, time, window size, background mode, guest or signed
-  in, the browser, and a section from each page that adds one through `useBugReportSection`
+  `formatBugReport`'s text: the address, time, window size, theme and vibes setting, guest or
+  signed in, the browser, and a section from each page that adds one through `useBugReportSection`
   (`src/context/BugReport.tsx`). `BugReportProvider` wraps the whole frame, so the sidebar's
   button can read the page beside it.
 
@@ -150,16 +155,31 @@ are shown, and the cards sort by name. Guests use both levels (bookstore D14).
   highlight, never inside it (bookstore D8). Until publishers have accounts, a store book is
   verified when it is an example book (`storeVerified`).
 
-## Theme colors
+## Theme and vibe areas
 
-- **Background modes** come from `BackgroundMode` and are saved in the browser, for guests and
-  accounts alike.
-- **shadcn/ui** (`plans/vibes.md` D12) supplies the Library's and the Bookstore's controls,
-  from `src/components/shadcn/` (`components.json`). Its color names (`--background`,
-  `--card`, `--primary`, `--muted`, `--border` and the rest) point at the background-mode
-  tokens in `globals.css`, so every mode restyles them, and only `--destructive` is new. A
-  bare `border` takes the theme's border color. Tailwind's radius scale isn't remapped.
-- **Buttons outside the Library and Bookstore use the theme tokens** `btn-primary`,
-  `btn-secondary` and `btn-ghost`, so their text stays readable in every mode.
+The base UI is ready for vibes (`plans/vibes.md` Phase 1): a vibe will be one stylesheet
+block that sets the tokens below and decorates the marked areas.
+
+- **The theme is light, dark or the system's,** picked on the Settings page
+  (`AppearancePanel`) beside the vibes switch, and saved in the browser for guests and
+  accounts alike (`AppearanceProvider`). `APPEARANCE_SCRIPT` runs in the root layout's
+  `<head>` and writes `data-theme` and `data-vibes` on `<html>` before the first paint, so a
+  dark page never flashes light. A browser that kept one of the five old background modes
+  gets dark for dark and light for the rest (`parseThemeChoice`). The vibes switch is saved
+  and written, and no vibe reads it yet.
+- **Every color, corner and font is a token** in `globals.css`, under shadcn/ui's names
+  (`--background`, `--card`, `--muted`, `--border`, `--primary` and the rest), plus the
+  app's own: the sidebar's, the move bars' (`--bar-white`, `--bar-draw`, `--bar-black`),
+  the board's arrows, `--warning`, `--success` and `--overlay`. Code that needs a color
+  string, such as the board's arrows, reads one with `useThemeColor`. Every `rounded-*`
+  class is a multiple of `--radius`, and the fonts are `font-sans`, `font-heading` and
+  `font-mono`, so a vibe can change all corners or faces at once. The book views keep their
+  own `--view-*` and `--fam-*` tokens (`plans/vibes.md` D11).
+- **Controls are shadcn/ui's,** from `src/components/shadcn/` (`components.json`), on those
+  tokens. A bare `border` takes the theme's border color.
+- **A box that holds a page's content is a `Panel`,** with a `PanelLabel` for its small
+  heading. It and the frame's areas carry `data-slot` (`backdrop`, `topbar`, `sidebar`,
+  `frame`, `panel`, and `move-bar` on the move bars), beside shadcn/ui's own slots, and their
+  `::before` and `::after` are left for a vibe's ornaments.
 - **The link reset in `globals.css` sits in the base layer.** Outside a layer it overrode
   every text-color utility on a link, which made links styled as dark buttons unreadable.

@@ -27,10 +27,10 @@ tree in `src/lib/books/explorerTree.ts`
 
 ## Explorer layout
 
-The cards sit straight on the page, without a tinted panel around them, and keep their
-padding small.
+The panels (`Panel`) sit straight on the page frame, without a tinted box around them, and
+keep their padding small.
 
-The header card has two rows:
+The header panel has two rows:
 
 1. The title and inline match info on the left, then the flip button and the search bar. On
    a phone the title is hidden and the search bar takes its place.
@@ -43,7 +43,7 @@ The header card has two rows:
      line.
    - "Add line" is always visible. It is disabled when no book is selected or no moves have
      been played, and lines are capped at 20 moves. A book that changed in another tab is
-     reloaded instead of saved (`STALE_BOOK_MESSAGE`).
+     reloaded instead of saved, and a toast says so (`STALE_BOOK_MESSAGE`).
 
 **The side panels can be resized.** Each panel above the statistics (the engine while it is
 on, the tree window and, at `xl`, the move row) has a `ResizeHandle`

@@ -41,7 +41,7 @@ export function PositionTooltip({
 
   return (
     <div
-      className="pointer-events-none fixed z-50 rounded-xl border border-[var(--border-card)] bg-[var(--bg-card)] p-2 shadow-xl"
+      className="pointer-events-none fixed z-50 rounded-md border bg-popover p-1.5 text-popover-foreground shadow-md"
       style={{
         width: WIDTH,
         left: nearRight ? undefined : pointer.x + 14,
@@ -50,15 +50,15 @@ export function PositionTooltip({
       }}
     >
       <BoardDisplay fen={node.fen} size="sm" orientation={orientation} />
-      <p className="mt-1.5 text-xs font-semibold text-[var(--text-primary)]">{moveLabel(node)}</p>
-      {opening && <p className="truncate text-xs text-[var(--text-muted)]">{opening}</p>}
+      <p className="mt-1.5 text-xs font-semibold text-foreground">{moveLabel(node)}</p>
+      {opening && <p className="truncate text-xs text-muted-foreground">{opening}</p>}
       {stats && total > 0 && (
         <>
-          <p className="text-xs text-[var(--text-muted)]">{formatGames(total)} master games</p>
-          <div className="mt-0.5 flex h-1.5 overflow-hidden rounded-full">
-            <div style={{ width: `${pct(stats.white)}%`, backgroundColor: "var(--bar-white)" }} />
-            <div style={{ width: `${pct(stats.draws)}%`, backgroundColor: "var(--bar-draw)" }} />
-            <div style={{ width: `${pct(stats.black)}%`, backgroundColor: "var(--bar-black)" }} />
+          <p className="text-xs text-muted-foreground">{formatGames(total)} master games</p>
+          <div data-slot="move-bar" className="mt-0.5 flex h-1.5 overflow-hidden rounded-xs">
+            <div className="bg-bar-white" style={{ width: `${pct(stats.white)}%` }} />
+            <div className="bg-bar-draw" style={{ width: `${pct(stats.draws)}%` }} />
+            <div className="bg-bar-black" style={{ width: `${pct(stats.black)}%` }} />
           </div>
         </>
       )}

@@ -1,6 +1,6 @@
 # Vibes
 
-Status: deciding · Updated: 2026-10-07 · Depends on: deployment.md
+Status: deciding · Updated: 2026-10-12 · Depends on: deployment.md
 
 **Goal:** the UI around the board takes on a vibe chosen for the opening being shown, growing
 richer the deeper the line goes, with music to match, and the community votes on which
@@ -18,8 +18,11 @@ From the user's message of 2026-10-07.
   around it takes on the vibe of the opening that position belongs to. People already
   associate openings with moods, and a vibe is one more cue that makes an opening a place
   (the product goal in `AGENTS.md`).
-- D2. **The base UI stays.** Users who want no vibes keep the base UI with its color modes.
-  A color mode never blends into a vibe; it is the no-vibes experience.
+- D2. **The base UI stays, in light and dark.** Settings has a theme (light, dark, or the
+  system's) and a vibes switch; with vibes off, the base UI is the whole experience. The five
+  background colors went on 2026-10-12, since every vibe in every layer is tested against
+  every base: a vibe comes in a light and a dark version of its colors, and shares its art
+  between them.
 - D3. **The community votes; the user decides.** Votes are input. The user assigns vibes to
   openings, and can change the vibes and restart the voting timer at any time.
 - D4. **Three ranks.** Visitors are guests, members are beta accounts, and the user holds
@@ -51,14 +54,22 @@ From the user's message of 2026-10-07.
 - D12. **shadcn/ui is the base UI** (was Q1, answered 2026-10-07: "shadcn/ui is great"). Vibes
   need a change of vibe to cost a style update, not a re-render, since it lands many times a
   minute; every visual property reachable from CSS so layers can fade by depth; ornaments
-  added to buttons, cards and the sidebar without each component knowing; and nothing that
-  moves. shadcn/ui's components are source files in the repo, every part carries a
-  `data-slot` attribute, and every color, radius and shadow is a CSS variable, so a vibe is a
-  stylesheet keyed on attributes of `<html>` that targets those slots, and switching is one
-  attribute write. The old UI hard-codes many classes and marks no parts. Runtime-themed
-  libraries (MUI, Mantine, Chakra) fit worst, since a theme change re-renders the tree. The
-  Library and the Bookstore moved first (`deployment.md` Phase 5b); the rest moves in this
-  plan's first phase, which also makes every visual value a token.
+  added to buttons, cards and the sidebar without each component knowing; and a layout that
+  never moves. Ornaments are decoration and may animate (a bus driving along the top, a flag
+  that waves once), but they stop when the system asks for reduced motion and never cover the
+  board or text being read. shadcn/ui's components are source files in the repo, every part
+  carries a `data-slot` attribute, and every color, radius and shadow is a CSS variable, so a
+  vibe is a stylesheet keyed on attributes of `<html>` that targets those slots, and switching
+  is one attribute write. The old UI hard-codes many classes and marks no parts.
+  Runtime-themed libraries (MUI, Mantine, Chakra) fit worst, since a theme change re-renders
+  the tree. The Library and the Bookstore moved first (`deployment.md` Phase 5b); the rest
+  moves in this plan's first phase, which also makes every visual value a token.
+- D13. **Vibes reach past color** (from the user's sketch of the Explorer, 2026-10-12). Vibes
+  start with color, texture, font and material, then grow into images and elements: a
+  backdrop behind the frame, the sidebar, the panels that hold everything, and the elements in
+  them (buttons, inputs, the move bars) down to their edges. These areas are where the base UI
+  leaves room today, not a fixed list. Elements that carry meaning keep it: the move bars'
+  white, draw and black stay light, middle and dark in every vibe.
 
 ## Open questions
 
@@ -193,7 +204,27 @@ of the Books, Librarian-King.
 
 ## Steps
 
-Drafted in plan mode once Q2–Q9 are answered. The likely phases are in Notes.
+Phase 1 doesn't depend on Q2–Q9, so it started on 2026-10-12. The later phases are drafted
+once those are answered; the likely ones are in Notes.
+
+### Phase 1. The base UI on shadcn/ui, every visual value a token (D2, D12, D13)
+
+- [x] (agent) Themes: light, dark and the system's, set before the first paint; the five
+      background modes go; a vibes switch in Settings, saved, with no vibes behind it yet.
+- [x] (agent) Tokens: shadcn/ui's names for every color, a radius scale from one `--radius`
+      that a vibe can override, font tokens for body, headings and numbers; the dark-mode
+      patches for fixed classes go.
+- [x] (agent) The areas of D13 marked with `data-slot`: a backdrop layer behind the frame,
+      the sidebar, the frame and the panels, with their pseudo-elements left free for vibes.
+- [x] (agent) A tightening pass, page by page: smaller corners everywhere, less padding and
+      fewer boxes inside boxes, most of all in the panels; shadcn/ui's controls in place of
+      `btn-*` and the old `ui/Button` and `ui/Badge`; AlertDialog and toasts in place of
+      `confirm()` and `alert()`. The trainer and puzzle pages get a minimal port.
+- [x] (agent) Docs brought up to date: `docs/design/dashboard.md` § "Theme and vibe areas"
+      and the UI rules in `AGENTS.md`.
+- [ ] (agent) The screenshot baselines renewed, and the browser tests run, in a review.
+- [ ] (user) Check every page in light and dark, wide and at phone width.
+- [ ] (user, agent) Record the Overview's demos again (`deployment.md` Phase 7).
 
 ## Notes
 
@@ -222,7 +253,8 @@ costs the server nothing. `load-testing.md` covers the ballot route's load.
 
 **Likely phases.**
 
-1. The rest of the base UI on shadcn/ui, with every visual value a token (D12).
+1. The rest of the base UI on shadcn/ui, with every visual value a token (D12), now Phase 1
+   in Steps.
 2. The vibe engine: anchors, finding the vibe (Q4), the attribute writer, two hand-built
    vibes on a fixed assignment, and the layout-shift test.
 3. Music: the loop engine and one vibe's tracks.

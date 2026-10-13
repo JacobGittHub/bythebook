@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { BackgroundModeProvider } from "@/context/BackgroundMode";
+import { AppearanceProvider } from "@/context/Appearance";
+import { APPEARANCE_SCRIPT } from "@/lib/appearance";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,12 +25,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // The head script sets the theme and vibes from the browser's settings before the first
+    // paint, so <html> differs from the server's render on purpose.
     <html
       lang="en"
+      data-theme="light"
+      data-vibes="on"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: APPEARANCE_SCRIPT }} />
+      </head>
       <body className="min-h-full">
-        <BackgroundModeProvider>{children}</BackgroundModeProvider>
+        <AppearanceProvider>{children}</AppearanceProvider>
       </body>
     </html>
   );

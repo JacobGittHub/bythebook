@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Alert, AlertDescription } from "@/components/shadcn/alert";
+import { Button } from "@/components/shadcn/button";
+import { Input } from "@/components/shadcn/input";
 import { resetPasswordWithCode } from "@/lib/auth/accounts";
 import { betaContactEmail, resetRequestMailto } from "@/lib/auth/contact";
 import { resetPasswordInputSchema } from "@/lib/validators/schemas";
@@ -45,84 +48,78 @@ export default async function ResetPasswordPage({
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl items-center px-6 py-16">
-      <section className="w-full rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Auth</p>
-        <h1 className="mt-3 text-3xl font-semibold text-slate-950">Reset password</h1>
-        <p className="mt-3 text-sm text-slate-600">
-          During the beta, passwords are reset with a one-time code. Request one by email,
-          then choose a new password here.
-        </p>
-        {resetRequestMailto ? (
-          // The address is written out because a mailto link does nothing for a visitor
-          // with no mail program set up; they can copy it instead.
-          <div className="mt-4 space-y-3">
-            <a
-              className="btn-secondary inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium transition-colors"
-              href={resetRequestMailto}
-            >
-              Email for a reset code
+    <>
+      <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">ByTheBook</p>
+      <h1 className="mt-1 font-heading text-2xl font-semibold">Reset password</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        During the beta, passwords are reset with a one-time code. Request one by email,
+        then choose a new password here.
+      </p>
+      {resetRequestMailto ? (
+        // The address is written out because a mailto link does nothing for a visitor
+        // with no mail program set up; they can copy it instead.
+        <div className="mt-3 grid justify-items-start gap-2">
+          <Button asChild variant="outline">
+            <a href={resetRequestMailto}>Email for a reset code</a>
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            Or write to{" "}
+            <a className="font-medium text-foreground underline" href={resetRequestMailto}>
+              {betaContactEmail}
             </a>
-            <p className="text-sm text-slate-600">
-              Or write to{" "}
-              <a className="font-medium text-slate-950 underline" href={resetRequestMailto}>
-                {betaContactEmail}
-              </a>
-              . So the code works for your account, send the request from the email address
-              tied to it.
-            </p>
-          </div>
-        ) : null}
-        {error ? (
-          <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {errorMessages[error] ?? "Unable to set a new password right now. Try again."}
+            . So the code works for your account, send the request from the email address
+            tied to it.
           </p>
-        ) : null}
-        <form action={resetAction} className="mt-6 space-y-4">
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">Reset code</span>
-            <input
-              autoComplete="off"
-              className="w-full rounded-2xl border border-slate-300 px-4 py-3 font-mono uppercase text-slate-900 outline-none transition-colors placeholder:normal-case focus:border-slate-950"
-              name="code"
-              placeholder="XXXXX-XXXXX-XXXXX-XXXXX"
-              type="text"
-            />
-          </label>
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">New password</span>
-            <input
-              autoComplete="new-password"
-              className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none transition-colors focus:border-slate-950"
-              name="password"
-              placeholder="At least 8 characters"
-              type="password"
-            />
-          </label>
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">Confirm new password</span>
-            <input
-              autoComplete="new-password"
-              className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none transition-colors focus:border-slate-950"
-              name="confirmPassword"
-              placeholder="Re-enter your new password"
-              type="password"
-            />
-          </label>
-          <button
-            className="btn-primary inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium transition-opacity"
-            type="submit"
-          >
-            Set new password
-          </button>
-        </form>
-        <p className="mt-6 text-sm text-slate-600">
-          Remembered it?{" "}
-          <Link className="font-medium text-slate-950 underline" href="/auth/login">
-            Sign in
-          </Link>
-        </p>
-      </section>
-    </main>
+        </div>
+      ) : null}
+      {error ? (
+        <Alert variant="destructive" className="mt-3">
+          <AlertDescription>
+            {errorMessages[error] ?? "Unable to set a new password right now. Try again."}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      <form action={resetAction} className="mt-4 grid gap-3">
+        <label className="grid gap-1.5">
+          <span className="text-sm font-medium">Reset code</span>
+          <Input
+            autoComplete="off"
+            className="font-mono uppercase placeholder:normal-case"
+            name="code"
+            placeholder="XXXXX-XXXXX-XXXXX-XXXXX"
+            type="text"
+          />
+        </label>
+        <label className="grid gap-1.5">
+          <span className="text-sm font-medium">New password</span>
+          <Input
+            autoComplete="new-password"
+           
+            name="password"
+            placeholder="At least 8 characters"
+            type="password"
+          />
+        </label>
+        <label className="grid gap-1.5">
+          <span className="text-sm font-medium">Confirm new password</span>
+          <Input
+            autoComplete="new-password"
+           
+            name="confirmPassword"
+            placeholder="Re-enter your new password"
+            type="password"
+          />
+        </label>
+        <Button className="justify-self-start" type="submit">
+          Set new password
+        </Button>
+      </form>
+      <p className="mt-4 text-sm text-muted-foreground">
+        Remembered it?{" "}
+        <Link className="font-medium text-foreground underline" href="/auth/login">
+          Sign in
+        </Link>
+      </p>
+    </>
   );
 }

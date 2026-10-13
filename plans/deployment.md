@@ -1,6 +1,6 @@
 # Public deployment
 
-Status: active · Updated: 2026-10-07 · Depends on: —
+Status: active · Updated: 2026-10-12 · Depends on: —
 
 **Goal:** put ByTheBook on Vercel so guests can use it without an
 account, while up to about 100 beta testers sign in and keep their data.
@@ -108,6 +108,7 @@ Chrome, Safari and Firefox, and the Overview page and explorer work on a phone (
 - D20. Button colors come from the theme tokens (`btn-primary`, `btn-secondary` and
   `btn-ghost` in `globals.css`), so a button's text stays readable on it in every
   background mode. Fixed slate or white classes on buttons are how text went missing.
+  *Superseded 2026-10-12 by `vibes.md` Phase 1:* buttons are shadcn/ui's, on the same tokens.
 
 From the user's answers of 2026-10-07 to the Library questions, drawn in
 `docs/design/mockups/library.html`.
@@ -269,7 +270,7 @@ views, and shadcn/ui reaches only the Library, the Bookstore and their dialogs f
       opening a book and a line, the Bookstore's two levels, and the Treemap's Add line.
       Done: `docs/design/dashboard.md` § "Library page" and § "Bookstore", and
       `docs/design/explorer.md` (zoom, `?book=` and `?line=`).
-- [ ] (user) Check as a guest and signed in, in each background mode and at phone width: New
+- [ ] (user) Check as a guest and signed in, in light and dark and at phone width: New
       book through the Explorer and through a pasted PGN, rename, change side, duplicate,
       Remove move, zoom, saving a store book, and the Treemap's Add line on a catalog
       position.
@@ -284,7 +285,7 @@ views, and shadcn/ui reaches only the Library, the Bookstore and their dialogs f
       placeholders, so this waits for the pages themselves.
 - [ ] (agent) A warning when a phone user turns on the heavy engine.
 - [ ] (user) Check on a real phone and in Chrome DevTools device mode, and check the
-      signed-in controls (book row, Library cards) in the dark background mode.
+      signed-in controls (book row, Library cards) in dark mode.
 
 ### Phase 7. Launch
 

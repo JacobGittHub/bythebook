@@ -4,11 +4,17 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "sonner";
 import { CanvasErrorBoundary } from "@/components/lab/CanvasErrorBoundary";
 import { LabSpinner } from "@/components/lab/LabSpinner";
 import { LabStats, type LabStatRow, type LabStatValues } from "@/components/lab/LabStats";
 import type { RegionFrame } from "@/components/lab/RegionMap";
 import { PositionPanel } from "@/components/repertoire/PositionPanel";
+import { RemoveFromBookButton } from "@/components/repertoire/RemoveFromBookButton";
+import { Button } from "@/components/shadcn/button";
+import { NativeSelect, NativeSelectOption } from "@/components/shadcn/native-select";
+import { Panel, PanelLabel } from "@/components/ui/Panel";
 import { useBugReportSection } from "@/context/BugReport";
 import { useLibraryBook, useLibraryBooks } from "@/context/Library";
 import { summarizeMasterGames } from "@/lib/chess/explorerData";
@@ -148,9 +154,9 @@ export function RegionMapView({ initialCamera }: Props) {
   const saveTree = async (tree: MoveNode) => {
     setIsSaving(true);
     try {
-      if (!(await saveStartTree(tree))) alert(STALE_BOOK_MESSAGE);
+      if (!(await saveStartTree(tree))) toast.error(STALE_BOOK_MESSAGE);
     } catch (error) {
-      alert(libraryErrorMessage(error));
+      toast.error(libraryErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -170,19 +176,17 @@ export function RegionMapView({ initialCamera }: Props) {
 
   return (
     // Wide: the map beside the position panel. Narrow: the panel opens under the map.
-    <div className="flex h-full min-h-0 flex-col gap-2 lg:flex-row lg:gap-3">
+    <div className="flex h-full min-h-0 flex-col gap-2 lg:flex-row">
       {/* ── Left: title bar + map ── */}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 lg:gap-3">
-        <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-card)] px-4 py-2">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
+        <Panel className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 px-2.5 py-1.5">
           {/* The opening the view is inside, with the moves that reach it underneath. */}
           <div className="min-w-0 flex-1 basis-56">
-            <p className="text-[10px] font-medium uppercase tracking-widest text-[var(--text-muted)]">
-              Labyrinth · prototype
-            </p>
-            <h1 className="truncate text-lg font-semibold leading-tight text-[var(--text-primary)]">{title}</h1>
+            <PanelLabel>Labyrinth · prototype</PanelLabel>
+            <h1 className="truncate font-heading text-base font-semibold leading-tight">{title}</h1>
             <p
               ref={lineRef}
-              className="overflow-x-auto whitespace-nowrap text-xs text-[var(--text-muted)] [scrollbar-width:none]"
+              className="overflow-x-auto whitespace-nowrap text-xs text-muted-foreground [scrollbar-width:none]"
             >
               {moves.length > 0 ? <span className="font-mono">{line}</span> : START_HINT}
             </p>
@@ -191,46 +195,47 @@ export function RegionMapView({ initialCamera }: Props) {
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             {/* Book selector, kept small: here the map is the subject. */}
             {books === null ? null : books.length > 0 ? (
-              <label className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--text-muted)]">
+              <label className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                 Book
-                <select
+                <NativeSelect
+                  size="sm"
                   value={activeBookId ?? ""}
                   onChange={(e) => setActiveBookId(e.target.value || null)}
-                  className="min-w-0 max-w-40 rounded-lg border border-[var(--border-card)] bg-[var(--bg-card)] py-1 pl-1.5 pr-5 text-xs text-[var(--text-primary)] focus:outline-none"
+                  wrapperClassName="min-w-0 max-w-40"
+                  className="h-7 pl-1.5 pr-7 text-xs"
                 >
-                  <option value="">None</option>
+                  <NativeSelectOption value="">None</NativeSelectOption>
                   {books.map((book) => (
-                    <option key={book.id} value={book.id}>
+                    <NativeSelectOption key={book.id} value={book.id}>
                       {book.name} ({book.color})
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </select>
+                </NativeSelect>
               </label>
             ) : (
-              <span className="text-xs text-[var(--text-muted)]">No books yet</span>
+              <span className="text-xs text-muted-foreground">No books yet</span>
             )}
 
-            {isSaving && <span className="shrink-0 text-xs text-[var(--text-muted)]">Saving…</span>}
+            {isSaving && <span className="shrink-0 text-xs text-muted-foreground">Saving…</span>}
 
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs"
               onClick={() => setPanelChoice(!panelOpen)}
               aria-expanded={panelOpen}
-              className="btn-ghost shrink-0 rounded-xl px-2.5 py-1.5 text-xs"
             >
               {panelOpen ? "Hide panel" : "Show panel"}
-            </button>
+            </Button>
 
-            <Link
-              href="/dashboard/visualizations"
-              className="btn-ghost shrink-0 rounded-xl px-2.5 py-1.5 text-xs"
-            >
-              All visualizations
-            </Link>
+            <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-xs">
+              <Link href="/dashboard/visualizations">All visualizations</Link>
+            </Button>
           </div>
-        </div>
+        </Panel>
 
         {/* The map fills this box whatever size it has, so the canvas never sets its height. */}
-        <div className="relative min-h-0 flex-1 overflow-hidden rounded-3xl border border-[var(--border-card)]">
+        <Panel className="min-h-0 flex-1 overflow-hidden">
           <div className="absolute inset-0">
             <CanvasErrorBoundary>
               <RegionMap
@@ -241,7 +246,7 @@ export function RegionMapView({ initialCamera }: Props) {
               />
             </CanvasErrorBoundary>
           </div>
-        </div>
+        </Panel>
       </div>
 
       {/* ── Right: the frame's position. Closed, it is not rendered: a hidden board can't animate. ── */}
@@ -266,56 +271,56 @@ export function RegionMapView({ initialCamera }: Props) {
               <>
                 {canEditBook &&
                   (inBook ? (
-                    <button
-                      onClick={handleRemoveFromBook}
+                    <RemoveFromBookButton
+                      bookName={activeBook.name}
                       disabled={isSaving}
-                      className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm"
-                    >
-                      Remove from book
-                    </button>
+                      onRemove={handleRemoveFromBook}
+                    />
                   ) : (
-                    <button
-                      onClick={handleAddToBook}
-                      disabled={isSaving}
-                      className="btn-primary w-full rounded-2xl px-3 py-2 text-sm font-medium"
-                    >
+                    <Button size="sm" onClick={handleAddToBook} disabled={isSaving}>
                       Add to book
-                    </button>
+                    </Button>
                   ))}
 
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => router.push(`/dashboard/explorer?fen=${encodeURIComponent(frame.fen)}`)}
-                  className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm"
                 >
                   Open in Explorer
-                </button>
+                </Button>
 
                 {activeBook && (
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => router.push(`/dashboard/train/${activeBook.id}`)}
-                    className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm"
                   >
                     Train this book
-                  </button>
+                  </Button>
                 )}
               </>
             )
           }
         >
           {/* The prototype's numbers and controls, closed until asked for. */}
-          <div className="shrink-0 rounded-3xl bg-[var(--bg-sidebar)] px-4 py-3">
+          <div className="shrink-0 rounded-md bg-sidebar px-2.5 py-2">
             <button
               onClick={() => setStatsOpen((open) => !open)}
               aria-expanded={statsOpen}
-              className="flex w-full items-center justify-between text-[10px] font-semibold uppercase tracking-widest text-[var(--bg-sidebar-muted)] hover:text-[var(--bg-sidebar-text)]"
+              className="flex w-full items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted-foreground hover:text-sidebar-foreground"
             >
               Map stats and controls
-              <span className="text-[9px]">{statsOpen ? "▲" : "▼"}</span>
+              {statsOpen ? (
+                <ChevronUp aria-hidden="true" className="size-3" />
+              ) : (
+                <ChevronDown aria-hidden="true" className="size-3" />
+              )}
             </button>
             {statsOpen && (
-              <div className="mt-2 flex flex-col gap-2">
+              <div className="mt-1.5 flex flex-col gap-1.5">
                 <LabStats statsRef={statsRef} rows={REGION_STATS} />
-              <p className="text-xs text-[var(--bg-sidebar-muted)]">{HOW_TO_MOVE}</p>
+                <p className="text-xs text-sidebar-muted-foreground">{HOW_TO_MOVE}</p>
               </div>
             )}
           </div>

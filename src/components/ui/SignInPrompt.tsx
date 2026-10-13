@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const linkClass = "font-medium text-[var(--text-primary)] underline";
+const linkClass = "font-medium text-foreground underline";
 
 /** Shown to a guest in place of something that needs an account, such as saving a book. */
 export function SignInPrompt({
@@ -12,7 +12,7 @@ export function SignInPrompt({
   className?: string;
 }) {
   return (
-    <p className={`text-[var(--text-muted)] ${className}`}>
+    <p className={`text-muted-foreground ${className}`}>
       <Link className={linkClass} href="/auth/login">
         Sign in
       </Link>{" "}

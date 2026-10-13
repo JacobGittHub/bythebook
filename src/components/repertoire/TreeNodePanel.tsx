@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { PositionPanel } from "@/components/repertoire/PositionPanel";
+import { RemoveFromBookButton } from "@/components/repertoire/RemoveFromBookButton";
+import { Button } from "@/components/shadcn/button";
 import { summarizeMasterGames } from "@/lib/chess/explorerData";
 import { getOpeningForLine } from "@/lib/chess/openingCatalog";
 import { useOpeningExplorer } from "@/hooks/useOpeningExplorer";
@@ -70,35 +72,35 @@ export function TreeNodePanel({
             {book &&
               !isRoot &&
               (!inBook ? (
-                <button onClick={onAddToBook} className="btn-primary w-full rounded-2xl px-3 py-2 text-sm font-medium">
+                <Button size="sm" onClick={onAddToBook}>
                   Add line to book
-                </button>
+                </Button>
               ) : (
-                <button onClick={onRemoveFromBook} className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm">
-                  Remove from book
-                </button>
+                <RemoveFromBookButton bookName={book.name} onRemove={onRemoveFromBook} />
               ))}
 
             {explorerData.data && moves.length > 0 && (
-              <button onClick={() => onExpand(moves)} className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm">
+              <Button variant="outline" size="sm" onClick={() => onExpand(moves)}>
                 {isExpanded ? "Collapse branch" : "Expand branch"}
-              </button>
+              </Button>
             )}
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => router.push(`/dashboard/explorer?fen=${encodeURIComponent(node.fen)}`)}
-              className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm"
             >
               Open in Explorer
-            </button>
+            </Button>
 
             {book && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => router.push(`/dashboard/train/${book.id}`)}
-                className="btn-secondary w-full rounded-2xl px-3 py-2 text-sm"
               >
                 Train this book
-              </button>
+              </Button>
             )}
           </>
         )

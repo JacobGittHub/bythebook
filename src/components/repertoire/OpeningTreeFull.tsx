@@ -168,7 +168,7 @@ export function OpeningTreeFull({
 
   if (!treeData) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)] opacity-50">
+      <div className="flex h-full items-center justify-center text-sm text-muted-foreground opacity-50">
         Loading tree…
       </div>
     );
@@ -201,7 +201,7 @@ export function OpeningTreeFull({
             width={GRID_SPACING} height={GRID_SPACING}
             patternUnits="userSpaceOnUse"
           >
-            <circle cx={GRID_SPACING / 2} cy={GRID_SPACING / 2} r="0.8" fill="var(--border-card)" opacity="0.5" />
+            <circle cx={GRID_SPACING / 2} cy={GRID_SPACING / 2} r="0.8" fill="var(--border)" opacity="0.5" />
           </pattern>
         </defs>
 
@@ -233,10 +233,10 @@ export function OpeningTreeFull({
                   d={linkPath(sx, sy, tx, ty)}
                   fill="none"
                   stroke={
-                    onPath      ? "var(--text-primary)"
+                    onPath      ? "var(--foreground)"
                     : isHighlight ? "#6366f1"
                     : inBook    ? "#059669"
-                    : "var(--border-card)"
+                    : "var(--border)"
                   }
                   strokeWidth={onPath ? 3.5 : isGhost ? 1.5 : 2}
                   strokeOpacity={isGhost ? 0.3 : onPath ? 1 : inBook ? 0.75 : 0.55}
@@ -264,10 +264,10 @@ export function OpeningTreeFull({
                   textAnchor={flip ? "end" : "start"}
                   fontSize={10}
                   fill={
-                    onPath      ? "var(--text-primary)"
+                    onPath      ? "var(--foreground)"
                     : isHighlight ? "#6366f1"
                     : inBook    ? "#059669"
-                    : "var(--text-muted)"
+                    : "var(--muted-foreground)"
                   }
                   fontWeight={onPath || isHighlight || inBook ? "600" : "400"}
                   opacity={node.data.isGhost ? 0.5 : 1}
@@ -292,17 +292,17 @@ export function OpeningTreeFull({
               const inBook = !isRoot && bookFens.has(node.data.fen);
               const r = isRoot ? ROOT_R : isGhost ? GHOST_R : NODE_R;
 
-              const fill = isGhost       ? "var(--bg-card)"
-                         : onPath        ? "var(--text-primary)"
+              const fill = isGhost       ? "var(--card)"
+                         : onPath        ? "var(--foreground)"
                          : inBook        ? "#059669"
                          : isHighlight   ? "#6366f1"
-                         : "var(--bg-muted)";
+                         : "var(--muted)";
 
-              const stroke = isGhost     ? "var(--border-card)"
-                           : onPath      ? "var(--text-primary)"
+              const stroke = isGhost     ? "var(--border)"
+                           : onPath      ? "var(--foreground)"
                            : inBook      ? "#059669"
                            : isHighlight ? "#6366f1"
-                           : "var(--border-card)";
+                           : "var(--border)";
 
               return (
                 <g
@@ -312,7 +312,7 @@ export function OpeningTreeFull({
                   onClick={() => handleNodeClick(node)}
                 >
                   {isSelected && (
-                    <circle r={r + 5} fill="none" stroke="var(--text-primary)" strokeWidth={2} opacity={0.35} />
+                    <circle r={r + 5} fill="none" stroke="var(--foreground)" strokeWidth={2} opacity={0.35} />
                   )}
                   <circle
                     r={r}
@@ -327,7 +327,7 @@ export function OpeningTreeFull({
                       y={ROOT_R + 13}
                       textAnchor="middle"
                       fontSize={9}
-                      fill="var(--text-muted)"
+                      fill="var(--muted-foreground)"
                       style={{ pointerEvents: "none", userSelect: "none" }}
                     >
                       Start

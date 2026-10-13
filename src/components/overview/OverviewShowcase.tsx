@@ -2,7 +2,10 @@
 
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
+import { Badge } from "@/components/shadcn/badge";
+import { Button } from "@/components/shadcn/button";
 import type { NavItem } from "@/lib/auth/access";
+import { cn } from "@/lib/utils";
 
 /** How long each demo stays up while the window is cycling on its own. */
 const DEMO_ROTATE_MS = 7000;
@@ -12,7 +15,7 @@ const STREAM_WORD_MS = 45;
 /** A paragraph that writes itself out a word at a time (see `.stream-word` in globals.css). */
 function StreamedText({ text }: { text: string }) {
   return (
-    <p className="mt-1 text-sm leading-6 text-[var(--text-muted)]">
+    <p className="mt-1 text-sm leading-6 text-muted-foreground">
       {text.split(" ").map((word, index) => (
         <Fragment key={index}>
           <span className="stream-word" style={{ animationDelay: `${index * STREAM_WORD_MS}ms` }}>
@@ -54,7 +57,8 @@ export function OverviewShowcase({ items }: { items: NavItem[] }) {
 
   return (
     <div
-      className="grid gap-3 rounded-3xl border border-[var(--border-card)] bg-[var(--bg-muted)] p-3 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-4 lg:p-4"
+      data-slot="panel"
+      className="relative grid gap-3 rounded-md border bg-card p-2 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:p-3"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
@@ -63,7 +67,7 @@ export function OverviewShowcase({ items }: { items: NavItem[] }) {
       }}
     >
       {/* Tabs: a scrolling row of chips on a phone, a column of cards on a wide screen. */}
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:mx-0 lg:grid lg:content-start lg:overflow-visible lg:p-0">
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 lg:mx-0 lg:grid lg:content-start lg:overflow-visible lg:p-0">
         {items.map((item, index) => {
           const isActive = index === activeIndex;
           const isPicked = isActive && picked;
@@ -73,11 +77,12 @@ export function OverviewShowcase({ items }: { items: NavItem[] }) {
               href={item.href}
               aria-label={isPicked ? `Jump to ${item.label}` : `Show ${item.label}`}
               aria-current={isActive ? "true" : undefined}
-              className={`group shrink-0 rounded-full border px-3.5 py-1.5 transition-colors lg:rounded-2xl lg:px-4 lg:py-3 ${
+              className={cn(
+                "group shrink-0 rounded-md border px-3 py-1.5 transition-colors lg:py-2",
                 isActive
-                  ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--bg-card)] lg:bg-[var(--bg-card)] lg:text-[var(--text-primary)]"
-                  : "border-[var(--border-card)] text-[var(--text-primary)] hover:border-[var(--text-primary)]"
-              }`}
+                  ? "border-foreground bg-primary text-primary-foreground lg:bg-muted lg:text-foreground"
+                  : "hover:border-foreground",
+              )}
               onClick={(event) => {
                 if (isPicked) return;
                 // A press meant for a new tab or window keeps doing that.
@@ -89,25 +94,25 @@ export function OverviewShowcase({ items }: { items: NavItem[] }) {
               }}
             >
               <span className="flex items-center gap-2">
-                <span className="text-sm font-semibold lg:text-base">{item.label}</span>
+                <span className="font-heading text-sm font-semibold">{item.label}</span>
                 {item.status === "coming_soon" ? (
-                  <span className="hidden shrink-0 rounded-full border border-[var(--border-card)] px-2 py-0.5 text-xs text-[var(--text-muted)] lg:inline">
+                  <Badge variant="outline" className="hidden font-normal text-muted-foreground lg:inline-flex">
                     Coming soon
-                  </span>
+                  </Badge>
                 ) : null}
                 {/* Lit while pressing the tab would route: on its own hover, or once the tab is picked. */}
-                <span
+                <Badge
                   data-jump
-                  className={`ml-auto hidden shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] lg:inline ${
-                    isPicked
-                      ? "border-[var(--text-primary)] text-[var(--text-primary)]"
-                      : "border-[var(--border-card)] text-[var(--text-muted)]"
-                  }`}
+                  variant="outline"
+                  className={cn(
+                    "ml-auto hidden transition-colors hover:border-foreground hover:text-foreground lg:inline-flex",
+                    isPicked ? "border-foreground text-foreground" : "text-muted-foreground",
+                  )}
                 >
                   Jump to page
-                </span>
+                </Badge>
               </span>
-              <span className="mt-1 hidden text-sm text-[var(--text-muted)] lg:block">
+              <span className="mt-0.5 hidden text-xs text-muted-foreground lg:block">
                 {item.summary}
               </span>
             </Link>
@@ -124,33 +129,30 @@ export function OverviewShowcase({ items }: { items: NavItem[] }) {
             key={active.demo}
             src={active.demo}
             alt={`${active.label} in use`}
-            className="aspect-video w-full rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] object-cover"
+            className="aspect-video w-full rounded-md border bg-card object-cover"
           />
         ) : (
-          <div className="flex aspect-video flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border-card)] bg-[var(--bg-card)] text-center">
-            <p className="text-lg font-semibold text-[var(--text-primary)]">{active.label}</p>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">Demo animation coming soon</p>
+          <div className="flex aspect-video flex-col items-center justify-center rounded-md border border-dashed bg-muted text-center">
+            <p className="font-heading text-lg font-semibold">{active.label}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Demo animation coming soon</p>
           </div>
         )}
-        <div className="mt-3 min-h-[12.5rem] sm:min-h-[8rem]">
+        <div className="mt-2 min-h-[12.5rem] sm:min-h-[8rem]">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-[var(--text-primary)]">{active.label}</h3>
+            <h3 className="font-heading font-semibold">{active.label}</h3>
             {active.status === "coming_soon" ? (
-              <span className="shrink-0 rounded-full border border-[var(--border-card)] px-2 py-0.5 text-xs text-[var(--text-muted)]">
+              <Badge variant="outline" className="font-normal text-muted-foreground">
                 Coming soon
-              </span>
+              </Badge>
             ) : null}
           </div>
           <StreamedText key={active.href} text={active.details ?? active.summary} />
         </div>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <Link
-            href={active.href}
-            className="btn-primary rounded-full px-4 py-2 text-sm font-medium"
-          >
-            Jump to {active.label}
-          </Link>
-          <p className="text-xs text-[var(--text-muted)]">
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <Button asChild size="sm">
+            <Link href={active.href}>Jump to {active.label}</Link>
+          </Button>
+          <p className="text-xs text-muted-foreground">
             {activeIndex + 1} of {items.length}
           </p>
         </div>

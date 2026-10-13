@@ -3,6 +3,13 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/shadcn/button";
+import {
+  NativeSelect,
+  NativeSelectOptGroup,
+  NativeSelectOption,
+} from "@/components/shadcn/native-select";
+import { Panel, PanelLabel } from "@/components/ui/Panel";
 import { useLibraryBook, useLibraryBooks } from "@/context/Library";
 import { EXAMPLE_ID_PREFIX, EXAMPLE_METHOD_NOTES, creditLine, type ExampleBook } from "@/lib/books/examples";
 import { MAX_BOOK_POSITIONS } from "@/lib/books/measures";
@@ -80,45 +87,45 @@ export function BookViewPage({ view: initialView, initialBookId }: Props) {
     // changes the panel never moves the view.
     <div className="flex h-full min-h-0 flex-col gap-2 lg:flex-row">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
-        <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] px-3 py-2">
+        <Panel className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1.5 px-2.5 py-1.5">
           <div className="min-w-0 flex-1 basis-56">
-            <p className="text-[10px] font-medium uppercase tracking-widest text-[var(--text-muted)]">
-              Small visualization
-            </p>
-            <h1 className="truncate text-lg font-semibold leading-tight text-[var(--text-primary)]">{viewInfo.label}</h1>
+            <PanelLabel>Small visualization</PanelLabel>
+            <h1 className="truncate font-heading text-base font-semibold leading-tight">{viewInfo.label}</h1>
           </div>
-          <label className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--text-muted)]">
+          <label className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
             Book
-            <select
+            <NativeSelect
               aria-label="Book"
+              size="sm"
               value={bookId}
               onChange={(event) => changeBook(event.target.value)}
-              className="min-w-0 max-w-64 rounded-lg border border-[var(--border-card)] bg-[var(--bg-card)] py-1 pl-1.5 pr-5 text-xs text-[var(--text-primary)] focus:outline-none"
+              wrapperClassName="min-w-0 max-w-64"
+              className="h-7 pl-1.5 pr-7 text-xs"
             >
-              <optgroup label="Examples">
+              <NativeSelectOptGroup label="Examples">
                 {(entries ?? []).map((entry) => (
-                  <option key={entry.id} value={entry.id}>
+                  <NativeSelectOption key={entry.id} value={entry.id}>
                     {entry.name} ({entry.color})
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </optgroup>
+              </NativeSelectOptGroup>
               {ownBooks && ownBooks.length > 0 && (
-                <optgroup label="Your books">
+                <NativeSelectOptGroup label="Your books">
                   {ownBooks.map((own) => (
-                    <option key={own.id} value={own.id}>
+                    <NativeSelectOption key={own.id} value={own.id}>
                       {own.name} ({own.color})
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </optgroup>
+                </NativeSelectOptGroup>
               )}
-            </select>
+            </NativeSelect>
           </label>
-          <Link href="/dashboard/visualizations" className="btn-ghost shrink-0 rounded-lg px-2 py-1 text-xs">
-            All visualizations
-          </Link>
-        </div>
+          <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-xs">
+            <Link href="/dashboard/visualizations">All visualizations</Link>
+          </Button>
+        </Panel>
 
-        <div className="flex min-h-[16rem] flex-1 gap-1.5 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-muted)] p-1.5">
+        <Panel className="flex min-h-[16rem] flex-1 gap-1.5 bg-muted p-1.5">
           <BookViewRail view={view} onChange={changeView} />
           {tree && selectedId && spineEndId ? (
             <div className="relative flex min-h-0 min-w-0 flex-1">
@@ -142,7 +149,7 @@ export function BookViewPage({ view: initialView, initialBookId }: Props) {
               />
             </div>
           ) : (
-            <p className="m-auto text-sm text-[var(--text-muted)]">
+            <p className="m-auto text-sm text-muted-foreground">
               {isExample
                 ? failed
                   ? "The example books didn't load."
@@ -154,51 +161,53 @@ export function BookViewPage({ view: initialView, initialBookId }: Props) {
                     : "Loading the book…"}
             </p>
           )}
-        </div>
+        </Panel>
       </div>
 
       <aside className="flex max-h-[45%] w-full shrink-0 flex-col gap-2 overflow-y-auto lg:max-h-none lg:w-72">
-        <SelectedPosition
-          node={shown}
-          preview={hovered !== null}
-          side={book?.color ?? "white"}
-          boardClassName="max-w-60"
-          className="shrink-0 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-2.5"
-        >
-          {selected && (
-            <button
-              type="button"
-              onClick={() =>
-                router.push(explorerHref({ bookId: isExample ? null : bookId, line: pathTo(selected) }))
-              }
-              className="btn-secondary w-full rounded-lg px-3 py-1.5 text-xs"
-            >
-              Open the selected position in the Explorer
-            </button>
-          )}
-        </SelectedPosition>
+        <Panel className="shrink-0 p-2">
+          <SelectedPosition
+            node={shown}
+            preview={hovered !== null}
+            side={book?.color ?? "white"}
+            boardClassName="max-w-60"
+          >
+            {selected && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() =>
+                  router.push(explorerHref({ bookId: isExample ? null : bookId, line: pathTo(selected) }))
+                }
+              >
+                Open the selected position in the Explorer
+              </Button>
+            )}
+          </SelectedPosition>
+        </Panel>
 
         {book && facts && (
-          <div className="shrink-0 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-2.5 text-xs">
-            <p className="font-semibold text-[var(--text-primary)]">{book.name}</p>
-            {example && <p className="mt-0.5 text-[var(--text-muted)]">{example.description}</p>}
+          <Panel className="shrink-0 p-2 text-xs">
+            <p className="font-heading font-semibold">{book.name}</p>
+            {example && <p className="mt-0.5 text-muted-foreground">{example.description}</p>}
             <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
-              <dt className="text-[var(--text-muted)]">Positions</dt>
+              <dt className="text-muted-foreground">Positions</dt>
               <dd className="tabular-nums">
                 {formatCount(facts.positions)} / {formatCount(MAX_BOOK_POSITIONS)}
               </dd>
-              <dt className="text-[var(--text-muted)]">Lines</dt>
+              <dt className="text-muted-foreground">Lines</dt>
               <dd className="tabular-nums">{facts.lines}</dd>
-              <dt className="text-[var(--text-muted)]">Average line</dt>
+              <dt className="text-muted-foreground">Average line</dt>
               <dd className="tabular-nums">{facts.averageDepth === null ? "–" : `${facts.averageDepth.toFixed(1)} plies`}</dd>
-              <dt className="text-[var(--text-muted)]">Clashes</dt>
+              <dt className="text-muted-foreground">Clashes</dt>
               <dd className="tabular-nums">{facts.clashes}</dd>
               {facts.unconnected && (
                 <dd className="col-span-2 font-medium text-[var(--view-clash)]">Unconnected lines</dd>
               )}
             </dl>
             {example && (
-              <div className="mt-2 border-t border-[var(--border-card)] pt-2 text-[var(--text-muted)]">
+              <div className="mt-2 border-t pt-2 text-muted-foreground">
                 <p>{EXAMPLE_METHOD_NOTES[example.method]}</p>
                 {example.attribution && (
                   <p className="mt-1">
@@ -216,7 +225,7 @@ export function BookViewPage({ view: initialView, initialBookId }: Props) {
                 {example.method !== "wikibooks" && <p className="mt-1">How it was built: {example.rules}.</p>}
               </div>
             )}
-          </div>
+          </Panel>
         )}
       </aside>
     </div>

@@ -55,9 +55,9 @@ DashboardTree
 | State | Look |
 |---|---|
 | Book node (its FEN is in `bookFens`) | Emerald fill and stroke (`#059669`) |
-| Ancestor on the selected path | `var(--text-primary)` fill with a thick stroke |
+| Ancestor on the selected path | `var(--foreground)` fill with a thick stroke |
 | Search highlight | Indigo (`#6366f1`) |
-| Catalog-only | `var(--bg-muted)` fill with a muted stroke |
+| Catalog-only | `var(--muted)` fill with a muted stroke |
 | Ghost (expansion preview) | Dashed stroke at low opacity |
 
 ## Side panel (`TreeNodePanel`)
@@ -73,9 +73,10 @@ data and buttons. It contains:
   failing that, at the nearest position before it on the selected path
 - Master-game stats, via `useOpeningExplorer`, added up from the listed moves
   (`summarizeMasterGames`)
-- "Add line to book" when the book lacks the line to the node, else "Remove from book". The
-  tree draws the catalog, so the panel looks the line up in the book's own tree
-  (`getNodePathByUciLine`), and Remove takes the book's node, not the catalog's
+- "Add line to book" when the book lacks the line to the node, else "Remove from book", which
+  asks first (`RemoveFromBookButton`, shared with the Labyrinth). The tree draws the
+  catalog, so the panel looks the line up in the book's own tree (`getNodePathByUciLine`),
+  and Remove takes the book's node, not the catalog's
 - "Open in Explorer", which goes to `/dashboard/explorer?fen=…`
 - "Train this book"
 

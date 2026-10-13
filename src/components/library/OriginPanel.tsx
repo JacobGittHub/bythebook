@@ -16,7 +16,7 @@ const TITLES: Record<BookOrigin["kind"], string> = {
  */
 export function OriginPanel({ origin, storeHref }: { origin: BookOrigin; storeHref: string | null }) {
   return (
-    <section aria-label="Where this book came from" className="flex flex-col gap-1.5 rounded-md border bg-card p-3 sm:max-w-md">
+    <section aria-label="Where this book came from" data-slot="panel" className="relative flex flex-col gap-1.5 rounded-md border bg-card p-3 sm:max-w-md">
       <h2 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{TITLES[origin.kind]}</h2>
       {origin.kind === "store" && <PublisherLabel name={origin.publisher} verified={storeVerified(origin)} />}
       <OriginLine origin={origin} />
