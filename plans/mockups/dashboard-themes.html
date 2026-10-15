@@ -1,0 +1,863 @@
+<!-- Mockup for plans/vibes.md Phase 1 (the base UI's look, chosen before the Overview demos are re-recorded). Published as the "ByTheBook Theme Directions" artifact. -->
+<title>ByTheBook Theme Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Baloo+2:wght@500;600;700&family=Literata:opsz,wght@7..72,500;7..72,600;7..72,700&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@500;600;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a studio on top (direction picker, light/dark, roundness), the chosen direction's
+   Library and Explorer drawn large, then all five side by side. The page chrome has its own
+   quiet palette; each mock carries its direction's tokens on its own root element. */
+:root {
+  --page: #eef0ec;
+  --sheet: #fbfcfa;
+  --ink: #1c2420;
+  --ink-soft: #5b6560;
+  --line: #d6dbd5;
+  --accent: #2d6a52;
+  --accent-ink: #ffffff;
+  --chip: #e4e9e4;
+  --ui: "Geist", "Segoe UI", system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #111513; --sheet: #181d1a; --ink: #e5eae6; --ink-soft: #9ea8a2; --line: #2b332f;
+    --accent: #84c9aa; --accent-ink: #0d1a14; --chip: #222a26; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #111513; --sheet: #181d1a; --ink: #e5eae6; --ink-soft: #9ea8a2; --line: #2b332f;
+  --accent: #84c9aa; --accent-ink: #0d1a14; --chip: #222a26; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font: 15px/1.55 var(--ui); }
+.wrap { max-width: 1280px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 80px; display: grid; gap: 40px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; letter-spacing: -0.012em; }
+h1 { font-size: clamp(26px, 4vw, 36px); line-height: 1.12; }
+h2 { font-size: 21px; }
+h3 { font-size: 16px; }
+p { margin: 0; }
+.eyebrow { font: 600 11px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); }
+.lede { max-width: 70ch; color: var(--ink-soft); margin-top: 12px; }
+code { font: 500 0.88em var(--mono); background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+
+/* Studio controls */
+.studio { display: grid; gap: 18px; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; padding: 12px; background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; background: var(--chip); border-radius: 9px; }
+.seg button { font: 500 13.5px/1 var(--ui); color: var(--ink-soft); background: transparent; border: 0; border-radius: 7px; padding: 8px 12px; cursor: pointer; }
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / 0.12); }
+.seg button:focus-visible, .glance button:focus-visible, .reset:focus-visible, input[type=range]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ctl { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-soft); }
+.ctl label { font-weight: 500; }
+.ctl input[type=range] { width: 150px; accent-color: var(--accent); }
+.ctl output { font: 500 12px var(--mono); color: var(--ink); min-width: 9ch; }
+.reset { font: 500 12px var(--ui); background: none; border: 1px solid var(--line); color: var(--ink-soft); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+
+.about { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px 32px; padding-inline: 4px; }
+.about h2 { font-size: 26px; }
+.about .one { color: var(--ink-soft); margin-top: 6px; max-width: 60ch; }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 14px; margin: 0; }
+.facts dt { color: var(--ink-soft); font-weight: 500; }
+.facts dd { margin: 0; }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.sw { display: flex; align-items: center; gap: 6px; font: 11px var(--mono); color: var(--ink-soft); }
+.sw i { width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--line); display: block; }
+
+figure { margin: 0; display: grid; gap: 8px; }
+figcaption { font-size: 13px; color: var(--ink-soft); display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+figcaption b { color: var(--ink); font-weight: 600; font-size: 14px; }
+.fit { position: relative; width: 100%; aspect-ratio: 1440 / 900; overflow: hidden; border-radius: 10px; border: 1px solid var(--line); background: var(--sheet); }
+.fit > .mock { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+
+.glance { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 14px; margin-top: 14px; }
+.glance button { all: unset; cursor: pointer; display: grid; gap: 6px; border-radius: 12px; padding: 6px; }
+.glance button[aria-pressed="true"] { background: var(--sheet); box-shadow: 0 0 0 2px var(--accent); }
+.glance .fit { border-radius: 8px; }
+.glance span { font-size: 13px; padding-inline: 2px; }
+.glance span b { font-weight: 600; }
+.glance span em { font-style: normal; color: var(--ink-soft); }
+
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 28px; }
+.notes ul { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 8px; color: var(--ink); max-width: 62ch; }
+.notes li::marker { color: var(--ink-soft); }
+.notes p { color: var(--ink-soft); margin-top: 10px; max-width: 62ch; }
+
+@media (max-width: 760px) {
+  .about { grid-template-columns: 1fr; }
+  .controls { position: static; }
+}
+
+/* ─────────────────────────────── The mocks ─────────────────────────────── */
+/* Every direction sets the same token names. "--k-panel" and "--k-frame" turn the one
+   radius into the panels' and the frame's corners, like rounded-lg and rounded-xl would. */
+
+.mock {
+  /* Current, light (what shipped on 2026-10-12) */
+  --r: 6px; --k-panel: 1; --k-frame: 1.5; --k-badge: 0.75; --k-board: 0;
+  --bg: #f0ebe0; --backdrop-img: none;
+  --fg: #1c1917; --card: #fdfaf5; --muted: #ede8dc; --muted-fg: #78716c; --border: #ddd5c8;
+  --primary: #1c1917; --primary-fg: #fdfaf5;
+  --sel-bg: #ede8dc; --sel-fg: var(--fg);
+  --toggle-on-bg: #1c1917; --toggle-on-fg: #fdfaf5;
+  --input-bg: var(--card);
+  --side-bg: #0f172a; --side-fg: #f1f5f9; --side-muted: #94a3b8; --side-border: #0f172a;
+  --side-active-bg: rgb(255 255 255 / 0.1); --side-active-fg: #ffffff;
+  --frame-bg: #fdfaf5; --frame-border: #ddd5c8; --frame-shadow: none;
+  --panel-bg: #fdfaf5; --panel-border: #ddd5c8; --panel-shadow: none; --panel-img: none;
+  --btn-shadow: none; --btn-primary-shadow: none;
+  --bar-w: #d4c8b4; --bar-d: #9a8870; --bar-b: #2e1e10;
+  --arrow: rgb(80 60 20 / 0.5);
+  --font-body: "Geist", "Segoe UI", system-ui, sans-serif;
+  --font-display: var(--font-body);
+  --font-mono: "Geist Mono", ui-monospace, Consolas, monospace;
+  --h-weight: 600; --h-track: -0.01em;
+  --blur: none; --ribbon: transparent;
+  /* The book views keep their own colors (plans/vibes.md D11). */
+  --view-edge: rgba(120, 108, 95, 0.45); --view-white: #ece5d8; --view-white-edge: #9c9282; --view-black: #2a2420;
+  --fam-0: #2f6aa3; --fam-1: #1f8a7a; --fam-2: #c2622a; --fam-3: #8a6a3f; --fam-4: #7457a8; --fam-5: #6f7f2c; --fam-6: #557086; --fam-7: #b0405f;
+  color-scheme: light;
+}
+.mock[data-mode="dark"] {
+  --bg: #111118; --fg: #e8e6f2; --card: #1c1c25; --muted: #242430; --muted-fg: #9390a8; --border: #30303d;
+  --primary: #e8e6f2; --primary-fg: #1c1c25; --sel-bg: #242430;
+  --toggle-on-bg: #e8e6f2; --toggle-on-fg: #1c1c25;
+  --side-bg: #09090e; --side-fg: #e8e6f2; --side-muted: #6e6d82; --side-border: #09090e; --side-active-bg: rgb(255 255 255 / 0.08);
+  --frame-bg: #1c1c25; --frame-border: #30303d; --panel-bg: #1c1c25; --panel-border: #30303d;
+  --bar-w: #b0aac8; --bar-d: #5c5878; --bar-b: #28283c;
+  --arrow: rgb(140 130 220 / 0.6);
+  --view-edge: rgba(170, 165, 200, 0.36); --view-white: #d9d4e6; --view-white-edge: #8e8aa3; --view-black: #0b0b10;
+  --fam-0: #6fa3dc; --fam-1: #4fc0ad; --fam-2: #e88e55; --fam-3: #c19a68; --fam-4: #a68adf; --fam-5: #a8b85a; --fam-6: #8aa6bd; --fam-7: #e07a96;
+  color-scheme: dark;
+}
+
+/* Clubroom: a chess club after hours. Felt sidebar, brass highlights, shadows instead of lines. */
+.mock[data-dir="clubroom"] {
+  --r: 10px; --k-panel: 1.5; --k-frame: 2; --k-board: 0.6;
+  --bg: #e2e5dd; --fg: #1f2622; --card: #fffefa; --muted: #f1f1ea; --muted-fg: #66716a; --border: #dcdfd6;
+  --primary: #1f4d3a; --primary-fg: #f7f3e6;
+  --sel-bg: #f6ecd2; --toggle-on-bg: #1f4d3a; --toggle-on-fg: #f7f3e6;
+  --input-bg: #f6f6f0;
+  --side-bg: #1d3a2f; --side-fg: #eef2ea; --side-muted: #9fb5a8; --side-border: #1d3a2f;
+  --side-active-bg: rgb(240 214 140 / 0.16); --side-active-fg: #f3d98f;
+  --frame-bg: #eceee7; --frame-border: transparent; --frame-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+  --panel-bg: #fffefa; --panel-border: transparent;
+  --panel-shadow: 0 1px 2px rgb(31 50 40 / 0.08), 0 4px 14px -4px rgb(31 50 40 / 0.12);
+  --btn-shadow: 0 1px 2px rgb(31 50 40 / 0.08); --btn-primary-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 1px 2px rgb(31 50 40 / 0.25);
+  --bar-w: #ddd3bb; --bar-d: #a08f6c; --bar-b: #263a30;
+  --arrow: rgb(31 77 58 / 0.55);
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+  --h-weight: 650; --h-track: -0.02em;
+}
+.mock[data-dir="clubroom"][data-mode="dark"] {
+  --bg: #0d1310; --fg: #e6ebe4; --card: #18201c; --muted: #1f2924; --muted-fg: #93a198; --border: #2a3530;
+  --primary: #d9b45a; --primary-fg: #1a160b; --sel-bg: rgb(217 180 90 / 0.13);
+  --toggle-on-bg: #d9b45a; --toggle-on-fg: #1a160b; --input-bg: #141b17;
+  --side-bg: #0f1b16; --side-fg: #e3ebe4; --side-muted: #7f9187; --side-border: #0f1b16;
+  --side-active-bg: rgb(217 180 90 / 0.14); --side-active-fg: #e7c977;
+  --frame-bg: #121915; --frame-shadow: inset 0 1px 0 rgb(255 255 255 / 0.03);
+  --panel-bg: #18201c; --panel-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 4px 16px -6px rgb(0 0 0 / 0.6);
+  --btn-shadow: none; --btn-primary-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25);
+  --bar-w: #c9bea0; --bar-d: #857659; --bar-b: #0b100d;
+  --arrow: rgb(217 180 90 / 0.6);
+}
+
+/* Toybox: a board-game box. Panels float on the backdrop with a pressable ledge. */
+.mock[data-dir="toybox"] {
+  --r: 14px; --k-panel: 1.4; --k-frame: 1.7; --k-badge: 99; --k-board: 0.7;
+  --bg: #e6eaf6; --fg: #18213d; --card: #ffffff; --muted: #f0f3fa; --muted-fg: #5d6787; --border: #d3d9ea;
+  --primary: #2b59d9; --primary-fg: #ffffff;
+  --sel-bg: #fff3c4; --toggle-on-bg: #2b59d9; --toggle-on-fg: #ffffff; --toggle-on-shadow: 0 2px 0 #1b3a99;
+  --input-bg: #f5f7fc;
+  --side-bg: #ffffff; --side-fg: #18213d; --side-muted: #6b7593; --side-border: #d3d9ea;
+  --side-active-bg: #2b59d9; --side-active-fg: #ffffff; --side-active-shadow: 0 3px 0 #1b3a99;
+  --side-shadow: 0 4px 0 #cfd6ea;
+  --frame-bg: transparent; --frame-border: transparent;
+  --panel-bg: #ffffff; --panel-border: #d3d9ea; --panel-shadow: 0 4px 0 #cfd6ea;
+  --btn-shadow: 0 2px 0 #d3d9ea; --btn-primary-shadow: 0 3px 0 #1b3a99;
+  --bar-w: #e3e8f5; --bar-d: #95a0c3; --bar-b: #1f2747;
+  --arrow: rgb(43 89 217 / 0.55);
+  --font-body: "Nunito", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Baloo 2", "Nunito", system-ui, sans-serif;
+  --h-weight: 700; --h-track: 0;
+}
+.mock[data-dir="toybox"][data-mode="dark"] {
+  --bg: #0e1222; --fg: #e8ecfb; --card: #1a2038; --muted: #222a47; --muted-fg: #98a1c4; --border: #2d3659;
+  --primary: #7b97ff; --primary-fg: #0e1222; --sel-bg: rgb(255 210 63 / 0.14);
+  --toggle-on-bg: #7b97ff; --toggle-on-fg: #0e1222; --toggle-on-shadow: 0 2px 0 #3f55b8; --input-bg: #151a2f;
+  --side-bg: #1a2038; --side-fg: #e8ecfb; --side-muted: #8d96b8; --side-border: #2d3659;
+  --side-active-bg: #7b97ff; --side-active-fg: #0e1222; --side-active-shadow: 0 3px 0 #3f55b8; --side-shadow: 0 4px 0 #080b16;
+  --panel-bg: #1a2038; --panel-border: #2d3659; --panel-shadow: 0 4px 0 #080b16;
+  --btn-shadow: 0 2px 0 #080b16; --btn-primary-shadow: 0 3px 0 #3f55b8;
+  --bar-w: #c9d0ea; --bar-d: #6b76a0; --bar-b: #070a15;
+  --arrow: rgb(123 151 255 / 0.6);
+}
+
+/* Paperback: the library metaphor. The sidebar belongs to the page, the active item wears a
+   ribbon, panels have a stacked-page edge and a faint paper grain. */
+.mock[data-dir="paperback"] {
+  --r: 8px; --k-panel: 1.25; --k-frame: 1.75; --k-board: 0.4;
+  --bg: #e4e6e2; --fg: #22252b; --card: #fbfbf8; --muted: #f0f1ec; --muted-fg: #626973; --border: #d2d5cf;
+  --primary: #2c4a74; --primary-fg: #ffffff;
+  --sel-bg: #e4eaf4; --toggle-on-bg: #2c4a74; --toggle-on-fg: #ffffff;
+  --input-bg: #ffffff;
+  --side-bg: transparent; --side-fg: #22252b; --side-muted: #6b7079; --side-border: transparent;
+  --side-active-bg: #fbfbf8; --side-active-fg: #22252b; --side-active-shadow: 0 1px 0 #d2d5cf, 0 0 0 1px #d8dbd5;
+  --ribbon: #8c2f39;
+  --frame-bg: #f3f4f0; --frame-border: #d2d5cf; --frame-shadow: 0 1px 0 #d2d5cf;
+  --panel-bg: #fbfbf8; --panel-border: #d2d5cf;
+  --panel-shadow: 0 2px 0 -1px #fbfbf8, 0 2px 0 0 #d2d5cf, 0 4px 0 -1px #f5f6f2, 0 4px 0 0 #d2d5cf;
+  --panel-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .32 0 0 0 0 .28 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --btn-shadow: none; --btn-primary-shadow: none;
+  --bar-w: #dcd8cc; --bar-d: #8f8a7a; --bar-b: #2a2c31;
+  --arrow: rgb(44 74 116 / 0.55);
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Literata", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --h-weight: 600; --h-track: -0.005em;
+}
+.mock[data-dir="paperback"][data-mode="dark"] {
+  --bg: #14161a; --fg: #e9e5dc; --card: #1e2126; --muted: #24282e; --muted-fg: #9c9a94; --border: #33373f;
+  --primary: #a9c0e6; --primary-fg: #12161d; --sel-bg: rgb(169 192 230 / 0.12);
+  --toggle-on-bg: #a9c0e6; --toggle-on-fg: #12161d; --input-bg: #191c21;
+  --side-fg: #e9e5dc; --side-muted: #8d8c88; --side-active-bg: #1e2126; --side-active-fg: #e9e5dc;
+  --side-active-shadow: 0 0 0 1px #33373f; --ribbon: #c9505c;
+  --frame-bg: #181a1e; --frame-border: #2b2f36; --frame-shadow: none;
+  --panel-bg: #1e2126; --panel-border: #33373f;
+  --panel-shadow: 0 2px 0 -1px #1e2126, 0 2px 0 0 #33373f, 0 4px 0 -1px #1b1e22, 0 4px 0 0 #2d3138;
+  --panel-img: none;
+  --bar-w: #d6d2c6; --bar-d: #8b8676; --bar-b: #0d0e10;
+  --arrow: rgb(169 192 230 / 0.6);
+}
+
+/* Lantern: frosted glass over a lit backdrop. The backdrop is where a vibe would paint. */
+.mock[data-dir="lantern"] {
+  --r: 12px; --k-panel: 1.4; --k-frame: 1.8; --k-badge: 99; --k-board: 0.6;
+  --bg: #f1ebe7;
+  --backdrop-img: radial-gradient(60% 55% at 8% 0%, #ffd2b4 0%, transparent 70%), radial-gradient(50% 60% at 95% 15%, #bcdff3 0%, transparent 70%), radial-gradient(55% 55% at 55% 105%, #d8cdf3 0%, transparent 70%);
+  --fg: #1d1b2a; --card: rgb(255 255 255 / 0.7); --muted: rgb(255 255 255 / 0.5); --muted-fg: #5d596f; --border: rgb(40 30 80 / 0.11);
+  --primary: #1d1b2a; --primary-fg: #ffffff;
+  --sel-bg: rgb(255 255 255 / 0.85); --toggle-on-bg: #1d1b2a; --toggle-on-fg: #ffffff;
+  --input-bg: rgb(255 255 255 / 0.55);
+  --side-bg: rgb(255 255 255 / 0.42); --side-fg: #1d1b2a; --side-muted: #5d596f; --side-border: rgb(255 255 255 / 0.6);
+  --side-active-bg: rgb(255 255 255 / 0.85); --side-active-fg: #1d1b2a; --side-active-shadow: 0 2px 8px -2px rgb(40 30 80 / 0.18);
+  --frame-bg: transparent; --frame-border: transparent;
+  --panel-bg: rgb(255 255 255 / 0.62); --panel-border: rgb(255 255 255 / 0.7);
+  --panel-shadow: 0 10px 30px -14px rgb(40 30 80 / 0.3);
+  --btn-shadow: none; --btn-primary-shadow: 0 4px 12px -4px rgb(29 27 42 / 0.45);
+  --bar-w: #ebe3da; --bar-d: #a596a8; --bar-b: #2a2340;
+  --arrow: rgb(61 70 160 / 0.5);
+  --font-body: "Onest", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Sora", "Onest", system-ui, sans-serif;
+  --h-weight: 600; --h-track: -0.025em;
+  --blur: blur(16px) saturate(150%);
+}
+.mock[data-dir="lantern"][data-mode="dark"] {
+  --bg: #0c0b14;
+  --backdrop-img: radial-gradient(60% 55% at 8% 0%, #43245a 0%, transparent 70%), radial-gradient(50% 60% at 95% 15%, #0f3d4f 0%, transparent 70%), radial-gradient(55% 55% at 55% 105%, #4a2c16 0%, transparent 70%);
+  --fg: #ece9f7; --card: rgb(26 24 40 / 0.62); --muted: rgb(255 255 255 / 0.06); --muted-fg: #a6a2bc; --border: rgb(255 255 255 / 0.1);
+  --primary: #ece9f7; --primary-fg: #12111c; --sel-bg: rgb(255 255 255 / 0.1);
+  --toggle-on-bg: #ece9f7; --toggle-on-fg: #12111c; --input-bg: rgb(255 255 255 / 0.05);
+  --side-bg: rgb(20 18 32 / 0.5); --side-fg: #ece9f7; --side-muted: #9894ae; --side-border: rgb(255 255 255 / 0.08);
+  --side-active-bg: rgb(255 255 255 / 0.12); --side-active-fg: #ffffff; --side-active-shadow: none;
+  --panel-bg: rgb(24 22 38 / 0.58); --panel-border: rgb(255 255 255 / 0.09); --panel-shadow: 0 12px 34px -16px rgb(0 0 0 / 0.7);
+  --btn-primary-shadow: 0 4px 14px -4px rgb(236 233 247 / 0.25);
+  --bar-w: #d3cce3; --bar-d: #6e6787; --bar-b: #0a0912;
+  --arrow: rgb(180 170 255 / 0.55);
+}
+
+.mock { width: 1440px; height: 900px; display: flex; gap: 12px; padding: 12px; overflow: hidden; background: var(--bg); color: var(--fg); font: 13px/1.4 var(--font-body); }
+.mock *, .mock *::before, .mock *::after { box-sizing: border-box; }
+.m-backdrop { position: absolute; inset: 0; background: var(--bg); background-image: var(--backdrop-img); }
+.m-side, .m-frame { position: relative; z-index: 1; }
+.m-side { width: 200px; flex: none; display: flex; flex-direction: column; padding: 22px 12px 12px; background: var(--side-bg); color: var(--side-fg); border: 1px solid var(--side-border); border-radius: calc(var(--r) * var(--k-frame)); box-shadow: var(--side-shadow, none); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+.m-brand { padding-inline: 10px; }
+.m-brand small { display: block; font: 600 10px/1 var(--font-mono); letter-spacing: 0.24em; color: var(--side-muted); }
+.m-brand b { display: block; margin-top: 7px; font: var(--h-weight) 19px/1.1 var(--font-display); letter-spacing: var(--h-track); }
+.m-nav { margin-top: 24px; display: flex; flex-direction: column; gap: 3px; }
+.m-nav span { position: relative; display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: var(--r); font-weight: 500; font-size: 13.5px; }
+.m-nav svg { width: 16px; height: 16px; opacity: 0.85; flex: none; }
+.m-nav .on { background: var(--side-active-bg); color: var(--side-active-fg); box-shadow: var(--side-active-shadow, none); font-weight: 600; }
+.m-nav .on::after { content: ""; position: absolute; right: 10px; top: -1px; width: 9px; height: 19px; background: var(--ribbon); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%); }
+.m-foot { margin-top: auto; display: flex; flex-direction: column; gap: 2px; border-top: 1px solid color-mix(in srgb, var(--side-muted) 30%, transparent); padding-top: 10px; }
+.m-foot .who { font-size: 11.5px; color: var(--side-muted); padding: 2px 10px 4px; }
+.m-foot span:not(.who) { height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; font-weight: 500; }
+.m-foot svg { width: 15px; height: 15px; opacity: 0.8; }
+
+.m-frame { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px; background: var(--frame-bg); border: 1px solid var(--frame-border); border-radius: calc(var(--r) * var(--k-frame)); box-shadow: var(--frame-shadow); }
+.m-panel { position: relative; min-width: 0; background-color: var(--panel-bg); background-image: var(--panel-img); border: 1px solid var(--panel-border); border-radius: calc(var(--r) * var(--k-panel)); box-shadow: var(--panel-shadow); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+.m-h1 { font: var(--h-weight) 24px/1.15 var(--font-display); letter-spacing: var(--h-track); }
+.m-h2 { font: var(--h-weight) 18px/1.2 var(--font-display); letter-spacing: var(--h-track); }
+.m-h3 { font: var(--h-weight) 16px/1.2 var(--font-display); letter-spacing: var(--h-track); }
+.m-sub { color: var(--muted-fg); font-size: 12px; }
+.m-label { font: 600 10.5px/1 var(--font-display); letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted-fg); }
+.m-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.m-grow { flex: 1; min-width: 0; }
+
+.m-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: var(--r); border: 1px solid transparent; font: 600 12.5px/1 var(--font-body); white-space: nowrap; color: var(--fg); flex: none; }
+.m-btn svg { width: 14px; height: 14px; }
+.m-btn.primary { background: var(--primary); color: var(--primary-fg); box-shadow: var(--btn-primary-shadow); }
+.m-btn.outline { background: var(--card); border-color: var(--border); box-shadow: var(--btn-shadow); }
+.m-btn.ghost { background: transparent; }
+.m-btn.sm { height: 26px; padding: 0 9px; font-size: 12px; }
+.m-btn.icon { width: 28px; padding: 0; }
+.m-input { display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--r); background: var(--input-bg); color: var(--muted-fg); font-size: 12.5px; min-width: 0; }
+.m-input svg { width: 14px; height: 14px; flex: none; }
+.m-input .val { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.m-input.select .val { color: var(--fg); }
+.m-tg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--border); border-radius: var(--r); background: var(--input-bg); flex: none; }
+.m-tg span { display: flex; align-items: center; height: 22px; padding: 0 9px; border-radius: calc(var(--r) * 0.7); font-size: 12px; font-weight: 600; color: var(--muted-fg); }
+.m-tg .on { background: var(--toggle-on-bg); color: var(--toggle-on-fg); box-shadow: var(--toggle-on-shadow, none); }
+.m-badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border: 1px solid var(--border); border-radius: min(calc(var(--r) * var(--k-badge)), 11px); font-size: 11.5px; font-weight: 500; white-space: nowrap; }
+.m-badge.fill { background: var(--muted); border-color: transparent; }
+.m-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--fam-2); }
+.m-sidesq { display: inline-block; width: 9px; height: 9px; border-radius: 2px; border: 1px solid var(--fg); }
+.m-sidesq.b { background: var(--fg); }
+
+/* Board: squares and pieces never change (D11). */
+.m-boardwrap { display: flex; gap: 8px; align-items: stretch; }
+.m-board { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); width: 600px; height: 600px; border-radius: calc(var(--r) * var(--k-board)); overflow: hidden; box-shadow: 0 0 0 2px #3b2a1a; flex: none; }
+.m-board i { position: relative; display: flex; align-items: center; justify-content: center; font-style: normal; }
+.m-board i.l { background: #f0d9b5; }
+.m-board i.d { background: #b58863; }
+.m-board i.hl.l { background: #f5e78a; }
+.m-board i.hl.d { background: #d5c25a; }
+.m-board i small { position: absolute; font: 600 10px/1 "Geist", sans-serif; }
+.m-board i.l small { color: #b58863; }
+.m-board i.d small { color: #f0d9b5; }
+.m-board i small.rk { top: 3px; left: 4px; }
+.m-board i small.fl { bottom: 3px; right: 4px; }
+.pc { font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", "Apple Symbols", serif; font-size: 58px; line-height: 1; }
+.pc.w { color: #ffffff; -webkit-text-stroke: 1.4px #1b1b1b; paint-order: stroke fill; }
+.pc.b { color: #161616; }
+.m-arrow { position: absolute; inset: 0; pointer-events: none; }
+.m-eval { width: 10px; border-radius: 99px; overflow: hidden; background: #eeeeee; display: flex; flex-direction: column; box-shadow: 0 0 0 1px var(--border); }
+.m-eval b { display: block; height: 46%; background: #222222; }
+
+.m-moves { display: grid; grid-template-columns: 44px 1fr 56px; align-items: center; column-gap: 12px; row-gap: 0; }
+.m-moves > * { height: 28px; display: flex; align-items: center; }
+.m-moves .hd { height: 22px; font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; color: var(--muted-fg); }
+.m-moves .san { font: 600 13px/1 var(--font-body); }
+.m-moves .n { justify-content: flex-end; font: 500 11.5px/1 var(--font-mono); color: var(--muted-fg); }
+.m-moves .bar span { display: flex; width: 100%; height: 9px; border-radius: min(calc(var(--r) * 0.5), 5px); overflow: hidden; }
+.m-moves .bar i { display: block; height: 100%; }
+.m-moves .row-hl { background: var(--sel-bg); margin-inline: -8px; padding-inline: 8px; border-radius: calc(var(--r) * 0.8); }
+
+.m-view { position: relative; flex: 1; min-width: 0; background: var(--muted); border-radius: var(--r); overflow: hidden; }
+.m-view svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.m-zoom { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--border); background: var(--card); border-radius: var(--r); font-size: 11px; color: var(--muted-fg); }
+.m-zoom span { width: 24px; height: 20px; display: flex; align-items: center; justify-content: center; }
+.m-zoom span.fit-w { width: 34px; }
+.m-rail { display: flex; flex-direction: column; gap: 4px; }
+.m-rail span { width: 28px; height: 28px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; color: var(--muted-fg); }
+.m-rail span.on { background: var(--sel-bg); color: var(--fg); }
+.m-rail svg { width: 15px; height: 15px; }
+
+.m-book { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.m-book:last-child { border-bottom: 0; }
+.m-book.on { background: var(--sel-bg); }
+.m-book .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.m-book .t b { font-weight: 600; font-size: 13px; }
+.m-book .t span { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted-fg); }
+.m-thumb { width: 46px; height: 30px; flex: none; border-radius: calc(var(--r) * 0.6); background: var(--muted); overflow: hidden; }
+.m-dl { display: flex; flex-wrap: wrap; gap: 4px 26px; margin: 0; }
+.m-dl dt { font: 600 10.5px/1.2 var(--font-display); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted-fg); }
+.m-dl dd { margin: 3px 0 0; font: 600 14px/1.2 var(--font-mono); }
+.m-link { text-decoration: underline; text-underline-offset: 2px; }
+.m-line { font: 500 13px/1 var(--font-mono); }
+.m-line b { background: var(--sel-bg); padding: 3px 5px; border-radius: calc(var(--r) * 0.6); font-weight: 600; }
+</style>
+
+<main class="wrap">
+  <header>
+    <p class="eyebrow">plans/vibes.md · Phase 1 · the base UI's look</p>
+    <h1>Theme directions for ByTheBook</h1>
+    <p class="lede">
+      Five looks for the same two pages. Current is what shipped on 2026-10-12. The other four
+      bring back a friendlier, rounder feel in different ways. Each one is only token values plus a
+      few rules on the panels and sidebar, so any of them, or a mix, fits the shadcn/ui setup
+      without moving anything on the page. Pick a direction, switch light and dark, and drag the
+      roundness until it feels right.
+    </p>
+  </header>
+
+  <section class="studio" aria-label="Theme studio">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Direction" id="dir-seg"></div>
+      <div class="seg" role="group" aria-label="Light or dark" id="mode-seg">
+        <button type="button" id="mode-light" data-mode="light">Light</button>
+        <button type="button" id="mode-dark" data-mode="dark">Dark</button>
+      </div>
+      <div class="ctl">
+        <label for="radius">Roundness</label>
+        <input type="range" id="radius" min="0" max="20" step="1" value="10">
+        <output id="radius-out" for="radius">10px</output>
+        <button type="button" class="reset" id="radius-reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="about">
+      <div>
+        <h2 id="about-name">Clubroom</h2>
+        <p class="one" id="about-one"></p>
+        <div class="swatches" id="swatches" aria-label="This direction's colors"></div>
+      </div>
+      <dl class="facts" id="about-facts"></dl>
+    </div>
+
+    <figure>
+      <figcaption><b>Library</b> a guest with six books, the Italian Game open</figcaption>
+      <div class="fit" id="stage-library"></div>
+    </figure>
+    <figure>
+      <figcaption><b>Explorer</b> the Sicilian after 2…d6, with a Najdorf book chosen and the light engine on (sample numbers)</figcaption>
+      <div class="fit" id="stage-explorer"></div>
+    </figure>
+  </section>
+
+  <section aria-labelledby="glance-h">
+    <h2 id="glance-h">All five side by side</h2>
+    <p class="lede" style="margin-top:6px">Click one to draw it large above.</p>
+    <div class="glance" id="glance"></div>
+  </section>
+
+  <section class="notes">
+    <div>
+      <h3>The same in every direction</h3>
+      <ul>
+        <li>The layout. Every box keeps its size and place, so a direction, and later a vibe, only repaints.</li>
+        <li>The board's squares and pieces, and the book views' colors (D11).</li>
+        <li>The move bars stay light, middle and dark (D13).</li>
+        <li>The controls are the same shadcn/ui components. A direction changes the token values in <code>globals.css</code>, plus a few rules on <code>data-slot="panel"</code> and <code>data-slot="sidebar"</code>.</li>
+        <li>The sidebar icons are drawn in every direction. They would be a small change to the nav, separate from the theme.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Mixing directions</h3>
+      <p>
+        Each direction turns the same five dials: corners, how boxes separate from each other
+        (lines, soft shadows, a ledge, or glass), the sidebar, the fonts, and the accent color. An
+        answer like "Clubroom's colors with Toybox's buttons" or "Paperback, but rounder" works,
+        since each dial is its own token.
+      </p>
+      <p>
+        Rounder than Current means lifting the "no corners larger than rounded-lg" rule in
+        AGENTS.md, which was written for the tightening pass.
+      </p>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  const DIRS = {
+    current: {
+      name: "Current", r: 6,
+      one: "What shipped on 2026-10-12: tight, small corners and thin lines around every box, a cream backdrop and a navy sidebar slab. Clean, but it reads as a tool more than a place.",
+      facts: [
+        ["Corners", "radius"],
+        ["Boxes", "A 1px line on every panel and on the frame."],
+        ["Sidebar", "A dark navy slab, apart from the page."],
+        ["Type", "Geist throughout."],
+        ["Accent", "None; black buttons."],
+        ["With vibes", "The vibe has to bring all the warmth."],
+      ],
+      swatch: ["--bg", "--card", "--border", "--primary", "--side-bg"],
+    },
+    clubroom: {
+      name: "Clubroom", r: 10,
+      one: "A chess club after hours. A felt-green sidebar, brass for whatever is selected, and panels that rest on the frame with soft shadows instead of lines. Warm and grown-up, and closest to the old app's friendliness without its padding.",
+      facts: [
+        ["Corners", "radius"],
+        ["Boxes", "No lines. Panels lift off a slightly darker frame with a soft shadow."],
+        ["Sidebar", "Felt green, with a brass highlight on the page you're on."],
+        ["Type", "Bricolage Grotesque for headings, Figtree for text."],
+        ["Accent", "Felt green buttons; brass selection, and brass buttons in dark."],
+        ["With vibes", "Felt and brass are plain tokens, so a vibe swaps them wholesale."],
+      ],
+      swatch: ["--bg", "--frame-bg", "--card", "--primary", "--side-bg", "--side-active-fg"],
+    },
+    toybox: {
+      name: "Toybox", r: 14,
+      one: "A board-game box. No outer frame: panels float straight on a tinted backdrop, and they and the buttons have a pressable ledge under them. Rounded type, one bright blue, and a sunny yellow for what's selected. The most playful of the four.",
+      facts: [
+        ["Corners", "radius"],
+        ["Boxes", "A line plus a solid ledge under each panel and button."],
+        ["Sidebar", "White like the panels; the page you're on is a blue pill."],
+        ["Type", "Baloo 2 for headings, Nunito for text."],
+        ["Accent", "Cobalt blue buttons; yellow selection."],
+        ["Watch for", "It can tip into a kids' app if the colors get any louder."],
+      ],
+      swatch: ["--bg", "--card", "--border", "--primary", "--sel-bg"],
+    },
+    paperback: {
+      name: "Paperback", r: 8,
+      one: "The library, taken literally. The sidebar is part of the page and the page you're on wears a ribbon bookmark. Panels have a stacked-page edge and a faint paper grain, and headings are set in a book serif. The calmest of the four.",
+      facts: [
+        ["Corners", "radius"],
+        ["Boxes", "A line, a stacked-page edge below, and a paper grain in light."],
+        ["Sidebar", "No slab. The current page is a white tab with a red ribbon."],
+        ["Type", "Literata for headings, Atkinson Hyperlegible for text, Plex Mono for figures."],
+        ["Accent", "Ink-blue buttons; pale ink selection."],
+        ["With vibes", "Quiet on its own, so it leaves the most room for a vibe's color."],
+      ],
+      swatch: ["--bg", "--frame-bg", "--card", "--primary", "--ribbon"],
+    },
+    lantern: {
+      name: "Lantern", r: 12,
+      one: "Frosted glass over a lit backdrop. The sidebar and panels let what's behind them glow through. In the base UI that's a soft wash of color; with vibes on, the backdrop becomes the stage, where the London bus would drive behind the glass.",
+      facts: [
+        ["Corners", "radius"],
+        ["Boxes", "Translucent panels with a blur and a soft drop shadow; no frame."],
+        ["Sidebar", "Glass, like the panels."],
+        ["Type", "Sora for headings, Onest for text."],
+        ["Accent", "Ink-black buttons; the backdrop carries the color."],
+        ["Watch for", "Blur costs some speed on older phones, and text contrast has to be checked over every vibe's backdrop."],
+      ],
+      swatch: ["--bg", "--card", "--border", "--primary", "--side-bg"],
+    },
+  };
+  const ORDER = ["current", "clubroom", "toybox", "paperback", "lantern"];
+
+  /* ── Icons (lucide-style strokes) ── */
+  const P = {
+    house: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    compass: '<circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-1.8 5.4a2 2 0 0 1-1.3 1.3l-5.3 1.7 1.8-5.4a2 2 0 0 1 1.3-1.3z"/>',
+    network: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.5 8 11 16M16.5 8 13 16"/>',
+    book: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+    store: '<path d="M3 9 4.5 4h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9h18"/><path d="M10 20v-5h4v5"/>',
+    target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    puzzle: '<path d="M5 4h5v2a2 2 0 1 0 4 0V4h5v5h-2a2 2 0 1 0 0 4h2v7H5v-7h2a2 2 0 1 0 0-4H5z"/>',
+    sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+    bug: '<rect x="7" y="6" width="10" height="14" rx="5"/><path d="M12 20v-8M7 12H3M21 12h-4M7 17l-3 2M17 17l3 2M7 8 4 6M17 8l3-2M9 6a3 3 0 0 1 6 0"/>',
+    login: '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5M15 12H3"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+    upload: '<path d="M12 15V3M7 8l5-5 5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
+    download: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
+    plus: '<path d="M5 12h14M12 5v14"/>',
+    flip: '<path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/>',
+    chevd: '<path d="m6 9 6 6 6-6"/>',
+    first: '<path d="m17 18-6-6 6-6M7 6v12"/>',
+    prev: '<path d="m15 18-6-6 6-6"/>',
+    next: '<path d="m9 18 6-6-6-6"/>',
+    last: '<path d="m7 18 6-6-6-6M17 6v12"/>',
+    play: '<path d="M7 4l13 8-13 8z"/>',
+    more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+    check: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+    tree: '<path d="M4 12h5M9 12l6-6h5M9 12l6 6h5M15 12h5"/>',
+    rows: '<path d="M4 6h16M4 12h10M4 18h13"/>',
+    branch: '<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 8v8M18 10a6 6 0 0 1-6 6H8"/>',
+    cols: '<rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="10" rx="1"/><rect x="17" y="4" width="4" height="6" rx="1"/>',
+    metro: '<circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12h5l5-5M12 12l5 5"/>',
+    collapse: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M16 9l-3 3 3 3"/>',
+  };
+  const ic = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+
+  /* ── Shell: backdrop, sidebar, frame ── */
+  function shell(active, page) {
+    const items = [["Overview", "house"], ["Explorer", "compass"], ["Visualizations", "network"], ["Library", "book"], ["Bookstore", "store"], ["Train", "target"], ["Puzzles", "puzzle"], ["Settings", "sliders"]];
+    return `<div class="mock" aria-hidden="true">
+      <div class="m-backdrop"></div>
+      <aside class="m-side">
+        <div class="m-row" style="align-items:flex-start">
+          <div class="m-brand m-grow"><small>BYTHEBOOK</small><b>Dashboard</b></div>
+          <span style="opacity:.7;width:16px;height:16px;display:block">${ic("collapse")}</span>
+        </div>
+        <nav class="m-nav">${items.map(([t, i]) => `<span class="${t === active ? "on" : ""}">${ic(i)}${t}</span>`).join("")}</nav>
+        <div class="m-foot">
+          <span>${ic("bug")}Copy bug report</span>
+          <span class="who">Browsing as a guest</span>
+          <span>${ic("login")}Sign in</span>
+          <span>${ic("user")}Create account</span>
+        </div>
+      </aside>
+      <div class="m-frame">${page}</div>
+    </div>`;
+  }
+
+  /* ── Book-view tree (a small horizontal tree, in the views' own colors) ── */
+  function N(san, c = [], o = {}) { return { san, c, ...o }; }
+  function treeSVG(root, W, H, o = {}) {
+    const pad = o.pad ?? 18, label = o.labelRoom ?? 30;
+    let leaves = 0; const nodes = [], edges = [];
+    (function walk(n, d, fam, parent) {
+      n.d = d; n.f = n.fam ?? fam;
+      if (parent) edges.push([parent, n]);
+      if (!n.c.length) n.y = leaves++;
+      else { n.c.forEach((ch) => walk(ch, d + 1, n.f, n)); n.y = (n.c[0].y + n.c[n.c.length - 1].y) / 2; }
+      nodes.push(n);
+    })(root, 0, null, null);
+    const depth = Math.max(...nodes.map((n) => n.d));
+    const dx = (W - pad * 2 - label) / depth;
+    const dy = leaves > 1 ? (H - pad * 2) / (leaves - 1) : 0;
+    const X = (n) => pad + n.d * dx, Y = (n) => (leaves > 1 ? pad + n.y * dy : H / 2);
+    let s = "";
+    for (const [a, b] of edges) {
+      const ax = X(a), ay = Y(a), bx = X(b), by = Y(b), mx = (ax + bx) / 2;
+      const on = a.on && b.on;
+      const col = on ? "var(--fg)" : b.f == null ? "var(--view-edge)" : `var(--fam-${b.f})`;
+      s += `<path d="M${ax} ${ay}C${mx} ${ay} ${mx} ${by} ${bx} ${by}" fill="none" stroke="${col}" stroke-width="${on ? 2.4 : 1.8}" stroke-linecap="round"/>`;
+    }
+    for (const n of nodes) {
+      const x = X(n), y = Y(n);
+      if (n.d === 0) { s += `<circle cx="${x}" cy="${y}" r="5" fill="var(--card)" stroke="var(--fg)" stroke-width="1.6"/>`; continue; }
+      const white = n.d % 2 === 1;
+      s += `<circle cx="${x}" cy="${y}" r="${n.on ? 4.6 : 3.8}" fill="${white ? "var(--view-white)" : "var(--view-black)"}" stroke="${n.on ? "var(--fg)" : white ? "var(--view-white-edge)" : "var(--view-black)"}" stroke-width="${n.on ? 1.6 : 1}"/>`;
+      if (o.labels !== false) s += `<text x="${x + 6}" y="${y - 7}" font-size="${o.fs ?? 10}" font-family="Geist Mono, ui-monospace, monospace" font-weight="${n.on ? 600 : 400}" fill="${n.on ? "var(--fg)" : "var(--muted-fg)"}" paint-order="stroke" stroke="var(--muted)" stroke-width="3" stroke-linejoin="round">${n.san}</text>`;
+    }
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${s}</svg>`;
+  }
+  const sicilian = () => N("", [N("e4", [N("c5", [
+    N("Nf3", [
+      N("d6", [N("d4", [N("cxd4", [N("Nxd4", [N("Nf6", [N("Nc3", [N("a6", [], { fam: 0 }), N("g6", [], { fam: 1 }), N("Nc6", [], { fam: 2 })])])])])]), N("Bb5+", [N("Bd7")], { fam: 4 })], { on: true }),
+      N("Nc6", [N("d4", [N("cxd4")])], { fam: 3 }),
+      N("e6", [N("d4", [N("cxd4")])], { fam: 5 }),
+    ], { on: true }),
+    N("Nc3", [N("Nc6", [N("g3")])], { fam: 6 }),
+    N("c3", [N("Nf6", [N("e5")])], { fam: 7 }),
+  ], { on: true })], { on: true })], { on: true });
+  const italian = () => N("", [N("e4", [N("e5", [N("Nf3", [N("Nc6", [N("Bc4", [
+    N("Bc5", [N("c3", [N("Nf6", [N("d4", [N("exd4")])])]), N("d3", [N("Nf6", [N("Nc3")])]), N("b4", [N("Bxb4", [N("c3")])], { fam: 2 })], { fam: 0 }),
+    N("Nf6", [N("Ng5", [N("d5", [N("exd5")])]), N("d3", [N("Be7")]), N("d4", [N("exd4", [N("e5")])])], { fam: 1 }),
+    N("Be7", [N("d4", [N("d6")])], { fam: 3 }),
+  ])])])])])]);
+
+  function thumb(seed) {
+    let s = "";
+    for (let i = 0; i < 5; i++) {
+      const len = 14 + ((seed * (i + 3) * 7) % 26);
+      s += `<rect x="4" y="${4 + i * 4.6}" width="${len}" height="2.4" rx="1.2" fill="var(--fam-${(seed + i) % 8})"/>`;
+    }
+    return `<svg class="m-thumb" viewBox="0 0 46 30"><rect x="3" y="3" width="1.6" height="24" fill="var(--fg)" opacity=".5"/>${s}</svg>`;
+  }
+
+  /* ── Library page ── */
+  function library() {
+    const books = [
+      ["Caro-Kann Defense", "b", "256", 1], ["Italian Game", "w", "338", 2], ["King's Gambit", "w", "75", 3],
+      ["London System", "w", "120", 4], ["Queen's Gambit", "w", "198", 5], ["Sicilian Najdorf", "b", "247", 6],
+    ];
+    return `
+      <div class="m-row" style="height:36px;gap:12px">
+        <span class="m-h1">Library</span>
+        <span class="m-sub" style="font-family:var(--font-mono)">6 books</span>
+        <span class="m-badge"><i class="m-dot"></i>Kept in this browser</span>
+        <span class="m-grow"></span>
+        <span class="m-btn ghost sm">${ic("upload")}Restore</span>
+        <span class="m-btn ghost sm">${ic("download")}Back up</span>
+        <span class="m-btn primary sm">${ic("plus")}New book</span>
+      </div>
+      <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:12px;flex:1;min-height:0">
+        <div style="display:flex;flex-direction:column;gap:8px;min-height:0">
+          <div class="m-panel" style="display:flex;flex-direction:column;overflow:hidden">
+            <div class="m-row" style="padding:8px;border-bottom:1px solid var(--border)">
+              <span class="m-input m-grow">${ic("search")}<span class="val">Search books</span></span>
+              <span class="m-tg"><span class="on">All</span><span>White</span><span>Black</span></span>
+            </div>
+            ${books.map(([n, side, pos, seed]) => `
+              <div class="m-book${n === "Italian Game" ? " on" : ""}">${thumb(seed)}
+                <span class="t"><b>${n}</b><span><i class="m-sidesq ${side}"></i>${side === "w" ? "White" : "Black"} · <span style="font-family:var(--font-mono)">${pos} positions</span></span></span>
+              </div>`).join("")}
+          </div>
+          <p class="m-sub" style="padding-inline:4px"><b style="color:var(--fg);font-weight:600">Game history</b> · coming soon: import your own games to see where you left the book.</p>
+        </div>
+        <section class="m-panel" style="display:flex;flex-direction:column;gap:14px;padding:16px;min-height:0">
+          <div class="m-row" style="align-items:flex-start;gap:16px">
+            <div class="m-grow">
+              <div class="m-row"><span class="m-h2">Italian Game</span><span class="m-sub m-row" style="gap:5px"><i class="m-sidesq w"></i>White</span></div>
+              <div class="m-row" style="margin-top:8px;gap:6px">
+                <span class="m-badge fill">ByTheBook</span>
+                <span class="m-row" style="gap:4px;font-size:11.5px;font-weight:600"><span style="width:14px;height:14px;display:block">${ic("check")}</span>Verified</span>
+              </div>
+              <p class="m-sub" style="margin-top:8px">From <span class="m-link">Wikibooks' Chess Opening Theory</span>, under <span class="m-link">CC BY-SA 4.0</span>.</p>
+            </div>
+            <div class="m-row" style="gap:6px">
+              <span class="m-btn primary sm">Open book page</span>
+              <span class="m-btn outline sm">Open in Explorer</span>
+              <span class="m-btn outline sm">Train</span>
+              <span class="m-btn outline sm icon">${ic("more")}</span>
+            </div>
+          </div>
+          <dl class="m-dl">
+            <div><dt>Positions</dt><dd>338 / 1,000</dd></div>
+            <div><dt>Lines</dt><dd>41</dd></div>
+            <div><dt>Average line</dt><dd>11.4 plies</dd></div>
+            <div><dt>Longest line</dt><dd>18 plies</dd></div>
+            <div><dt>Clashes</dt><dd>0</dd></div>
+          </dl>
+          <div style="display:flex;gap:8px;flex:1;min-height:0;padding:6px;border:1px solid var(--border);border-radius:calc(var(--r) * var(--k-panel));background:var(--muted)">
+            <div class="m-rail"><span class="on">${ic("tree")}</span><span>${ic("rows")}</span><span>${ic("branch")}</span><span>${ic("cols")}</span><span>${ic("metro")}</span></div>
+            <div class="m-view">${treeSVG(italian(), 820, 470, { pad: 26, labelRoom: 46, fs: 11 })}
+              <div class="m-zoom"><span>−</span><span class="fit-w">Fit</span><span>+</span></div>
+            </div>
+          </div>
+        </section>
+      </div>`;
+  }
+
+  /* ── Explorer page ── */
+  const FEN = ["rnbqkbnr", "pp2pppp", "3p4", "2p5", "4P3", "5N2", "PPPP1PPP", "RNBQKB1R"];
+  const GLYPH = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
+  function board() {
+    let sq = "";
+    FEN.forEach((row, ri) => {
+      const cells = [];
+      for (const ch of row) { if (/\d/.test(ch)) for (let k = 0; k < +ch; k++) cells.push(""); else cells.push(ch); }
+      cells.forEach((p, fi) => {
+        const light = (ri + fi) % 2 === 0;
+        const hl = (ri === 2 && fi === 3) || (ri === 1 && fi === 3);
+        const rank = 8 - ri, file = "abcdefgh"[fi];
+        let inner = "";
+        if (fi === 0) inner += `<small class="rk">${rank}</small>`;
+        if (ri === 7) inner += `<small class="fl">${file}</small>`;
+        if (p) inner += `<span class="pc ${p === p.toUpperCase() ? "w" : "b"}">${GLYPH[p.toLowerCase()]}︎</span>`;
+        sq += `<i class="${light ? "l" : "d"}${hl ? " hl" : ""}">${inner}</i>`;
+      });
+    });
+    // The hovered move d2-d4, in the board's arrow token.
+    const arrow = `<svg class="m-arrow" viewBox="0 0 600 600"><path d="M262.5 487.5V372" stroke="var(--arrow)" stroke-width="15" stroke-linecap="round"/><path d="M236 378 262.5 330 289 378z" fill="var(--arrow)"/></svg>`;
+    return `<div class="m-board">${sq}${arrow}</div>`;
+  }
+  function explorer() {
+    const moves = [
+      ["d4", "312K", 36, 33], ["Bb5+", "38K", 37, 37], ["c3", "21K", 34, 35], ["Nc3", "18K", 33, 31], ["Bc4", "9.6K", 35, 27],
+      ["g3", "3.1K", 36, 30], ["b4", "1.4K", 30, 26], ["c4", "1.1K", 38, 30], ["Be2", "980", 33, 33], ["h3", "610", 31, 34], ["Qe2", "540", 34, 31],
+    ];
+    return `
+      <div style="display:grid;grid-template-columns:minmax(0,1.17fr) minmax(0,1fr);gap:12px;flex:1;min-height:0">
+        <section class="m-panel" style="padding:12px;display:flex;flex-direction:column;gap:10px">
+          <div class="m-row" style="height:32px">
+            <span class="m-h3">Opening Explorer</span><span class="m-sub">Play moves or search.</span>
+            <span class="m-grow"></span>
+            <span class="m-btn outline sm">${ic("flip")}White</span>
+            <span class="m-input" style="width:210px"><span class="val">Search — Sicilian, B12…</span></span>
+          </div>
+          <div class="m-row">
+            <span class="m-input select" style="width:178px"><span class="val">Sicilian Najdorf</span>${ic("chevd")}</span>
+            <span class="m-input select m-grow"><span class="val" style="color:var(--muted-fg)">View lines</span>${ic("chevd")}</span>
+            <span class="m-btn primary sm">${ic("plus")}Add line</span>
+          </div>
+          <div class="m-boardwrap" style="margin-top:4px">${board()}<div class="m-eval"><b></b></div></div>
+        </section>
+        <div style="display:flex;flex-direction:column;gap:10px;min-height:0">
+          <section class="m-panel m-row" style="padding:8px 10px 8px 14px;height:46px">
+            <span class="m-label">Engine</span>
+            <span class="m-sub" style="font-family:var(--font-mono)">+0.31 · depth 18</span>
+            <span class="m-grow"></span>
+            <span class="m-tg"><span>None</span><span class="on">Light</span><span>Heavy</span></span>
+          </section>
+          <section class="m-panel" style="display:flex;gap:8px;padding:8px;height:244px">
+            <div class="m-rail"><span class="on">${ic("tree")}</span><span>${ic("rows")}</span><span>${ic("branch")}</span><span>${ic("cols")}</span><span>${ic("metro")}</span></div>
+            <div class="m-view">${treeSVG(sicilian(), 470, 228, { pad: 16, labelRoom: 30, fs: 9.5 })}
+              <div class="m-zoom"><span>−</span><span class="fit-w">Fit</span><span>+</span></div>
+            </div>
+          </section>
+          <section class="m-panel m-row" style="padding:6px 8px 6px 14px;height:44px">
+            <span class="m-line m-grow">1. e4 c5 2. Nf3 <b>d6</b></span>
+            <span class="m-btn ghost icon sm">${ic("first")}</span><span class="m-btn ghost icon sm">${ic("prev")}</span>
+            <span class="m-btn outline icon sm">${ic("play")}</span>
+            <span class="m-btn ghost icon sm">${ic("next")}</span><span class="m-btn ghost icon sm">${ic("last")}</span>
+          </section>
+          <section class="m-panel" style="flex:1;min-height:0;padding:12px 14px;display:flex;flex-direction:column;gap:10px;overflow:hidden">
+            <div>
+              <span class="m-label">B50 · Sicilian Defense</span>
+              <div class="m-h3" style="margin-top:6px">Modern Variations</div>
+            </div>
+            <div class="m-moves" style="border-top:1px solid var(--border);padding-top:6px">
+              <span class="hd">MOVE</span><span class="hd">WHITE / DRAW / BLACK</span><span class="hd" style="justify-content:flex-end">GAMES</span>
+              ${moves.map(([m, n, w, d], i) => {
+                const row = `<span class="san">${m}</span><span class="bar"><span><i style="width:${w}%;background:var(--bar-w)"></i><i style="width:${d}%;background:var(--bar-d)"></i><i style="flex:1;background:var(--bar-b)"></i></span></span><span class="n">${n}</span>`;
+                return i === 0 ? `<div class="row-hl" style="grid-column:1/-1;display:grid;grid-template-columns:44px 1fr 56px;column-gap:12px;height:28px;align-items:center">${row.replaceAll('<span class="', '<span style="display:flex;align-items:center" class="')}</div>` : row;
+              }).join("")}
+            </div>
+          </section>
+        </div>
+      </div>`;
+  }
+
+  /* ── Mounting and fitting ── */
+  const fits = [];
+  const ro = new ResizeObserver((entries) => {
+    for (const e of entries) {
+      const m = e.target.firstElementChild;
+      if (m) m.style.transform = `scale(${e.contentRect.width / 1440})`;
+    }
+  });
+  function mount(el, html) {
+    el.innerHTML = html;
+    fits.push(el);
+    ro.observe(el);
+  }
+  const libHTML = shell("Library", library());
+  const expHTML = shell("Explorer", explorer());
+  mount(document.getElementById("stage-library"), libHTML);
+  mount(document.getElementById("stage-explorer"), expHTML);
+
+  const glance = document.getElementById("glance");
+  const dirSeg = document.getElementById("dir-seg");
+  for (const id of ORDER) {
+    const b = document.createElement("button");
+    b.type = "button"; b.id = "dir-" + id; b.dataset.dir = id; b.textContent = DIRS[id].name;
+    dirSeg.appendChild(b);
+    const g = document.createElement("button");
+    g.type = "button"; g.id = "glance-" + id; g.dataset.dir = id;
+    g.innerHTML = `<div class="fit"></div><span><b>${DIRS[id].name}</b> <em>· ${DIRS[id].r}px corners</em></span>`;
+    glance.appendChild(g);
+    const f = g.querySelector(".fit");
+    mount(f, expHTML);
+    f.firstElementChild.dataset.dir = id;
+  }
+
+  /* ── State ── */
+  const radius = document.getElementById("radius");
+  const radiusOut = document.getElementById("radius-out");
+  let dir = "clubroom";
+  let mode = (() => {
+    const t = document.documentElement.getAttribute("data-theme");
+    if (t === "dark" || t === "light") return t;
+    return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  })();
+  let r = DIRS[dir].r;
+
+  function stageMocks() { return ["stage-library", "stage-explorer"].map((id) => document.getElementById(id).firstElementChild); }
+
+  function render() {
+    for (const el of fits) el.firstElementChild.dataset.mode = mode;
+    for (const m of stageMocks()) { m.dataset.dir = dir; m.style.setProperty("--r", r + "px"); }
+    document.querySelectorAll("#dir-seg button, #glance button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.dir === dir)));
+    document.querySelectorAll("#mode-seg button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+    radius.value = r;
+    radiusOut.textContent = r + "px";
+
+    const d = DIRS[dir];
+    document.getElementById("about-name").textContent = d.name;
+    document.getElementById("about-one").textContent = d.one;
+    const probe = stageMocks()[0], cs = getComputedStyle(probe);
+    const kP = parseFloat(cs.getPropertyValue("--k-panel")), kF = parseFloat(cs.getPropertyValue("--k-frame"));
+    const corners = `${r}px on controls, ${Math.round(r * kP)}px on panels, ${Math.round(r * kF)}px on the frame and sidebar.`;
+    document.getElementById("about-facts").innerHTML = d.facts.map(([k, v]) => `<dt>${k}</dt><dd>${v === "radius" ? corners : v}</dd>`).join("");
+    document.getElementById("swatches").innerHTML = [...d.swatch, "--bar-w", "--bar-d", "--bar-b"].map((t) => {
+      const v = cs.getPropertyValue(t).trim();
+      return `<span class="sw"><i style="background:${v}"></i>${t.replace("--", "")}</span>`;
+    }).join("");
+  }
+
+  dirSeg.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; dir = b.dataset.dir; r = DIRS[dir].r; render(); });
+  glance.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    dir = b.dataset.dir; r = DIRS[dir].r; render();
+    document.querySelector(".studio").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  });
+  document.getElementById("mode-seg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; mode = b.dataset.mode; render(); });
+  radius.addEventListener("input", () => { r = +radius.value; render(); });
+  document.getElementById("radius-reset").addEventListener("click", () => { r = DIRS[dir].r; render(); });
+
+  render();
+})();
+</script>

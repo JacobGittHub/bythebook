@@ -1,0 +1,1307 @@
+<!-- Mockup for plans/book-ui.md (and plans/vibes.md D14–D15): the dashboard as an open book. The Overview, Explorer, Visualizations, Library, Bookstore and Settings as spreads, with page turns, bookmarks that ride on the turning page, the book slide, the one-page form with its spine on the right and page tabs, and a sample static vibe that dresses only the book. Round five. Published as the "Spread Pages" artifact. -->
+<title>Spread Pages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,500&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=IM+Fell+English:ital@0;1&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a sticky control bar, one live book drawn large (it scales to the window), a caption that
+   says what you're looking at and what to try, then notes. The page chrome has its own quiet palette;
+   the mock carries the book's tokens on its own root. */
+:root {
+  --page: #eceeea;
+  --sheet: #fbfbf9;
+  --ink: #22262b;
+  --ink-soft: #5d646c;
+  --line: #d5d8d2;
+  --accent: #2c4a74;
+  --chip: #e2e5e0;
+  --ui: "Geist", "Segoe UI", system-ui, sans-serif;
+  --serif: "Literata", Georgia, serif;
+  --mono: "Geist Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #121417; --sheet: #1a1d21; --ink: #e8e5de; --ink-soft: #a09d97; --line: #2e3238;
+    --accent: #a9c0e6; --chip: #23272c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #121417; --sheet: #1a1d21; --ink: #e8e5de; --ink-soft: #a09d97; --line: #2e3238;
+  --accent: #a9c0e6; --chip: #23272c; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font: 15px/1.55 var(--ui); }
+.wrap { max-width: 1320px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 80px; display: grid; gap: 36px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font: 600 clamp(28px, 4vw, 38px)/1.1 var(--serif); letter-spacing: -0.01em; }
+h2 { font: 600 24px/1.2 var(--serif); }
+h3 { font: 600 16px/1.3 var(--ui); }
+p { margin: 0; }
+.eyebrow { font: 600 11px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); }
+.lede { max-width: 74ch; color: var(--ink-soft); margin-top: 12px; }
+code { font: 500 0.88em var(--mono); background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+
+.studio { display: grid; gap: 14px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; padding: 12px; background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.ctl { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-soft); }
+.ctl > span { font-weight: 500; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; background: var(--chip); border-radius: 9px; }
+.seg button { font: 500 13px/1 var(--ui); color: var(--ink-soft); background: transparent; border: 0; border-radius: 7px; padding: 8px 10px; cursor: pointer; }
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / 0.12); }
+.seg button:focus-visible, .tour:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tour { margin-left: auto; font: 600 13px/1 var(--ui); color: var(--sheet); background: var(--accent); border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
+.tour[aria-pressed="true"] { background: var(--ink-soft); }
+
+figure { margin: 0; display: grid; gap: 10px; }
+.fit { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 10px; border: 1px solid var(--line); background: var(--sheet); }
+.fit > .mock { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+.caption { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 28px; font-size: 14px; }
+.caption p { min-width: 0; }
+.caption b { font-weight: 600; }
+.caption .try { color: var(--ink-soft); }
+.rm { font-size: 13px; color: var(--ink-soft); }
+
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 28px 40px; }
+.notes ul { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 8px; max-width: 66ch; }
+.notes li::marker { color: var(--ink-soft); }
+.notes p { color: var(--ink-soft); margin-top: 10px; max-width: 66ch; }
+.tablewrap { overflow-x: auto; margin-top: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px 9px 0; border-top: 1px solid var(--line); }
+th { font: 600 11px/1.2 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); border-top: 0; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+td.yes { white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .controls { position: static; }
+  .caption { grid-template-columns: 1fr; }
+  .tour { margin-left: 0; }
+}
+
+/* ───────────────────────────── The mock ───────────────────────────── */
+.mock {
+  --r: 8px; --pr: calc(var(--r) * 1.25); --gw: 96px; --gdur: 420ms;
+  --desk: #e2e4df; --sheet: #fbfbf8; --sheet-2: #f1f2ed;
+  --fg: #22252b; --muted: #eef0ea; --muted-fg: #636a73;
+  --rule: #d9dcd5; --border: #d0d4cd;
+  --primary: #2c4a74; --primary-fg: #ffffff;
+  --sel: #e3e9f3; --ribbon: #8c2f39;
+  --input-bg: #ffffff;
+  --cover: #26364f; --edge-line: #cfd2ca;
+  --spine: rgb(70 60 40 / 0.32); --shade: rgb(30 25 15 / 0.55);
+  --grain: none;
+  --bar-w: #dcd8cc; --bar-d: #8f8a7a; --bar-b: #2a2c31;
+  --arrow: rgb(44 74 116 / 0.55);
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Literata", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --font-hand: "Caveat", "Segoe Print", cursive;
+  /* The book views keep their own colors, vibe or not (plans/vibes.md D11). */
+  --view-bg: #eef0ea; --view-halo: #eef0ea;
+  --view-edge: rgba(120, 108, 95, 0.45); --view-white: #ece5d8; --view-white-edge: #9c9282; --view-black: #2a2420;
+  --fam-0: #2f6aa3; --fam-1: #1f8a7a; --fam-2: #c2622a; --fam-3: #8a6a3f; --fam-4: #7457a8; --fam-5: #6f7f2c; --fam-6: #557086; --fam-7: #b0405f;
+  color-scheme: light;
+  position: relative; overflow: hidden; background: var(--desk); color: var(--fg); font: 13px/1.4 var(--font-body);
+}
+.mock[data-form="spread"] { width: 1440px; height: 900px; }
+.mock[data-form="single"] { width: 1152px; height: 720px; }
+.mock[data-mode="dark"] {
+  --gw: 46px;
+  --desk: #0e1013; --sheet: #1c1f24; --sheet-2: #23272d;
+  --fg: #e9e5dc; --muted: #24282e; --muted-fg: #9c9a94;
+  --rule: #30343b; --border: #383c44;
+  --primary: #a9c0e6; --primary-fg: #12161d;
+  --sel: rgb(169 192 230 / 0.13); --ribbon: #c9505c;
+  --input-bg: #191c21; --cover: #1b2433; --edge-line: #2d3138;
+  --spine: rgb(0 0 0 / 0.5); --shade: rgb(0 0 0 / 0.7);
+  --bar-w: #d6d2c6; --bar-d: #8b8676; --bar-b: #0d0e10;
+  --arrow: rgb(169 192 230 / 0.6);
+  --view-bg: #24282e; --view-halo: #24282e;
+  --view-edge: rgba(170, 165, 200, 0.36); --view-white: #d9d4e6; --view-white-edge: #8e8aa3; --view-black: #0b0b10;
+  --fam-0: #6fa3dc; --fam-1: #4fc0ad; --fam-2: #e88e55; --fam-3: #c19a68; --fam-4: #a68adf; --fam-5: #a8b85a; --fam-6: #8aa6bd; --fam-7: #e07a96;
+  color-scheme: dark;
+}
+/* A sample static vibe. It dresses only the book (cover, paper, borders, type, corners, margin
+   drawings) and never the strip, the account links or the desk (plans/vibes.md D14). */
+.mock[data-vibe="on"] :is(.book, .solo) {
+  --sheet: #f3ead5; --fg: #2d2116; --muted: #ebdfc5; --muted-fg: #76654f; --rule: #d9c9a8; --border: #cbb894;
+  --sel: #e8d8b4; --primary: #6b3d1f; --primary-fg: #fbf3e2; --input-bg: #fbf4e3; --edge-line: #d2c09a;
+  --cover: #5a3822; --spine: rgb(90 60 20 / 0.34); --pr: 3px; --r: 3px;
+  --font-display: "IM Fell English", Georgia, serif;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .32 0 0 0 0 .15 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.mock[data-mode="dark"][data-vibe="on"] :is(.book, .solo) {
+  --sheet: #241e17; --fg: #ece0c8; --muted: #2d261d; --muted-fg: #a8997f; --rule: #3c3227; --border: #4a3d2e;
+  --sel: rgb(230 200 140 / 0.12); --primary: #d9b77e; --primary-fg: #1d160f; --input-bg: #1f1a14; --edge-line: #3a3026;
+  --cover: #3a2416; --spine: rgb(0 0 0 / 0.55);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .9 0 0 0 0 .8 0 0 0 0 .6 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.mock *, .mock *::before, .mock *::after { box-sizing: border-box; }
+.mock [role="button"] { cursor: pointer; }
+.mock [role="button"]:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+/* Type */
+.h1 { font: 600 26px/1.15 var(--font-display); letter-spacing: -0.01em; }
+.h2 { font: 600 20px/1.2 var(--font-display); }
+.sub { color: var(--muted-fg); font-size: 12px; }
+.sc { font: 600 10.5px/1 var(--font-display); letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted-fg); white-space: nowrap; }
+.rh { font: italic 500 13px/1 var(--font-display); color: var(--muted-fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mono { font-family: var(--font-mono); }
+.row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.grow { flex: 1; min-width: 0; }
+
+/* Controls (shadcn/ui shapes, book paint) */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: var(--r); border: 1px solid transparent; font: 700 12px/1 var(--font-body); white-space: nowrap; color: var(--fg); flex: none; }
+.btn svg { width: 14px; height: 14px; }
+.btn.primary { background: var(--primary); color: var(--primary-fg); }
+.btn.outline { background: var(--input-bg); border-color: var(--border); }
+.btn.ghost { background: transparent; font-weight: 400; }
+.btn.icon { width: 28px; padding: 0; }
+.btn.sm { height: 24px; padding: 0 8px; font-size: 11.5px; }
+.btn[role="button"]:hover { filter: brightness(0.96); }
+.input { display: flex; align-items: center; gap: 7px; height: 28px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--r); background: var(--input-bg); color: var(--muted-fg); font-size: 12.5px; min-width: 0; }
+.input svg { width: 14px; height: 14px; flex: none; }
+.input .val { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.input.select .val { color: var(--fg); }
+.tg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--border); border-radius: var(--r); background: var(--input-bg); flex: none; }
+.tg span { display: flex; align-items: center; gap: 5px; height: 21px; padding: 0 8px; border-radius: calc(var(--r) * 0.7); font-size: 12px; font-weight: 700; color: var(--muted-fg); }
+.tg span svg { width: 13px; height: 13px; }
+.tg .on { background: var(--primary); color: var(--primary-fg); }
+.badge { display: inline-flex; align-items: center; gap: 6px; height: 21px; padding: 0 8px; border-radius: calc(var(--r) * 0.75); font-size: 11.5px; background: var(--muted); white-space: nowrap; }
+.sq { display: inline-block; width: 9px; height: 9px; border-radius: 2px; border: 1px solid var(--fg); flex: none; }
+.sq.b { background: var(--fg); }
+.ico { width: 15px; height: 15px; display: block; flex: none; }
+.verified { display: inline-flex; align-items: center; gap: 3px; font-size: 11.5px; font-weight: 700; color: var(--fg); white-space: nowrap; }
+.verified svg { width: 13px; height: 13px; }
+.backlink { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; padding: 4px 8px 4px 2px; border-radius: var(--r); font-weight: 700; font-size: 12.5px; }
+.backlink svg { width: 15px; height: 15px; }
+.backlink:hover { background: var(--sel); }
+
+/* Board: squares and pieces never change. Sized by its container, pieces by the board. */
+.board { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); aspect-ratio: 1; container-type: inline-size; border-radius: 3px; overflow: hidden; box-shadow: 0 0 0 2px #3b2a1a; flex: none; }
+.board i { position: relative; display: flex; align-items: center; justify-content: center; font-style: normal; }
+.board i.l { background: #f0d9b5; }
+.board i.d { background: #b58863; }
+.board i.hl.l { background: #f5e78a; }
+.board i.hl.d { background: #d5c25a; }
+.board i small { position: absolute; font: 600 10px/1 "Geist", sans-serif; }
+.board i.l small { color: #b58863; }
+.board i.d small { color: #f0d9b5; }
+.board i small.rk { top: 3px; left: 4px; }
+.board i small.fl { bottom: 3px; right: 4px; }
+.pc { font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", "Apple Symbols", serif; line-height: 1; font-size: 9.6cqw; }
+.pc.w { color: #ffffff; -webkit-text-stroke: 1.2px #1b1b1b; paint-order: stroke fill; }
+.pc.b { color: #161616; }
+.board .arrow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.boardslot { flex: 1; min-height: 0; container-type: size; display: flex; justify-content: center; align-items: flex-start; }
+.bwrap { display: flex; gap: 8px; height: min(100cqh, calc(100cqw - 18px)); }
+.bwrap .board { height: 100%; }
+.evalbar { width: 10px; border-radius: 99px; overflow: hidden; background: #eeeeee; display: flex; flex-direction: column; box-shadow: 0 0 0 1px var(--border); flex: none; }
+.evalbar b { display: block; height: 46%; background: #222222; }
+
+/* Explorer parts */
+.moves { display: grid; grid-template-columns: 46px 1fr 54px; align-items: center; column-gap: 12px; }
+.moves > span { height: 25px; display: flex; align-items: center; }
+.moves .hd { height: 20px; }
+.moves .san { font: 700 13px/1 var(--font-body); }
+.moves .n { justify-content: flex-end; font: 500 11.5px/1 var(--font-mono); color: var(--muted-fg); }
+.moves .bar b { display: flex; width: 100%; height: 9px; border-radius: 3px; overflow: hidden; }
+.moves .bar i { display: block; height: 100%; }
+.moves .hl { background: var(--sel); }
+.moves .hl.first { border-radius: var(--r) 0 0 var(--r); margin-left: -8px; padding-left: 8px; }
+.moves .hl.last { border-radius: 0 var(--r) var(--r) 0; margin-right: -8px; padding-right: 8px; }
+.view { position: relative; flex: 1; min-width: 0; min-height: 0; background: var(--view-bg); border-radius: 6px; overflow: hidden; }
+.view svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.view .vnote { position: absolute; left: 10px; top: 8px; font: italic 500 12px var(--font-display); color: var(--muted-fg); }
+.zoom { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--border); background: var(--input-bg); border-radius: 6px; font-size: 11px; color: var(--muted-fg); }
+.zoom span { width: 22px; height: 18px; display: flex; align-items: center; justify-content: center; }
+.zoom span.w { width: 32px; }
+.rail { display: flex; flex-direction: column; gap: 4px; flex: none; }
+.rail span { width: 28px; height: 28px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; color: var(--muted-fg); }
+.rail span.on { background: var(--sel); color: var(--fg); }
+.rail svg { width: 15px; height: 15px; }
+.line { font: 500 13px/1.5 var(--font-mono); }
+.line b { background: var(--sel); padding: 2px 5px; border-radius: calc(var(--r) * 0.6); font-weight: 600; }
+.exr { display: grid; grid-template-columns: minmax(0, 1fr) 132px; gap: 18px; flex: 1; min-height: 0; }
+.stack { display: grid; grid-template-rows: minmax(0, 46fr) auto minmax(0, 54fr); gap: 14px; min-height: 0; min-width: 0; }
+.slot { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.slothead { display: flex; gap: 12px; height: 26px; align-items: center; border-bottom: 1px solid var(--rule); flex: none; padding-bottom: 4px; }
+.mtab { font: 600 10.5px/1 var(--font-display); letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted-fg); white-space: nowrap; padding: 5px 0 6px; }
+.mtab:hover { color: var(--fg); }
+.mtab.on { color: var(--fg); box-shadow: inset 0 -2px 0 var(--ribbon); }
+.mtab.soon { opacity: 0.6; cursor: default; }
+.mtab.soon:hover { color: var(--muted-fg); }
+.mtab small { font: 500 9px var(--font-mono); letter-spacing: 0; text-transform: none; color: var(--muted-fg); margin-left: 4px; }
+.slotbody { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding-top: 9px; }
+.slotbody > .row.fill { flex: 1; min-height: 0; align-items: stretch; }
+.scrollbox { overflow: auto; min-height: 0; flex: 1; padding-right: 8px; }
+.eline { display: flex; gap: 10px; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--rule); font-size: 12.5px; }
+.eline:last-child { border-bottom: 0; }
+.eline .ev { font: 600 12.5px var(--font-mono); min-width: 42px; }
+.score { display: flex; flex-direction: column; gap: 8px; min-height: 0; border-left: 1px solid var(--rule); padding-left: 14px; }
+.sheetgrid { display: grid; grid-template-columns: 22px 1fr 1fr; flex: 1; min-height: 0; overflow: hidden; align-content: start; }
+.sheetgrid span { height: 26px; display: flex; align-items: center; border-bottom: 1px solid var(--rule); font: 500 12.5px var(--font-mono); }
+.sheetgrid .no { font-size: 10.5px; color: var(--muted-fg); }
+.sheetgrid b { background: var(--sel); padding: 2px 5px; margin-left: -5px; border-radius: calc(var(--r) * 0.6); font-weight: 700; }
+.score .navrow { display: flex; justify-content: space-between; }
+
+/* Library, Bookstore, Overview and Settings parts */
+.toclist { display: flex; flex-direction: column; gap: 1px; margin-inline: -10px; }
+.toc { display: flex; align-items: baseline; gap: 8px; padding: 7px 10px; border-radius: var(--r); }
+.toc .nm { font: 500 14px/1.2 var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.lead { flex: 1; min-width: 12px; border-bottom: 1.5px dotted var(--muted-fg); opacity: 0.55; transform: translateY(-3px); }
+.toc .fig { font: 500 12px/1 var(--font-mono); color: var(--muted-fg); white-space: nowrap; }
+.toc[role="button"]:hover { background: var(--sel); }
+.toc.on { background: var(--sel); }
+.toc.on .nm { font-weight: 600; }
+.toc .sq { transform: translateY(-1px); }
+.dl { display: flex; flex-wrap: wrap; gap: 6px 26px; margin: 0; }
+.dl dt { font: 600 10px/1.2 var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-fg); }
+.dl dd { margin: 3px 0 0; font: 600 14px/1.2 var(--font-mono); }
+.reader { display: flex; gap: 10px; flex: 1; min-height: 0; }
+.posside { width: 216px; flex: none; display: flex; flex-direction: column; gap: 10px; }
+.posside .board { width: 100%; }
+.cards { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 22px; }
+.card { display: flex; flex-direction: column; gap: 4px; padding: 10px 8px 11px; border-top: 1px solid var(--rule); min-width: 0; border-radius: 2px; }
+.card:hover { background: var(--sel); }
+.card .mini { display: block; width: 100%; height: 26px; border-radius: 4px; background: var(--view-bg); }
+.card .cname { font: 600 15px/1.3 var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pub { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; min-width: 0; }
+.cfacts { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; font-size: 11.5px; color: var(--muted-fg); white-space: nowrap; }
+.cfacts .rate { margin-left: auto; }
+.desc { max-width: 58ch; color: var(--fg); font-size: 13.5px; line-height: 1.5; margin-top: 8px; }
+.desc sup, .colophon sup { font: 600 9px var(--font-mono); color: var(--ribbon); }
+.colophon { border-top: 1px solid var(--rule); padding-top: 8px; font-size: 11.5px; color: var(--muted-fg); max-width: 92ch; }
+.savebox { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+.titlepg { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
+.titlepg .h1 { font-size: 46px; }
+.titlepg p { max-width: 34ch; }
+.note { font-size: 14px; line-height: 1.6; max-width: 60ch; }
+.note + .note { margin-top: 10px; }
+.blank-lines { flex: 1; background: repeating-linear-gradient(to bottom, transparent 0 21px, var(--rule) 21px 22px); opacity: 0.55; border-radius: 2px; }
+.peek { margin-left: auto; width: 252px; display: flex; flex-direction: column; gap: 10px; }
+/* Overview: the contents */
+.chaps { display: flex; flex-direction: column; gap: 2px; margin-inline: -10px; }
+.chap { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 2px 6px; padding: 9px 10px; border-radius: var(--r); }
+.chap:hover { background: var(--sel); }
+.chap.on { background: var(--sel); }
+.chap .num { font: 500 15px/1.3 var(--font-display); color: var(--muted-fg); }
+.chap .cname { font: 600 19px/1.25 var(--font-display); white-space: nowrap; }
+.chap .cfig { font: 500 11.5px/1 var(--font-mono); color: var(--muted-fg); white-space: nowrap; }
+.chap .csum { grid-column: 2; font-size: 12.5px; color: var(--muted-fg); }
+.jump { font: 700 11px/1 var(--font-body); padding: 5px 8px; border-radius: calc(var(--r) * 0.7); background: var(--primary); color: var(--primary-fg); white-space: nowrap; }
+.demo { position: relative; aspect-ratio: 16 / 10; width: 100%; max-height: 52%; background: var(--view-bg); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); flex: none; }
+.demo .tag { position: absolute; left: 10px; bottom: 8px; font: 500 11px var(--font-mono); color: var(--muted-fg); }
+.access { display: grid; grid-template-columns: 1.1fr 1fr 1fr; font-size: 12px; border-top: 1px solid var(--rule); }
+.access span { padding: 6px 8px 6px 0; border-bottom: 1px solid var(--rule); color: var(--muted-fg); }
+.access .k { color: var(--fg); font-weight: 700; }
+.access .hd { font: 600 10px/1.2 var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; }
+/* Settings */
+.setlist { display: flex; flex-direction: column; }
+.setrow { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 6px 14px; padding: 14px 0; border-top: 1px solid var(--rule); align-items: start; }
+.setrow > b { font: 600 14px/1.3 var(--font-display); padding-top: 3px; }
+.setrow .sub { grid-column: 2; }
+
+/* ── Spread ── */
+.L-spread { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+.toprow { height: 50px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 26px; }
+.brand { font: 600 19px/1 var(--font-display); letter-spacing: -0.01em; white-space: nowrap; }
+.navtabs { display: flex; align-items: center; margin-left: 8px; font-size: 13px; color: var(--muted-fg); }
+.navtabs span { padding: 7px 8px; white-space: nowrap; }
+.navtabs span:hover { color: var(--fg); }
+.navtabs span.on { color: var(--fg); font-weight: 700; box-shadow: inset 0 -2px 0 var(--ribbon); }
+/* A page's bookmark: tucked into the page, it rises out of the top edge to meet the page's tab.
+   It belongs to the page, so it turns with the leaf. */
+.bmk { position: absolute; left: calc(var(--bx) - 7px); top: calc(-1 * var(--rise)); width: 14px; height: calc(var(--rise) + 22px); background: var(--ribbon); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 7px), 0 100%); z-index: 9; pointer-events: none; }
+.book.anim .bmk { transition: transform var(--gdur) cubic-bezier(0.3, 0.7, 0.2, 1); }
+.book[data-shift="on"] .bmk { transform: translateX(var(--shift)); }
+.vsw { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; padding: 4px 6px; border-radius: 6px; }
+.vsw i { position: relative; width: 28px; height: 16px; border-radius: 99px; background: var(--border); transition: background 160ms; flex: none; }
+.vsw i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--input-bg); transition: transform 160ms; box-shadow: 0 1px 2px rgb(0 0 0 / 0.25); }
+.mock[data-vibe="on"] .vsw i { background: var(--primary); }
+.mock[data-vibe="on"] .vsw i::after { transform: translateX(12px); }
+
+.book { position: relative; flex: 1; min-height: 0; margin: 14px 26px 22px; display: flex; perspective: 2800px; --el: 8px; --er: 8px; }
+.book.anim { transition: margin-left var(--gdur) cubic-bezier(0.3, 0.7, 0.2, 1); }
+.book[data-shift="on"] { margin-left: calc(26px - var(--shift)); }
+.cover { position: absolute; top: -8px; bottom: -10px; left: calc(-1 * var(--el) - 9px); right: calc(-1 * var(--er) - 9px); z-index: -1; background: var(--cover); border-radius: 9px; box-shadow: 0 2px 3px rgb(0 0 0 / 0.18), 0 22px 44px -22px rgb(0 0 0 / 0.55); transition: left var(--gdur), right var(--gdur); }
+.edges { position: absolute; top: 3px; bottom: 3px; background: repeating-linear-gradient(to right, var(--sheet) 0 1px, var(--edge-line) 1px 2px); transition: width var(--gdur); z-index: 0; }
+.edges.el { right: 100%; width: var(--el); border-radius: 3px 0 0 3px; }
+.edges.er { left: 100%; width: var(--er); border-radius: 0 3px 3px 0; }
+.mock .page { position: relative; min-width: 0; background-color: var(--sheet); background-image: var(--grain); border: 1px solid var(--border); }
+.mock .page.l { border-radius: var(--pr) 0 0 var(--pr); border-right: 0; }
+.mock .page.r { border-radius: 0 var(--pr) var(--pr) 0; border-left: 0; }
+.mock .page::after { content: ""; position: absolute; top: 0; bottom: 0; width: var(--gw); pointer-events: none; z-index: 3; }
+.mock .page.l::after { right: 0; background: linear-gradient(to left, var(--spine), transparent 75%); }
+.mock .page.r::after { left: 0; background: linear-gradient(to right, var(--spine), transparent 75%); }
+.mock:not([data-mode="dark"]) .book .page.r::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: var(--spine); z-index: 3; }
+.book > .page.l { flex: 0 0 50%; }
+.book > .page.r { flex: 1 1 0; }
+.book:is([data-shift="on"], .keep-px) > .page.l { flex-basis: var(--lpx); }
+
+/* Inside a page */
+.pgin { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 26px 34px 14px; transition: opacity 160ms; overflow: hidden; border-radius: inherit; }
+.page.l .pgin { padding-right: 40px; }
+.page.r .pgin { padding-left: 40px; }
+.rhrow { display: flex; align-items: center; gap: 10px; height: 22px; flex: none; }
+.pgin > .body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding-block: 12px; position: relative; z-index: 1; }
+.pgin > .body.scroll { overflow: auto; margin-right: -14px; padding-right: 14px; }
+.foot { display: flex; align-items: center; gap: 8px; height: 22px; flex: none; font: 500 11.5px/1 var(--font-mono); color: var(--muted-fg); white-space: nowrap; }
+/* The strip left in view when the book slides for a Bookstore entry: it goes back to the shelf. */
+.fold { position: absolute; top: 0; bottom: 0; right: 0; width: 52px; display: flex; align-items: center; justify-content: center; z-index: 4; background-color: var(--sheet); background-image: var(--grain); }
+.fold span { writing-mode: vertical-rl; transform: rotate(180deg); display: flex; align-items: center; gap: 8px; font: italic 500 14px/1 var(--font-display); color: var(--muted-fg); }
+.fold svg { width: 15px; height: 15px; transform: rotate(180deg); }
+.fold { transition: opacity var(--gdur); }
+.book:not([data-shift="on"]) .fold { opacity: 0; pointer-events: none; }
+.fold:hover span { color: var(--fg); }
+
+/* The vibe's static decoration: a border inside each page and drawings in the margins. */
+.deco { display: none; position: absolute; inset: 0; pointer-events: none; z-index: 2; overflow: hidden; border-radius: inherit; }
+.mock[data-vibe="on"] .deco { display: block; }
+.deco .frame { position: absolute; inset: 8px; border: 3px double var(--rule); border-radius: 2px; }
+.deco svg { position: absolute; overflow: visible; }
+.deco text { font-family: var(--font-hand); fill: var(--muted-fg); }
+
+/* The turning leaf */
+.leaf { position: absolute; transform-style: preserve-3d; z-index: 30; will-change: transform; }
+.leaf.fwd { transform-origin: 0 50%; }
+.leaf.bwd { transform-origin: 100% 50%; }
+.leaf.solo-leaf { transform-origin: 100% 50%; inset: 0; }
+.face { position: absolute !important; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.face.back { transform: rotateY(180deg); }
+.face .fold { display: none; }
+.shade, .cast { position: absolute; inset: 0; pointer-events: none; z-index: 8; opacity: 0; }
+.page.r > .shade { background: linear-gradient(to right, var(--shade), transparent 85%); }
+.page.s > .shade { background: linear-gradient(to left, var(--shade), transparent 85%); }
+.page.l > .shade { background: linear-gradient(to left, var(--shade), transparent 85%); }
+.page.r > .cast { background: linear-gradient(to right, var(--shade), transparent 55%); }
+.page.l > .cast { background: linear-gradient(to left, var(--shade), transparent 55%); }
+
+/* ── Single page: the spine on the right, the pages' tabs on the left ── */
+.L-single { position: absolute; inset: 0; display: flex; --el: 8px; }
+.tocside { position: relative; z-index: 2; width: 232px; flex: none; display: flex; flex-direction: column; padding: 18px 0 16px 18px; white-space: nowrap; }
+.tochead { height: 30px; padding-right: 10px; }
+.ptabs { display: flex; flex-direction: column; gap: 4px; margin-top: 30px; }
+.ptab { display: flex; align-items: center; gap: 9px; height: 36px; padding: 0 12px 0 14px; border: 1px solid var(--border); border-right: 0; border-radius: var(--pr) 0 0 var(--pr); background: var(--sheet-2); color: var(--muted-fg); font-size: 13px; }
+.ptab:hover { color: var(--fg); }
+.ptab .fig { margin-left: auto; font: 500 11.5px/1 var(--font-mono); color: var(--muted-fg); }
+/* The current page's own tab: cut into the page and joined to it, so it turns with the page. */
+.ptab.cur { position: absolute; top: var(--ty); left: calc(-1 * (var(--tw) + var(--el) + 1px)); width: calc(var(--tw) + var(--el) + 2px); background-color: var(--sheet); background-image: var(--grain); color: var(--fg); font-weight: 700; z-index: 9; box-shadow: inset 3px 0 0 var(--ribbon); padding-right: calc(12px + var(--el)); }
+.navfoot { margin-top: auto; display: flex; flex-direction: column; gap: 2px; font-size: 13px; padding-right: 10px; }
+.navfoot > span { display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 8px; color: var(--muted-fg); }
+.navfoot .who { font-size: 11.5px; height: auto; padding-bottom: 2px; }
+.navfoot .strong { color: var(--fg); font-weight: 700; }
+.mock[data-contents="closed"] .tocside { width: 70px; }
+.mock[data-contents="closed"] :is(.tocside .brand, .ptab .nm, .ptab .fig, .gtext) { display: none; }
+/* perspective makes .solo its own layer, so it sits above the tab column for the page's tab to show. */
+.solo { position: relative; z-index: 3; flex: 1; min-width: 0; margin: 18px 40px 18px var(--el); perspective: 2400px; }
+.solo::before { content: ""; position: absolute; top: -7px; bottom: -9px; left: calc(-1 * var(--el) - 1px); right: -6px; background: var(--cover); border-radius: 8px 3px 3px 8px; box-shadow: 0 2px 3px rgb(0 0 0 / 0.18), 0 22px 44px -22px rgb(0 0 0 / 0.55); }
+/* The spine: a rounded band on the right edge, with the cover's raised bands near head and tail. */
+.spinebar { position: absolute; top: -7px; bottom: -9px; right: -24px; width: 20px; border-radius: 0 11px 11px 0; background: linear-gradient(to right, rgb(0 0 0 / 0.35), rgb(255 255 255 / 0.12) 45%, rgb(0 0 0 / 0.28)), var(--cover); box-shadow: 0 22px 44px -22px rgb(0 0 0 / 0.55); }
+.spinebar::before, .spinebar::after { content: ""; position: absolute; left: 0; right: 2px; height: 3px; background: rgb(0 0 0 / 0.28); box-shadow: 0 1px 0 rgb(255 255 255 / 0.12); }
+.spinebar::before { top: 40px; }
+.spinebar::after { bottom: 40px; }
+.solo > .page { position: absolute; inset: 0; }
+.mock .page.s { border-radius: var(--pr) 3px 3px var(--pr); }
+.mock .page.s::after { left: auto; right: 0; width: 44px; background: linear-gradient(to left, var(--spine), transparent 80%); }
+.page.s .pgin { padding: 16px 50px 12px 30px; }
+.duo-l { overflow: auto; padding-right: 6px; }
+.duo { display: flex; gap: 22px; flex: 1; min-height: 0; }
+.duo-l, .duo-r { display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; }
+.duo-r { flex: 1; }
+.duo-r.scroll { overflow: auto; padding-right: 10px; }
+.vrule { width: 1px; background: var(--rule); align-self: stretch; flex: none; }
+</style>
+
+<main class="wrap">
+  <header>
+    <p class="eyebrow">plans/book-ui.md · round five</p>
+    <h1>The Spread, page by page</h1>
+    <p class="lede">
+      The dashboard as an open book, after your notes on round four. The strip is one row again, with
+      the tabs at the left. Each page carries its own bookmark, which meets its tab when the page
+      turns to it. The spine control is gone; only the Library and Bookstore slide the book. The
+      one-page form has its spine on the right and tabs cut into its pages. The figures are sample
+      numbers.
+    </p>
+  </header>
+
+  <section class="studio" aria-label="The live book">
+    <div class="controls">
+      <div class="ctl"><span>Form</span>
+        <div class="seg" role="group" aria-label="Form" id="form-seg">
+          <button type="button" id="form-spread" data-v="spread">Spread</button>
+          <button type="button" id="form-single" data-v="single">Single page</button>
+        </div>
+      </div>
+      <div class="ctl"><span>Turn</span>
+        <div class="seg" role="group" aria-label="Page turn" id="turn-seg">
+          <button type="button" id="turn-3d" data-v="3d">Page turn</button>
+          <button type="button" id="turn-slide" data-v="slide">Slide</button>
+          <button type="button" id="turn-none" data-v="none">None</button>
+        </div>
+      </div>
+      <div class="ctl"><span>Speed</span>
+        <div class="seg" role="group" aria-label="Speed" id="speed-seg">
+          <button type="button" id="speed-1" data-v="1">Normal</button>
+          <button type="button" id="speed-03" data-v="0.3">Slow</button>
+        </div>
+      </div>
+      <div class="seg" role="group" aria-label="Light or dark" id="mode-seg">
+        <button type="button" id="mode-light" data-v="light">Light</button>
+        <button type="button" id="mode-dark" data-v="dark">Dark</button>
+      </div>
+      <button type="button" class="tour" id="tour-btn" aria-pressed="false">Play the tour</button>
+    </div>
+
+    <figure>
+      <div class="fit" id="stage"></div>
+      <figcaption class="caption">
+        <p id="now"></p>
+        <p class="try" id="try"></p>
+      </figcaption>
+      <p class="rm" id="rm-note" hidden>Your system asks for reduced motion, so turns start at None. Pick Page turn or Slide to see them.</p>
+    </figure>
+  </section>
+
+  <section class="notes">
+    <div>
+      <h3>Things to try</h3>
+      <ul>
+        <li>Click a tab. The page that turns carries its bookmark: going forward, the new page's bookmark arrives on the leaf; going back, the old one leaves on it. The tab lights as the leaf lands.</li>
+        <li>In the Library, press <b>Open book page</b>. The whole book slides left and the bookmark stays under its tab.</li>
+        <li>Open a Bookstore entry. The book slides the same way, so the shelf's page is out of sight but for a strip at the edge that goes back to the shelf.</li>
+        <li>In the Explorer, press <b>Swap with board</b> at the top right of the right page. The button stays where it is, and says <b>Swap back</b>.</li>
+        <li>Open <b>Visualizations</b>, the chapter back in the strip, and pick a visualization.</li>
+        <li>Switch the form to <b>Single page</b> and pick a tab. The page turns on its spine at the right and takes its tab with it.</li>
+        <li>Turn on <b>Vibes</b> at the top right. Only the book changes. In the one-page form the current page's own tab takes the page's paper; the tab column stays as it is.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>What changed since round four</h3>
+      <ul>
+        <li>One strip: the brand and the tabs at the left, the vibes switch and the account links at the right.</li>
+        <li>The bookmark belongs to the page, not the strip. It doesn't slide; it turns with its page.</li>
+        <li>The spine control and the flat pages are gone. The Bookstore entry slides the book like the Library, which fixes the shelf's page showing beside it.</li>
+        <li>The Explorer's swap button keeps one place, the Labyrinth tab says coming soon, and the move list under the right page is gone; the scoresheet in the margin is the one.</li>
+        <li>Visualizations is a chapter again, and the Overview has eight chapters, with Vibes coming soon.</li>
+        <li>The one-page form has a spine on the right, turns toward it, and its contents are page tabs.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>The animations</h2>
+    <p class="lede" style="margin-top:6px">Which ones this page can show, and what only the real app can answer.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Animation</th><th>Shown here</th><th>Needs the real app to judge</th></tr></thead>
+        <tbody>
+          <tr><td>Page turn</td><td class="yes">Yes, three ways</td><td>A rigid leaf with shading; a bending sheet would need WebGL. How it feels on the fiftieth click, and on a cheap laptop or phone.</td></tr>
+          <tr><td>Riffle</td><td class="yes">Yes</td><td>Whether a jump of several pages reads as "far away" or as lag.</td></tr>
+          <tr><td>Book slide</td><td class="yes">Yes</td><td>A second level's page lays out once, at its final size, and the slide only moves it. That should be cheap, but check it with the real book view.</td></tr>
+          <tr><td>Bookmark</td><td class="yes">Yes</td><td>It is part of the page's picture in a view transition, so it should turn with the leaf for free; the spike checks that the picture includes what sticks out of the page.</td></tr>
+          <tr><td>Page tabs</td><td class="yes">Yes</td><td>The same, for the one-page form.</td></tr>
+          <tr><td>Board swap</td><td class="yes">A fade</td><td>Whether the board should glide between pages instead. View transitions can morph it from one place to the other.</td></tr>
+          <tr><td>Real navigation</td><td class="yes">No</td><td>Back and forward, a page still loading when the turn starts, links opened in a new tab.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ── Icons ── */
+  const P = {
+    house: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    compass: '<circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-1.8 5.4a2 2 0 0 1-1.3 1.3l-5.3 1.7 1.8-5.4a2 2 0 0 1 1.3-1.3z"/>',
+    book: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+    store: '<path d="M3 9 4.5 4h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9h18"/><path d="M10 20v-5h4v5"/>',
+    target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    puzzle: '<path d="M5 4h5v2a2 2 0 1 0 4 0V4h5v5h-2a2 2 0 1 0 0 4h2v7H5v-7h2a2 2 0 1 0 0-4H5z"/>',
+    sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+    bug: '<rect x="7" y="6" width="10" height="14" rx="5"/><path d="M12 20v-8M7 12H3M21 12h-4M7 17l-3 2M17 17l3 2M7 8 4 6M17 8l3-2M9 6a3 3 0 0 1 6 0"/>',
+    login: '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5M15 12H3"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+    upload: '<path d="M12 15V3M7 8l5-5 5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
+    download: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
+    plus: '<path d="M5 12h14M12 5v14"/>',
+    flip: '<path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/>',
+    swap: '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
+    chevd: '<path d="m6 9 6 6 6-6"/>',
+    first: '<path d="m17 18-6-6 6-6M7 6v12"/>',
+    prev: '<path d="m15 18-6-6 6-6"/>',
+    next: '<path d="m9 18 6-6-6-6"/>',
+    last: '<path d="m7 18 6-6-6-6M17 6v12"/>',
+    more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+    check: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+    tree: '<path d="M4 12h5M9 12l6-6h5M9 12l6 6h5M15 12h5"/>',
+    rows: '<path d="M4 6h16M4 12h10M4 18h13"/>',
+    branch: '<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 8v8M18 10a6 6 0 0 1-6 6H8"/>',
+    cols: '<rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="10" rx="1"/><rect x="17" y="4" width="4" height="6" rx="1"/>',
+    metro: '<circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12h5l5-5M12 12l5 5"/>',
+    eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    panel: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/>',
+  };
+  const ic = (n, cls = "") => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+  const B = (attrs) => `${attrs} role="button" tabindex="0"`;
+  const fmt = (n) => n.toLocaleString("en-US");
+
+  /* ── Pages, in book order ── */
+  const NAV = [["overview", "Overview", "house"], ["explorer", "Explorer", "compass"], ["visualizations", "Visualizations", "eye"], ["library", "Library", "book"], ["bookstore", "Bookstore", "store"], ["train", "Train", "target"], ["puzzles", "Puzzles", "puzzle"], ["settings", "Settings", "sliders"]];
+  const ORDER = NAV.map((n) => n[0]);
+  const NAME = Object.fromEntries(NAV.map(([k, l]) => [k, l]));
+  const ICON = Object.fromEntries(NAV.map(([k, , i]) => [k, i]));
+  const TOC_FIG = { overview: "", explorer: "B50", visualizations: "9", library: "6", bookstore: "11", train: "soon", puzzles: "soon", settings: "" };
+  // Adapted from NAV_ITEMS (src/lib/auth/access.ts).
+  const CHAPTERS = {
+    explorer: ["I", "Live", "Board analysis with master-game statistics and an engine.", "Play moves on the board and the Explorer names the opening you are in, lists what masters played from that position and how those games ended, and draws the book you chose, with where you are in it. Turn on Stockfish, which runs in your own browser, to see the evaluation and the best move."],
+    visualizations: ["II", "Live", "Experimental ways to see opening theory as a place.", "The book views, the Treemap and the prototypes, each on a page of its own. The Labyrinth, the map in development, draws every move as a region inside the move before it; it is coming to the Explorer too."],
+    library: ["III", "Live", "Your own data: the books you build.", "Everything that is yours. Create a book for an opening you play, add lines to it from the Explorer or paste them in, and open each book on a page of its own. As a guest your books are kept in this browser, and you can back them up to a file; an account keeps them on the server."],
+    bookstore: ["IV", "Live", "Ready-made books to add to your library.", "A shelf of ready-made books, such as the Queen's Gambit or the Caro-Kann, each drawn by its shape beside a board. Save one and it is copied into your library, to edit as your own. Ratings and books from other players come later."],
+    train: ["V", "Soon", "Drill the lines in your books.", "Drills made from your books: the computer plays into your lines and you answer from memory, with the positions you miss coming back more often. The trainer itself is not built yet."],
+    puzzles: ["VI", "Soon", "Tactical puzzles.", "Tactical puzzles from the Lichess puzzle database, with your attempts tracked. No puzzles are loaded yet."],
+    vibes: ["VII", "Soon", "The book dressed for the opening on the board.", "With vibes on, the book takes on the character of the opening you are playing: its paper, its borders, its type and the notes in its margins. The first vibes are still being made; the switch at the top right is where they will turn on."],
+    settings: ["VIII", "Live", "Light or dark, page turns, and vibes.", "Choose a light or dark theme, or follow your device, how pages turn, and whether vibes dress the book. The choices are saved in this browser, so they work the same for guests and accounts."],
+  };
+  const CH_NAME = { ...NAME, vibes: "Vibes" };
+  // Adapted from VISUALIZATIONS (src/lib/auth/access.ts) and the book views' summaries.
+  const VIZ = [
+    ["labyrinth", "Labyrinth", "In development", "Account", "Every move as a region inside the move before it, sized by how often masters played it. Zoom in to walk deeper into a line, with the opening's name above the map and its position on a board beside it. Coming to the Explorer as well."],
+    ["ply", "Ply columns", "Book views", "", "Every position as a dot, one column per move, so depth lines up across the whole book."],
+    ["metro", "Metro map", "Book views", "", "Each line as a route of stations, the main line running straight and each defense in its own color."],
+    ["spine", "Spine and ribs", "Book views", "", "One line straight across, with the book's other moves as ribs. Click a rib to walk down it."],
+    ["icicle", "Icicle", "Book views", "", "Each move as a block sized by its share of the book, like the Labyrinth laid flat."],
+    ["branch", "Branch points", "Book views", "", "Only the places where the book splits, for big books: runs of single moves become one stretch."],
+    ["treemap", "Treemap", "Opening tree", "", "Every named opening as one radial tree. Pan, search, and click a position to see its board and master statistics."],
+    ["globe", "Globe", "Prototypes", "Account", "Openings placed on a rotating 3D globe."],
+    ["map2d", "2D map", "Prototypes", "Account", "Openings as branches on a flat map that shows more detail as you zoom."],
+  ].map(([id, name, group, needs, sum]) => ({ id, name, group, needs, sum }));
+
+  /* ── Trees: "(" opens alternatives split by "|", and "#k" sets a family color ── */
+  const TREES = {
+    italian: "e4 e5 Nf3 Nc6 Bc4 ( Bc5#0 ( c3 Nf6 d4 exd4 | d3 Nf6 Nc3 | b4#2 Bxb4 c3 ) | Nf6#1 ( Ng5 d5 exd5 | d3 Be7 | d4 exd4 e5 ) | Be7#3 d4 d6 )",
+    sicilian: "e4 c5 ( Nf3 ( d6 ( d4 cxd4 Nxd4 Nf6 Nc3 ( a6#0 | g6#1 | Nc6#2 ) | Bb5+#4 Bd7 ) | Nc6#3 d4 cxd4 | e6#5 d4 cxd4 ) | Nc3#6 Nc6 g3 | c3#7 Nf6 e5 )",
+    qg: "d4 d5 c4 ( e6#0 ( Nc3 Nf6 ( Bg5 Be7 | cxd5 exd5 ) | Nf3 Nf6 g3 ) | c6#1 ( Nf3 Nf6 Nc3 dxc4 | Nc3 e6 ) | dxc4#2 ( Nf3 Nf6 e3 | e4 e5 ) | Nc6#3 Nc3 dxc4 | e5#4 dxe5 d4 )",
+    caro: "e4 c6 ( d4 d5 ( e5#0 Bf5 ( Nf3 e6 | Nc3 e6 ) | Nc3#1 dxe4 Nxe4 ( Bf5 Ng3 | Nd7 Nf3 ) | exd5#2 cxd5 ( c4#3 Nf6 | Bd3 Nc6 ) ) | Nc3#4 d5 Nf3 | c4#5 d5 exd5 )",
+    kg: "e4 e5 f4 ( exf4#0 ( Nf3 ( g5 h4 | d6 d4 ) | Bc4#1 Nf6 ) | Bc5#2 Nf3 d6 | d5#3 exd5 e4 )",
+    london: "d4 ( d5 Bf4 ( Nf6#0 e3 ( c5 c3 | e6 Nf3 ) | c5#1 e3 Nc6 ) | Nf6 Bf4 ( g6#2 e3 Bg7 | e6#3 e3 c5 | c5#4 e3 ) )",
+    ruy: "e4 e5 Nf3 Nc6 Bb5 ( a6#0 Ba4 Nf6 ( O-O Be7 | d3 b5 ) | Nf6#1 O-O Nxe4 | f5#2 Nc3 fxe4 | Bc5#3 c3 Nf6 | d6#4 d4 Bd7 )",
+    french: "e4 e6 d4 d5 ( e5#0 c5 c3 Nc6 | Nc3#1 ( Bb4 e5 c5 | Nf6 Bg5 Be7 | dxe4 Nxe4 ) | Nd2#2 ( c5 exd5 | Nf6 e5 ) | exd5#3 exd5 Bd3 )",
+    english: "c4 ( e5#0 Nc3 Nf6 g3 | c5#1 Nc3 Nc6 g3 | Nf6#2 Nc3 ( e6 e4 | g6 e4 ) | e6#3 Nc3 d5 )",
+  };
+  const LINE = { italian: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5"], sicilian: ["e4", "c5", "Nf3", "d6"], qg: ["d4", "d5", "c4"], caro: ["e4", "c6", "d4", "d5"], kg: ["e4", "e5", "f4"], london: ["d4", "d5", "Bf4"], ruy: ["e4", "e5", "Nf3", "Nc6", "Bb5"], french: ["e4", "e6", "d4", "d5"], english: ["c4"] };
+  const FEN = {
+    italian: "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R",
+    sicilian: "rnbqkbnr/pp2pppp/3p4/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R",
+    qg: "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR",
+    caro: "rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR",
+    kg: "rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR",
+    london: "rnbqkbnr/ppp1pppp/8/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR",
+    ruy: "r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R",
+    french: "rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPP2PPP/RNBQKBNR",
+    english: "rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR",
+  };
+  const HL = { italian: ["f8", "c5"], sicilian: ["d7", "d6"], qg: ["c2", "c4"], caro: ["d7", "d5"], kg: ["f2", "f4"], london: ["c1", "f4"], ruy: ["f1", "b5"], french: ["d7", "d5"], english: ["c2", "c4"] };
+
+  function parse(src) {
+    const t = src.trim().split(/\s+/); let i = 0;
+    function seq() {
+      const head = { san: "", c: [] }; let cur = head;
+      while (i < t.length) {
+        const k = t[i];
+        if (k === "|" || k === ")") break;
+        if (k === "(") {
+          i++;
+          for (;;) { const alt = seq(); cur.c.push(...alt.c); if (t[i] === "|") { i++; continue; } i++; break; }
+          continue;
+        }
+        const [san, f] = k.split("#"); const n = { san, c: [] };
+        if (f !== undefined) n.fam = +f;
+        cur.c.push(n); cur = n; i++;
+      }
+      return head;
+    }
+    return seq();
+  }
+  function tree(key, line) {
+    const root = parse(TREES[key]);
+    if (line) { root.on = true; let cur = root; for (const san of line) { const ch = cur.c.find((c) => c.san === san); if (!ch) break; ch.on = true; cur = ch; } }
+    return root;
+  }
+  function layoutTree(root) {
+    let leaves = 0; const nodes = [], edges = [];
+    (function walk(n, d, fam, parent) {
+      n.d = d; n.f = n.fam ?? fam;
+      if (parent) edges.push([parent, n]);
+      if (!n.c.length) n.y = leaves++;
+      else { n.c.forEach((ch) => walk(ch, d + 1, n.f, n)); n.y = (n.c[0].y + n.c[n.c.length - 1].y) / 2; }
+      nodes.push(n);
+    })(root, 0, null, null);
+    return { nodes, edges, leaves, depth: Math.max(...nodes.map((n) => n.d)) };
+  }
+  const famCol = (f) => (f == null ? "var(--view-edge)" : `var(--fam-${f})`);
+  const nodeDot = (n, x, y) => {
+    if (n.d === 0) return `<circle cx="${x}" cy="${y}" r="5" fill="var(--view-bg)" stroke="var(--fg)" stroke-width="1.6"/>`;
+    const white = n.d % 2 === 1;
+    return `<circle cx="${x}" cy="${y}" r="${n.on ? 4.6 : 3.8}" fill="${white ? "var(--view-white)" : "var(--view-black)"}" stroke="${n.on ? "var(--fg)" : white ? "var(--view-white-edge)" : "var(--view-black)"}" stroke-width="${n.on ? 1.6 : 1}"/>`;
+  };
+  const label = (n, x, y, fs) => `<text x="${x}" y="${y}" font-size="${fs}" font-family="IBM Plex Mono, ui-monospace, monospace" font-weight="${n.on ? 600 : 400}" fill="${n.on ? "var(--fg)" : "var(--muted-fg)"}" paint-order="stroke" stroke="var(--view-halo)" stroke-width="3" stroke-linejoin="round">${n.san}</text>`;
+
+  function treeSVG(root, W, H, fs = 10) {
+    const { nodes, edges, leaves, depth } = layoutTree(root);
+    const pad = 18, room = 34;
+    const dx = (W - pad * 2 - room) / depth, dy = (H - pad * 2) / Math.max(1, leaves - 1);
+    const X = (n) => pad + n.d * dx, Y = (n) => pad + n.y * dy;
+    let s = "";
+    for (const [a, b] of edges) {
+      const ax = X(a), ay = Y(a), bx = X(b), by = Y(b), mx = (ax + bx) / 2, on = a.on && b.on;
+      s += `<path d="M${ax} ${ay}C${mx} ${ay} ${mx} ${by} ${bx} ${by}" fill="none" stroke="${on ? "var(--fg)" : famCol(b.f)}" stroke-width="${on ? 2.4 : 1.8}" stroke-linecap="round"/>`;
+    }
+    for (const n of nodes) { s += nodeDot(n, X(n), Y(n)); if (n.d) s += label(n, X(n) + 6, Y(n) - 7, fs); }
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${s}</svg>`;
+  }
+
+  const view = (svg, note = "") => `<div class="view">${svg}${note ? `<span class="vnote">${note}</span>` : ""}<div class="zoom"><span>−</span><span class="w">Fit</span><span>+</span></div></div>`;
+  const rail = () => `<div class="rail"><span class="on">${ic("tree")}</span><span>${ic("rows")}</span><span>${ic("branch")}</span><span>${ic("cols")}</span><span>${ic("metro")}</span></div>`;
+  function mini(seed) {
+    let s = "";
+    for (let i = 0; i < 5; i++) s += `<rect x="12" y="${3 + i * 4.3}" width="${70 + ((seed * (i + 3) * 37) % 190)}" height="2.6" rx="1.3" fill="var(--fam-${(seed + i) % 8})"/>`;
+    return `<svg class="mini" viewBox="0 0 300 26" preserveAspectRatio="none"><rect x="6" y="3" width="1.6" height="20" fill="var(--fg)" opacity=".5"/>${s}</svg>`;
+  }
+
+  /* ── Board ── */
+  const GLYPH = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
+  function board(fen, hl = [], arrow = false) {
+    const H = new Set(hl.map((s) => `${8 - +s[1]},${"abcdefgh".indexOf(s[0])}`));
+    let sq = "";
+    fen.split("/").forEach((row, ri) => {
+      const cells = [];
+      for (const ch of row) { if (/\d/.test(ch)) for (let k = 0; k < +ch; k++) cells.push(""); else cells.push(ch); }
+      cells.forEach((p, fi) => {
+        let inner = "";
+        if (fi === 0) inner += `<small class="rk">${8 - ri}</small>`;
+        if (ri === 7) inner += `<small class="fl">${"abcdefgh"[fi]}</small>`;
+        if (p) inner += `<span class="pc ${p === p.toUpperCase() ? "w" : "b"}">${GLYPH[p.toLowerCase()]}︎</span>`;
+        sq += `<i class="${(ri + fi) % 2 === 0 ? "l" : "d"}${H.has(ri + "," + fi) ? " hl" : ""}">${inner}</i>`;
+      });
+    });
+    const ar = arrow ? `<svg class="arrow" viewBox="0 0 600 600"><path d="M262.5 487.5V372" stroke="var(--arrow)" stroke-width="15" stroke-linecap="round"/><path d="M236 378 262.5 330 289 378z" fill="var(--arrow)"/></svg>` : "";
+    return `<div class="board">${sq}${ar}</div>`;
+  }
+  const boardSlot = () => `<div class="boardslot"><div class="bwrap">${board(FEN.sicilian, HL.sicilian, true)}<div class="evalbar"><b></b></div></div></div>`;
+  const lineText = (line) => line.map((m, i) => `${i % 2 === 0 ? `${i / 2 + 1}. ` : ""}${i === line.length - 1 ? `<b>${m}</b>` : m}`).join(" ");
+
+  /* ── Books ── */
+  const LIB = [
+    { id: "caro", name: "Caro-Kann Defense", side: "b", pos: 256, tree: "caro" },
+    { id: "italian", name: "Italian Game", side: "w", pos: 338, tree: "italian" },
+    { id: "kg", name: "King's Gambit", side: "w", pos: 75, tree: "kg" },
+    { id: "london", name: "London System", side: "w", pos: 120, tree: "london", own: true },
+    { id: "qg", name: "Queen's Gambit", side: "w", pos: 198, tree: "qg" },
+    { id: "najdorf", name: "Sicilian Najdorf", side: "b", pos: 247, tree: "sicilian", own: true },
+  ];
+  const STORE = [
+    ["queens-gambit", "Queen's Gambit", "w", 198, "qg", "wiki", "1.d4 d5 2.c4 and the replies Wikibooks covers: the Slav, the Queen's Gambit Declined and Accepted, the Chigorin, the Albin Countergambit and more. Both sides' alternatives are kept."],
+    ["italian-game", "Italian Game", "w", 338, "italian", "wiki", "1.e4 e5 2.Nf3 Nc6 3.Bc4: the Giuoco Piano, the Two Knights Defense, the Evans Gambit and their sidelines."],
+    ["ruy-lopez", "Ruy Lopez", "w", 253, "ruy", "wiki", "1.e4 e5 2.Nf3 Nc6 3.Bb5: the Morphy Defense, the Berlin, the Schliemann and the other third moves for Black."],
+    ["kings-gambit", "King's Gambit", "w", 75, "kg", "wiki", "1.e4 e5 2.f4, accepted and declined."],
+    ["english-opening", "English Opening", "w", 108, "english", "wiki", "1.c4 and Black's main replies, from the Symmetrical English to the Reversed Sicilian."],
+    ["french-defense", "French Defense", "b", 141, "french", "wiki", "1.e4 e6: the Advance, Exchange, Tarrasch and Winawer lines, among others."],
+    ["caro-kann-defense", "Caro-Kann Defense", "b", 256, "caro", "wiki", "1.e4 c6: the Classical, Advance, Exchange and Panov lines, among others."],
+    ["sicilian-defense", "Sicilian Defense", "b", 247, "sicilian", "wiki", "1.e4 c5 as far as Wikibooks takes it: the Open Sicilian's main systems and White's anti-Sicilians."],
+    ["queens-gambit-catalog", "Queen's Gambit (catalog lines)", "w", 872, "qg", "catalog", "Every named line through 1.d4 d5 2.c4 in the opening catalog, for comparing ways of making books."],
+    ["queens-gambit-masters", "Queen's Gambit (master statistics)", "w", 214, "qg", "masters", "Grown from master games alone, for comparing ways of making books: White plays the most played move, and Black gets every common reply."],
+    ["queens-gambit-catalog-masters", "Queen's Gambit (catalog + masters)", "w", 1000, "qg", "both", "The catalog's named lines through 1.d4 d5 2.c4, with Black's common replies they lack, each carried on from master games."],
+  ].map(([id, name, side, pos, tr, method, desc], i) => ({ id, name, side, pos, tree: tr, method, desc, seed: i + 2 }));
+  const HOW = {
+    wiki: "Made from the moves on Wikibooks' Chess Opening Theory pages, by their contributors, under CC BY-SA 4.0. A saved copy keeps this credit.",
+    catalog: "Made from every named line in the opening catalog. The catalog is public domain, so nothing needs crediting.",
+    masters: "Grown from master games: White plays the most played move, and Black gets every common reply.",
+    both: "The catalog's named lines, with Black's common replies they lack, each carried on from master games.",
+  };
+  const SRC = { wiki: "Wikibooks, CC BY-SA 4.0", catalog: "Opening catalog, public domain", masters: "Master games", both: "Catalog and master games" };
+  const sideName = (s) => (s === "w" ? "White" : "Black");
+  const linesOf = (pos) => Math.max(6, Math.round(pos / 8.2));
+  const measures = (pos) => `<dl class="dl"><div><dt>Positions</dt><dd>${fmt(pos)} / 1,000</dd></div><div><dt>Lines</dt><dd>${linesOf(pos)}</dd></div><div><dt>Average line</dt><dd>${(8.6 + (pos % 7) * 0.4).toFixed(1)} plies</dd></div><div><dt>Longest line</dt><dd>${12 + (pos % 9)} plies</dd></div></dl>`;
+  const libBook = (id) => LIB.find((b) => b.id === id);
+  const storeBook = (id) => STORE.find((b) => b.id === id);
+  const tocRow = (x, on, kind) => `<div class="toc${on ? " on" : ""}" ${B(`data-${kind}="${x.id}"`)}><i class="sq ${x.side}"></i><span class="nm">${x.name}</span><span class="lead"></span><span class="fig">${x.pos}</span></div>`;
+  const originTags = (b) => (b.own ? `<span class="badge">Made by you</span>` : `<span class="badge">ByTheBook</span><span class="verified">${ic("check")}Verified</span><span class="sub">from Wikibooks</span>`);
+  function reader(b, kind) {
+    return `<div class="reader">${rail()}${view(treeSVG(tree(b.tree, LINE[b.tree]), 640, 420, 10.5))}
+      <aside class="posside"><span class="sc">This position</span>${board(FEN[b.tree], HL[b.tree])}<div class="line">${lineText(LINE[b.tree])}</div>
+      <span class="btn outline" ${B('data-go="explorer"')}>Open position in Explorer</span>${kind === "lib" ? `<span class="btn ghost">Remove this move</span>` : ""}</aside></div>`;
+  }
+
+  /* ── Explorer pieces ── */
+  const MOVES = [["d4", "312K", 36, 33], ["Bb5+", "38K", 37, 37], ["c3", "21K", 34, 35], ["Nc3", "18K", 33, 31], ["Bc4", "9.6K", 35, 27], ["g3", "3.1K", 36, 30], ["b4", "1.4K", 30, 26], ["c4", "1.1K", 38, 30], ["Be2", "980", 33, 33], ["h3", "610", 31, 34], ["Qe2", "540", 34, 31], ["a3", "410", 32, 33]];
+  function movesTable() {
+    let s = `<span class="hd sc">Move</span><span class="hd sc">White · Draw · Black</span><span class="hd sc" style="justify-content:flex-end">Games</span>`;
+    MOVES.forEach(([m, g, w, d], i) => {
+      const h = i === 0 ? " hl" : "";
+      s += `<span class="san${h} first">${m}</span><span class="bar${h}"><b><i style="width:${w}%;background:var(--bar-w)"></i><i style="width:${d}%;background:var(--bar-d)"></i><i style="flex:1;background:var(--bar-b)"></i></b></span><span class="n${h} last">${g}</span>`;
+    });
+    return `<div class="moves">${s}</div>`;
+  }
+  const ENGINE = [["+0.31", "3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6"], ["+0.24", "3. Bb5+ Bd7 4. Bxd7+ Qxd7 5. c4"], ["+0.12", "3. c3 Nf6 4. Be2 Nbd7 5. d3"]];
+  const viewTabs = () => `<span class="mtab on">Book view</span><span class="mtab soon" title="Coming soon">Labyrinth<small>coming soon</small></span>`;
+  const viewBody = (W, H) => `<div class="row fill">${rail()}${view(treeSVG(tree("sicilian", LINE.sicilian), W, H, 9.5), "Sicilian Najdorf · you are at 2…d6, in the book")}</div>`;
+  // One button, always at the right end of the right page's top slot, whichever way round.
+  const swapBtn = (back) => `<span class="btn outline sm" ${B("data-swap")}>${ic("swap")}${back ? "Swap back" : "Swap with board"}</span>`;
+  function scoresheet() {
+    const done = [["e4", "c5"], ["Nf3", "d6"]];
+    let g = "";
+    for (let n = 1; n <= 16; n++) {
+      const [w, b] = done[n - 1] || ["", ""];
+      g += `<span class="no">${n}.</span><span>${w}</span><span>${n === 2 ? `<b>${b}</b>` : b}</span>`;
+    }
+    return `<aside class="score"><div class="row"><span class="sc">Line</span><span class="grow"></span><span class="sub mono">ply 4</span></div><div class="sheetgrid">${g}</div>
+      <div class="navrow"><span class="btn ghost icon">${ic("first")}</span><span class="btn ghost icon">${ic("prev")}</span><span class="btn ghost icon">${ic("next")}</span><span class="btn ghost icon">${ic("last")}</span></div></aside>`;
+  }
+
+  /* ── Margin drawings for the sample vibe (static) ── */
+  function deco(side) {
+    const hand = side === "l"
+      ? `<svg style="left:-44px;top:-44px" width="90" height="90"><circle cx="45" cy="45" r="34" fill="none" stroke="var(--muted-fg)" stroke-opacity=".18" stroke-width="5" stroke-dasharray="70 6 120 4"/></svg>
+         <svg style="left:10px;bottom:70px" width="24" height="120"><path d="M14 4c-6 22 4 40-2 62s4 30 0 46" fill="none" stroke="var(--muted-fg)" stroke-opacity=".5" stroke-width="1.4" stroke-linecap="round"/><path d="M7 104l5 9 6-8" fill="none" stroke="var(--muted-fg)" stroke-opacity=".5" stroke-width="1.4" stroke-linecap="round"/></svg>`
+      : `<svg style="right:6px;top:120px" width="26" height="60"><text x="2" y="22" font-size="22" transform="rotate(8 12 18)">!?</text></svg>
+         <svg style="right:8px;bottom:64px" width="24" height="70"><text x="1" y="20" font-size="20">±</text><path d="M5 34c6 6 10 14 8 28" fill="none" stroke="var(--muted-fg)" stroke-opacity=".5" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+    return `<div class="deco"><span class="frame"></span>${hand}</div>`;
+  }
+
+  /* ── Spreads: each says what its two pages hold and where its spine sits ── */
+  function lib1(s) {
+    const b = libBook(s.book);
+    return {
+      single: "both", duoW: "300px",
+      left: {
+        rh: `<span class="rh">Library</span><span class="grow"></span><span class="sc">Kept in this browser</span>`,
+        body: `<div class="row" style="flex-wrap:wrap"><span class="h1" style="font-size:30px">Your books</span><span class="grow"></span><span class="btn ghost">${ic("upload")}Restore</span><span class="btn ghost">${ic("download")}Back up</span><span class="btn primary">${ic("plus")}New book</span></div>
+          <div class="row"><span class="input grow">${ic("search")}<span class="val">Search books</span></span><span class="tg"><span class="on">All</span><span>White</span><span>Black</span></span></div>
+          <div class="toclist">${LIB.map((x) => tocRow(x, x.id === s.book, "book")).join("")}</div>
+          <p class="sub" style="margin-top:6px"><b style="color:var(--fg)">Game history</b> · coming soon: import your own games to see where you left the book.</p>`,
+        foot: `<span>6 books</span><span class="grow"></span><span>1,234 positions in all</span>`,
+      },
+      right: {
+        rh: `<span class="sc">${sideName(b.side)}</span><span class="grow"></span><span class="rh">${b.name}</span>`,
+        body: `<div><div class="row"><span class="h1">${b.name}</span><span class="sub row" style="gap:5px"><i class="sq ${b.side}"></i>${sideName(b.side)}</span></div><div class="row" style="margin-top:8px">${originTags(b)}</div></div>
+          <div class="row" style="gap:6px;flex-wrap:wrap"><span class="btn primary" ${B('data-go="lib2"')}>Open book page</span><span class="btn outline" ${B('data-go="explorer"')}>Open in Explorer</span><span class="btn outline">Train</span><span class="btn outline icon">${ic("more")}</span></div>
+          ${measures(b.pos)}<div class="reader">${rail()}${view(treeSVG(tree(b.tree), 600, 380, 10.5))}</div>`,
+        foot: `<span>${b.own ? "Your book" : "Wikibooks, CC BY-SA 4.0"}</span><span class="grow"></span><span>${fmt(b.pos)} of 1,000 positions</span>`,
+      },
+    };
+  }
+  function lib2(s) {
+    const b = libBook(s.book), i = LIB.indexOf(b);
+    return {
+      shift: 300, single: "right", back: { label: "Library", go: "lib1" },
+      left: {
+        rh: `<span class="grow"></span><span class="sc">Library · 6 books</span>`,
+        body: `<div class="peek"><span class="backlink" ${B('data-go="lib1"')} style="align-self:flex-end">${ic("prev")}All books</span><div class="toclist">${LIB.map((x) => tocRow(x, x.id === s.book, "book")).join("")}</div></div>`,
+        foot: `<span class="grow"></span><span>Book ${i + 1} of 6</span>`,
+      },
+      right: {
+        rh: `<span class="sc">${sideName(b.side)} · ${b.own ? "Your book" : "ByTheBook"}</span><span class="grow"></span><span class="rh">${b.name}</span>`,
+        body: `<div class="row" style="align-items:flex-start;gap:16px"><div class="grow"><div class="row"><span class="h1" style="font-size:30px">${b.name}</span><span class="sub row" style="gap:5px"><i class="sq ${b.side}"></i>${sideName(b.side)}</span></div><div class="row" style="margin-top:8px">${originTags(b)}</div></div>
+          <div class="row" style="gap:6px"><span class="btn outline" ${B('data-go="explorer"')}>Open in Explorer</span><span class="btn primary">Train this book</span><span class="btn outline icon">${ic("more")}</span></div></div>
+          ${measures(b.pos)}${reader(b, "lib")}`,
+        foot: `<span>${b.own ? "Your book" : "Wikibooks, CC BY-SA 4.0"}</span><span class="grow"></span><span>${fmt(b.pos)} of 1,000 positions</span>`,
+      },
+    };
+  }
+  function store1() {
+    const card = (x) => `<div class="card" ${B(`data-store="${x.id}"`)}>${mini(x.seed)}<span class="cname">${x.name}</span>
+      <span class="pub">ByTheBook <span class="verified">${ic("check")}Verified</span></span>
+      <span class="cfacts"><i class="sq ${x.side}"></i>${sideName(x.side)} · <span class="mono">${fmt(x.pos)} / 1,000</span> · ${linesOf(x.pos)} lines<span class="rate">No ratings yet</span></span></div>`;
+    return {
+      single: "both", duoW: "280px",
+      left: {
+        rh: `<span class="rh">Bookstore</span><span class="grow"></span><span class="sc">11 books</span>`,
+        body: `<span class="h1" style="font-size:30px">Bookstore</span>
+          <p class="note" style="color:var(--muted-fg)">Ready-made opening books. Saving one copies it into your library, where you can edit it as your own.</p>
+          <span class="input">${ic("search")}<span class="val">Search the Bookstore</span></span>
+          <div class="row"><span class="tg"><span class="on">All</span><span>White</span><span>Black</span></span><span class="tg"><span>${ic("check")}Verified only</span></span></div>
+          <div><div class="sc" style="margin:10px 0 8px">Shelves</div><div class="toclist">
+            <div class="toc on"><span class="nm">All books</span><span class="lead"></span><span class="fig">11</span></div>
+            <div class="toc"><i class="sq w"></i><span class="nm">For White</span><span class="lead"></span><span class="fig">8</span></div>
+            <div class="toc"><i class="sq b"></i><span class="nm">For Black</span><span class="lead"></span><span class="fig">3</span></div></div></div>
+          <p class="sub">Ratings, saves and books from other players arrive with the store's back end (plans/bookstore.md).</p>`,
+        foot: `<span>Shelf: all books</span><span class="grow"></span><span>11 books</span>`,
+      },
+      right: {
+        rh: `<span class="sc">All books</span><span class="grow"></span><span class="rh">The shelf</span>`,
+        body: `<div class="cards">${STORE.map(card).join("")}</div>`, scroll: true,
+        foot: `<span>11 books</span><span class="grow"></span><span>positions against the 1,000 limit</span>`,
+      },
+    };
+  }
+  function store2(s) {
+    const b = storeBook(s.store), i = STORE.indexOf(b);
+    return {
+      shift: 52, single: "right", back: { label: "The shelf", go: "store1" },
+      left: { ...store1().left, strip: { label: "Back to the shelf", go: "store1" } },
+      right: {
+        rh: `<span class="sc">${sideName(b.side)} · ByTheBook · book ${i + 1} of 11</span><span class="grow"></span><span class="rh">${b.name}</span>`,
+        body: `<div class="row" style="align-items:flex-start;gap:20px"><div class="grow">
+            <div class="row"><span class="h1" style="font-size:30px">${b.name}</span><span class="sub row" style="gap:5px"><i class="sq ${b.side}"></i>${sideName(b.side)}</span></div>
+            <div class="row" style="margin-top:8px"><span class="pub">ByTheBook <span class="verified">${ic("check")}Verified</span></span><span class="sub">· No ratings yet · 0 saves</span></div>
+            <p class="desc">${b.desc}<sup>1</sup></p></div>
+            <div class="savebox"><span class="btn primary">Save to library</span><span class="sub">Saving copies it into this browser's library.</span></div></div>
+          ${measures(b.pos)}${reader(b, "store")}<p class="colophon"><sup>1</sup> ${HOW[b.method]}</p>`,
+        foot: `<span>${SRC[b.method]}</span><span class="grow"></span><span>${fmt(b.pos)} of 1,000 positions</span>`,
+      },
+    };
+  }
+  function explorer(s) {
+    const search = `<div class="row"><span class="btn outline">${ic("flip")}White</span><span class="input grow">${ic("search")}<span class="val">Search — Sicilian, B12…</span></span></div>
+      <div class="row"><span class="input select" style="width:170px"><span class="val">Sicilian Najdorf</span>${ic("chevd")}</span><span class="input select grow"><span class="val" style="color:var(--muted-fg)">View lines</span>${ic("chevd")}</span><span class="btn primary">${ic("plus")}Add line</span></div>`;
+    const leftBody = s.swap
+      ? `${search}<section class="slot" style="flex:1"><div class="slothead">${viewTabs()}</div><div class="slotbody">${viewBody(600, 560)}</div></section>`
+      : `${search}${boardSlot()}`;
+    const top = s.swap
+      ? `<section class="slot"><div class="slothead"><span class="mtab on">Board</span><span class="sub">White to move</span><span class="grow"></span>${swapBtn(true)}</div><div class="slotbody">${boardSlot()}</div></section>`
+      : `<section class="slot"><div class="slothead">${viewTabs()}<span class="grow"></span>${swapBtn(false)}</div><div class="slotbody">${viewBody(520, 250)}</div></section>`;
+    const engine = `<section class="slot"><div class="slothead"><span class="mtab on">Engine</span><span class="sub mono">+0.31 · depth 18</span><span class="grow"></span><span class="tg"><span>None</span><span class="on">Light</span><span>Heavy</span></span></div>
+      <div class="slotbody" style="gap:0;padding-top:4px">${ENGINE.map(([e, l]) => `<div class="eline"><span class="ev">${e}</span><span class="mono">${l}</span></div>`).join("")}</div></section>`;
+    const moves = `<section class="slot"><div class="slothead"><span class="mtab on">Master moves</span><span class="grow"></span><span class="sub mono">312K games</span></div><div class="slotbody"><div class="scrollbox">${movesTable()}</div></div></section>`;
+    return {
+      single: "both", duoW: "46%",
+      left: {
+        rh: `<span class="rh">Sicilian Defense</span><span class="grow"></span><span class="sc">Opening Explorer</span>`,
+        body: leftBody,
+        foot: s.swap ? `<span>Book view on the big page</span><span class="grow"></span><span>Sicilian Najdorf · 247 positions</span>` : `<span>White to move</span><span class="grow"></span><span>Sicilian Najdorf book · in book</span>`,
+      },
+      right: {
+        rh: `<span class="sc">B50</span><span class="grow"></span><span class="rh">Modern Variations</span>`,
+        body: `<div class="exr"><div class="stack">${top}${engine}${moves}</div>${scoresheet()}</div>`,
+        foot: `<span>Sicilian Defense: Modern Variations</span><span class="grow"></span><span>312K master games</span>`,
+      },
+    };
+  }
+  function overview(s) {
+    const keys = Object.keys(CHAPTERS), k = s.ov, [num, status, , details] = CHAPTERS[k], isPage = k in NAME;
+    const chap = (key) => {
+      const [n, st8, sum] = CHAPTERS[key], on = key === k, page = key in NAME;
+      return `<div class="chap${on ? " on" : ""}" ${B(`data-pick="${key}"`)}><span class="num">${n}</span><span class="row"><span class="cname">${CH_NAME[key]}</span><span class="lead"></span>${on && page ? `<span class="jump" ${B(`data-nav="${key}"`)}>Jump to page</span>` : `<span class="cfig">${st8}</span>`}</span><span class="csum">${sum}</span></div>`;
+    };
+    const demo = k === "explorer" ? `<div class="row" style="position:absolute;inset:14px 14px 30px;gap:14px;align-items:stretch"><div style="width:42%">${board(FEN.sicilian, HL.sicilian)}</div>${view(treeSVG(tree("sicilian", LINE.sicilian), 300, 200, 9))}</div>`
+      : k === "library" || k === "visualizations" ? `<div class="row" style="position:absolute;inset:14px 14px 30px;align-items:stretch">${view(treeSVG(tree(k === "library" ? "italian" : "ruy"), 420, 230, 9.5))}</div>`
+      : k === "bookstore" ? `<div style="position:absolute;inset:14px 14px 30px;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start">${STORE.slice(0, 6).map((x) => `<div style="display:flex;flex-direction:column;gap:3px">${mini(x.seed)}<span style="font:600 12px var(--font-display)">${x.name}</span></div>`).join("")}</div>`
+      : `<div class="titlepg" style="position:absolute;inset:0"><span class="sub">${status === "Soon" ? "Coming soon" : "No demo recorded yet"}</span></div>`;
+    return {
+      single: "both", duoW: "330px",
+      left: {
+        rh: `<span class="rh">Overview</span><span class="grow"></span><span class="sc">Contents</span>`,
+        body: `<div><span class="h1" style="font-size:34px">Contents</span><p class="sub" style="margin-top:6px">Every page of the book, in order. Pick a chapter to see it on the right.</p></div>
+          <div class="chaps">${keys.map(chap).join("")}</div>
+          <div><div class="sc" style="margin-bottom:6px">What an account adds</div><div class="access"><span class="hd">&nbsp;</span><span class="hd">Guest</span><span class="hd">Account</span>
+            <span class="k">Your books</span><span>Kept in this browser</span><span>Saved to your account</span>
+            <span class="k">Master statistics</span><span>Saved positions</span><span>Any position, live</span>
+            <span class="k">Prototype views</span><span>Listed only</span><span>Yes</span></div></div>`,
+        foot: `<span>ByTheBook, an opening trainer</span>`,
+      },
+      right: {
+        rh: `<span class="sc">Chapter ${num}</span><span class="grow"></span><span class="rh">${CH_NAME[k]}</span>`,
+        body: `<span class="h1" style="font-size:30px">${CH_NAME[k]}</span><div class="demo">${demo}${status === "Soon" ? "" : `<span class="tag">Demo, recorded from the app</span>`}</div><p class="note">${details}</p>
+          ${isPage ? `<span class="btn primary" ${B(`data-nav="${k}"`)} style="align-self:flex-start">Jump to page</span>` : `<span class="badge" style="align-self:flex-start">Coming soon</span>`}`,
+        foot: `<span>Chapter ${num} of VIII</span>`,
+      },
+    };
+  }
+  function visuals(s) {
+    const v = VIZ.find((x) => x.id === s.vz), groups = [...new Set(VIZ.map((x) => x.group))];
+    const row = (x) => `<div class="toc${x.id === v.id ? " on" : ""}" ${B(`data-vz="${x.id}"`)}><span class="nm">${x.name}</span><span class="lead"></span><span class="fig">${x.needs || (x.group === "Book views" ? "small" : "full page")}</span></div>`;
+    const prev = v.group === "Book views" || v.id === "treemap"
+      ? `<div class="row" style="position:absolute;inset:14px 14px 30px;align-items:stretch">${view(treeSVG(tree(v.id === "treemap" ? "sicilian" : "ruy"), 420, 230, 9.5), v.name)}</div>`
+      : `<div class="titlepg" style="position:absolute;inset:0"><span class="sub">${v.id === "labyrinth" ? "Needs an account · coming to the Explorer" : "A prototype, kept for later"}</span></div>`;
+    return {
+      single: "both", duoW: "300px",
+      left: {
+        rh: `<span class="rh">Visualizations</span><span class="grow"></span><span class="sc">Chapter II</span>`,
+        body: `<div><span class="h1" style="font-size:30px">Visualizations</span><p class="sub" style="margin-top:6px">Ways to see a book as a place. Pick one to see it on the right.</p></div>
+          ${groups.map((g) => `<div><div class="sc" style="margin:4px 0 6px">${g}</div><div class="toclist">${VIZ.filter((x) => x.group === g).map(row).join("")}</div></div>`).join("")}`,
+        foot: `<span>9 visualizations</span><span class="grow"></span><span>5 small, 4 full page</span>`,
+      },
+      right: {
+        rh: `<span class="sc">${v.group}</span><span class="grow"></span><span class="rh">${v.name}</span>`,
+        body: `<span class="h1" style="font-size:30px">${v.name}</span><div class="demo">${prev}</div><p class="note">${v.sum}</p>
+          <div class="row"><span class="btn primary" ${B("data-nop")}>Jump to page</span>${v.needs ? `<span class="sub">Needs an account</span>` : ""}</div>`,
+        foot: `<span>${v.group}</span><span class="grow"></span><span>${VIZ.indexOf(v) + 1} of 9</span>`,
+      },
+    };
+  }
+  function settings() {
+    const seg = (key, opts, cur) => `<span class="tg">${opts.map(([v, l]) => `<span class="${v === cur ? "on" : ""}" ${B(`data-set="${key}:${v}"`)}>${l}</span>`).join("")}</span>`;
+    return {
+      single: "both", duoW: "48%",
+      left: {
+        rh: `<span class="rh">Settings</span><span class="grow"></span><span class="sc">Saved in this browser</span>`,
+        body: `<span class="h1" style="font-size:30px">Appearance</span><div class="setlist">
+          <div class="setrow"><b>Theme</b>${seg("mode", [["light", "Light"], ["dark", "Dark"], ["system", "System"]], st.mode)}<span class="sub">Light has the deep gutter, dark the soft one.</span></div>
+          <div class="setrow"><b>Vibes</b>${seg("vibe", [["on", "On"], ["off", "Off"]], st.vibe)}<span class="sub">The same switch sits at the top right, beside Sign in. A vibe dresses the book, never the strip.</span></div>
+          <div class="setrow"><b>Page turns</b>${seg("turn", [["3d", "Page turn"], ["slide", "Slide"], ["none", "None"]], st.turn)}<span class="sub">None whenever your system asks for less motion.</span></div>
+          <div class="setrow"><b>Music</b><span class="sub" style="grid-column:2">Comes with vibes (plans/vibes.md).</span></div></div>`,
+        foot: `<span>Settings</span>`,
+      },
+      right: {
+        rh: `<span class="sc">Guest</span><span class="grow"></span><span class="rh">Your data</span>`,
+        body: `<span class="h1" style="font-size:30px">Library and account</span><div class="setlist">
+          <div class="setrow"><b>Your books</b><span>Kept in this browser. Last backup: never.</span><span class="row" style="grid-column:2"><span class="btn outline">${ic("download")}Back up</span><span class="btn ghost">${ic("upload")}Restore</span></span></div>
+          <div class="setrow"><b>Account</b><span>Browsing as a guest. An account keeps your books on any device.</span><span class="row" style="grid-column:2"><span class="btn primary">Sign in</span><span class="btn outline">Create account</span></span></div>
+          <div class="setrow"><b>Problems</b><span>Copy a bug report with this page's state.</span><span class="row" style="grid-column:2"><span class="btn outline">${ic("bug")}Copy bug report</span></span></div></div>`,
+        foot: `<span class="grow"></span><span>Nothing here leaves your browser until you sign in</span>`,
+      },
+    };
+  }
+  const CHAPTER = {
+    train: { line: "Drills from your books.", text: ["The trainer is a placeholder today. It would be a spread like the Explorer's: the board on the left page, the drill and your answers on the right."] },
+    puzzles: { line: "Positions to solve.", text: ["Puzzles is a placeholder today, and would take the same spread as the trainer."] },
+  };
+  function chapter(s) {
+    const c = CHAPTER[s.page], n = ORDER.indexOf(s.page) + 1;
+    return {
+      single: "right",
+      left: { rh: `<span class="rh">${NAME[s.page]}</span>`, body: `<div class="titlepg"><span class="sc">Part ${n} of ${ORDER.length}</span><span class="h1">${NAME[s.page]}</span><p class="sub">${c.line}</p></div>`, foot: "" },
+      right: { rh: `<span class="sc">Placeholder</span><span class="grow"></span><span class="rh">${NAME[s.page]}</span>`, body: `<div class="h1">${NAME[s.page]}</div>${c.text.map((t) => `<p class="note">${t}</p>`).join("")}<div class="blank-lines"></div>`, foot: "" },
+    };
+  }
+  function compose(s) {
+    if (s.page === "library") return s.level === 1 ? lib1(s) : lib2(s);
+    if (s.page === "bookstore") return s.level === 1 ? store1(s) : store2(s);
+    if (s.page === "explorer") return explorer(s);
+    if (s.page === "overview") return overview(s);
+    if (s.page === "visualizations") return visuals(s);
+    if (s.page === "settings") return settings(s);
+    return chapter(s);
+  }
+  const blankPart = (pageKey) => ({ rh: `<span class="rh">${NAME[pageKey]}</span>`, body: `<div class="blank-lines"></div>`, foot: "" });
+
+  /* ── State and rendering ── */
+  const st = {
+    page: "library", level: 1, book: "italian", store: "sicilian-defense", swap: false, ov: "explorer", vz: "ply",
+    form: "spread", turn: reduced ? "none" : "3d", speed: 1, contents: "open", vibe: "off",
+    mode: (() => {
+      const t = document.documentElement.getAttribute("data-theme");
+      if (t === "dark" || t === "light") return t;
+      return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    })(),
+  };
+  let busy = false, mk = null, POS = {};
+  const D = (ms) => Math.round(ms / st.speed);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const stage = $("#stage");
+
+  // Where each tab's bookmark lands, measured once the strip is drawn (mock pixels).
+  function off(el) { let x = 0, y = 0; while (el && el !== mk) { x += el.offsetLeft; y += el.offsetTop; el = el.offsetParent; } return { x, y }; }
+  function measure() {
+    POS = {};
+    if (st.form === "spread") {
+      const pl = $("#pl", mk), o = off(pl);
+      POS.pl = o.x + 1; POS.spine = o.x + pl.offsetWidth; POS.tabs = {};
+      mk.querySelectorAll(".navtabs [data-nav]").forEach((t) => { const q = off(t); POS.tabs[t.dataset.nav] = q.x + t.offsetWidth / 2; POS.rise = o.y + 1 - (q.y + t.offsetHeight); });
+    } else {
+      const ps = $("#ps", mk), o = off(ps); POS.ty = {};
+      mk.querySelectorAll(".ptabs [data-nav]").forEach((t) => { POS.ty[t.dataset.nav] = off(t).y - o.y - 1; POS.tw = t.offsetWidth; });
+    }
+  }
+  // A page's bookmark sits under its tab, on whichever page lies below the tab.
+  function bookmark(key, side) {
+    const x = POS.tabs && POS.tabs[key];
+    if (x == null || (side === "l") !== (x < POS.spine)) return "";
+    return `<span class="bmk" style="--bx:${(x - (side === "l" ? POS.pl : POS.spine)).toFixed(1)}px;--rise:${POS.rise}px"></span>`;
+  }
+  function pageInner(part, side, key) {
+    return `<div class="pgin"><div class="rhrow">${part.rh}</div><div class="body${part.scroll ? " scroll" : ""}">${part.body}</div><div class="foot">${part.foot}</div></div>${deco(side)}
+      ${part.strip ? `<div class="fold" ${B(`data-go="${part.strip.go}"`)}><span>${ic("prev")}${part.strip.label}</span></div>` : ""}${key ? bookmark(key, side) : ""}`;
+  }
+  function soloInner(p, key) {
+    const rh = p.single === "right" && p.back ? `<span class="backlink" ${B(`data-go="${p.back.go}"`)}>${ic("prev")}${p.back.label}</span><span class="grow"></span>${p.right.rh}` : p.single === "both" ? p.left.rh : p.right.rh;
+    const body = p.single === "both"
+      ? `<div class="duo"><div class="duo-l" style="flex:0 0 ${p.duoW}">${p.left.body}</div><div class="vrule"></div><div class="duo-r${p.right.scroll ? " scroll" : ""}">${p.right.body}</div></div>`
+      : p.right.body;
+    const tab = POS.ty ? `<div class="ptab cur" style="--ty:${POS.ty[key]}px;--tw:${POS.tw}px">${ic(ICON[key], "ico")}<span class="nm">${NAME[key]}</span>${TOC_FIG[key] ? `<span class="fig">${TOC_FIG[key]}</span>` : ""}</div>` : "";
+    return `<div class="pgin"><div class="rhrow">${rh}</div><div class="body">${body}</div><div class="foot">${p.right.foot}</div></div>${deco("r")}${tab}`;
+  }
+  const vibeSwitch = () => `<span class="vsw" ${B("data-vibesw")} title="Vibes dress the book"><i></i><span class="gtext">Vibes</span></span>`;
+  function shell() {
+    if (st.form === "spread") {
+      return `<div class="L-spread"><div class="toprow"><span class="brand">ByTheBook</span>
+        <span class="navtabs">${NAV.map(([k, l]) => `<span ${B(`data-nav="${k}"`)}>${l}</span>`).join("")}</span><span class="grow"></span>
+        ${vibeSwitch()}<span class="btn ghost icon">${ic("bug")}</span><span class="sub">Browsing as a guest</span><span class="btn ghost" style="font-weight:700">Sign in</span><span class="btn outline">Create account</span></div>
+        <div class="book" id="bk" data-shift="off"><span class="cover"></span><span class="edges el"></span><div class="page l" id="pl"></div><div class="page r" id="pr"></div><span class="edges er"></span></div></div>`;
+    }
+    return `<div class="L-single"><nav class="tocside"><div class="row tochead"><span class="brand">ByTheBook</span><span class="grow"></span><span class="btn ghost icon" ${B("data-toc")} title="Narrow or widen the tabs">${ic("panel")}</span></div>
+      <div class="ptabs">${NAV.map(([k, l, i]) => `<div class="ptab" ${B(`data-nav="${k}"`)}>${ic(i, "ico")}<span class="nm">${l}</span>${TOC_FIG[k] ? `<span class="fig">${TOC_FIG[k]}</span>` : ""}</div>`).join("")}</div>
+      <div class="navfoot">${vibeSwitch()}<span>${ic("bug", "ico")}<span class="gtext">Copy bug report</span></span><span class="who gtext">Browsing as a guest</span><span class="strong">${ic("login", "ico")}<span class="gtext">Sign in</span></span><span>${ic("user", "ico")}<span class="gtext">Create account</span></span></div></nav>
+      <div class="solo" id="solo"><span class="edges el"></span><div class="page s" id="ps"></div><span class="spinebar"></span></div></div>`;
+  }
+  function chrome(pageKey = st.page) {
+    mk.querySelectorAll(".navtabs [data-nav], .ptabs [data-nav]").forEach((el) => el.classList.toggle("on", el.dataset.nav === pageKey));
+  }
+  function attrs() {
+    mk.dataset.mode = st.mode === "dark" ? "dark" : "light"; mk.dataset.contents = st.contents; mk.dataset.vibe = st.vibe;
+    mk.style.setProperty("--gdur", D(420) + "ms");
+  }
+  function geom(parts, animate) {
+    const bk = $("#bk", mk); if (!bk) return Promise.resolve();
+    animate = animate && st.turn !== "none";
+    const shift = parts.shift ? "on" : "off", changed = bk.dataset.shift !== shift;
+    if (shift === "on" && changed) {
+      const lpx = bk.clientWidth / 2;
+      // The left page slides until only its last `shift` pixels show at the window's edge.
+      bk.style.setProperty("--lpx", lpx + "px"); bk.style.setProperty("--shift", lpx - parts.shift + 26 + "px");
+    }
+    if (shift === "off" && changed) { bk.classList.add("keep-px"); setTimeout(() => bk.classList.remove("keep-px"), animate ? D(460) : 0); }
+    bk.classList.toggle("anim", !!animate);
+    bk.dataset.shift = shift; bk.dataset.page = st.page;
+    const at = ORDER.indexOf(st.page);
+    bk.style.setProperty("--el", 4 + at * 2.4 + "px");
+    bk.style.setProperty("--er", 4 + (ORDER.length - 1 - at) * 2.4 + "px");
+    return changed && animate ? sleep(D(460)) : Promise.resolve();
+  }
+  function paint() {
+    const p = compose(st);
+    if (st.form === "spread") { $("#pl", mk).innerHTML = pageInner(p.left, "l", st.page); $("#pr", mk).innerHTML = pageInner(p.right, "r", st.page); }
+    else $("#ps", mk).innerHTML = soloInner(p, st.page);
+    return p;
+  }
+  function build() {
+    stage.innerHTML = `<div class="mock" id="mk" data-form="${st.form}">${shell()}</div>`;
+    mk = $("#mk"); attrs(); chrome(); measure();
+    const p = paint(); geom(p, false); fit();
+  }
+  function fit() { if (mk) mk.style.transform = `scale(${stage.clientWidth / (st.form === "spread" ? 1440 : 1152)})`; }
+  new ResizeObserver(fit).observe(stage);
+
+  /* ── Transitions ── */
+  async function fadeSwap(el, html, out = 110, inn = 170) {
+    const g = el.querySelector(".pgin");
+    if (g && st.turn !== "none") await g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: D(out), fill: "forwards" }).finished;
+    el.innerHTML = html;
+    const n = el.querySelector(".pgin");
+    if (n && st.turn !== "none") await n.animate([{ opacity: 0 }, { opacity: 1 }], { duration: D(inn) }).finished;
+  }
+  async function ink(both) {
+    const p = compose(st);
+    if (st.form === "spread") {
+      const pl = $("#pl", mk);
+      if (both) await Promise.all([fadeSwap(pl, pageInner(p.left, "l", st.page)), fadeSwap($("#pr", mk), pageInner(p.right, "r", st.page))]);
+      else {
+        const sc = pl.querySelector(".body") ? pl.querySelector(".body").scrollTop : 0;
+        pl.innerHTML = pageInner(p.left, "l", st.page);
+        const nb = pl.querySelector(".body"); if (nb) nb.scrollTop = sc;
+        await fadeSwap($("#pr", mk), pageInner(p.right, "r", st.page));
+      }
+    } else await fadeSwap($("#ps", mk), soloInner(p, st.page));
+    await geom(p, true);
+  }
+  async function slideBook(next) {
+    // A second level (a Library book, a Bookstore entry): the whole book slides over, no page turns.
+    Object.assign(st, next);
+    const p = compose(st);
+    await Promise.all([fadeSwap($("#pl", mk), pageInner(p.left, "l", st.page), 120, 220), fadeSwap($("#pr", mk), pageInner(p.right, "r", st.page), 120, 220), geom(p, true)]);
+  }
+  async function slideSwap(els, htmls, dir) {
+    await Promise.all(els.map((el) => el.querySelector(".pgin").animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: `translateX(${-dir * 36}px)` }], { duration: D(170), easing: "ease-in", fill: "forwards" }).finished));
+    els.forEach((el, i) => (el.innerHTML = htmls[i]));
+    await Promise.all(els.map((el, i) => el.querySelector(".pgin").animate([{ opacity: 0, transform: `translateX(${dir * 36}px)` }, { opacity: 1, transform: "none" }], { duration: D(240), delay: D(i * 50), easing: "ease-out", fill: "backwards" }).finished));
+  }
+  function between(a, b, n) {
+    const out = [], ia = ORDER.indexOf(a), ib = ORDER.indexOf(b), step = Math.sign(ib - ia) || 1;
+    for (let k = 1; k < n; k++) out.push(ORDER[Math.round(ia + (step * k * Math.abs(ib - ia)) / n)] || b);
+    return out;
+  }
+  async function turnSpread(next, dir, n) {
+    const bk = $("#bk", mk), pl = $("#pl", mk), pr = $("#pr", mk);
+    const cur = compose(st);
+    await geom({ shift: 0 }, true);
+    const nxt = compose(next);
+    const oldL = pageInner(cur.left, "l", st.page), oldR = pageInner(cur.right, "r", st.page);
+    const newL = pageInner(nxt.left, "l", next.page), newR = pageInner(nxt.right, "r", next.page);
+    if (st.turn === "none") { chrome(next.page); Object.assign(st, next); pl.innerHTML = newL; pr.innerHTML = newR; return geom(nxt, true); }
+    if (st.turn === "slide") { chrome(next.page); await slideSwap([pl, pr], [newL, newR], dir); Object.assign(st, next); return geom(nxt, true); }
+
+    // Each page carries its own bookmark: the old one rides away on the leaf or is covered by it,
+    // the new one arrives on the leaf or is revealed under it. The tab lights as the leaf lands.
+    const ref = dir > 0 ? pr : pl;
+    const g = { left: ref.offsetLeft, top: ref.offsetTop, width: ref.offsetWidth, height: ref.offsetHeight };
+    if (dir > 0) pr.innerHTML = newR; else pl.innerHTML = newL;
+    const mid = between(st.page, next.page, n);
+    const dur = D(780), gap = D(130), blank = D(560);
+    const runs = [];
+    for (let i = 0; i < n; i++) {
+      const fs = dir > 0 ? "r" : "l", bs = dir > 0 ? "l" : "r";
+      // Riffled pages are blank but carry their own bookmarks past their tabs.
+      const front = i === 0 ? (dir > 0 ? oldR : oldL) : pageInner(blankPart(mid[i - 1]), fs, mid[i - 1]);
+      const back = i === n - 1 ? (dir > 0 ? newL : newR) : pageInner(blankPart(mid[i]), bs, mid[i]);
+      const leaf = document.createElement("div");
+      leaf.className = "leaf " + (dir > 0 ? "fwd" : "bwd");
+      Object.assign(leaf.style, { left: g.left + "px", top: g.top + "px", width: g.width + "px", height: g.height + "px", zIndex: 30 + (n - i) });
+      leaf.innerHTML = `<div class="face front page ${fs}">${front}<i class="shade"></i></div><div class="face back page ${bs}">${back}<i class="shade"></i></div>`;
+      bk.appendChild(leaf);
+      const delay = i * gap, d = i === n - 1 ? dur : blank;
+      const a = leaf.animate([{ transform: "rotateY(0deg)" }, { transform: `rotateY(${dir > 0 ? -180 : 180}deg)` }], { duration: d, delay, easing: "cubic-bezier(.45,.02,.3,1)", fill: "both" });
+      leaf.querySelector(".front .shade").animate([{ opacity: 0 }, { opacity: 0.75, offset: 0.5 }, { opacity: 0.75 }], { duration: d, delay, fill: "both" });
+      leaf.querySelector(".back .shade").animate([{ opacity: 0.75 }, { opacity: 0.75, offset: 0.5 }, { opacity: 0 }], { duration: d, delay, fill: "both" });
+      setTimeout(() => (leaf.style.zIndex = 40 + i), delay + d / 2);
+      runs.push({ leaf, a });
+    }
+    const total = (n - 1) * gap + dur, landAt = (n - 1) * gap + dur * 0.62, half = ((n - 1) * gap + dur / 2) / total;
+    const reveal = dir > 0 ? pr : pl, land = dir > 0 ? pl : pr;
+    const covered = land.querySelector(".bmk");
+    if (covered) covered.animate([{ opacity: 1 }, { opacity: 0 }], { duration: D(140), delay: landAt, fill: "forwards" });
+    setTimeout(() => chrome(next.page), dir > 0 ? landAt : D(160));
+    const cast = (page, frames) => { const c = document.createElement("i"); c.className = "cast"; page.appendChild(c); c.animate(frames, { duration: total, fill: "both" }); return c; };
+    const c1 = cast(reveal, [{ opacity: 0.6 }, { opacity: 0.25, offset: half }, { opacity: 0 }]);
+    const c2 = cast(land, [{ opacity: 0 }, { opacity: 0, offset: half }, { opacity: 0.45, offset: half + (1 - half) * 0.6 }, { opacity: 0 }]);
+    await runs[n - 1].a.finished;
+    Object.assign(st, next);
+    if (dir > 0) pl.innerHTML = newL; else pr.innerHTML = newR;
+    runs.forEach((r) => r.leaf.remove()); c1.remove(); c2.remove();
+    await geom(nxt, true);
+  }
+  // One page, its spine on the right: the leaf turns on that spine, carrying its tab with it.
+  async function turnSingle(next, dir) {
+    const solo = $("#solo", mk), ps = $("#ps", mk);
+    const oldH = soloInner(compose(st), st.page), newH = soloInner(compose(next), next.page);
+    chrome(next.page);
+    if (st.turn === "none") { Object.assign(st, next); ps.innerHTML = newH; return; }
+    if (st.turn === "slide") { await slideSwap([ps], [newH], dir); Object.assign(st, next); return; }
+    const leaf = document.createElement("div");
+    leaf.className = "leaf solo-leaf"; leaf.style.zIndex = 30;
+    leaf.innerHTML = `<div class="face page s">${dir > 0 ? oldH : newH}<i class="shade"></i></div>`;
+    const frames = [{ transform: "rotateY(0deg)", opacity: 1 }, { transform: "rotateY(80deg)", opacity: 1, offset: 0.8 }, { transform: "rotateY(98deg)", opacity: 0 }];
+    if (dir > 0) ps.innerHTML = newH;
+    solo.appendChild(leaf);
+    const opts = { duration: D(640), easing: "cubic-bezier(.45,.02,.3,1)", fill: "both", direction: dir > 0 ? "normal" : "reverse" };
+    leaf.querySelector(".shade").animate([{ opacity: 0 }, { opacity: 0.6 }], opts);
+    await leaf.animate(frames, opts).finished;
+    Object.assign(st, next);
+    ps.innerHTML = newH; leaf.remove();
+  }
+  async function navigate(patch) {
+    if (busy) return; busy = true;
+    try {
+      const next = { ...st, ...patch };
+      const a = ORDER.indexOf(st.page), b = ORDER.indexOf(next.page);
+      let dir = 0, n = 1;
+      if (a !== b) { dir = Math.sign(b - a); n = Math.min(3, Math.abs(b - a)); }
+      else if (next.level !== st.level) dir = next.level > st.level ? 1 : -1;
+      if (dir === 0) { Object.assign(st, next); await ink(false); }
+      else if (st.form === "spread" && a === b && (st.page === "library" || st.page === "bookstore")) await slideBook(next);
+      else if (st.form === "spread") await turnSpread(next, dir, n);
+      else await turnSingle(next, dir);
+    } finally { busy = false; caption(); }
+  }
+  async function rerender(both) {
+    if (busy) return; busy = true;
+    try { await ink(both); } finally { busy = false; caption(); }
+  }
+
+  /* ── Input inside the mock ── */
+  function act(el) {
+    const d = el.dataset;
+    if (d.nav) { if (d.nav !== st.page || st.level !== 1) navigate({ page: d.nav, level: 1 }); }
+    else if (d.book) { if (d.book !== st.book) navigate({ book: d.book }); }
+    else if (d.store) { if (d.store !== st.store || st.level !== 2) navigate({ store: d.store, level: 2 }); }
+    else if (d.go === "lib2") navigate({ level: 2 });
+    else if (d.go === "lib1" || d.go === "store1") navigate({ level: 1 });
+    else if (d.go === "explorer") navigate({ page: "explorer", level: 1 });
+    else if (d.pick) { if (d.pick !== st.ov) { st.ov = d.pick; rerender(false); } }
+    else if ("swap" in d) { st.swap = !st.swap; rerender(true); }
+    else if (d.vz) { if (d.vz !== st.vz) { st.vz = d.vz; rerender(false); } }
+    else if ("vibesw" in d) { st.vibe = st.vibe === "on" ? "off" : "on"; attrs(); if (st.page === "settings") rerender(false); }
+    else if (d.set) {
+      const [k, v] = d.set.split(":");
+      if (k === "mode") st.mode = v === "system" ? (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : v;
+      else st[k] = v;
+      attrs(); press(); rerender(false);
+    }
+    else if ("toc" in d) { if (busy) return; st.contents = st.contents === "open" ? "closed" : "open"; attrs(); measure(); paint(); }
+  }
+  const SEL = "[data-nav],[data-book],[data-store],[data-go],[data-pick],[data-swap],[data-vz],[data-vibesw],[data-set],[data-toc]";
+  stage.addEventListener("click", (e) => { const el = e.target.closest(SEL); if (el && stage.contains(el)) act(el); });
+  stage.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const el = e.target.closest(SEL); if (el) { e.preventDefault(); act(el); }
+  });
+  stage.addEventListener("pointerdown", (e) => { if (e.isTrusted) stopTour(); });
+
+  /* ── Caption ── */
+  function caption() {
+    let now = "", tryit = "";
+    if (st.page === "library" && st.level === 1) { now = `<b>Library.</b> An even spread: your books on the left page, the chosen book on the right.`; tryit = "Try: pick another book, or press Open book page to slide the book over."; }
+    else if (st.page === "library") { now = `<b>Library › ${libBook(st.book).name}.</b> The whole book has slid left: the list stays in view at the edge, and the book page takes the rest. The bookmark stays under its tab.`; tryit = "Try: pick another book at the edge, or All books to slide back."; }
+    else if (st.page === "bookstore" && st.level === 1) { now = `<b>Bookstore.</b> Search, filters and shelves on the left page; the shelf's books on the right.`; tryit = "Try: open any entry on the shelf."; }
+    else if (st.page === "bookstore") { now = `<b>Bookstore › ${storeBook(st.store).name}.</b> The book has slid over like the Library's, so the shelf's page is out of sight but for a strip at the edge.`; tryit = "Try: the strip at the left edge goes back to the shelf."; }
+    else if (st.page === "explorer") { now = `<b>Explorer.</b> ${st.swap ? "Swapped: the book view has the left page and the board sits small on the right." : "The board on the left page; the book view, engine and master moves on the right, with the line in the margin."}`; tryit = st.swap ? "Try: Swap back; the button hasn't moved." : "Try: Swap with board, at the top right of the right page."; }
+    else if (st.page === "overview") { now = `<b>Overview.</b> The book's contents on the left, eight chapters with Vibes coming soon; the picked chapter's demo and description on the right.`; tryit = "Try: pick another chapter, then its Jump to page tag."; }
+    else if (st.page === "visualizations") { now = `<b>Visualizations.</b> The visualizations as contents on the left; the picked one's preview and description on the right.`; tryit = "Try: pick another visualization."; }
+    else if (st.page === "settings") { now = `<b>Settings.</b> Appearance on the left page, your data and account on the right. The switches here work.`; tryit = "Try: switch the theme, vibes or page turns from the page itself."; }
+    else { now = `<b>${NAME[st.page]}.</b> A placeholder spread.`; tryit = "Try: jump to a far page in the strip; the book riffles through what's between."; }
+    if (st.form === "single") tryit = "One page with its spine on the right. Pick a tab: the page turns on the spine and takes its tab with it.";
+    $("#now").innerHTML = now; $("#try").textContent = tryit;
+  }
+
+  /* ── Tour ── */
+  let touring = 0;
+  function stopTour() { if (!touring) return; touring = 0; tourBtn.setAttribute("aria-pressed", "false"); tourBtn.textContent = "Play the tour"; }
+  async function tour() {
+    const id = ++touring;
+    tourBtn.setAttribute("aria-pressed", "true"); tourBtn.textContent = "Stop the tour";
+    const steps = [
+      () => navigate({ page: "library", level: 1, book: "italian" }),
+      () => navigate({ book: "najdorf" }),
+      () => navigate({ level: 2 }),
+      () => navigate({ book: "caro" }),
+      () => navigate({ level: 1 }),
+      () => navigate({ page: "bookstore", level: 1 }),
+      () => navigate({ store: "french-defense", level: 2 }),
+      () => navigate({ level: 1 }),
+      () => navigate({ page: "explorer", level: 1 }),
+      () => { st.swap = true; return rerender(true); },
+      () => { st.swap = false; return rerender(true); },
+      () => navigate({ page: "visualizations", level: 1 }),
+      () => { st.vz = "metro"; return rerender(false); },
+      () => { st.vibe = "on"; attrs(); },
+      () => navigate({ page: "overview", level: 1 }),
+      () => { st.ov = "library"; return rerender(false); },
+      () => navigate({ page: "settings", level: 1 }),
+      () => { st.vibe = "off"; attrs(); return rerender(false); },
+      () => navigate({ page: "library", level: 1, book: "italian" }),
+    ];
+    for (const step of steps) {
+      if (touring !== id) return;
+      while (busy) await sleep(50);
+      await step();
+      await sleep(D(1300));
+    }
+    if (touring === id) stopTour();
+  }
+  const tourBtn = $("#tour-btn");
+  tourBtn.addEventListener("click", () => { if (touring) stopTour(); else tour(); });
+
+  /* ── Controls ── */
+  function press() {
+    const set = (sel, v) => document.querySelectorAll(sel + " button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === String(v))));
+    set("#form-seg", st.form); set("#turn-seg", st.turn); set("#speed-seg", st.speed); set("#mode-seg", st.mode);
+  }
+  const bind = (id, fn) => $(id).addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; fn(b.dataset.v); press(); });
+  bind("#form-seg", (v) => { if (v === st.form || busy) return; stopTour(); st.form = v; build(); caption(); });
+  bind("#turn-seg", (v) => { st.turn = v; if (st.page === "settings") rerender(false); });
+  bind("#speed-seg", (v) => { st.speed = +v; attrs(); });
+  bind("#mode-seg", (v) => { st.mode = v; attrs(); if (st.page === "settings") rerender(false); });
+  if (reduced) $("#rm-note").hidden = false;
+
+  build(); press(); caption();
+})();
+</script>

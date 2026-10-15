@@ -1,0 +1,780 @@
+<!-- Mockup for plans/vibes.md Phase 1 (the base UI's look): page-structure variations on the Paperback direction from dashboard-themes.html. Published as the "Paperback Layouts" artifact. -->
+<title>Paperback Layouts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,500&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a studio on top (layout picker, light/dark, heading face, paper grain, roundness),
+   the chosen layout's Library and Explorer drawn large, then all four side by side. The page
+   chrome has its own quiet palette; each mock carries the Paperback tokens on its own root. */
+:root {
+  --page: #eceeea;
+  --sheet: #fbfbf9;
+  --ink: #22262b;
+  --ink-soft: #5d646c;
+  --line: #d5d8d2;
+  --accent: #2c4a74;
+  --chip: #e2e5e0;
+  --ui: "Geist", "Segoe UI", system-ui, sans-serif;
+  --serif: "Literata", Georgia, serif;
+  --mono: "Geist Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #121417; --sheet: #1a1d21; --ink: #e8e5de; --ink-soft: #a09d97; --line: #2e3238;
+    --accent: #a9c0e6; --chip: #23272c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #121417; --sheet: #1a1d21; --ink: #e8e5de; --ink-soft: #a09d97; --line: #2e3238;
+  --accent: #a9c0e6; --chip: #23272c; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font: 15px/1.55 var(--ui); }
+.wrap { max-width: 1280px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 80px; display: grid; gap: 40px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font: 600 clamp(28px, 4vw, 38px)/1.1 var(--serif); letter-spacing: -0.01em; }
+h2 { font: 600 24px/1.2 var(--serif); }
+h3 { font: 600 16px/1.3 var(--ui); }
+p { margin: 0; }
+.eyebrow { font: 600 11px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); }
+.lede { max-width: 72ch; color: var(--ink-soft); margin-top: 12px; }
+code { font: 500 0.88em var(--mono); background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+
+.studio { display: grid; gap: 18px; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; padding: 12px; background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; background: var(--chip); border-radius: 9px; }
+.seg button { font: 500 13.5px/1 var(--ui); color: var(--ink-soft); background: transparent; border: 0; border-radius: 7px; padding: 8px 11px; cursor: pointer; }
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / 0.12); }
+.seg button:focus-visible, .glance button:focus-visible, .reset:focus-visible, input[type=range]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ctl { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-soft); }
+.ctl > span, .ctl label { font-weight: 500; }
+.ctl input[type=range] { width: 120px; accent-color: var(--accent); }
+.ctl output { font: 500 12px var(--mono); color: var(--ink); min-width: 4ch; }
+.reset { font: 500 12px var(--ui); background: none; border: 1px solid var(--line); color: var(--ink-soft); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+
+.about { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px 36px; padding-inline: 4px; }
+.about .one { color: var(--ink-soft); margin-top: 8px; max-width: 62ch; }
+.lean { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 13px; color: var(--ink-soft); }
+.lean i { display: inline-block; width: 26px; height: 6px; border-radius: 3px; background: var(--chip); }
+.lean i.on { background: var(--accent); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 7px 14px; font-size: 14px; margin: 0; align-content: start; }
+.facts dt { color: var(--ink-soft); font-weight: 500; }
+.facts dd { margin: 0; }
+
+figure { margin: 0; display: grid; gap: 8px; }
+figcaption { font-size: 13px; color: var(--ink-soft); display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+figcaption b { color: var(--ink); font-weight: 600; font-size: 14px; }
+.fit { position: relative; width: 100%; aspect-ratio: 1440 / 900; overflow: hidden; border-radius: 10px; border: 1px solid var(--line); background: var(--sheet); }
+.fit > .mock { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+
+.glance { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 14px; margin-top: 14px; }
+.glance button { all: unset; cursor: pointer; display: grid; gap: 6px; border-radius: 12px; padding: 6px; }
+.glance button[aria-pressed="true"] { background: var(--sheet); box-shadow: 0 0 0 2px var(--accent); }
+.glance .fit { border-radius: 8px; }
+.glance span { font-size: 13px; padding-inline: 2px; }
+.glance span b { font-weight: 600; }
+.glance span em { font-style: normal; color: var(--ink-soft); }
+
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 28px; }
+.notes ul { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 8px; max-width: 62ch; }
+.notes li::marker { color: var(--ink-soft); }
+.notes p { color: var(--ink-soft); margin-top: 10px; max-width: 62ch; }
+
+@media (max-width: 760px) {
+  .about { grid-template-columns: 1fr; }
+  .controls { position: static; }
+}
+
+/* ───────────────────────────── The mocks ───────────────────────────── */
+.mock {
+  --r: 8px;
+  --desk: #e2e4df;             /* behind the page: where a vibe paints */
+  --sheet: #fbfbf8;            /* the page */
+  --sheet-2: #f1f2ed;          /* tinted blocks and unselected tabs */
+  --fg: #22252b; --muted: #eef0ea; --muted-fg: #636a73;
+  --rule: #d9dcd5; --border: #d0d4cd;
+  --primary: #2c4a74; --primary-fg: #ffffff;
+  --sel: #e3e9f3; --ribbon: #8c2f39;
+  --input-bg: #ffffff;
+  --spine: rgb(70 60 40 / 0.16);
+  --grain: none;
+  --bar-w: #dcd8cc; --bar-d: #8f8a7a; --bar-b: #2a2c31;
+  --arrow: rgb(44 74 116 / 0.55);
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Literata", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  /* The book views keep their own colors (plans/vibes.md D11). */
+  --view-edge: rgba(120, 108, 95, 0.45); --view-white: #ece5d8; --view-white-edge: #9c9282; --view-black: #2a2420;
+  --fam-0: #2f6aa3; --fam-1: #1f8a7a; --fam-2: #c2622a; --fam-3: #8a6a3f; --fam-4: #7457a8; --fam-5: #6f7f2c; --fam-6: #557086; --fam-7: #b0405f;
+  color-scheme: light;
+}
+.mock[data-grain="on"] {
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .32 0 0 0 0 .28 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.mock[data-mode="dark"] {
+  --desk: #0e1013; --sheet: #1c1f24; --sheet-2: #23272d;
+  --fg: #e9e5dc; --muted: #24282e; --muted-fg: #9c9a94;
+  --rule: #30343b; --border: #383c44;
+  --primary: #a9c0e6; --primary-fg: #12161d;
+  --sel: rgb(169 192 230 / 0.13); --ribbon: #c9505c;
+  --input-bg: #191c21; --spine: rgb(0 0 0 / 0.5);
+  --bar-w: #d6d2c6; --bar-d: #8b8676; --bar-b: #0d0e10;
+  --arrow: rgb(169 192 230 / 0.6);
+  --view-edge: rgba(170, 165, 200, 0.36); --view-white: #d9d4e6; --view-white-edge: #8e8aa3; --view-black: #0b0b10;
+  --fam-0: #6fa3dc; --fam-1: #4fc0ad; --fam-2: #e88e55; --fam-3: #c19a68; --fam-4: #a68adf; --fam-5: #a8b85a; --fam-6: #8aa6bd; --fam-7: #e07a96;
+  color-scheme: dark;
+}
+.mock[data-mode="dark"][data-grain="on"] { --grain: none; }
+.mock[data-head="sans"] { --font-display: var(--font-body); }
+
+.mock { position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--desk); color: var(--fg); font: 13px/1.4 var(--font-body); }
+.mock *, .mock *::before, .mock *::after { box-sizing: border-box; }
+.sheet { background-color: var(--sheet); background-image: var(--grain); border: 1px solid var(--border); border-radius: calc(var(--r) * 1.5); box-shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 12px 32px -20px rgb(0 0 0 / 0.35); }
+
+/* Type */
+.h1 { font: 600 26px/1.15 var(--font-display); letter-spacing: -0.01em; }
+.h2 { font: 600 20px/1.2 var(--font-display); }
+.h3 { font: 600 17px/1.2 var(--font-display); }
+.sub { color: var(--muted-fg); font-size: 12px; }
+.sc { font: 600 10.5px/1 var(--font-display); letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted-fg); }
+.rh { font: italic 500 13px/1 var(--font-display); color: var(--muted-fg); }
+.mono { font-family: var(--font-mono); }
+.row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.grow { flex: 1; min-width: 0; }
+
+/* Controls (shadcn/ui shapes, Paperback paint) */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: var(--r); border: 1px solid transparent; font: 700 12px/1 var(--font-body); white-space: nowrap; color: var(--fg); flex: none; }
+.btn svg { width: 14px; height: 14px; }
+.btn.primary { background: var(--primary); color: var(--primary-fg); }
+.btn.outline { background: var(--input-bg); border-color: var(--border); }
+.btn.ghost { background: transparent; font-weight: 400; }
+.btn.icon { width: 28px; padding: 0; }
+.input { display: flex; align-items: center; gap: 7px; height: 28px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--r); background: var(--input-bg); color: var(--muted-fg); font-size: 12.5px; min-width: 0; }
+.input svg { width: 14px; height: 14px; flex: none; }
+.input .val { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.input.select .val { color: var(--fg); }
+.tg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--border); border-radius: var(--r); background: var(--input-bg); flex: none; }
+.tg span { display: flex; align-items: center; height: 21px; padding: 0 8px; border-radius: calc(var(--r) * 0.7); font-size: 12px; font-weight: 700; color: var(--muted-fg); }
+.tg .on { background: var(--primary); color: var(--primary-fg); }
+.badge { display: inline-flex; align-items: center; gap: 6px; height: 21px; padding: 0 8px; border-radius: calc(var(--r) * 0.75); font-size: 11.5px; background: var(--muted); white-space: nowrap; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--fam-2); }
+.sq { display: inline-block; width: 9px; height: 9px; border-radius: 2px; border: 1px solid var(--fg); flex: none; }
+.sq.b { background: var(--fg); }
+.link { text-decoration: underline; text-underline-offset: 2px; }
+.ico { width: 15px; height: 15px; display: block; flex: none; }
+
+/* The ribbon: a bookmark hanging from the top of whatever it marks. */
+.ribbon { position: relative; }
+.ribbon::after { content: ""; position: absolute; top: -1px; width: 9px; height: 19px; background: var(--ribbon); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%); }
+
+/* Board: squares and pieces never change (D11). */
+.board { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); border-radius: calc(var(--r) * 0.4); overflow: hidden; box-shadow: 0 0 0 2px #3b2a1a; flex: none; }
+.board i { position: relative; display: flex; align-items: center; justify-content: center; font-style: normal; }
+.board i.l { background: #f0d9b5; }
+.board i.d { background: #b58863; }
+.board i.hl.l { background: #f5e78a; }
+.board i.hl.d { background: #d5c25a; }
+.board i small { position: absolute; font: 600 10px/1 "Geist", sans-serif; }
+.board i.l small { color: #b58863; }
+.board i.d small { color: #f0d9b5; }
+.board i small.rk { top: 3px; left: 4px; }
+.board i small.fl { bottom: 3px; right: 4px; }
+.pc { font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", "Apple Symbols", serif; line-height: 1; }
+.pc.w { color: #ffffff; -webkit-text-stroke: 1.4px #1b1b1b; paint-order: stroke fill; }
+.pc.b { color: #161616; }
+.board .arrow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.evalbar { width: 10px; border-radius: 99px; overflow: hidden; background: #eeeeee; display: flex; flex-direction: column; box-shadow: 0 0 0 1px var(--border); flex: none; }
+.evalbar b { display: block; height: 46%; background: #222222; }
+
+/* Explorer parts */
+.moves { display: grid; grid-template-columns: 46px 1fr 54px; align-items: center; column-gap: 12px; }
+.moves > span { height: 27px; display: flex; align-items: center; }
+.moves .hd { height: 22px; }
+.moves .san { font: 700 13px/1 var(--font-body); }
+.moves .n { justify-content: flex-end; font: 500 11.5px/1 var(--font-mono); color: var(--muted-fg); }
+.moves .bar b { display: flex; width: 100%; height: 9px; border-radius: 3px; overflow: hidden; }
+.moves .bar i { display: block; height: 100%; }
+.moves .hl { background: var(--sel); }
+.moves .hl.first { border-radius: var(--r) 0 0 var(--r); margin-left: -8px; padding-left: 8px; }
+.moves .hl.last { border-radius: 0 var(--r) var(--r) 0; margin-right: -8px; padding-right: 8px; }
+.view { position: relative; flex: 1; min-width: 0; background: var(--muted); border-radius: var(--r); overflow: hidden; }
+.view svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.zoom { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--border); background: var(--input-bg); border-radius: var(--r); font-size: 11px; color: var(--muted-fg); }
+.zoom span { width: 22px; height: 18px; display: flex; align-items: center; justify-content: center; }
+.zoom span.w { width: 32px; }
+.rail { display: flex; flex-direction: column; gap: 4px; }
+.rail span { width: 28px; height: 28px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; color: var(--muted-fg); }
+.rail span.on { background: var(--sel); color: var(--fg); }
+.rail svg { width: 15px; height: 15px; }
+.line { font: 500 13px/1 var(--font-mono); }
+.line b { background: var(--sel); padding: 3px 5px; border-radius: calc(var(--r) * 0.6); font-weight: 600; }
+
+/* Library parts */
+.book { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r); }
+.book.on { background: var(--sel); }
+.book .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.book .t b { font-weight: 700; font-size: 13px; }
+.book .t span { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted-fg); }
+.thumb { width: 46px; height: 30px; flex: none; border-radius: calc(var(--r) * 0.6); background: var(--muted); }
+.toc { display: flex; align-items: baseline; gap: 8px; padding: 7px 10px; border-radius: var(--r); }
+.toc .nm { font: 500 14px/1.2 var(--font-display); white-space: nowrap; }
+.toc .lead { flex: 1; min-width: 12px; border-bottom: 1.5px dotted var(--muted-fg); opacity: 0.55; transform: translateY(-3px); }
+.toc .fig { font: 500 12px/1 var(--font-mono); color: var(--muted-fg); white-space: nowrap; }
+.toc.on { background: var(--sel); }
+.toc.on .nm { font-weight: 600; }
+.dl { display: flex; flex-wrap: wrap; gap: 4px 26px; margin: 0; }
+.dl dt { font: 600 10px/1.2 var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-fg); }
+.dl dd { margin: 3px 0 0; font: 600 14px/1.2 var(--font-mono); }
+
+/* Rules between sections, in place of boxes. */
+.ruled > * + * { border-top: 1px solid var(--rule); }
+.vrule { width: 1px; background: var(--rule); align-self: stretch; }
+.block { background: var(--sheet-2); border-radius: calc(var(--r) * 1.25); }
+
+/* ── Margin ── */
+.L-margin { display: flex; height: 100%; }
+.L-margin .nav { width: 196px; flex: none; display: flex; flex-direction: column; padding: 30px 14px 18px 22px; }
+.brand { font: 600 21px/1 var(--font-display); letter-spacing: -0.01em; }
+.brand small { display: block; margin-top: 7px; font: 500 10px/1 var(--font-mono); letter-spacing: 0.18em; color: var(--muted-fg); text-transform: uppercase; }
+.navlist { display: flex; flex-direction: column; gap: 2px; margin-top: 26px; }
+.navlist span { display: flex; align-items: center; gap: 10px; height: 33px; padding: 0 10px; border-radius: var(--r); font-size: 13.5px; color: var(--muted-fg); }
+.navlist span.on { color: var(--fg); font-weight: 700; background: var(--sheet); box-shadow: 0 0 0 1px var(--border); }
+.navlist span.on::after { right: 10px; }
+.navfoot { margin-top: auto; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.navfoot span { display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 10px; color: var(--muted-fg); }
+.navfoot .who { font-size: 11.5px; height: auto; padding-bottom: 2px; }
+.navfoot .strong { color: var(--fg); font-weight: 700; }
+.L-margin .sheet { flex: 1; min-width: 0; margin: 14px 14px 14px 0; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ── Contents ── */
+.L-contents { position: absolute; inset: 14px; display: grid; grid-template-columns: 236px 1px minmax(0, 1fr); }
+.L-contents .toc-col { display: flex; flex-direction: column; padding: 26px 20px 18px 22px; }
+.L-contents .toc-col .eyebrow-sc { margin-top: 26px; margin-bottom: 8px; padding-left: 10px; }
+.L-contents .toc { padding: 7px 10px; }
+.L-contents .toc.on::after { right: auto; left: -12px; }
+.L-contents .main { display: flex; flex-direction: column; padding: 16px 24px 12px; min-width: 0; min-height: 0; }
+.runhead { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
+.folio { display: flex; justify-content: center; align-items: center; gap: 14px; padding-top: 9px; border-top: 1px solid var(--rule); font: 500 12px/1 var(--font-mono); color: var(--muted-fg); }
+
+/* ── Thumb index ── */
+.L-index { position: absolute; inset: 14px 0 14px 14px; display: flex; }
+.L-index .sheet { flex: 1; min-width: 0; padding: 0 22px 18px; display: flex; flex-direction: column; position: relative; z-index: 1; border-top-right-radius: calc(var(--r) * 0.5); border-bottom-right-radius: calc(var(--r) * 0.5); }
+.L-index .masthead { display: flex; align-items: center; gap: 12px; height: 56px; border-bottom: 1px solid var(--rule); margin-bottom: 16px; }
+.tabs { width: 118px; flex: none; display: flex; flex-direction: column; gap: 5px; padding-top: 74px; padding-bottom: 20px; }
+.tab { position: relative; display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 12px 0 14px; margin-left: -1px; background: var(--sheet-2); border: 1px solid var(--border); border-left-color: transparent; border-radius: 0 calc(var(--r) * 1.25) calc(var(--r) * 1.25) 0; font-size: 12.5px; color: var(--muted-fg); }
+.tab.on { z-index: 2; background-color: var(--sheet); background-image: var(--grain); color: var(--fg); font-weight: 700; border-left: 1px solid var(--sheet); width: calc(100% + 6px); }
+.tab.end { margin-top: auto; }
+
+/* ── Spread ── */
+.L-spread { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.topstrip { height: 52px; flex: none; display: flex; align-items: center; gap: 22px; padding: 0 26px; }
+.topstrip .links { display: flex; gap: 20px; margin-left: 18px; font-size: 13.5px; color: var(--muted-fg); }
+.topstrip .links span { position: relative; padding: 6px 0; }
+.topstrip .links span.on { color: var(--fg); font-weight: 700; box-shadow: inset 0 -2px 0 var(--ribbon); }
+.book2 { flex: 1; min-height: 0; margin: 0 22px 20px; display: grid; grid-template-columns: 1fr 1fr; border-radius: calc(var(--r) * 1.25); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 18px 40px -22px rgb(0 0 0 / 0.45); position: relative; }
+.page { position: relative; background-color: var(--sheet); background-image: var(--grain); border: 1px solid var(--border); display: flex; flex-direction: column; padding: 18px 34px 14px; min-width: 0; min-height: 0; }
+.page.left { border-radius: calc(var(--r) * 1.25) 0 0 calc(var(--r) * 1.25); border-right: 0; }
+.page.right { border-radius: 0 calc(var(--r) * 1.25) calc(var(--r) * 1.25) 0; border-left: 0; }
+.page.left::before, .page.right::before { content: ""; position: absolute; top: 0; bottom: 0; width: 46px; pointer-events: none; }
+.page.left::before { right: 0; background: linear-gradient(to left, var(--spine), transparent); }
+.page.right::before { left: 0; background: linear-gradient(to right, var(--spine), transparent); }
+.page .rhrow { display: flex; align-items: baseline; gap: 10px; height: 22px; }
+.page .foot { display: flex; align-items: center; height: 22px; font: 500 11.5px/1 var(--font-mono); color: var(--muted-fg); }
+.page .body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding-block: 12px; position: relative; z-index: 1; }
+.book2 .ribbon-mark { position: absolute; top: -1px; right: 150px; width: 12px; height: 46px; background: var(--ribbon); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); z-index: 3; }
+</style>
+
+<main class="wrap">
+  <header>
+    <p class="eyebrow">plans/vibes.md · Phase 1 · Paperback, round two</p>
+    <h1>Paperback layouts</h1>
+    <p class="lede">
+      Four ways to build the Paperback look into the structure of the page, from a light touch to
+      an open book. None of them has a sidebar box, and the stacked-page edges are gone. The paper
+      grain and the book serif are switches, so you can see how much of the bookishness comes from
+      the layout alone.
+    </p>
+  </header>
+
+  <section class="studio" aria-label="Layout studio">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Layout" id="lay-seg"></div>
+      <div class="seg" role="group" aria-label="Light or dark" id="mode-seg">
+        <button type="button" id="mode-light" data-v="light">Light</button>
+        <button type="button" id="mode-dark" data-v="dark">Dark</button>
+      </div>
+      <div class="ctl"><span>Headings</span>
+        <div class="seg" role="group" aria-label="Heading face" id="head-seg">
+          <button type="button" id="head-serif" data-v="serif">Serif</button>
+          <button type="button" id="head-sans" data-v="sans">Sans</button>
+        </div>
+      </div>
+      <div class="ctl"><span>Paper grain</span>
+        <div class="seg" role="group" aria-label="Paper grain" id="grain-seg">
+          <button type="button" id="grain-off" data-v="off">Off</button>
+          <button type="button" id="grain-on" data-v="on">On</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="radius">Roundness</label>
+        <input type="range" id="radius" min="0" max="16" step="1" value="8">
+        <output id="radius-out" for="radius">8px</output>
+        <button type="button" class="reset" id="radius-reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="about">
+      <div>
+        <h2 id="about-name"></h2>
+        <p class="one" id="about-one"></p>
+        <p class="lean" id="about-lean"></p>
+      </div>
+      <dl class="facts" id="about-facts"></dl>
+    </div>
+
+    <figure>
+      <figcaption><b>Library</b> a guest with six books, the Italian Game open</figcaption>
+      <div class="fit" id="stage-library"></div>
+    </figure>
+    <figure>
+      <figcaption><b>Explorer</b> the Sicilian after 2…d6, with a Najdorf book chosen and the light engine on (sample numbers)</figcaption>
+      <div class="fit" id="stage-explorer"></div>
+    </figure>
+  </section>
+
+  <section aria-labelledby="glance-h">
+    <h2 id="glance-h">All four side by side</h2>
+    <p class="lede" style="margin-top:6px">Click one to draw it large above.</p>
+    <div class="glance" id="glance"></div>
+  </section>
+
+  <section class="notes">
+    <div>
+      <h3>The same in all four</h3>
+      <ul>
+        <li>No sidebar box. The navigation sits on the page or the desk around it.</li>
+        <li>Fewer boxes inside the page. Sections are split by rules or tinted blocks, and the only filled boxes left are the board and the tree views.</li>
+        <li>The red ribbon marks where you are.</li>
+        <li>The board, the book views and the light, middle and dark move bars don't change.</li>
+        <li>The page fits the window, and only the side panels scroll, as the Explorer does today.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>What this means for vibes</h3>
+      <p>
+        Every layout here has a desk: the space around the page. That's the natural home for a
+        vibe's art, since it never covers the board or text, so the base UI can stay calm and
+        bookish while the vibe dresses the desk. The page itself takes only color and type from a
+        vibe.
+      </p>
+      <p>
+        Thumb index and Spread change components, not just tokens: the navigation moves, so the
+        dashboard frame, its phone menu and <code>--dash-offset</code> would change with it.
+      </p>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  const LAYOUTS = {
+    margin: {
+      name: "Margin", lean: 1,
+      one: "The lightest touch. The navigation moves out of its box and into the margin beside one sheet of paper. Inside the sheet, sections are split by thin rules instead of boxed, so the page has one box instead of six.",
+      facts: [
+        ["Navigation", "Plain text in the left margin; the current page is a small white tab with the ribbon."],
+        ["Inside the page", "Rules between sections. The board and the tree view are the only filled shapes."],
+        ["Board", "620px at this window size, 20px more than today."],
+        ["Phone", "Same as today: the margin becomes the top bar and its menu."],
+        ["Vibes", "Dress the margin and the desk around the sheet."],
+      ],
+    },
+    contents: {
+      name: "Contents", lean: 2,
+      one: "The navigation becomes the book's table of contents, with dotted leaders running to something true about each page: the opening on the board, how many books you have, what's coming soon. A running head across the top and a folio line at the bottom frame every page like a printed one.",
+      facts: [
+        ["Navigation", "A contents list inside the page, with leaders to live figures."],
+        ["Inside the page", "A running head on top (page name and its state), a folio at the bottom (the line on the board, or the book's size)."],
+        ["Board", "600px, the same as today."],
+        ["Library", "Your books listed like chapters, with leaders to their positions."],
+        ["Phone", "The contents become the menu; the running head becomes the top bar."],
+        ["Vibes", "Dress the desk and the contents column."],
+      ],
+    },
+    index: {
+      name: "Thumb index", lean: 3,
+      one: "No sidebar at all. The pages are tabs on the right edge of the sheet, like the cut tabs on a dictionary, and the page you're on is the tab joined to the sheet. The account links move to a masthead at the top. The page gets the sidebar's width back.",
+      facts: [
+        ["Navigation", "Index tabs on the sheet's right edge; account links in the masthead."],
+        ["Inside the page", "Tinted blocks with no lines, under a masthead rule."],
+        ["Board", "660px, 60px more than today, since the sidebar's width goes to the page."],
+        ["Phone", "The tabs become a bottom tab bar, in reach of a thumb."],
+        ["Vibes", "Each tab, and the desk, can take a vibe's color."],
+        ["Watch for", "Eight tabs fit at this height; a short laptop window fits fewer, so Settings may move into the masthead."],
+      ],
+    },
+    spread: {
+      name: "Spread", lean: 4,
+      one: "The page is an open book. The left page holds the board or your list of books, the right page holds what you're reading about it, with a shadow in the gutter, running heads and folios. The navigation is a slim strip above the book, and a real ribbon lies across the right page.",
+      facts: [
+        ["Navigation", "A text strip above the book, with the ribbon's color under the current page."],
+        ["Inside the page", "Two pages, each with a running head (the opening on the left, the variation on the right) and a folio."],
+        ["Board", "600px, the same as today, on the left page."],
+        ["Phone", "One page at a time, with the two pages stacked; the strip becomes the menu."],
+        ["Vibes", "The desk around the book is a large stage, and the strip above it is where the bus would drive."],
+        ["Watch for", "The two pages are fixed halves. Pages that don't split in two (Overview, Settings, the Treemap) need a one-page form."],
+      ],
+    },
+  };
+  const ORDER = ["margin", "contents", "index", "spread"];
+
+  /* ── Icons ── */
+  const P = {
+    house: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    compass: '<circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-1.8 5.4a2 2 0 0 1-1.3 1.3l-5.3 1.7 1.8-5.4a2 2 0 0 1 1.3-1.3z"/>',
+    network: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.5 8 11 16M16.5 8 13 16"/>',
+    book: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+    store: '<path d="M3 9 4.5 4h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9h18"/><path d="M10 20v-5h4v5"/>',
+    target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    puzzle: '<path d="M5 4h5v2a2 2 0 1 0 4 0V4h5v5h-2a2 2 0 1 0 0 4h2v7H5v-7h2a2 2 0 1 0 0-4H5z"/>',
+    sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+    bug: '<rect x="7" y="6" width="10" height="14" rx="5"/><path d="M12 20v-8M7 12H3M21 12h-4M7 17l-3 2M17 17l3 2M7 8 4 6M17 8l3-2M9 6a3 3 0 0 1 6 0"/>',
+    login: '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5M15 12H3"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+    upload: '<path d="M12 15V3M7 8l5-5 5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
+    download: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
+    plus: '<path d="M5 12h14M12 5v14"/>',
+    flip: '<path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/>',
+    chevd: '<path d="m6 9 6 6 6-6"/>',
+    first: '<path d="m17 18-6-6 6-6M7 6v12"/>',
+    prev: '<path d="m15 18-6-6 6-6"/>',
+    next: '<path d="m9 18 6-6-6-6"/>',
+    last: '<path d="m7 18 6-6-6-6M17 6v12"/>',
+    play: '<path d="M7 4l13 8-13 8z"/>',
+    more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+    check: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+    tree: '<path d="M4 12h5M9 12l6-6h5M9 12l6 6h5M15 12h5"/>',
+    rows: '<path d="M4 6h16M4 12h10M4 18h13"/>',
+    branch: '<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 8v8M18 10a6 6 0 0 1-6 6H8"/>',
+    cols: '<rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="10" rx="1"/><rect x="17" y="4" width="4" height="6" rx="1"/>',
+    metro: '<circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12h5l5-5M12 12l5 5"/>',
+  };
+  const ic = (n, cls = "") => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+  const NAV = [["Overview", "house"], ["Explorer", "compass"], ["Visualizations", "network"], ["Library", "book"], ["Bookstore", "store"], ["Train", "target"], ["Puzzles", "puzzle"], ["Settings", "sliders"]];
+  // What each contents entry's leader runs to, per page being shown.
+  const TOC_FIG = { Overview: "", Explorer: "B50", Visualizations: "5", Library: "6 books", Bookstore: "11 books", Train: "soon", Puzzles: "soon", Settings: "" };
+
+  /* ── Trees in the book views' colors ── */
+  function N(san, c = [], o = {}) { return { san, c, ...o }; }
+  function treeSVG(root, W, H, o = {}) {
+    const pad = o.pad ?? 18, label = o.labelRoom ?? 30;
+    let leaves = 0; const nodes = [], edges = [];
+    (function walk(n, d, fam, parent) {
+      n.d = d; n.f = n.fam ?? fam;
+      if (parent) edges.push([parent, n]);
+      if (!n.c.length) n.y = leaves++;
+      else { n.c.forEach((ch) => walk(ch, d + 1, n.f, n)); n.y = (n.c[0].y + n.c[n.c.length - 1].y) / 2; }
+      nodes.push(n);
+    })(root, 0, null, null);
+    const depth = Math.max(...nodes.map((n) => n.d));
+    const dx = (W - pad * 2 - label) / depth, dy = (H - pad * 2) / Math.max(1, leaves - 1);
+    const X = (n) => pad + n.d * dx, Y = (n) => pad + n.y * dy;
+    let s = "";
+    for (const [a, b] of edges) {
+      const ax = X(a), ay = Y(a), bx = X(b), by = Y(b), mx = (ax + bx) / 2, on = a.on && b.on;
+      const col = on ? "var(--fg)" : b.f == null ? "var(--view-edge)" : `var(--fam-${b.f})`;
+      s += `<path d="M${ax} ${ay}C${mx} ${ay} ${mx} ${by} ${bx} ${by}" fill="none" stroke="${col}" stroke-width="${on ? 2.4 : 1.8}" stroke-linecap="round"/>`;
+    }
+    for (const n of nodes) {
+      const x = X(n), y = Y(n);
+      if (n.d === 0) { s += `<circle cx="${x}" cy="${y}" r="5" fill="var(--sheet)" stroke="var(--fg)" stroke-width="1.6"/>`; continue; }
+      const white = n.d % 2 === 1;
+      s += `<circle cx="${x}" cy="${y}" r="${n.on ? 4.6 : 3.8}" fill="${white ? "var(--view-white)" : "var(--view-black)"}" stroke="${n.on ? "var(--fg)" : white ? "var(--view-white-edge)" : "var(--view-black)"}" stroke-width="${n.on ? 1.6 : 1}"/>`;
+      s += `<text x="${x + 6}" y="${y - 7}" font-size="${o.fs ?? 10}" font-family="IBM Plex Mono, ui-monospace, monospace" font-weight="${n.on ? 600 : 400}" fill="${n.on ? "var(--fg)" : "var(--muted-fg)"}" paint-order="stroke" stroke="var(--muted)" stroke-width="3" stroke-linejoin="round">${n.san}</text>`;
+    }
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${s}</svg>`;
+  }
+  const sicilian = () => N("", [N("e4", [N("c5", [
+    N("Nf3", [
+      N("d6", [N("d4", [N("cxd4", [N("Nxd4", [N("Nf6", [N("Nc3", [N("a6", [], { fam: 0 }), N("g6", [], { fam: 1 }), N("Nc6", [], { fam: 2 })])])])])]), N("Bb5+", [N("Bd7")], { fam: 4 })], { on: true }),
+      N("Nc6", [N("d4", [N("cxd4")])], { fam: 3 }),
+      N("e6", [N("d4", [N("cxd4")])], { fam: 5 }),
+    ], { on: true }),
+    N("Nc3", [N("Nc6", [N("g3")])], { fam: 6 }),
+    N("c3", [N("Nf6", [N("e5")])], { fam: 7 }),
+  ], { on: true })], { on: true })], { on: true });
+  const italian = () => N("", [N("e4", [N("e5", [N("Nf3", [N("Nc6", [N("Bc4", [
+    N("Bc5", [N("c3", [N("Nf6", [N("d4", [N("exd4")])])]), N("d3", [N("Nf6", [N("Nc3")])]), N("b4", [N("Bxb4", [N("c3")])], { fam: 2 })], { fam: 0 }),
+    N("Nf6", [N("Ng5", [N("d5", [N("exd5")])]), N("d3", [N("Be7")]), N("d4", [N("exd4", [N("e5")])])], { fam: 1 }),
+    N("Be7", [N("d4", [N("d6")])], { fam: 3 }),
+  ])])])])])]);
+  const view = (tree, W, H, o) => `<div class="view">${treeSVG(tree, W, H, o)}<div class="zoom"><span>−</span><span class="w">Fit</span><span>+</span></div></div>`;
+  const rail = () => `<div class="rail"><span class="on">${ic("tree")}</span><span>${ic("rows")}</span><span>${ic("branch")}</span><span>${ic("cols")}</span><span>${ic("metro")}</span></div>`;
+
+  function thumb(seed) {
+    let s = "";
+    for (let i = 0; i < 5; i++) s += `<rect x="5" y="${4 + i * 4.6}" width="${14 + ((seed * (i + 3) * 7) % 26)}" height="2.4" rx="1.2" fill="var(--fam-${(seed + i) % 8})"/>`;
+    return `<svg class="thumb" viewBox="0 0 46 30"><rect x="3" y="3" width="1.6" height="24" fill="var(--fg)" opacity=".5"/>${s}</svg>`;
+  }
+
+  /* ── Board ── */
+  const FEN = ["rnbqkbnr", "pp2pppp", "3p4", "2p5", "4P3", "5N2", "PPPP1PPP", "RNBQKB1R"];
+  const GLYPH = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
+  function board(size) {
+    let sq = "";
+    FEN.forEach((row, ri) => {
+      const cells = [];
+      for (const ch of row) { if (/\d/.test(ch)) for (let k = 0; k < +ch; k++) cells.push(""); else cells.push(ch); }
+      cells.forEach((p, fi) => {
+        const hl = fi === 3 && (ri === 1 || ri === 2);
+        let inner = "";
+        if (fi === 0) inner += `<small class="rk">${8 - ri}</small>`;
+        if (ri === 7) inner += `<small class="fl">${"abcdefgh"[fi]}</small>`;
+        if (p) inner += `<span class="pc ${p === p.toUpperCase() ? "w" : "b"}" style="font-size:${Math.round(size * 0.097)}px">${GLYPH[p.toLowerCase()]}︎</span>`;
+        sq += `<i class="${(ri + fi) % 2 === 0 ? "l" : "d"}${hl ? " hl" : ""}">${inner}</i>`;
+      });
+    });
+    const arrow = `<svg class="arrow" viewBox="0 0 600 600"><path d="M262.5 487.5V372" stroke="var(--arrow)" stroke-width="15" stroke-linecap="round"/><path d="M236 378 262.5 330 289 378z" fill="var(--arrow)"/></svg>`;
+    return `<div class="row" style="gap:8px;align-items:stretch"><div class="board" style="width:${size}px;height:${size}px">${sq}${arrow}</div><div class="evalbar"><b></b></div></div>`;
+  }
+
+  /* ── Shared pieces ── */
+  const MOVES = [["d4", "312K", 36, 33], ["Bb5+", "38K", 37, 37], ["c3", "21K", 34, 35], ["Nc3", "18K", 33, 31], ["Bc4", "9.6K", 35, 27], ["g3", "3.1K", 36, 30], ["b4", "1.4K", 30, 26], ["c4", "1.1K", 38, 30], ["Be2", "980", 33, 33], ["h3", "610", 31, 34], ["Qe2", "540", 34, 31], ["a3", "410", 32, 33]];
+  function moves(n) {
+    let s = `<span class="hd sc">Move</span><span class="hd sc">White · Draw · Black</span><span class="hd sc" style="justify-content:flex-end">Games</span>`;
+    MOVES.slice(0, n).forEach(([m, g, w, d], i) => {
+      const h = i === 0 ? " hl" : "";
+      s += `<span class="san${h} first">${m}</span><span class="bar${h}"><b><i style="width:${w}%;background:var(--bar-w)"></i><i style="width:${d}%;background:var(--bar-d)"></i><i style="flex:1;background:var(--bar-b)"></i></b></span><span class="n${h} last">${g}</span>`;
+    });
+    return `<div class="moves">${s}</div>`;
+  }
+  const engineRow = () => `<div class="row"><span class="sc">Engine</span><span class="sub mono">+0.31 · depth 18</span><span class="grow"></span><span class="tg"><span>None</span><span class="on">Light</span><span>Heavy</span></span></div>`;
+  const lineRow = () => `<div class="row"><span class="line grow">1. e4 c5 2. Nf3 <b>d6</b></span><span class="btn ghost icon">${ic("first")}</span><span class="btn ghost icon">${ic("prev")}</span><span class="btn outline icon">${ic("play")}</span><span class="btn ghost icon">${ic("next")}</span><span class="btn ghost icon">${ic("last")}</span></div>`;
+  const posHead = () => `<div><span class="sc">B50 · Sicilian Defense</span><div class="h3" style="margin-top:6px">Modern Variations</div></div>`;
+  const exSearch = (w = 200) => `<span class="btn outline">${ic("flip")}White</span><span class="input" style="width:${w}px">${ic("search")}<span class="val">Search — Sicilian, B12…</span></span>`;
+  const exSelects = () => `<div class="row"><span class="input select" style="width:176px"><span class="val">Sicilian Najdorf</span>${ic("chevd")}</span><span class="input select grow"><span class="val" style="color:var(--muted-fg)">View lines</span>${ic("chevd")}</span><span class="btn primary">${ic("plus")}Add line</span></div>`;
+  const libActions = () => `<span class="btn ghost">${ic("upload")}Restore</span><span class="btn ghost">${ic("download")}Back up</span><span class="btn primary">${ic("plus")}New book</span>`;
+  const BOOKS = [["Caro-Kann Defense", "b", 256, 1], ["Italian Game", "w", 338, 2], ["King's Gambit", "w", 75, 3], ["London System", "w", 120, 4], ["Queen's Gambit", "w", 198, 5], ["Sicilian Najdorf", "b", 247, 6]];
+  const bookRows = () => BOOKS.map(([n, s, p, seed]) => `<div class="book${n === "Italian Game" ? " on" : ""}">${thumb(seed)}<span class="t"><b>${n}</b><span><i class="sq ${s}"></i>${s === "w" ? "White" : "Black"} · <span class="mono">${p} positions</span></span></span></div>`).join("");
+  const bookToc = () => BOOKS.map(([n, s, p]) => `<div class="toc${n === "Italian Game" ? " on" : ""}"><i class="sq ${s}" style="transform:translateY(-1px)"></i><span class="nm">${n}</span><span class="lead"></span><span class="fig">${p}</span></div>`).join("");
+  const searchRow = () => `<div class="row"><span class="input grow">${ic("search")}<span class="val">Search books</span></span><span class="tg"><span class="on">All</span><span>White</span><span>Black</span></span></div>`;
+  function detailHead(big) {
+    return `<div class="row" style="align-items:flex-start;gap:16px">
+      <div class="grow">
+        <div class="row"><span class="${big ? "h1" : "h2"}">Italian Game</span><span class="sub row" style="gap:5px"><i class="sq"></i>White</span></div>
+        <div class="row" style="margin-top:8px;gap:8px"><span class="badge">ByTheBook</span><span class="row" style="gap:4px;font-size:11.5px;font-weight:700">${ic("check", "ico")}Verified</span></div>
+        <p class="sub" style="margin-top:7px">From <span class="link">Wikibooks' Chess Opening Theory</span>, under <span class="link">CC BY-SA 4.0</span>.</p>
+      </div>
+      <div class="row" style="gap:6px"><span class="btn primary">Open book page</span><span class="btn outline">Open in Explorer</span><span class="btn outline">Train</span><span class="btn outline icon">${ic("more")}</span></div>
+    </div>`;
+  }
+  const measures = () => `<dl class="dl"><div><dt>Positions</dt><dd>338 / 1,000</dd></div><div><dt>Lines</dt><dd>41</dd></div><div><dt>Average line</dt><dd>11.4 plies</dd></div><div><dt>Longest line</dt><dd>18 plies</dd></div><div><dt>Clashes</dt><dd>0</dd></div></dl>`;
+  const guestFoot = () => `<div class="navfoot"><span>${ic("bug", "ico")}Copy bug report</span><span class="who">Browsing as a guest</span><span class="strong">${ic("login", "ico")}Sign in</span><span>${ic("user", "ico")}Create account</span></div>`;
+
+  /* ── Layout: Margin ── */
+  function margin(page) {
+    const nav = `<div class="nav"><div class="brand">ByTheBook<small>Opening trainer</small></div>
+      <div class="navlist">${NAV.map(([t, i]) => `<span class="${t === page ? "on ribbon" : ""}">${ic(i, "ico")}${t}</span>`).join("")}</div>${guestFoot()}</div>`;
+    let body;
+    if (page === "Explorer") {
+      body = `<div style="display:grid;grid-template-columns:auto 1px minmax(0,1fr);gap:20px;flex:1;min-height:0">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="row" style="height:30px"><span class="h2">Opening Explorer</span><span class="grow"></span>${exSearch(196)}</div>
+          ${exSelects()}
+          <div style="margin-top:6px">${board(616)}</div>
+        </div>
+        <div class="vrule"></div>
+        <div class="ruled" style="display:flex;flex-direction:column;min-height:0">
+          <div style="padding-bottom:10px">${engineRow()}</div>
+          <div style="display:flex;gap:8px;padding-block:10px;height:250px">${rail()}${view(sicilian(), 470, 230, { pad: 16, fs: 9.5 })}</div>
+          <div style="padding-block:8px">${lineRow()}</div>
+          <div style="padding-top:12px;display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden">${posHead()}${moves(12)}</div>
+        </div>
+      </div>`;
+    } else {
+      body = `<div class="row" style="height:32px;gap:12px"><span class="h1">Library</span><span class="sub mono">6 books</span><span class="badge"><i class="dot"></i>Kept in this browser</span><span class="grow"></span>${libActions()}</div>
+      <div style="display:grid;grid-template-columns:300px 1px minmax(0,1fr);gap:20px;flex:1;min-height:0;border-top:1px solid var(--rule);padding-top:14px">
+        <div style="display:flex;flex-direction:column;gap:8px">${searchRow()}<div style="display:flex;flex-direction:column;gap:2px;margin-inline:-10px">${bookRows()}</div>
+          <p class="sub" style="margin-top:6px"><b style="color:var(--fg)">Game history</b> · coming soon: import your own games to see where you left the book.</p></div>
+        <div class="vrule"></div>
+        <div style="display:flex;flex-direction:column;gap:16px;min-height:0">${detailHead(false)}${measures()}
+          <div style="display:flex;gap:8px;flex:1;min-height:0">${rail()}${view(italian(), 780, 480, { pad: 26, labelRoom: 46, fs: 11 })}</div></div>
+      </div>`;
+    }
+    return `<div class="L-margin">${nav}<div class="sheet">${body}</div></div>`;
+  }
+
+  /* ── Layout: Contents ── */
+  function contents(page) {
+    const toc = `<div class="toc-col"><div class="brand">ByTheBook<small>Opening trainer</small></div>
+      <div class="sc eyebrow-sc">Contents</div>
+      <div style="display:flex;flex-direction:column;gap:1px">${NAV.map(([t]) => `<div class="toc${t === page ? " on ribbon" : ""}"><span class="nm">${t}</span>${TOC_FIG[t] ? `<span class="lead"></span><span class="fig">${TOC_FIG[t]}</span>` : ""}</div>`).join("")}</div>
+      ${guestFoot()}</div>`;
+    let main;
+    if (page === "Explorer") {
+      main = `<div class="runhead"><span class="h3">Opening Explorer</span><span class="rh">Sicilian Defense · Modern Variations</span><span class="grow"></span>${exSearch(200)}</div>
+        <div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:26px;flex:1;min-height:0;padding-block:14px">
+          <div style="display:flex;flex-direction:column;gap:12px">${exSelects()}${board(600)}</div>
+          <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
+            <section style="display:flex;flex-direction:column;gap:8px"><div class="row" style="border-bottom:1px solid var(--rule);padding-bottom:6px"><span class="sc">Lines</span><span class="grow"></span><span class="tg"><span>None</span><span class="on">Light</span><span>Heavy</span></span></div>
+              <div style="display:flex;gap:8px;height:226px">${rail()}${view(sicilian(), 460, 226, { pad: 16, fs: 9.5 })}</div></section>
+            <section style="display:flex;flex-direction:column;gap:8px;min-height:0;overflow:hidden"><div class="row" style="border-bottom:1px solid var(--rule);padding-bottom:6px"><span class="sc">Moves from here</span><span class="grow"></span><span class="sub mono">engine +0.31 · depth 18</span></div>${moves(11)}</section>
+          </div>
+        </div>
+        <div class="folio"><span class="btn ghost icon">${ic("first")}</span><span class="btn ghost icon">${ic("prev")}</span><span class="line">1. e4 c5 2. Nf3 <b>d6</b></span><span class="btn ghost icon">${ic("next")}</span><span class="btn ghost icon">${ic("last")}</span></div>`;
+    } else {
+      main = `<div class="runhead"><span class="h3">Library</span><span class="rh">Kept in this browser</span><span class="grow"></span>${libActions()}</div>
+        <div style="display:grid;grid-template-columns:330px minmax(0,1fr);gap:28px;flex:1;min-height:0;padding-block:16px">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="h1">Your books</div>${searchRow()}
+            <div style="display:flex;flex-direction:column;gap:1px;margin-inline:-10px">${bookToc()}</div>
+            <p class="sub" style="margin-top:6px"><b style="color:var(--fg)">Game history</b> · coming soon.</p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;min-height:0">${detailHead(true)}${measures()}
+            <div style="display:flex;gap:8px;flex:1;min-height:0">${rail()}${view(italian(), 760, 470, { pad: 26, labelRoom: 46, fs: 11 })}</div></div>
+        </div>
+        <div class="folio"><span>6 books</span><span>·</span><span>Italian Game, 338 of 1,000 positions</span></div>`;
+    }
+    return `<div class="L-contents sheet">${toc}<div class="vrule"></div><div class="main">${main}</div></div>`;
+  }
+
+  /* ── Layout: Thumb index ── */
+  function index(page) {
+    const tabs = `<div class="tabs">${NAV.map(([t, i]) => `<span class="tab${t === page ? " on" : ""}${t === "Settings" ? " end" : ""}">${ic(i, "ico")}${t === "Visualizations" ? "Visuals" : t}</span>`).join("")}</div>`;
+    const mast = (title, extra) => `<div class="masthead"><span class="brand" style="font-size:19px">ByTheBook</span><span class="rh" style="font-size:15px">${title}</span>${extra}<span class="grow"></span>
+      <span class="btn ghost icon">${ic("bug")}</span><span class="sub">Browsing as a guest</span><span class="btn ghost" style="font-weight:700">Sign in</span><span class="btn outline">Create account</span></div>`;
+    let body;
+    if (page === "Explorer") {
+      body = mast("Opening Explorer", "") + `<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;flex:1;min-height:0">
+        <div style="display:flex;flex-direction:column;gap:10px"><div class="row">${exSearch(250)}<span class="grow"></span></div>${exSelects()}<div style="margin-top:4px">${board(640)}</div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;min-height:0">
+          <div class="block" style="padding:9px 12px">${engineRow()}</div>
+          <div class="block" style="display:flex;gap:8px;padding:8px;height:256px">${rail()}${view(sicilian(), 480, 240, { pad: 16, fs: 9.5 })}</div>
+          <div class="block" style="padding:6px 8px 6px 12px">${lineRow()}</div>
+          <div class="block" style="flex:1;min-height:0;padding:12px 14px;display:flex;flex-direction:column;gap:10px;overflow:hidden">${posHead()}${moves(9)}</div>
+        </div></div>`;
+    } else {
+      body = mast("Library", `<span class="badge"><i class="dot"></i>Kept in this browser</span>`) + `<div style="display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;flex:1;min-height:0">
+        <div class="block" style="padding:10px;display:flex;flex-direction:column;gap:8px;align-self:start">${searchRow()}<div style="display:flex;flex-direction:column;gap:2px">${bookRows()}</div></div>
+        <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
+          <div class="row" style="justify-content:flex-end;gap:6px;margin-top:-6px">${libActions()}</div>
+          ${detailHead(true)}${measures()}
+          <div class="block" style="display:flex;gap:8px;flex:1;min-height:0;padding:8px">${rail()}${view(italian(), 780, 470, { pad: 26, labelRoom: 46, fs: 11 })}</div></div>
+      </div>`;
+    }
+    return `<div class="L-index"><div class="sheet">${body}</div>${tabs}</div>`;
+  }
+
+  /* ── Layout: Spread ── */
+  function spread(page) {
+    const strip = `<div class="topstrip"><span class="brand" style="font-size:19px">ByTheBook</span>
+      <span class="links">${NAV.map(([t]) => `<span class="${t === page ? "on" : ""}">${t}</span>`).join("")}</span><span class="grow"></span>
+      <span class="btn ghost icon">${ic("bug")}</span><span class="sub">Browsing as a guest</span><span class="btn ghost" style="font-weight:700">Sign in</span><span class="btn outline">Create account</span></div>`;
+    let left, right;
+    if (page === "Explorer") {
+      left = `<div class="rhrow"><span class="rh">Sicilian Defense</span><span class="grow"></span><span class="sc">Opening Explorer</span></div>
+        <div class="body"><div class="row">${exSearch(220)}<span class="grow"></span></div>${exSelects()}<div style="display:flex;justify-content:center;margin-top:4px">${board(584)}</div></div>
+        <div class="foot"><span class="btn ghost icon">${ic("first")}</span><span class="btn ghost icon">${ic("prev")}</span><span class="line" style="margin-inline:6px">1. e4 c5 2. Nf3 <b>d6</b></span><span class="btn ghost icon">${ic("next")}</span><span class="btn ghost icon">${ic("last")}</span><span class="grow"></span><span>ply 4</span></div>`;
+      right = `<div class="rhrow"><span class="sc">B50</span><span class="grow"></span><span class="rh">Modern Variations</span></div>
+        <div class="body" style="gap:16px">
+          <div class="h1" style="font-size:28px">Modern Variations</div>
+          <div style="display:flex;gap:8px;height:224px">${rail()}${view(sicilian(), 520, 224, { pad: 16, fs: 9.5 })}</div>
+          <div class="row" style="border-bottom:1px solid var(--rule);padding-bottom:6px"><span class="sc">Moves from here</span><span class="grow"></span><span class="sub mono">+0.31 · depth 18</span><span class="tg"><span>None</span><span class="on">Light</span><span>Heavy</span></span></div>
+          <div style="overflow:hidden;min-height:0">${moves(10)}</div>
+        </div>
+        <div class="foot"><span>Sicilian Najdorf · 247 positions</span><span class="grow"></span><span>312K games</span></div>`;
+    } else {
+      left = `<div class="rhrow"><span class="rh">Library</span><span class="grow"></span><span class="sc">Kept in this browser</span></div>
+        <div class="body"><div class="row"><span class="h1" style="font-size:30px">Your books</span><span class="grow"></span>${libActions()}</div>${searchRow()}
+          <div style="display:flex;flex-direction:column;gap:2px;margin-inline:-10px">${bookToc()}</div>
+          <p class="sub" style="margin-top:8px"><b style="color:var(--fg)">Game history</b> · coming soon: import your own games to see where you left the book.</p></div>
+        <div class="foot"><span>6 books</span><span class="grow"></span><span>1,234 positions in all</span></div>`;
+      right = `<div class="rhrow"><span class="sc">White</span><span class="grow"></span><span class="rh">Italian Game</span></div>
+        <div class="body" style="gap:16px">${detailHead(true).replace('<div class="row" style="gap:6px">', '<div class="row" style="gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:250px">')}${measures()}
+          <div style="display:flex;gap:8px;flex:1;min-height:0">${rail()}${view(italian(), 560, 400, { pad: 22, labelRoom: 40, fs: 10.5 })}</div></div>
+        <div class="foot"><span>Wikibooks, CC BY-SA 4.0</span><span class="grow"></span><span>338 of 1,000 positions</span></div>`;
+    }
+    return `<div class="L-spread">${strip}<div class="book2"><div class="page left">${left}</div><div class="page right">${right}</div><span class="ribbon-mark"></span></div></div>`;
+  }
+
+  const BUILD = { margin, contents, index, spread };
+
+  /* ── Mounting ── */
+  const fits = [];
+  const ro = new ResizeObserver((entries) => {
+    for (const e of entries) { const m = e.target.firstElementChild; if (m) m.style.transform = `scale(${e.contentRect.width / 1440})`; }
+  });
+  function mount(el) { fits.push(el); ro.observe(el); }
+  function draw(el, lay, page) { el.innerHTML = `<div class="mock" aria-hidden="true">${BUILD[lay](page)}</div>`; }
+
+  const stageLib = document.getElementById("stage-library"), stageEx = document.getElementById("stage-explorer");
+  mount(stageLib); mount(stageEx);
+  const glance = document.getElementById("glance"), laySeg = document.getElementById("lay-seg");
+  for (const id of ORDER) {
+    const b = document.createElement("button");
+    b.type = "button"; b.id = "lay-" + id; b.dataset.v = id; b.textContent = LAYOUTS[id].name;
+    laySeg.appendChild(b);
+    const g = document.createElement("button");
+    g.type = "button"; g.id = "glance-" + id; g.dataset.v = id;
+    g.innerHTML = `<div class="fit"></div><span><b>${LAYOUTS[id].name}</b> <em>· ${["", "light touch", "bookish", "structural", "an open book"][LAYOUTS[id].lean]}</em></span>`;
+    glance.appendChild(g);
+    const f = g.querySelector(".fit");
+    draw(f, id, "Library");
+    mount(f);
+  }
+
+  /* ── State ── */
+  const st = {
+    lay: "margin",
+    mode: (() => {
+      const t = document.documentElement.getAttribute("data-theme");
+      if (t === "dark" || t === "light") return t;
+      return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    })(),
+    head: "serif", grain: "off", r: 8,
+  };
+  const radius = document.getElementById("radius"), radiusOut = document.getElementById("radius-out");
+  let drawn = "";
+
+  function render() {
+    if (drawn !== st.lay) { draw(stageLib, st.lay, "Library"); draw(stageEx, st.lay, "Explorer"); drawn = st.lay; }
+    for (const el of fits) {
+      const m = el.firstElementChild;
+      m.dataset.mode = st.mode; m.dataset.head = st.head; m.dataset.grain = st.grain;
+      m.style.setProperty("--r", st.r + "px");
+      m.style.transform = `scale(${el.clientWidth / 1440})`;
+    }
+    const press = (sel, v) => document.querySelectorAll(sel).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === v)));
+    press("#lay-seg button, #glance button", st.lay);
+    press("#mode-seg button", st.mode);
+    press("#head-seg button", st.head);
+    press("#grain-seg button", st.grain);
+    radius.value = st.r; radiusOut.textContent = st.r + "px";
+    const L = LAYOUTS[st.lay];
+    document.getElementById("about-name").textContent = L.name;
+    document.getElementById("about-one").textContent = L.one;
+    document.getElementById("about-lean").innerHTML = `How bookish ${[1, 2, 3, 4].map((i) => `<i class="${i <= L.lean ? "on" : ""}"></i>`).join("")}`;
+    document.getElementById("about-facts").innerHTML = L.facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+  }
+
+  const bind = (id, key) => document.getElementById(id).addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return; st[key] = b.dataset.v; render();
+  });
+  bind("lay-seg", "lay"); bind("mode-seg", "mode"); bind("head-seg", "head"); bind("grain-seg", "grain");
+  glance.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    st.lay = b.dataset.v; render();
+    document.querySelector(".studio").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  });
+  radius.addEventListener("input", () => { st.r = +radius.value; render(); });
+  document.getElementById("radius-reset").addEventListener("click", () => { st.r = 8; render(); });
+
+  render();
+})();
+</script>

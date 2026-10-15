@@ -1,10 +1,10 @@
 # Vibes
 
-Status: deciding · Updated: 2026-10-12 · Depends on: deployment.md
+Status: deciding · Updated: 2026-10-14 · Depends on: deployment.md, book-ui.md
 
-**Goal:** the UI around the board takes on a vibe chosen for the opening being shown, growing
-richer the deeper the line goes, with music to match, and the community votes on which
-opening gets which vibe.
+**Goal:** the book the app is drawn as (`book-ui.md`) takes on a vibe chosen for the opening
+being shown, growing richer the deeper the line goes, with music to match, and the community
+votes on which opening gets which vibe.
 **Done when:** one voting period has run end to end (members and visitors voted, and the user
 published assignments from the tally), and with vibes on, every page with a board shows the
 assigned vibe and its music, layered by depth, while the base UI stays one switch away.
@@ -23,6 +23,8 @@ From the user's message of 2026-10-07.
   background colors went on 2026-10-12, since every vibe in every layer is tested against
   every base: a vibe comes in a light and a dark version of its colors, and shares its art
   between them.
+  *Amended 2026-10-14 (D14):* the vibes switch moves to the strip above the book, beside the
+  account links; Settings keeps one too.
 - D3. **The community votes; the user decides.** Votes are input. The user assigns vibes to
   openings, and can change the vibes and restart the voting timer at any time.
 - D4. **Three ranks.** Visitors are guests, members are beta accounts, and the user holds
@@ -51,6 +53,8 @@ From the user's message of 2026-10-07.
 - D11. **The visualization windows don't change, for now** (carried from 2026-10-06). Vibes
   restyle the surroundings: the frame, buttons, fonts, sidebar and cards. The book views,
   the Treemap and the Labyrinth keep their own colors.
+  *Amended 2026-10-14 (D14):* what a vibe restyles is now the book, not the frame around it.
+  The visualization windows still keep their own colors.
 - D12. **shadcn/ui is the base UI** (was Q1, answered 2026-10-07: "shadcn/ui is great"). Vibes
   need a change of vibe to cost a style update, not a re-render, since it lands many times a
   minute; every visual property reachable from CSS so layers can fade by depth; ornaments
@@ -64,12 +68,32 @@ From the user's message of 2026-10-07.
   Runtime-themed libraries (MUI, Mantine, Chakra) fit worst, since a theme change re-renders
   the tree. The Library and the Bookstore moved first (`deployment.md` Phase 5b); the rest
   moves in this plan's first phase, which also makes every visual value a token.
+  *Amended 2026-10-14 (D14, D15):* ornaments go on the book's areas, not on the sidebar or
+  the frame, and the first vibes have none that move.
 - D13. **Vibes reach past color** (from the user's sketch of the Explorer, 2026-10-12). Vibes
   start with color, texture, font and material, then grow into images and elements: a
   backdrop behind the frame, the sidebar, the panels that hold everything, and the elements in
   them (buttons, inputs, the move bars) down to their edges. These areas are where the base UI
   leaves room today, not a fixed list. Elements that carry meaning keep it: the move bars'
   white, draw and black stay light, middle and dark in every vibe.
+  *Amended 2026-10-14 (D14):* the backdrop and the sidebar are no longer vibe areas; the
+  book's are. The rest of D13 holds.
+
+From the user's message of 2026-10-14, when the app became a book (`book-ui.md`).
+
+- D14. **A vibe dresses the book, not its surroundings.** A vibe changes the book as a
+  whole: the paper's texture and color, decorative borders on the page, the fonts on the
+  page, corner roundness, the cover, and drawings in the margins, like pencil notes in a
+  real book. It leaves the strip, the tabs, the account links and the desk alone; a page's
+  own bookmark, and in the one-page form its own tab, are cut from its paper and take it
+  (`book-ui.md` D4, D15). The book's
+  vibe areas are the cover, the pages, the page edges, the gutter, the running heads and
+  folios, and the margins (`book-ui.md` Phase 1). The board's squares and pieces, the move
+  bars' meaning and the visualization windows' colors stay as D11 and D13 say. The mockup's
+  sample vibe shows the kind of change (`plans/mockups/dashboard-spread.html`).
+- D15. **The first vibes are static.** They change how the book looks and nothing on it
+  moves. D12's moving ornaments wait until the static vibes work. Q10 asks whether static
+  also means no depth layers at first.
 
 ## Open questions
 
@@ -172,13 +196,14 @@ but it would be the app's first scheduled aggregate, so it waits for the user's 
 **Recommendation:**
 
 - The board's squares and pieces stay the same everywhere, so the board stays readable; the
-  frame around it takes part in the vibe.
-- Pages without a board use the base UI.
+  pages around it take part in the vibe (D14).
+- Pages without a board show the base book.
 - New visitors get vibes on and music off. Browsers block sound until the user presses
   something anyway, and sound that starts unasked drives people away. A music button sits in
-  the header.
-- Settings: vibes on or off, music on or off with a volume, and a cap on layers for people
-  who want a calmer page. Moving ornaments stop when the system asks for reduced motion.
+  the strip, beside the vibes switch.
+- Settings: vibes on or off (also in the strip), music on or off with a volume, and a cap on
+  layers for people who want a calmer page. Moving ornaments, once there are any (D15), stop
+  when the system asks for reduced motion.
 
 > ME:
 
@@ -199,6 +224,19 @@ The user asked for a library title with a king's air.
 
 **Recommendation:** Grand Librarian, shown with a small crown. Others: Head Librarian, Keeper
 of the Books, Librarian-King.
+
+> ME:
+
+### Q10. Do the first vibes have depth layers?
+
+D15 makes the first vibes static: nothing on the book moves. Depth layers (D8) are static too,
+since each layer adds or removes something as the line goes deeper, but they make every vibe
+several looks instead of one.
+
+**Recommendation:** the first two vibes are one look each, with no layers and no subvibes, so
+the book's areas, the switch and the contrast tests get proven on something small. Layers
+follow in the next step of the same phase, before the music, since the music's layers
+follow the vibe's.
 
 > ME:
 
@@ -226,13 +264,18 @@ once those are answered; the likely ones are in Notes.
 - [ ] (user) Check every page in light and dark, wide and at phone width.
 - [ ] (user, agent) Record the Overview's demos again (`deployment.md` Phase 7).
 
+*2026-10-14:* the book (`book-ui.md`) replaces the frame this phase built, so these three
+open steps would be done twice. If the book comes first (`book-ui.md` Q9), they move to that
+plan's Phase 4.
+
 ## Notes
 
 **Layers without layout shift (D12).**
 
-- A vibe changes paint, never size: colors, borders drawn inside boxes, backgrounds,
-  ornaments laid over the frame, and fonts with matched metrics so text keeps its width. A
-  browser test can check that the board and panels keep their boxes in every vibe and layer.
+- A vibe changes paint, never size: colors, borders drawn inside the pages, paper textures,
+  drawings laid in the margins, and fonts with matched metrics so text keeps its width. A
+  browser test can check that the board and the page's sections keep their boxes in every
+  vibe and layer.
 - One CSS variable for depth, registered with `@property` so it animates, drives each
   ornament's opacity through that ornament's own threshold. Layers then fade in and out from
   one value change, in every browser.
@@ -255,8 +298,9 @@ costs the server nothing. `load-testing.md` covers the ballot route's load.
 
 1. The rest of the base UI on shadcn/ui, with every visual value a token (D12), now Phase 1
    in Steps.
-2. The vibe engine: anchors, finding the vibe (Q4), the attribute writer, two hand-built
-   vibes on a fixed assignment, and the layout-shift test.
+2. The vibe engine, after the book (`book-ui.md`): anchors, finding the vibe (Q4), the
+   attribute writer, two hand-built static vibes on a fixed assignment that dress the book
+   (D14, D15), then depth layers (Q10), and the layout-shift test.
 3. Music: the loop engine and one vibe's tracks.
 4. Ranks, ballots, the visitor route, the tally job, and the leaderboard with its countdown.
 5. The first voting period, after which the user publishes the first assignment.
