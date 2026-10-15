@@ -84,9 +84,9 @@ From the user's message of 2026-10-14, when the app became a book (`book-ui.md`)
 - D14. **A vibe dresses the book, not its surroundings.** A vibe changes the book as a
   whole: the paper's texture and color, decorative borders on the page, the fonts on the
   page, corner roundness, the cover, and drawings in the margins, like pencil notes in a
-  real book. It leaves the strip, the tabs, the account links and the desk alone; a page's
-  own bookmark, and in the one-page form its own tab, are cut from its paper and take it
-  (`book-ui.md` D4, D15). The book's
+  real book. It leaves the strip, the tabs, the chapter column, the account links and the
+  desk alone; a page's own bookmark, and in the one-page form its own tab, belong to the page
+  and take its vibe (`book-ui.md` D4, D15). The book's
   vibe areas are the cover, the pages, the page edges, the gutter, the running heads and
   folios, and the margins (`book-ui.md` Phase 1). The board's squares and pieces, the move
   bars' meaning and the visualization windows' colors stay as D11 and D13 say. The mockup's

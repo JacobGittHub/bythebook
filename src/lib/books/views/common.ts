@@ -7,7 +7,7 @@ export type Box = { width: number; height: number };
 
 export type Point = { x: number; y: number };
 
-/** Width of one character of the views' monospace labels (9.5px JetBrains Mono or Geist Mono). */
+/** Width of one character of the views' monospace labels (9.5px IBM Plex Mono). */
 export const LABEL_CHAR_W = 5.8;
 
 /** Width of one character of a line's name at its terminus (10.5px sans). */

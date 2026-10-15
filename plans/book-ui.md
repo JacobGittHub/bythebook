@@ -1,6 +1,6 @@
 # Book UI
 
-Status: ready · Updated: 2026-10-14 · Depends on: —
+Status: active · Updated: 2026-10-14 · Depends on: —
 
 **Goal:** rebuild the dashboard as an open book: every page a spread of two pages on a desk,
 with page turns, bookmarks that turn with their pages, a one-page form for narrow windows and
@@ -13,8 +13,9 @@ it.
 ## Decisions
 
 From the user's messages of 2026-10-13 and 2026-10-14, about the mockup
-`plans/mockups/dashboard-spread.html` (rounds three to five, the "Spread Pages" artifact).
-Q1–Q9 were answered on 2026-10-14; D4, D8 and D13–D19 hold the answers.
+`plans/mockups/dashboard-spread.html` (rounds three to seven, the "Spread Pages" artifact).
+Q1–Q9 were answered on 2026-10-14; D4, D8 and D13–D19 hold the answers. D4 and D15 were
+amended the same day from the user's notes on round five.
 
 - D1. **The dashboard is an open book on a desk**, the Spread layout of the Paperback
   direction (`plans/mockups/dashboard-paperback.html`). One strip above the book holds the
@@ -30,9 +31,9 @@ Q1–Q9 were answered on 2026-10-14; D4, D8 and D13–D19 hold the answers.
   shadow), dark mode the soft one. Both show stacks of page edges on either side, whose
   thickness says how far into the book the current page is, and a cloth cover behind the
   pages.
-- D4. **Each page carries its own bookmark** (round five). It is tucked into the page and
-  rises out of its top edge to meet the page's tab in the strip. Being part of the page, it
-  turns with it: going forward, the new page's bookmark arrives on the turning leaf; going
+- D4. **Each page carries its own bookmark** (round five; its look from round six). It is a
+  ribbon folded over the page's top edge, never rising above the page, and it sits level with
+  the page's tab in the strip. Being part of the page, it turns with it: going forward, the new page's bookmark arrives on the turning leaf; going
   back, the old one leaves on it. It never slides along the strip. The tab lights when its
   bookmark comes into view. A bookmark lands on whichever page lies under its tab, so a tab
   over the right page drops its bookmark there. Riffled pages carry their own bookmarks past
@@ -79,16 +80,22 @@ Q1–Q9 were answered on 2026-10-14; D4, D8 and D13–D19 hold the answers.
   leaf with two faces, so a turn is drawn in two halves: the old page folds to the spine,
   then the new one opens from it. A page's picture includes what sticks out of it, so the
   bookmark and the page tab turn with the page for free. Browsers without support change
-  pages instantly. A spike comes first (Phase 2).
-- D15. **Narrow windows and phones get the one-page form** (Q4). Below the width at which
-  the board would fall under about 440 px (around 1,100 px of window), the book is one page.
-  It is the default on phones. Its spine is on the right, drawn as a rounded band, and pages
-  turn on it. The contents become page tabs on the fore-edge at the left: each page has its
-  tab cut into it, joined to the page and lined up with that page's slot in the tab column, so
-  the tab turns with its page as the bookmark does in a spread. The tab column narrows to
-  icons, and on a phone it is icons only. A spread's two halves sit side by side inside the
-  page where they fit and stack on a phone; a second level shows only its own page with a
-  back link. The Explorer stacks the board above the analysis, as it does today
+  pages instantly. A spike comes first (Phase 2). It found that each page needs a name of its
+  own, from its route, so the leaving and arriving pages are separate groups that the turn can
+  stack; under one shared name WebKit ignores which lies on top.
+- D15. **Narrow windows and phones get the one-page form** (Q4; its look from rounds six and seven).
+  Below the width at which the board would fall under about 440 px (around 1,100 px of
+  window), the book is one page. It is the default on phones. The book is open, not closed:
+  the page is its left page, with the gutter at its right and the facing page running on
+  past the window's right edge, so the book has no visible end there, and leaves turn on
+  that gutter. Forward, the next leaf comes over from the gutter
+  and lies down; back, the page lifts away over it. The chapters stay in a column at the left,
+  apart from the page, as the strip's tabs are apart from the spread. The page carries a short
+  tab, a ribbon around its fore-edge that reaches just past the page edges to meet its
+  chapter, so the tab turns with its page as the bookmark does in a spread. The column
+  narrows to icons, and on a phone it is icons only. A spread's two halves sit side by side
+  inside the page where they fit and stack on a phone; a second level shows only its own page
+  with a back link. The Explorer stacks the board above the analysis, as it does today
   (`docs/design/explorer.md`).
 - D16. **The Labyrinth's Explorer tab says "coming soon"** (Q5). The user will revisit it, so
   this plan doesn't build it there. What was found stays in the Notes for that work.
@@ -107,28 +114,41 @@ Q1–Q9 were answered on 2026-10-14; D4, D8 and D13–D19 hold the answers.
 
 ## Steps
 
-Drafted 2026-10-14, once Q1–Q9 were answered; the user approves them before Phase 1 starts.
+Drafted 2026-10-14, once Q1–Q9 were answered, and approved the same day ("Lets do phase one
+and get to the test of turns").
 
 ### Phase 0. Mockups
 
-- [x] (agent) Rounds three to five of `plans/mockups/dashboard-spread.html`.
+- [x] (agent) Rounds three to seven of `plans/mockups/dashboard-spread.html`.
 - [x] (user) Answer Q1–Q9 (D13–D19).
 
 ### Phase 1. Tokens, fonts and book areas (D2, D3)
 
-- [ ] (agent) Literata, Atkinson Hyperlegible and IBM Plex Mono through `next/font`, as the
+- [x] (agent) Literata, Atkinson Hyperlegible and IBM Plex Mono through `next/font`, as the
       `--font-*` tokens.
-- [ ] (agent) The paper palette in light and dark in `globals.css`: desk, page, rule, cover,
-      page edge, spine shadow, turn shade and bookmark, beside shadcn/ui's names.
-- [ ] (agent) The book's vibe areas marked with `data-slot` (cover, page, page edge, gutter,
-      running head, folio, margin), replacing the frame's areas (`vibes.md` D14).
-- [ ] (agent) A unit test that every text and background pair passes WCAG AA in both themes.
+- [x] (agent) The paper palette in light and dark in `globals.css`: desk, page, rule, cover,
+      page edge, gutter, turn shade and bookmark, beside shadcn/ui's names, which are now
+      made from them. The live dashboard takes it at once; its sidebar keeps its own colors
+      until the shell replaces it.
+- [x] (agent) The book's vibe areas marked with `data-slot` (book, cover, page, page edge,
+      gutter, running head, folio, margin) on the book's parts in `src/components/book/`.
+      They replace the frame's areas when the shell does (`vibes.md` D14).
+- [x] (agent) A unit test that every text and background pair passes WCAG AA in both themes
+      (`src/lib/theme/contrast.test.ts`). It moved four colors a shade: the muted text in
+      both themes, dark mode's destructive red and the old sidebar's muted text.
 
 ### Phase 2. The book frame (D1, D3–D5, D8, D9, D12–D15)
 
-- [ ] (agent) Spike: a two-page turn with view transitions on a scratch route, with a
-      bookmark sticking out of the page, checked in Chrome, Safari and Firefox. The user
-      watches it before the rest is built.
+- [x] (agent) Spike: a two-page turn with view transitions on a scratch route
+      (`/spike/book-turn`), with bookmarks, the one-page form and its page tabs. It works in
+      Chromium and Firefox. Playwright's WebKit runs every animation with the right timing but
+      doesn't draw the arriving page during the turn, which may be that build's fault (it is
+      WebKit on Windows, not Safari).
+- [x] (user) Watch the spike, in Chrome and on a real Safari (an iPhone or a Mac) if you have
+      one. Chrome looked right but for a pause in the one-page turn near edge-on: a CSS easing
+      applies between each pair of keyframes, so a middle keyframe stalled the swing there;
+      the swing now has two keyframes and a separate fade. Safari didn't look right; the user
+      put it off to Phase 4. The route goes once the shell is built.
 - [ ] (agent) A pure layout function for the book: given the window, the form and the slide,
       the rectangles of the pages, the cover, the page edges, each tab's bookmark and, in the
       one-page form, each page tab. Property tests: the pages never overlap, everything fits
@@ -143,8 +163,9 @@ Drafted 2026-10-14, once Q1–Q9 were answered; the user approves them before Ph
       the page's own height, and the board-page rule in `AGENTS.md` changes with it.
 - [ ] (agent) Turns, riffles, Slide and None, and the motion setting (D13, D14).
 - [ ] (agent) The book slide for second levels, with the Bookstore's strip (D8, D9).
-- [ ] (agent) The one-page form: the spine on the right, turns on it, the page tabs and the
-      phone's icon tabs (D15).
+- [ ] (agent) The one-page form: the open left page with its gutter at the right and the
+      facing page running off the window, turns on the gutter, the page tabs and the phone's
+      icon tabs (D15).
 
 ### Phase 3. The pages, each with its browser tests
 
@@ -168,6 +189,10 @@ Drafted 2026-10-14, once Q1–Q9 were answered; the user approves them before Ph
       never scrolls; each bookmark and page tab meets its tab; turns go the right way in
       each motion setting; reduced motion changes pages instantly. New screenshot baselines
       (this takes over `vibes.md` Phase 1's open step).
+- [ ] (user, agent) Safari: the turns and the slide on a real iPhone or Mac, from a
+      production build on the local network. The spike's turns didn't look right there
+      (2026-10-14); find out what Safari draws wrong and fix it, or give Safari Slide
+      or None until it can. The Done-when needs Safari.
 - [ ] (agent) A slow-device check: turns and the slide with Chromium's CPU throttled four
       times. The user decides whether Slide becomes the default anywhere, phones first.
 - [ ] (agent) Docs: `docs/design/dashboard.md` and `docs/design/explorer.md` rewritten for

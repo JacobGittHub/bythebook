@@ -167,19 +167,28 @@ block that sets the tokens below and decorates the marked areas.
   dark page never flashes light. A browser that kept one of the five old background modes
   gets dark for dark and light for the rest (`parseThemeChoice`). The vibes switch is saved
   and written, and no vibe reads it yet.
-- **Every color, corner and font is a token** in `globals.css`, under shadcn/ui's names
-  (`--background`, `--card`, `--muted`, `--border`, `--primary` and the rest), plus the
-  app's own: the sidebar's, the move bars' (`--bar-white`, `--bar-draw`, `--bar-black`),
-  the board's arrows, `--warning`, `--success` and `--overlay`. Code that needs a color
-  string, such as the board's arrows, reads one with `useThemeColor`. Every `rounded-*`
-  class is a multiple of `--radius`, and the fonts are `font-sans`, `font-heading` and
-  `font-mono`, so a vibe can change all corners or faces at once. The book views keep their
-  own `--view-*` and `--fam-*` tokens (`plans/vibes.md` D11).
+- **Every color, corner and font is a token** in `globals.css`: the book's paper palette
+  (`--desk`, `--page`, `--page-alt`, `--rule`, `--cover`, `--page-edge`, `--gutter`,
+  `--turn-shade`, `--bookmark`, `plans/book-ui.md` D2, D3) and shadcn/ui's names
+  (`--background`, `--card`, `--muted`, `--border`, `--primary` and the rest), most of which
+  are made from the book's, plus the app's own: the sidebar's, the move bars'
+  (`--bar-white`, `--bar-draw`, `--bar-black`), the board's arrows, `--warning`, `--success`
+  and `--overlay`. Code that needs a color string, such as the board's arrows, reads one with
+  `useThemeColor`. Every `rounded-*` class is a multiple of `--radius`, and the fonts are
+  `font-sans` (Atkinson Hyperlegible), `font-heading` (Literata) and `font-mono` (IBM Plex
+  Mono), loaded by the root layout, so a vibe can change all corners or
+  faces at once. The book views keep their own `--view-*` and `--fam-*` tokens
+  (`plans/vibes.md` D11). `src/lib/theme/contrast.test.ts` checks that every text and
+  background pair passes WCAG AA in both themes.
 - **Controls are shadcn/ui's,** from `src/components/shadcn/` (`components.json`), on those
   tokens. A bare `border` takes the theme's border color.
 - **A box that holds a page's content is a `Panel`,** with a `PanelLabel` for its small
   heading. It and the frame's areas carry `data-slot` (`backdrop`, `topbar`, `sidebar`,
   `frame`, `panel`, and `move-bar` on the move bars), beside shadcn/ui's own slots, and their
   `::before` and `::after` are left for a vibe's ornaments.
+- **The book's parts** (`src/components/book/Book.tsx`) carry the book's vibe areas: `book`,
+  `cover`, `page`, `page-edge`, `gutter`, `running-head`, `folio` and `margin`
+  (`plans/vibes.md` D14). They replace the frame's areas when the book shell replaces the
+  frame (`plans/book-ui.md` Phase 2).
 - **The link reset in `globals.css` sits in the base layer.** Outside a layer it overrode
   every text-color utility on a link, which made links styled as dark buttons unreadable.

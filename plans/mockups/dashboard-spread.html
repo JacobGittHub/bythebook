@@ -1,4 +1,4 @@
-<!-- Mockup for plans/book-ui.md (and plans/vibes.md D14–D15): the dashboard as an open book. The Overview, Explorer, Visualizations, Library, Bookstore and Settings as spreads, with page turns, bookmarks that ride on the turning page, the book slide, the one-page form with its spine on the right and page tabs, and a sample static vibe that dresses only the book. Round five. Published as the "Spread Pages" artifact. -->
+<!-- Mockup for plans/book-ui.md (and plans/vibes.md D14–D15): the dashboard as an open book. The Overview, Explorer, Visualizations, Library, Bookstore and Settings as spreads, with page turns, bookmarks that ride on the turning page, the book slide, the one-page form as the left page of an open book with page tabs, and a sample static vibe that dresses only the book. Round seven. Published as the "Spread Pages" artifact. -->
 <title>Spread Pages</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -84,7 +84,7 @@ td.yes { white-space: nowrap; }
 .mock {
   --r: 8px; --pr: calc(var(--r) * 1.25); --gw: 96px; --gdur: 420ms;
   --desk: #e2e4df; --sheet: #fbfbf8; --sheet-2: #f1f2ed;
-  --fg: #22252b; --muted: #eef0ea; --muted-fg: #636a73;
+  --fg: #22252b; --muted: #eef0ea; --muted-fg: #5c636b;
   --rule: #d9dcd5; --border: #d0d4cd;
   --primary: #2c4a74; --primary-fg: #ffffff;
   --sel: #e3e9f3; --ribbon: #8c2f39;
@@ -110,7 +110,7 @@ td.yes { white-space: nowrap; }
 .mock[data-mode="dark"] {
   --gw: 46px;
   --desk: #0e1013; --sheet: #1c1f24; --sheet-2: #23272d;
-  --fg: #e9e5dc; --muted: #24282e; --muted-fg: #9c9a94;
+  --fg: #e9e5dc; --muted: #24282e; --muted-fg: #a3a19b;
   --rule: #30343b; --border: #383c44;
   --primary: #a9c0e6; --primary-fg: #12161d;
   --sel: rgb(169 192 230 / 0.13); --ribbon: #c9505c;
@@ -312,9 +312,10 @@ td.yes { white-space: nowrap; }
 .navtabs span { padding: 7px 8px; white-space: nowrap; }
 .navtabs span:hover { color: var(--fg); }
 .navtabs span.on { color: var(--fg); font-weight: 700; box-shadow: inset 0 -2px 0 var(--ribbon); }
-/* A page's bookmark: tucked into the page, it rises out of the top edge to meet the page's tab.
-   It belongs to the page, so it turns with the leaf. */
-.bmk { position: absolute; left: calc(var(--bx) - 7px); top: calc(-1 * var(--rise)); width: 14px; height: calc(var(--rise) + 22px); background: var(--ribbon); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 7px), 0 100%); z-index: 9; pointer-events: none; }
+/* A page's bookmark: a ribbon folded over the page's top edge, level with the page's tab in the strip.
+   It belongs to the page, so it turns with the leaf. The shadow sits on the box, the ribbon's shape on ::before. */
+.bmk { position: absolute; left: calc(var(--bx) - 7px); top: -1px; width: 14px; height: 26px; z-index: 9; pointer-events: none; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.28)); }
+.bmk::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgb(0 0 0 / 0.34), rgb(0 0 0 / 0.1) 3px, transparent 6px), var(--ribbon); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 6px), 0 100%); }
 .book.anim .bmk { transition: transform var(--gdur) cubic-bezier(0.3, 0.7, 0.2, 1); }
 .book[data-shift="on"] .bmk { transform: translateX(var(--shift)); }
 .vsw { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; padding: 4px 6px; border-radius: 6px; }
@@ -342,7 +343,7 @@ td.yes { white-space: nowrap; }
 .book:is([data-shift="on"], .keep-px) > .page.l { flex-basis: var(--lpx); }
 
 /* Inside a page */
-.pgin { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 26px 34px 14px; transition: opacity 160ms; overflow: hidden; border-radius: inherit; }
+.pgin { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 30px 34px 14px; transition: opacity 160ms; overflow: hidden; border-radius: inherit; }
 .page.l .pgin { padding-right: 40px; }
 .page.r .pgin { padding-left: 40px; }
 .rhrow { display: flex; align-items: center; gap: 10px; height: 22px; flex: none; }
@@ -379,34 +380,37 @@ td.yes { white-space: nowrap; }
 .page.r > .cast { background: linear-gradient(to right, var(--shade), transparent 55%); }
 .page.l > .cast { background: linear-gradient(to left, var(--shade), transparent 55%); }
 
-/* ── Single page: the spine on the right, the pages' tabs on the left ── */
-.L-single { position: absolute; inset: 0; display: flex; --el: 8px; }
-.tocside { position: relative; z-index: 2; width: 232px; flex: none; display: flex; flex-direction: column; padding: 18px 0 16px 18px; white-space: nowrap; }
+/* ── Single page: the left page of an open book, the gutter at its right; the chapters at the left ── */
+.L-single { position: absolute; inset: 0; display: flex; --el: 8px; --er: 6px; --tabout: 10px; --face: 56px; --face-off: 48px; overflow: hidden; }
+.tocside { position: relative; z-index: 2; width: 214px; flex: none; display: flex; flex-direction: column; padding: 18px 0 16px 18px; white-space: nowrap; }
 .tochead { height: 30px; padding-right: 10px; }
-.ptabs { display: flex; flex-direction: column; gap: 4px; margin-top: 30px; }
-.ptab { display: flex; align-items: center; gap: 9px; height: 36px; padding: 0 12px 0 14px; border: 1px solid var(--border); border-right: 0; border-radius: var(--pr) 0 0 var(--pr); background: var(--sheet-2); color: var(--muted-fg); font-size: 13px; }
-.ptab:hover { color: var(--fg); }
-.ptab .fig { margin-left: auto; font: 500 11.5px/1 var(--font-mono); color: var(--muted-fg); }
-/* The current page's own tab: cut into the page and joined to it, so it turns with the page. */
-.ptab.cur { position: absolute; top: var(--ty); left: calc(-1 * (var(--tw) + var(--el) + 1px)); width: calc(var(--tw) + var(--el) + 2px); background-color: var(--sheet); background-image: var(--grain); color: var(--fg); font-weight: 700; z-index: 9; box-shadow: inset 3px 0 0 var(--ribbon); padding-right: calc(12px + var(--el)); }
+.sidech { display: flex; flex-direction: column; gap: 2px; margin-top: 30px; }
+.sch { display: flex; align-items: center; gap: 9px; height: 32px; padding: 0 16px 0 8px; color: var(--muted-fg); font-size: 13px; }
+.sch:hover { color: var(--fg); }
+.sch .fig { margin-left: auto; font: 500 11.5px/1 var(--font-mono); color: var(--muted-fg); }
+.sch.on { color: var(--fg); font-weight: 700; }
+/* The current page's tab: a short ribbon folded around the page's fore-edge, level with its chapter
+   and just reaching it. It belongs to the page, so it turns with the page. */
+.ptab { position: absolute; top: var(--ty); height: var(--th); left: calc(-1 * (var(--el) + var(--tabout) + 1px)); width: calc(var(--el) + var(--tabout) + 16px); z-index: 9; pointer-events: none; filter: drop-shadow(-1px 1px 1px rgb(0 0 0 / 0.22)); }
+.ptab::before { content: ""; position: absolute; inset: 6px 0; border-radius: 3px 0 0 3px; background: linear-gradient(to right, transparent calc(var(--el) + var(--tabout) - 2px), rgb(0 0 0 / 0.3) calc(var(--el) + var(--tabout) + 1px), transparent calc(var(--el) + var(--tabout) + 5px)), var(--ribbon); }
 .navfoot { margin-top: auto; display: flex; flex-direction: column; gap: 2px; font-size: 13px; padding-right: 10px; }
 .navfoot > span { display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 8px; color: var(--muted-fg); }
 .navfoot .who { font-size: 11.5px; height: auto; padding-bottom: 2px; }
 .navfoot .strong { color: var(--fg); font-weight: 700; }
 .mock[data-contents="closed"] .tocside { width: 70px; }
-.mock[data-contents="closed"] :is(.tocside .brand, .ptab .nm, .ptab .fig, .gtext) { display: none; }
-/* perspective makes .solo its own layer, so it sits above the tab column for the page's tab to show. */
-.solo { position: relative; z-index: 3; flex: 1; min-width: 0; margin: 18px 40px 18px var(--el); perspective: 2400px; }
-.solo::before { content: ""; position: absolute; top: -7px; bottom: -9px; left: calc(-1 * var(--el) - 1px); right: -6px; background: var(--cover); border-radius: 8px 3px 3px 8px; box-shadow: 0 2px 3px rgb(0 0 0 / 0.18), 0 22px 44px -22px rgb(0 0 0 / 0.55); }
-/* The spine: a rounded band on the right edge, with the cover's raised bands near head and tail. */
-.spinebar { position: absolute; top: -7px; bottom: -9px; right: -24px; width: 20px; border-radius: 0 11px 11px 0; background: linear-gradient(to right, rgb(0 0 0 / 0.35), rgb(255 255 255 / 0.12) 45%, rgb(0 0 0 / 0.28)), var(--cover); box-shadow: 0 22px 44px -22px rgb(0 0 0 / 0.55); }
-.spinebar::before, .spinebar::after { content: ""; position: absolute; left: 0; right: 2px; height: 3px; background: rgb(0 0 0 / 0.28); box-shadow: 0 1px 0 rgb(255 255 255 / 0.12); }
-.spinebar::before { top: 40px; }
-.spinebar::after { bottom: 40px; }
+.mock[data-contents="closed"] :is(.tocside .brand, .sch .nm, .sch .fig, .gtext) { display: none; }
+/* perspective makes .solo its own layer, so it sits above the chapter column for the page's tab to show. */
+.solo { position: relative; z-index: 3; flex: 1; min-width: 0; margin: 18px var(--face) 18px calc(var(--el) + var(--tabout) + 1px); perspective: 2400px; }
+.solo::before { content: ""; position: absolute; top: -7px; bottom: -9px; left: calc(-1 * var(--el) - 1px); right: calc(-1 * (var(--face) + var(--face-off) + var(--er) + 7px)); background: var(--cover); border-radius: 8px; box-shadow: 0 2px 3px rgb(0 0 0 / 0.18), 0 22px 44px -22px rgb(0 0 0 / 0.55); }
+/* The facing page, out of its gutter and on past the window's edge: the book is open, and the
+   window shows its left page. The facing page's far edge, its page edges and the cover are out of view. */
+.facing { position: absolute; top: 0; bottom: 0; left: 100%; width: calc(var(--face) + var(--face-off)); background-color: var(--sheet); background-image: linear-gradient(to right, var(--spine), transparent 72px), var(--grain); border: 1px solid var(--border); border-left: 0; border-radius: 0 3px 3px 0; }
+.mock:not([data-mode="dark"]) .facing { box-shadow: inset 1px 0 0 var(--spine); }
+.solo > .edges.er { left: calc(100% + var(--face) + var(--face-off)); }
 .solo > .page { position: absolute; inset: 0; }
-.mock .page.s { border-radius: var(--pr) 3px 3px var(--pr); }
+.mock .page.s { border-radius: var(--pr) 0 0 var(--pr); border-right: 0; }
 .mock .page.s::after { left: auto; right: 0; width: 44px; background: linear-gradient(to left, var(--spine), transparent 80%); }
-.page.s .pgin { padding: 16px 50px 12px 30px; }
+.page.s .pgin { padding: 16px 44px 12px 30px; }
 .duo-l { overflow: auto; padding-right: 6px; }
 .duo { display: flex; gap: 22px; flex: 1; min-height: 0; }
 .duo-l, .duo-r { display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; }
@@ -417,14 +421,13 @@ td.yes { white-space: nowrap; }
 
 <main class="wrap">
   <header>
-    <p class="eyebrow">plans/book-ui.md · round five</p>
+    <p class="eyebrow">plans/book-ui.md · round seven</p>
     <h1>The Spread, page by page</h1>
     <p class="lede">
-      The dashboard as an open book, after your notes on round four. The strip is one row again, with
-      the tabs at the left. Each page carries its own bookmark, which meets its tab when the page
-      turns to it. The spine control is gone; only the Library and Bookstore slide the book. The
-      one-page form has its spine on the right and tabs cut into its pages. The figures are sample
-      numbers.
+      The dashboard as an open book, after your notes on round six. Each page's bookmark is folded
+      over its top edge, level with its tab, and turns with the page. The one-page form is the left
+      page of an open book, its gutter at the right and the facing page running off the window's edge; the chapters stay in their column, and the page
+      carries a short tab that reaches its chapter. The figures are sample numbers.
     </p>
   </header>
 
@@ -475,19 +478,14 @@ td.yes { white-space: nowrap; }
         <li>Open a Bookstore entry. The book slides the same way, so the shelf's page is out of sight but for a strip at the edge that goes back to the shelf.</li>
         <li>In the Explorer, press <b>Swap with board</b> at the top right of the right page. The button stays where it is, and says <b>Swap back</b>.</li>
         <li>Open <b>Visualizations</b>, the chapter back in the strip, and pick a visualization.</li>
-        <li>Switch the form to <b>Single page</b> and pick a tab. The page turns on its spine at the right and takes its tab with it.</li>
-        <li>Turn on <b>Vibes</b> at the top right. Only the book changes. In the one-page form the current page's own tab takes the page's paper; the tab column stays as it is.</li>
+        <li>Switch the form to <b>Single page</b> and pick a chapter. Going forward, the next leaf comes over from the gutter at the right and lies down, bringing its tab; going back, the page lifts away over the gutter.</li>
+        <li>Turn on <b>Vibes</b> at the top right. Only the book changes; the strip and the chapter column stay as they are.</li>
       </ul>
     </div>
     <div>
-      <h3>What changed since round four</h3>
+      <h3>What changed since round six</h3>
       <ul>
-        <li>One strip: the brand and the tabs at the left, the vibes switch and the account links at the right.</li>
-        <li>The bookmark belongs to the page, not the strip. It doesn't slide; it turns with its page.</li>
-        <li>The spine control and the flat pages are gone. The Bookstore entry slides the book like the Library, which fixes the shelf's page showing beside it.</li>
-        <li>The Explorer's swap button keeps one place, the Labyrinth tab says coming soon, and the move list under the right page is gone; the scoresheet in the margin is the one.</li>
-        <li>Visualizations is a chapter again, and the Overview has eight chapters, with Vibes coming soon.</li>
-        <li>The one-page form has a spine on the right, turns toward it, and its contents are page tabs.</li>
+        <li>In the one-page form, the facing page no longer stops short of the window's edge. It runs on past it, so the window frames the left page of an open book and the book has no visible end at the right.</li>
       </ul>
     </div>
   </section>
@@ -1007,17 +1005,17 @@ td.yes { white-space: nowrap; }
     if (st.form === "spread") {
       const pl = $("#pl", mk), o = off(pl);
       POS.pl = o.x + 1; POS.spine = o.x + pl.offsetWidth; POS.tabs = {};
-      mk.querySelectorAll(".navtabs [data-nav]").forEach((t) => { const q = off(t); POS.tabs[t.dataset.nav] = q.x + t.offsetWidth / 2; POS.rise = o.y + 1 - (q.y + t.offsetHeight); });
+      mk.querySelectorAll(".navtabs [data-nav]").forEach((t) => { POS.tabs[t.dataset.nav] = off(t).x + t.offsetWidth / 2; });
     } else {
       const ps = $("#ps", mk), o = off(ps); POS.ty = {};
-      mk.querySelectorAll(".ptabs [data-nav]").forEach((t) => { POS.ty[t.dataset.nav] = off(t).y - o.y - 1; POS.tw = t.offsetWidth; });
+      mk.querySelectorAll(".sidech [data-nav]").forEach((t) => { POS.ty[t.dataset.nav] = off(t).y - o.y - 1; POS.th = t.offsetHeight; });
     }
   }
   // A page's bookmark sits under its tab, on whichever page lies below the tab.
   function bookmark(key, side) {
     const x = POS.tabs && POS.tabs[key];
     if (x == null || (side === "l") !== (x < POS.spine)) return "";
-    return `<span class="bmk" style="--bx:${(x - (side === "l" ? POS.pl : POS.spine)).toFixed(1)}px;--rise:${POS.rise}px"></span>`;
+    return `<span class="bmk" style="--bx:${(x - (side === "l" ? POS.pl : POS.spine)).toFixed(1)}px"></span>`;
   }
   function pageInner(part, side, key) {
     return `<div class="pgin"><div class="rhrow">${part.rh}</div><div class="body${part.scroll ? " scroll" : ""}">${part.body}</div><div class="foot">${part.foot}</div></div>${deco(side)}
@@ -1028,7 +1026,7 @@ td.yes { white-space: nowrap; }
     const body = p.single === "both"
       ? `<div class="duo"><div class="duo-l" style="flex:0 0 ${p.duoW}">${p.left.body}</div><div class="vrule"></div><div class="duo-r${p.right.scroll ? " scroll" : ""}">${p.right.body}</div></div>`
       : p.right.body;
-    const tab = POS.ty ? `<div class="ptab cur" style="--ty:${POS.ty[key]}px;--tw:${POS.tw}px">${ic(ICON[key], "ico")}<span class="nm">${NAME[key]}</span>${TOC_FIG[key] ? `<span class="fig">${TOC_FIG[key]}</span>` : ""}</div>` : "";
+    const tab = POS.ty ? `<span class="ptab" style="--ty:${POS.ty[key]}px;--th:${POS.th}px"></span>` : "";
     return `<div class="pgin"><div class="rhrow">${rh}</div><div class="body">${body}</div><div class="foot">${p.right.foot}</div></div>${deco("r")}${tab}`;
   }
   const vibeSwitch = () => `<span class="vsw" ${B("data-vibesw")} title="Vibes dress the book"><i></i><span class="gtext">Vibes</span></span>`;
@@ -1040,12 +1038,12 @@ td.yes { white-space: nowrap; }
         <div class="book" id="bk" data-shift="off"><span class="cover"></span><span class="edges el"></span><div class="page l" id="pl"></div><div class="page r" id="pr"></div><span class="edges er"></span></div></div>`;
     }
     return `<div class="L-single"><nav class="tocside"><div class="row tochead"><span class="brand">ByTheBook</span><span class="grow"></span><span class="btn ghost icon" ${B("data-toc")} title="Narrow or widen the tabs">${ic("panel")}</span></div>
-      <div class="ptabs">${NAV.map(([k, l, i]) => `<div class="ptab" ${B(`data-nav="${k}"`)}>${ic(i, "ico")}<span class="nm">${l}</span>${TOC_FIG[k] ? `<span class="fig">${TOC_FIG[k]}</span>` : ""}</div>`).join("")}</div>
+      <div class="sidech">${NAV.map(([k, l, i]) => `<div class="sch" ${B(`data-nav="${k}"`)}>${ic(i, "ico")}<span class="nm">${l}</span>${TOC_FIG[k] ? `<span class="fig">${TOC_FIG[k]}</span>` : ""}</div>`).join("")}</div>
       <div class="navfoot">${vibeSwitch()}<span>${ic("bug", "ico")}<span class="gtext">Copy bug report</span></span><span class="who gtext">Browsing as a guest</span><span class="strong">${ic("login", "ico")}<span class="gtext">Sign in</span></span><span>${ic("user", "ico")}<span class="gtext">Create account</span></span></div></nav>
-      <div class="solo" id="solo"><span class="edges el"></span><div class="page s" id="ps"></div><span class="spinebar"></span></div></div>`;
+      <div class="solo" id="solo"><span class="edges el"></span><div class="page s" id="ps"></div><span class="facing"></span><span class="edges er"></span></div></div>`;
   }
   function chrome(pageKey = st.page) {
-    mk.querySelectorAll(".navtabs [data-nav], .ptabs [data-nav]").forEach((el) => el.classList.toggle("on", el.dataset.nav === pageKey));
+    mk.querySelectorAll(".navtabs [data-nav], .sidech [data-nav]").forEach((el) => el.classList.toggle("on", el.dataset.nav === pageKey));
   }
   function attrs() {
     mk.dataset.mode = st.mode === "dark" ? "dark" : "light"; mk.dataset.contents = st.contents; mk.dataset.vibe = st.vibe;
@@ -1169,20 +1167,21 @@ td.yes { white-space: nowrap; }
     runs.forEach((r) => r.leaf.remove()); c1.remove(); c2.remove();
     await geom(nxt, true);
   }
-  // One page, its spine on the right: the leaf turns on that spine, carrying its tab with it.
+  // One page, the left page of an open book, so a leaf turns on the gutter at the right and carries its
+  // tab. Forward, the next leaf comes over from the gutter and lies down; back, this one lifts and goes.
   async function turnSingle(next, dir) {
     const solo = $("#solo", mk), ps = $("#ps", mk);
     const oldH = soloInner(compose(st), st.page), newH = soloInner(compose(next), next.page);
-    chrome(next.page);
-    if (st.turn === "none") { Object.assign(st, next); ps.innerHTML = newH; return; }
-    if (st.turn === "slide") { await slideSwap([ps], [newH], dir); Object.assign(st, next); return; }
+    if (st.turn === "none") { chrome(next.page); Object.assign(st, next); ps.innerHTML = newH; return; }
+    if (st.turn === "slide") { chrome(next.page); await slideSwap([ps], [newH], dir); Object.assign(st, next); return; }
     const leaf = document.createElement("div");
     leaf.className = "leaf solo-leaf"; leaf.style.zIndex = 30;
-    leaf.innerHTML = `<div class="face page s">${dir > 0 ? oldH : newH}<i class="shade"></i></div>`;
+    leaf.innerHTML = `<div class="face page s">${dir > 0 ? newH : oldH}<i class="shade"></i></div>`;
     const frames = [{ transform: "rotateY(0deg)", opacity: 1 }, { transform: "rotateY(80deg)", opacity: 1, offset: 0.8 }, { transform: "rotateY(98deg)", opacity: 0 }];
-    if (dir > 0) ps.innerHTML = newH;
+    if (dir < 0) ps.innerHTML = newH;
     solo.appendChild(leaf);
-    const opts = { duration: D(640), easing: "cubic-bezier(.45,.02,.3,1)", fill: "both", direction: dir > 0 ? "normal" : "reverse" };
+    const dur = D(640), opts = { duration: dur, easing: "cubic-bezier(.45,.02,.3,1)", fill: "both", direction: dir > 0 ? "reverse" : "normal" };
+    setTimeout(() => chrome(next.page), dir > 0 ? dur * 0.75 : D(120));
     leaf.querySelector(".shade").animate([{ opacity: 0 }, { opacity: 0.6 }], opts);
     await leaf.animate(frames, opts).finished;
     Object.assign(st, next);
@@ -1248,7 +1247,7 @@ td.yes { white-space: nowrap; }
     else if (st.page === "visualizations") { now = `<b>Visualizations.</b> The visualizations as contents on the left; the picked one's preview and description on the right.`; tryit = "Try: pick another visualization."; }
     else if (st.page === "settings") { now = `<b>Settings.</b> Appearance on the left page, your data and account on the right. The switches here work.`; tryit = "Try: switch the theme, vibes or page turns from the page itself."; }
     else { now = `<b>${NAME[st.page]}.</b> A placeholder spread.`; tryit = "Try: jump to a far page in the strip; the book riffles through what's between."; }
-    if (st.form === "single") tryit = "One page with its spine on the right. Pick a tab: the page turns on the spine and takes its tab with it.";
+    if (st.form === "single") tryit = "The left page of an open book, the gutter at the right. Pick a chapter: the next leaf lies down from the gutter, bringing its tab.";
     $("#now").innerHTML = now; $("#try").textContent = tryit;
   }
 

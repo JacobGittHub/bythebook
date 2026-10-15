@@ -5,22 +5,45 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* ── Theme tokens ──────────────────────────────────────────────────────── */
-/* Every color, corner and font in the base UI comes from these variables, under shadcn/ui's
-   names (plans/vibes.md D12). The theme is light or dark (`data-theme` on <html>); a vibe
-   (`data-vibe`, plans/vibes.md) will be one more block that sets the same names, so nothing
-   else changes when it switches. Change paint here, never size: spacing stays in the
-   components, so a theme or a vibe never moves the layout. */
+/* Every color, corner and font in the base UI comes from these variables: the book's own
+   (plans/book-ui.md D2, D3) and shadcn/ui's (plans/vibes.md D12), most of which are made from
+   the book's below. The theme is light or dark (`data-theme` on <html>); a vibe will set the
+   same names on the book (`data-slot="book"`, plans/vibes.md D14), so nothing else changes
+   when it switches. Change paint here, never size: spacing stays in the components, so a theme
+   or a vibe never moves the layout. */
 
 :root,
 [data-theme="light"] {
   color-scheme: light;
 
-  --background: #f0ebe0;
-  --foreground: #1c1917;
-  --card: #fdfaf5;
-  --muted: #ede8dc;
-  --muted-foreground: #78716c;
-  --border: #ddd5c8;
+  /* The book: the desk it lies on, its paper, and what is drawn on and around it. */
+  --desk: #e2e4df;
+  --page: #fbfbf8;
+  /* A shade off the page, for wells on it: an input's well, a selected row's ground. */
+  --page-alt: #f1f2ed;
+  /* Hairlines on the page: dotted leaders and the rules between sections. */
+  --rule: #d9dcd5;
+  --cover: #26364f;
+  /* The lines between leaves in the stacks of page edges. */
+  --page-edge: #cfd2ca;
+  /* The shadow in the gutter, deep in light mode and soft in dark (D3). Its width is paint,
+     a gradient's reach, and moves nothing. */
+  --gutter: rgb(70 60 40 / 0.32);
+  --gutter-width: 96px;
+  /* The shade a turning leaf takes and casts. */
+  --turn-shade: rgb(30 25 15 / 0.55);
+  --bookmark: #8c2f39;
+  /* The light mode's crease down the middle of the gutter; dark mode has none. */
+  --crease: rgb(70 60 40 / 0.32);
+
+  --foreground: #22252b;
+  --muted: #eef0ea;
+  --muted-foreground: #5c636b;
+  --border: #d0d4cd;
+  --primary: #2c4a74;
+  --primary-foreground: #ffffff;
+  /* The ground of a hovered or selected item. */
+  --accent: #e3e9f3;
   --destructive: #b42318;
   --destructive-foreground: #ffffff;
   /* Cautions that aren't errors, such as a board that left the chosen line. */
@@ -28,6 +51,7 @@
   /* Things that went right, such as a correct move in a drill. */
   --success: #15803d;
 
+  /* The sidebar frame's, until the book replaces it (plans/book-ui.md Phase 2). */
   --sidebar: #0f172a;
   --sidebar-foreground: #f1f5f9;
   --sidebar-muted-foreground: #94a3b8;
@@ -36,68 +60,91 @@
 
   /* The move bars (white, draw, black): light, middle and dark in every theme and vibe
      (plans/vibes.md D13). */
-  --bar-white: #d4c8b4;
-  --bar-draw: #9a8870;
-  --bar-black: #2e1e10;
+  --bar-white: #dcd8cc;
+  --bar-draw: #8f8a7a;
+  --bar-black: #2a2c31;
   /* The arrows on the board: the hovered move, and the engine's best move. */
-  --board-arrow: rgb(80 60 20 / 0.5);
+  --board-arrow: rgb(44 74 116 / 0.55);
   --engine-arrow: rgb(230 140 40 / 0.7);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --background: #111118;
-  --foreground: #e8e6f2;
-  --card: #1c1c25;
-  --muted: #242430;
-  --muted-foreground: #9390a8;
-  --border: #30303d;
-  --destructive: #e5534b;
-  --destructive-foreground: #111118;
+  --desk: #0e1013;
+  --page: #1c1f24;
+  --page-alt: #23272d;
+  --rule: #30343b;
+  --cover: #1b2433;
+  --page-edge: #2d3138;
+  --gutter: rgb(0 0 0 / 0.5);
+  --gutter-width: 46px;
+  --turn-shade: rgb(0 0 0 / 0.7);
+  --bookmark: #c9505c;
+  --crease: transparent;
+
+  --foreground: #e9e5dc;
+  --muted: #24282e;
+  --muted-foreground: #a3a19b;
+  --border: #383c44;
+  --primary: #a9c0e6;
+  --primary-foreground: #12161d;
+  --accent: rgb(169 192 230 / 0.13);
+  --destructive: #ea5f57;
+  --destructive-foreground: #12161d;
   --warning: #f0a64a;
   --success: #4ade80;
 
   --sidebar: #09090e;
   --sidebar-foreground: #e8e6f2;
-  --sidebar-muted-foreground: #6e6d82;
+  --sidebar-muted-foreground: #807f94;
   --sidebar-accent: rgb(255 255 255 / 0.08);
   --sidebar-border: rgb(255 255 255 / 0.1);
 
-  --bar-white: #b0aac8;
-  --bar-draw: #5c5878;
-  --bar-black: #28283c;
-  --board-arrow: rgb(140 130 220 / 0.55);
+  --bar-white: #d6d2c6;
+  --bar-draw: #8b8676;
+  --bar-black: #0d0e10;
+  --board-arrow: rgb(169 192 230 / 0.6);
   --engine-arrow: rgb(240 160 70 / 0.75);
 }
 
-/* The names shadcn/ui's components read that are made from the ones above. They sit on the
-   same element, so a theme or vibe that changes a source color changes these with it. */
-:root {
+/* The names shadcn/ui's components read that are made from the ones above. A custom property
+   made from others is worked out where it is declared, so this block is declared again on the
+   book: a vibe that sets the book's paper there changes these with it. */
+:root,
+[data-slot="book"] {
+  --background: var(--desk);
+  --card: var(--page);
   --card-foreground: var(--foreground);
-  --popover: var(--card);
+  --popover: var(--page);
   --popover-foreground: var(--foreground);
-  --primary: var(--foreground);
-  --primary-foreground: var(--card);
   --secondary: var(--muted);
   --secondary-foreground: var(--foreground);
-  --accent: var(--muted);
   --accent-foreground: var(--foreground);
   --input: var(--border);
   --ring: var(--muted-foreground);
   --sidebar-accent-foreground: var(--sidebar-foreground);
+}
+
+:root {
   /* The shade behind a dialog or the phone menu. */
   --overlay: rgb(0 0 0 / 0.5);
+  /* The cover's shadow on the desk, and the fold and shadow of a bookmark or page tab. */
+  --cover-shadow: 0 2px 3px rgb(0 0 0 / 0.18), 0 22px 44px -22px rgb(0 0 0 / 0.55);
+  --mark-fold: rgb(0 0 0 / 0.32);
+  --mark-shadow: rgb(0 0 0 / 0.28);
 
   /* Corners: every rounded-* class is a multiple of this one value, so a vibe can make the
      whole UI square (0) or softer with one change. */
   --radius: 0.375rem;
 
-  /* Type: body text, headings (page and panel titles, the sidebar's name) and figures. A
-     vibe's fonts are sized to these metrics so text keeps its width. */
-  --font-body: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-body);
-  --font-figures: var(--font-geist-mono), ui-monospace, monospace;
+  /* Type (plans/book-ui.md D2): Atkinson Hyperlegible for text, Literata for headings (page
+     and panel titles, running heads, the brand) and IBM Plex Mono for figures. The faces come
+     from next/font in the root layout. A vibe's fonts are sized to these metrics so text
+     keeps its width. */
+  --font-body: var(--font-atkinson), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-literata), Georgia, "Times New Roman", serif;
+  --font-figures: var(--font-plex-mono), ui-monospace, Consolas, monospace;
 }
 
 @theme inline {
@@ -121,6 +168,13 @@
   --color-success: var(--success);
   --color-overlay: var(--overlay);
   --color-border: var(--border);
+  --color-desk: var(--desk);
+  --color-page: var(--page);
+  --color-page-alt: var(--page-alt);
+  --color-rule: var(--rule);
+  --color-cover: var(--cover);
+  --color-page-edge: var(--page-edge);
+  --color-bookmark: var(--bookmark);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-sidebar: var(--sidebar);
@@ -177,17 +231,186 @@ body {
   }
 }
 
-/* ── Vibe areas (plans/vibes.md D13) ───────────────────────────────────── */
-/* The parts a vibe decorates carry a `data-slot`: `backdrop` (the layer behind the frame),
-   `sidebar`, `frame` (the box around each page) and `panel` (the boxes inside it), beside
-   shadcn/ui's own slots. Their ::before and ::after are left free for a vibe's ornaments, so
-   the base UI never uses them on these elements. An ornament is decoration only: it ignores
-   the pointer, never covers the board or text, and stops moving under reduced motion. */
+/* ── Vibe areas (plans/vibes.md D13, D14) ──────────────────────────────── */
+/* The parts a vibe decorates carry a `data-slot`, beside shadcn/ui's own slots. The book's
+   are `book` (the whole book, where a vibe sets its tokens), `cover`, `page`, `page-edge`
+   (the stacks of leaves), `gutter`, `running-head`, `folio` and `margin`. The frame's
+   (`backdrop`, `sidebar`, `frame` and `panel`) stay until the book replaces the frame
+   (plans/book-ui.md Phase 2). Their ::before and ::after are left free for a vibe's
+   ornaments, so the base UI never uses them on these elements. An ornament is decoration
+   only: it ignores the pointer, never covers the board or text, and stops moving under
+   reduced motion. */
 
 [data-slot="frame"],
 [data-slot="panel"],
-[data-slot="sidebar"] {
+[data-slot="sidebar"],
+[data-slot="cover"],
+[data-slot="page"],
+[data-slot="margin"] {
   isolation: isolate;
+}
+
+/* ── The book (src/components/book/, plans/book-ui.md) ───────────────────── */
+/* The paint of the book's parts. Its layout (where the book sits, how wide each page is) is the
+   caller's. Nothing here uses ::before or ::after on a vibe area. */
+
+/* The book is its own stacking context, so the cover (z-index -1) lies on the desk, not under it. */
+.book {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 0;
+}
+[data-slot="cover"] {
+  position: absolute;
+  inset: -8px calc(-1 * var(--edge-right) - 9px) -10px calc(-1 * var(--edge-left) - 9px);
+  z-index: -1;
+  border-radius: var(--radius-lg);
+  background: var(--cover);
+  box-shadow: var(--cover-shadow);
+}
+.book[data-form="single"] > [data-slot="cover"] {
+  left: calc(-1 * var(--edge-left) - 1px);
+}
+[data-slot="page-edge"] {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  background: repeating-linear-gradient(to right, var(--page) 0 1px, var(--page-edge) 1px 2px);
+}
+[data-slot="page-edge"][data-side="left"] {
+  right: 100%;
+  width: var(--edge-left);
+  border-radius: 3px 0 0 3px;
+}
+[data-slot="page-edge"][data-side="right"] {
+  left: 100%;
+  width: var(--edge-right);
+  border-radius: 0 3px 3px 0;
+}
+
+.book-page {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--page);
+  color: var(--foreground);
+}
+.book-page[data-side="left"],
+.book-page[data-side="single"] {
+  border-right: 0;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+.book-page[data-side="right"] {
+  border-left: 0;
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+.book-page-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: inherit;
+  padding: 30px 34px 14px;
+}
+.book-page[data-side="left"] .book-page-inner { padding-right: 40px; }
+.book-page[data-side="right"] .book-page-inner { padding-left: 40px; }
+.book-page[data-side="single"] .book-page-inner { padding: 16px 44px 12px 30px; }
+.book-running-head,
+.book-folio {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  height: 22px;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+}
+.book-running-head { font: italic 500 13px/1 var(--font-display); }
+.book-folio { font: 500 11.5px/1 var(--font-figures); }
+.book-page-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  padding-block: 12px;
+}
+[data-slot="gutter"] {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  width: var(--gutter-width);
+  pointer-events: none;
+}
+.book-page:is([data-side="left"], [data-side="single"]) > [data-slot="gutter"] {
+  right: 0;
+  background: linear-gradient(to left, var(--gutter), transparent 75%);
+}
+.book-page[data-side="right"] > [data-slot="gutter"] {
+  left: 0;
+  border-left: 1px solid var(--crease);
+  background: linear-gradient(to right, var(--gutter), transparent 75%);
+}
+/* The one-page form is the left page of an open book: past its gutter, the facing page runs on
+   past the window's right edge, --facing-shown of it in view. The book's negative right margin
+   takes the rest, and the facing page's far edge, the page edges and the cover, out of view. */
+.book[data-form="single"] {
+  --facing-shown: 56px;
+  --facing-hidden: 48px;
+  margin-right: calc(-1 * var(--facing-hidden));
+}
+.book-facing {
+  width: calc(var(--facing-shown) + var(--facing-hidden));
+  flex: none;
+  border: 1px solid var(--border);
+  border-left: 1px solid var(--crease);
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(to right, var(--gutter), transparent calc(var(--gutter-width) * 0.75)), var(--page);
+}
+
+/* A page's bookmark: the ribbon's shadow is on the box and its shape on ::before, since a
+   clip-path would cut the shadow off. (The bookmark is not a vibe area.) */
+.book-bookmark {
+  position: absolute;
+  top: -1px;
+  z-index: 9;
+  width: 14px;
+  height: 26px;
+  margin-left: -7px;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px var(--mark-shadow));
+}
+.book-bookmark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, var(--mark-fold), transparent 6px),
+    var(--bookmark);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 6px), 0 100%);
+}
+/* A page's tab in the one-page form: out past the page edges by --tab-out, in by 15px, with a
+   fold where it turns around the fore-edge. */
+.book-page-tab {
+  --tab-out: calc(var(--edge-left) + 10px);
+  position: absolute;
+  left: calc(-1 * var(--tab-out) - 1px);
+  z-index: 9;
+  width: calc(var(--tab-out) + 16px);
+  padding-block: 6px;
+  pointer-events: none;
+  filter: drop-shadow(-1px 1px 1px var(--mark-shadow));
+  background-clip: content-box;
+  border-radius: 3px 0 0 3px;
+  background-image:
+    linear-gradient(to right, transparent calc(var(--tab-out) - 2px), var(--mark-fold) calc(var(--tab-out) + 1px), transparent calc(var(--tab-out) + 5px)),
+    linear-gradient(var(--bookmark), var(--bookmark));
+  background-origin: content-box;
 }
 
 /* ── Book views (src/components/books/) ───────────────────────────────── */
@@ -239,7 +462,7 @@ body {
 
 .bv-svg {
   display: block;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-figures);
 }
 .bv-hit { cursor: pointer; }
 .bv-hit-area { fill: transparent; stroke: none; }
@@ -270,7 +493,7 @@ body {
 .bv-label.on-path,
 .bv-label.on-hover { opacity: 1; fill: var(--foreground); }
 .bv-label.on-hover { fill: var(--view-hover); }
-.bv-label.name { font-family: var(--font-geist-sans), sans-serif; font-size: 10.5px; font-weight: 600; }
+.bv-label.name { font-family: var(--font-body); font-size: 10.5px; font-weight: 600; }
 .bv-stub { font-size: 9px; font-weight: 600; fill: var(--muted-foreground); pointer-events: none; }
 .bv-seg { fill: none; stroke: var(--view-edge); stroke-width: 1.6; }
 .bv-seg.on-path { stroke: var(--view-path); stroke-width: 2.2; }

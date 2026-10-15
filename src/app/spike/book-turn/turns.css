@@ -1,0 +1,148 @@
+/* The spike's page turns (plans/book-ui.md D13, D14), as view transitions. Each page is a named
+   picture; a move's type (turn-forward, turn-back) gives it its class, set in SpikeBook.
+   A picture is one face, so a spread's turn is two halves: the old page folds to the spine,
+   then the new one opens from it. Moves into the Phase 2 turns step once the user has seen it. */
+
+:root {
+  --turn: 480ms;
+  --turn-half: calc(var(--turn) / 2);
+  --turn-depth: 2800px;
+}
+:root[data-turn-speed="slow"] {
+  --turn: 1920ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --turn: 0ms;
+  }
+}
+
+/* What isn't a page (the desk, the cover, the edges) changes at once, under the turning pages. */
+::view-transition-old(root) {
+  display: none;
+}
+::view-transition-new(root) {
+  animation: none;
+}
+
+/* Every picture in a turn is opaque: no cross-fade blending. */
+::view-transition-old(*),
+::view-transition-new(*) {
+  mix-blend-mode: normal;
+}
+
+/* Each page leaving is an "out" group and each page arriving an "in" group; the group's z-index
+   says which lies on top. */
+
+/* Forward: the right page folds to the spine, then the next left page opens from it. */
+::view-transition-group(.turn-fwd-r-out) { z-index: 2; }
+::view-transition-old(.turn-fwd-r-out) {
+  transform-origin: left center;
+  animation: turn-fold-right var(--turn-half) ease-in both;
+}
+::view-transition-new(.turn-fwd-r-in) {
+  animation: turn-uncover var(--turn-half) ease-out both;
+}
+::view-transition-old(.turn-fwd-l-out) {
+  animation: turn-hold var(--turn) linear both;
+}
+::view-transition-group(.turn-fwd-l-in) { z-index: 2; }
+::view-transition-new(.turn-fwd-l-in) {
+  transform-origin: right center;
+  animation: turn-open-left var(--turn-half) ease-out var(--turn-half) both;
+}
+
+/* Back: the left page folds to the spine, then the previous right page opens from it. */
+::view-transition-group(.turn-back-l-out) { z-index: 2; }
+::view-transition-old(.turn-back-l-out) {
+  transform-origin: right center;
+  animation: turn-fold-left var(--turn-half) ease-in both;
+}
+::view-transition-new(.turn-back-l-in) {
+  animation: turn-uncover var(--turn-half) ease-out both;
+}
+::view-transition-old(.turn-back-r-out) {
+  animation: turn-hold var(--turn) linear both;
+}
+::view-transition-group(.turn-back-r-in) { z-index: 2; }
+::view-transition-new(.turn-back-r-in) {
+  transform-origin: left center;
+  animation: turn-open-right var(--turn-half) ease-out var(--turn-half) both;
+}
+
+/* One page, the left page of an open book: leaves turn on the gutter at its right. Forward, the
+   next leaf comes over from the gutter and lies down; back, this one lifts and goes over it. */
+::view-transition-group(.turn-fwd-s-in) { z-index: 2; }
+::view-transition-new(.turn-fwd-s-in) {
+  animation:
+    turn-lift-single var(--turn) cubic-bezier(0.45, 0.02, 0.3, 1) reverse both,
+    turn-lift-fade var(--turn) linear reverse both;
+}
+::view-transition-old(.turn-fwd-s-out) {
+  animation: turn-hold var(--turn) linear both;
+}
+::view-transition-group(.turn-back-s-out) { z-index: 2; }
+::view-transition-old(.turn-back-s-out) {
+  animation:
+    turn-lift-single var(--turn) cubic-bezier(0.45, 0.02, 0.3, 1) both,
+    turn-lift-fade var(--turn) linear both;
+}
+::view-transition-new(.turn-back-s-in) {
+  animation: turn-uncover var(--turn) ease-out both;
+}
+
+/* The strip's and the chapter column's current tab change halfway, as the new page shows. */
+::view-transition-old(.turn-strip) {
+  animation: turn-out-at-half var(--turn) linear both;
+}
+::view-transition-new(.turn-strip) {
+  animation: turn-in-at-half var(--turn) linear both;
+}
+
+@keyframes turn-fold-right {
+  from { transform: perspective(var(--turn-depth)) rotateY(0deg); filter: brightness(1); }
+  to { transform: perspective(var(--turn-depth)) rotateY(-90deg); filter: brightness(0.6); }
+}
+@keyframes turn-fold-left {
+  from { transform: perspective(var(--turn-depth)) rotateY(0deg); filter: brightness(1); }
+  to { transform: perspective(var(--turn-depth)) rotateY(90deg); filter: brightness(0.6); }
+}
+@keyframes turn-open-left {
+  from { transform: perspective(var(--turn-depth)) rotateY(90deg); filter: brightness(0.6); }
+  to { transform: perspective(var(--turn-depth)) rotateY(0deg); filter: brightness(1); }
+}
+@keyframes turn-open-right {
+  from { transform: perspective(var(--turn-depth)) rotateY(-90deg); filter: brightness(0.6); }
+  to { transform: perspective(var(--turn-depth)) rotateY(0deg); filter: brightness(1); }
+}
+/* The one-page leaf hinges on its right edge but is seen from the page's middle: perspective()
+   projects from the transform origin, so the origin stays central and the hinge is reached by
+   translating to the right edge and back. A CSS easing applies to each pair of keyframes, not to
+   the whole animation, so the swing has only two (a middle one would stall it there) and the fade
+   past the edge-on angle is a second animation, from 58% of the time (80° on the curve). */
+@keyframes turn-lift-single {
+  from { transform: perspective(var(--turn-depth)) translateX(50%) rotateY(0deg) translateX(-50%); filter: brightness(1); }
+  to { transform: perspective(var(--turn-depth)) translateX(50%) rotateY(98deg) translateX(-50%); filter: brightness(0.7); }
+}
+@keyframes turn-lift-fade {
+  0%, 58% { opacity: 1; }
+  100% { opacity: 0; }
+}
+/* The page a turning leaf uncovers starts in its shade. */
+@keyframes turn-uncover {
+  from { filter: brightness(0.8); }
+  to { filter: brightness(1); }
+}
+/* Keeps a picture in place until the turn ends. */
+@keyframes turn-hold {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+@keyframes turn-out-at-half {
+  0%, 49.9% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes turn-in-at-half {
+  0%, 49.9% { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}

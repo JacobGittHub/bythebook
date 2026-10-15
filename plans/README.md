@@ -24,7 +24,7 @@ otherwise)
 | [bookstore.md](bookstore.md) | deciding | deployment.md | Default books, repertoires, and library export and import |
 | [game-history.md](game-history.md) | deciding | deployment.md | Import a user's own games and show them on the app's displays |
 | [load-testing.md](load-testing.md) | deciding | deployment.md | Find how many visitors and members the app serves at once, with telemetry |
-| [book-ui.md](book-ui.md) | ready | — | The dashboard rebuilt as an open book, with page turns, bookmarks that turn with their pages and a one-page form |
+| [book-ui.md](book-ui.md) | active | — | The dashboard rebuilt as an open book, with page turns, bookmarks that turn with their pages and a one-page form |
 | [vibes.md](vibes.md) | deciding | deployment.md, book-ui.md | Vibes and music that dress the book for the opening on the board, assigned from community votes |
 
 Statuses: `deciding` (open questions remain) · `ready` (steps written, not started) ·
