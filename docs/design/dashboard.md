@@ -4,7 +4,7 @@
 **Files:** `src/app/dashboard/layout.tsx` (the frame and Sign out),
 `src/components/book/` (the book frame, its parts and its turns), `src/lib/book/` (the book's
 layout and turns),
-`src/components/overview/OverviewShowcase.tsx`,
+`src/components/overview/OverviewSpread.tsx`,
 `src/app/dashboard/visualizations/page.tsx`, `src/components/ui/RouteCard.tsx`,
 `src/components/books/BookViewPage.tsx` (the small visualizations), `src/components/library/`
 (the Library and the Bookstore), `src/lib/auth/access.ts` (what the strip and both pages
@@ -100,21 +100,30 @@ A move to another chapter, or down to a second level and back, turns the page
 ## Overview
 
 The Overview is the info page that a landing page would otherwise be (`/` redirects to
-`/dashboard`).
+`/dashboard`). It is a spread (`OverviewSpread`, `plans/book-ui.md` D10).
 
-- **Page tabs beside one demo window, as one group** (`OverviewShowcase`). The window cycles
-  through the pages by `DEMO_ROTATE_MS` and waits while the pointer or keyboard focus is
-  inside the group.
-- **Pointing at a tab only highlights it.** The first press shows its demo and stops the
-  cycling; a second press, or a press on its "Jump to page" tag, opens the page. Mouse,
-  touch and keyboard all work this way. On a phone the tabs are a row of chips.
-- **The description writes itself out a word at a time** (`.stream-word` in `globals.css`,
-  paced by `STREAM_WORD_MS`).
-- **The window plays the page's demo**, a looping GIF named by its `NAV_ITEMS` entry's `demo`
-  and recorded from the running app by `npm run demos:record` (`scripts/demos/recordDemos.ts`)
-  into `public/demos/`. A page without one shows a placeholder. The demos are first drafts
+- **The left page is the book's contents** (`bookContents` in `src/lib/auth/access.ts`): a
+  chapter per row in book order, numbered, with dotted leaders. The Overview itself is front
+  matter, not a chapter; `VIBES_CHAPTER` is listed before Settings, coming soon, with no page
+  yet. Below the chapters, the guest and account table (`ACCESS_ROWS`) and, for a guest, how
+  to get an account. In the spread the contents fit the page (`.overview-contents` in
+  `globals.css`): a shorter page drops the chapters' summaries, then the line under the title.
+- **The right page shows the picked chapter:** its demo, its description, written out a word
+  at a time (`.stream-word`, paced by `STREAM_WORD_MS`), and "Jump to page". It starts on
+  the first chapter and changes only when another is picked, which re-inks the page (`Ink`
+  in `src/components/book/Book.tsx`).
+- **Pointing at a chapter only highlights it.** The first press shows it; a second press, or
+  its "Jump to page" tag, opens its page. Mouse, touch and keyboard all work this way. In the
+  one-page form the right page's half lies below the contents on a phone, and a press scrolls
+  to it.
+- **The demo is a looping GIF** named by the chapter's `NAV_ITEMS` entry's `demo` and
+  recorded from the running app by `npm run demos:record` (`scripts/demos/recordDemos.ts`)
+  into `public/demos/`. A chapter without one shows a placeholder. The demos are first drafts
   (deployment Phase 7).
-- **The guest and account table** comes from `ACCESS_ROWS`.
+- **Folios number the chapters as the contents do:** each `Chapter` the frame gets carries
+  its `number` in `bookContents`, and `chapterFolio` (`src/components/book/Spread.tsx`) writes
+  "Chapter I of VIII", counting the Vibes chapter. The one-page form's chapter column marks a
+  page that is coming soon.
 
 ## Visualizations page
 

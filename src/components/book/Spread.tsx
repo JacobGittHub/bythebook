@@ -22,6 +22,11 @@ import { cn } from "@/lib/utils";
 // classes say only which page it is and whether it leaves or arrives; the way is the frame's,
 // and so is the camera, which moves each picture as the browser takes it.
 
+/** A chapter's place in the book as its folios say it (D10), such as "Chapter I of VIII", or null for the Overview, which is the contents. */
+export function chapterFolio(number: number | null, count: number): string | null {
+  return number === null ? null : `Chapter ${roman(number)} of ${roman(count)}`;
+}
+
 /** One page's content: its running head, its folio and its body. */
 export type PageContent = { head?: ReactNode; folio?: ReactNode; body: ReactNode };
 
@@ -141,7 +146,7 @@ export function Spread({ left, right }: { left: PageContent; right: PageContent 
       <>
         <RiffledLeaves layout={layout} />
         <PagePicture part="s">
-          <BookPage side="single" head={head} folio={right.folio ?? left.folio} marks={tab}>
+          <BookPage side="single" head={head} folio={second ? (right.folio ?? left.folio) : (left.folio ?? right.folio)} marks={tab}>
             {!second ? (
               <div className="book-halves">
                 <div className="book-half">{left.body}</div>
@@ -196,16 +201,12 @@ export function Spread({ left, right }: { left: PageContent; right: PageContent 
  * left page shows only a way back to the chapter's own page.
  */
 export function InterimSpread({ children }: { children: ReactNode }) {
-  const { form, chapters, at, level, tabs } = useBookFrame();
+  const { form, chapters, chapterCount, at, level, tabs } = useBookFrame();
   const layout = useLayout();
   const { bookmark, pageTab } = marksOf(layout, at, tabs !== null);
   const chapter = chapters[at];
   const head = chapter && <span>{chapter.label}</span>;
-  const folio = chapter && (
-    <span className="ml-auto">
-      Chapter {roman(at + 1)} of {roman(chapters.length)}
-    </span>
-  );
+  const folio = chapter && <span className="ml-auto">{chapterFolio(chapter.number, chapterCount)}</span>;
 
   if (form === "single") {
     return (

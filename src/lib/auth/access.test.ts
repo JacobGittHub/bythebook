@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NAV_ITEMS, VISUALIZATIONS, requiresAccount, visibleNavItems } from "./access";
+import { NAV_ITEMS, VIBES_CHAPTER, VISUALIZATIONS, bookContents, requiresAccount, visibleNavItems } from "./access";
 
 const ALL_PAGES = [...NAV_ITEMS, ...VISUALIZATIONS];
 
@@ -58,5 +58,27 @@ describe("requiresAccount", () => {
     expect(requiresAccount("/dashboard/visualizations")).toBe(false);
     expect(requiresAccount("/dashboard/visualizations/treemap")).toBe(false);
     expect(requiresAccount("/dashboard/train/some-book-id")).toBe(false);
+  });
+});
+
+describe("bookContents", () => {
+  it("lists every page after the Overview once, in book order, with the Vibes chapter before Settings", () => {
+    for (const signedIn of [false, true]) {
+      const contents = bookContents(signedIn);
+      expect(contents.filter((entry) => entry.href !== null).map((entry) => entry.href)).toEqual(
+        visibleNavItems(signedIn).slice(1).map((item) => item.href),
+      );
+      const vibes = contents.indexOf(VIBES_CHAPTER);
+      expect(contents[vibes + 1]?.href).toBe("/dashboard/settings");
+    }
+  });
+
+  it("leaves out the Overview, which is the contents itself", () => {
+    expect(NAV_ITEMS[0].href).toBe("/dashboard");
+    expect(bookContents(true).some((entry) => entry.href === "/dashboard")).toBe(false);
+  });
+
+  it("gives every chapter a description for the right page", () => {
+    expect(bookContents(true).every((entry) => entry.details)).toBe(true);
   });
 });

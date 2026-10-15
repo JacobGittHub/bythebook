@@ -70,7 +70,11 @@ import "./turns.css";
 // move, so its classes can't say the way. As each picture of the turn appears, the page tells
 // the frame (`onPicture`), which moves it with the camera (camera.ts).
 
-export type Chapter = { href: string; label: string; icon: ChapterIcon };
+/**
+ * A chapter of the book, with its tab: `number` is its number in the contents (`bookContents`),
+ * null for the Overview, which is the contents, and `soon` marks a page that is coming soon.
+ */
+export type Chapter = { href: string; label: string; icon: ChapterIcon; number: number | null; soon: boolean };
 
 const ICONS: Record<ChapterIcon, LucideIcon> = {
   house: House,
@@ -101,6 +105,8 @@ type BookFrameContext = {
   motion: Motion;
   turn: FrameTurn;
   chapters: Chapter[];
+  /** How many chapters the contents list, those with no page yet among them. */
+  chapterCount: number;
   /** The current page's chapter, or -1 outside every chapter, and its level there (D8). */
   at: number;
   level: Level;
@@ -120,6 +126,7 @@ const FrameContext = createContext<BookFrameContext>({
   motion: "turn",
   turn: NO_TURN,
   chapters: [],
+  chapterCount: 0,
   at: -1,
   level: 1,
   column: "names",
@@ -151,6 +158,7 @@ const readWindow = (): Size => {
 
 export function BookFrame({
   chapters,
+  chapterCount,
   initialForm,
   initialColumn,
   viewer,
@@ -160,6 +168,8 @@ export function BookFrame({
 }: {
   /** The book's chapters for this viewer, in book order (`visibleNavItems`). */
   chapters: Chapter[];
+  /** How many chapters the contents list (`bookContents`), for the folios. */
+  chapterCount: number;
   /** The form to render on the server, from `FORM_COOKIE`. */
   initialForm: BookForm;
   /** The reader's pick of the chapter column, from `CHAPTERS_COOKIE`, or null to follow the window. */
@@ -235,7 +245,7 @@ export function BookFrame({
   const account = <AccountLinks viewer={viewer} debug={debug} signOut={signOut} form={form} />;
 
   return (
-    <FrameContext.Provider value={{ form, motion, turn, chapters, at, level, column, window: size, tabs, onPicture }}>
+    <FrameContext.Provider value={{ form, motion, turn, chapters, chapterCount, at, level, column, window: size, tabs, onPicture }}>
       <style href="book-frame" precedence="default">
         {bookFrameCss()}
       </style>
@@ -294,6 +304,7 @@ export function BookFrame({
                     >
                       <Icon aria-hidden className="size-4 flex-none" />
                       <span className="book-chapter-text">{chapter.label}</span>
+                      {chapter.soon && <span className="book-chapter-text ml-auto font-mono text-[11.5px] font-normal">soon</span>}
                     </Link>
                   );
                 })}

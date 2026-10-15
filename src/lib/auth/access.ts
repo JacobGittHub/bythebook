@@ -1,5 +1,5 @@
 // What a guest and a signed-in user may each reach (plans/deployment.md, D17 and D18). The
-// sidebar, the proxy, the Overview page and the Visualizations page all read this file, so
+// book's tabs, the proxy, the Overview page and the Visualizations page all read this file, so
 // they can't disagree. It has no Supabase or browser imports: the proxy imports it, and the
 // tests run in Node.
 
@@ -113,11 +113,41 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Settings",
     access: "everyone",
     status: "live",
-    summary: "Light or dark, and whether vibes are on.",
+    summary: "Light or dark, page turns, and vibes.",
     details:
-      "Choose a light or dark theme, or follow your device, and turn vibes on or off. The choices are saved in this browser, so they work the same for guests and accounts.",
+      "Choose a light or dark theme, or follow your device, how pages turn, and whether vibes dress the book. The choices are saved in this browser, so they work the same for guests and accounts.",
   },
 ];
+
+/** A chapter in the book's contents (plans/book-ui.md D10): a page of the book, or one with no page yet (`href` null). */
+export type ContentsEntry = Pick<NavItem, "label" | "status" | "summary" | "details" | "demo"> & { href: string | null };
+
+/**
+ * The Vibes chapter (plans/vibes.md): listed in the book's contents, coming soon, with no page
+ * or tab yet. It comes just before Settings.
+ */
+export const VIBES_CHAPTER: ContentsEntry = {
+  href: null,
+  label: "Vibes",
+  status: "coming_soon",
+  summary: "The book dressed for the opening on the board.",
+  details:
+    "With vibes on, the book takes on the character of the opening you are playing: its paper, its borders and its type, with music to match. The first vibes are still being made; the Vibes switch beside the account links is where they will turn on.",
+};
+
+/**
+ * The book's chapters as its contents list them, for this viewer: the pages after the
+ * Overview, which is the contents itself, with the Vibes chapter in its place. A chapter's
+ * number is its place in this list, from 1.
+ */
+export function bookContents(signedIn: boolean): ContentsEntry[] {
+  return visibleNavItems(signedIn)
+    .filter((item) => item.href !== "/dashboard")
+    .flatMap(({ href, label, status, summary, details, demo }): ContentsEntry[] => {
+      const entry = { href, label, status, summary, details, demo };
+      return href === "/dashboard/settings" ? [VIBES_CHAPTER, entry] : [entry];
+    });
+}
 
 /**
  * The pages behind the Visualizations page's buttons. A `prototype` is a possible future
@@ -185,31 +215,9 @@ export function requiresAccount(pathname: string): boolean {
 
 export type AccessRow = { feature: string; guest: string; account: string };
 
-/** The guest and account differences, as shown on the Overview page. */
+/** What an account adds, as the Overview's contents page shows it. */
 export const ACCESS_ROWS: AccessRow[] = [
-  {
-    feature: "Explorer, Treemap, the small visualizations and the engine",
-    guest: "Yes",
-    account: "Yes",
-  },
-  {
-    feature: "Master-game statistics",
-    guest: "Positions already saved on the server, which covers every named opening",
-    account: "Any position, looked up live when it isn't saved yet",
-  },
-  {
-    feature: "Books in your library",
-    guest: "Kept in this browser, with backup to a file",
-    account: "Saved to your account, on any device",
-  },
-  {
-    feature: "Visualization prototypes",
-    guest: "Listed, but opening one needs an account",
-    account: "Yes",
-  },
-  {
-    feature: "Appearance settings",
-    guest: "Saved in your browser",
-    account: "Saved in your browser",
-  },
+  { feature: "Your books", guest: "Kept in this browser", account: "Saved to your account" },
+  { feature: "Master statistics", guest: "Every named opening", account: "Any position, live" },
+  { feature: "Prototype views", guest: "Listed only", account: "Yes" },
 ];

@@ -424,6 +424,13 @@ body {
 }
 .book-running-head { height: var(--page-head, 22px); font: italic 500 13px/1 var(--font-display); }
 .book-folio { height: var(--page-folio, 22px); font: 500 11.5px/1 var(--font-figures); }
+/* Small capitals, for a running head's or a page's labels, such as "Contents" or "Chapter I". */
+.book-sc {
+  font: normal 600 10.5px/1 var(--font-display);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
 /* The way back from a second level to its chapter, in words (AGENTS.md § "UI"). */
 .book-back {
   font: 700 13px/1 var(--font-body);
@@ -518,6 +525,14 @@ body {
   align-self: flex-end;
   width: calc(var(--zoom-shown, 290px) - var(--page-gutter, 40px));
 }
+
+/* What a page re-inks when it changes within a spread (D13), such as the Overview's picked
+   chapter: it fades in anew. Under None, and so under reduced motion, it changes at once. */
+@keyframes book-ink {
+  from { opacity: 0; }
+}
+.book-ink { animation: book-ink 170ms ease-out both; }
+:root[data-motion="none"] .book-ink { animation: none; }
 
 /* What a page shows until it is made a spread (plans/book-ui.md Phase 3): the page as it was,
    across both pages of the spread, over the spine. */
@@ -691,6 +706,20 @@ body {
 .bv-spine-label { font-size: 10px; font-weight: 600; fill: var(--foreground); text-anchor: middle; pointer-events: none; }
 .bv-spine-label.ahead { fill: var(--muted-foreground); font-weight: 500; }
 .bv-spine-num { font-size: 8.5px; fill: var(--muted-foreground); text-anchor: middle; pointer-events: none; }
+
+/* ── The Overview's contents (src/components/overview/OverviewSpread.tsx) ── */
+/* In the spread the contents fit the left page (data-fit): a shorter page drops the chapters'
+   one-line summaries, which the right page says at length, then the line under the title, and
+   sets the rows closer. In the one-page form the page scrolls instead. */
+.overview-contents[data-fit] { container: overview-contents / size; }
+@container overview-contents (height < 730px) {
+  .overview-summary { display: none; }
+}
+@container overview-contents (height < 580px) {
+  .overview-lede { display: none; }
+  .overview-contents h1 { font-size: 28px; }
+  .overview-chapter { padding-block: 4px; }
+}
 
 /* ── Streamed text (the Overview's demo description) ───────────────────── */
 /* Each word fades in after the one before it, so a paragraph writes itself out without

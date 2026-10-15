@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/shadcn/tooltip";
 import { BugReportProvider } from "@/context/BugReport";
 import { LibraryProvider } from "@/context/Library";
 import { ViewerProvider } from "@/context/Viewer";
-import { visibleNavItems } from "@/lib/auth/access";
+import { bookContents, visibleNavItems } from "@/lib/auth/access";
 import { canDebug } from "@/lib/auth/debug";
 import { getViewer } from "@/lib/auth/viewer";
 import { CHAPTERS_COOKIE, FORM_COOKIE } from "@/lib/book/frameCss";
@@ -29,7 +29,11 @@ export default async function DashboardLayout({
 }) {
   const viewer = await getViewer();
   const debug = canDebug(viewer);
-  const chapters = visibleNavItems(viewer.signedIn).map(({ href, label, icon }) => ({ href, label, icon }));
+  const contents = bookContents(viewer.signedIn);
+  const chapters = visibleNavItems(viewer.signedIn).map(({ href, label, icon, status }) => {
+    const index = contents.findIndex((entry) => entry.href === href);
+    return { href, label, icon, number: index < 0 ? null : index + 1, soon: status === "coming_soon" };
+  });
   const cookieStore = await cookies();
   const initialForm = cookieStore.get(FORM_COOKIE)?.value === "single" ? "single" : "spread";
   const column = cookieStore.get(CHAPTERS_COOKIE)?.value;
@@ -43,6 +47,7 @@ export default async function DashboardLayout({
           <TooltipProvider delayDuration={300}>
             <BookFrame
               chapters={chapters}
+              chapterCount={contents.length}
               initialForm={initialForm}
               initialColumn={initialColumn}
               viewer={{ signedIn: viewer.signedIn, displayName: viewer.signedIn ? viewer.displayName : null }}

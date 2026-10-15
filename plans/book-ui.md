@@ -80,6 +80,14 @@ it, replacing the book slide.
   press shows a chapter, and a second press or its "Jump to page" tag goes there. The
   contents include a Vibes chapter marked coming soon, with no page to jump to yet. Settings
   has appearance on the left page, and your data and account on the right.
+  From the user's answers of 2026-10-15, on starting Phase 3: the chapters are numbered as
+  the mockup numbers them, and the folios follow. The Overview is the contents, front matter
+  with no number, so the Explorer is Chapter I and Vibes VII, and every folio counts the
+  Vibes chapter ("of VIII"). The Overview's left page is the mockup's: the contents, then what
+  an account adds, with the sign-in offer below it. The right page changes only when a
+  chapter is picked; today's cycling of the demos goes. The intro and the deployment notes
+  leave the Overview. Settings takes the deployment notes, with a thank-you to Lichess and
+  room for a message from the developer.
 - D11. **Train and Puzzles keep placeholder spreads** until they have plans of their own.
 - D12. **Vibes dress the book, not its surroundings** (`vibes.md` D14). The vibes switch
   sits in the strip, beside the account links.
@@ -233,9 +241,17 @@ and get to the test of turns").
 
 ### Phase 3. The pages, each with its browser tests
 
-- [ ] (agent) Overview (D10): the contents, with the Vibes chapter, and the demo window as a
+- [x] (agent) Overview (D10): the contents, with the Vibes chapter, and the demo window as a
       spread. The Vibes chapter is declared beside `NAV_ITEMS`, so the Overview still reads
       one list.
+      Done as `OverviewSpread`, reading `bookContents` (`VIBES_CHAPTER` before Settings). The
+      contents fit the left page at every spread size by dropping the chapters' summaries,
+      then the line under the title, on shorter pages; in the one-page form a pick scrolls
+      to the chapter below the contents. The folios count from the Explorer. The guest and
+      account table is the mockup's three rows. The deployment notes and a thank-you to
+      Lichess sit on the interim Settings page until its step. The chapter column marks the
+      pages coming soon; its counts (books, visualizations) come with the pages that own
+      them.
 - [ ] (agent) Library (D8): the first level as a spread, the second by the zoom and turn.
 - [ ] (agent) Bookstore (D9): the first level as a spread, a book's page by the zoom and turn.
 - [ ] (agent) Explorer (D6, D7, D16, D17): the Even layout, the scoresheet, the swap, the
@@ -243,7 +259,9 @@ and get to the test of turns").
 - [ ] (agent) Visualizations (D18): the contents and the preview as a spread, and each
       visualization's own page in the book.
 - [ ] (agent) Settings (D10, D13): appearance, page turns and the vibes switch on the left;
-      your books, the account and the bug report on the right.
+      your books, the account and the bug report on the right, and the deployment notes, a
+      thank-you to Lichess and a message from the developer.
+- [ ] (user) Write the developer's message for Settings.
 - [ ] (agent) The Train and Puzzles placeholders (D11), and the sign-in pages as one page on
       the desk.
 

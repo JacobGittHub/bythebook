@@ -103,6 +103,15 @@ export function BookPage({
   );
 }
 
+/**
+ * Content that changes within a spread (D13), keyed by what it shows. Once `inked`, each change
+ * re-inks it: it fades in anew (`.book-ink`), not on the page's first showing, which the turn
+ * brings in.
+ */
+export function Ink({ inked, className, ...props }: { inked: boolean } & ComponentProps<"div">) {
+  return <div className={cn(inked && "book-ink", className)} {...props} />;
+}
+
 /** A page's outer margin, for what sits beside the text, such as the Explorer's scoresheet. */
 export function PageMargin({ className, ...props }: ComponentProps<"aside">) {
   return <aside data-slot="margin" className={cn("relative", className)} {...props} />;
