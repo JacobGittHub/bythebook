@@ -1,6 +1,7 @@
-// The viewer's appearance settings (plans/vibes.md D2): a theme of light, dark or the
-// system's, and whether vibes are on. Both are kept in the browser, for guests and accounts
-// alike, and written to <html> as `data-theme` and `data-vibes`, which globals.css reads.
+// The viewer's appearance settings (plans/vibes.md D2, plans/book-ui.md D13): a theme of light,
+// dark or the system's, whether vibes are on, and how the book's pages move. All are kept in
+// the browser, for guests and accounts alike, and written to <html> as `data-theme`,
+// `data-vibes` and `data-motion`, which the CSS reads.
 
 export type ThemeChoice = "light" | "dark" | "system";
 export type Theme = "light" | "dark";
@@ -11,10 +12,17 @@ export const DEFAULT_VIBES = true;
 
 export const THEME_STORAGE_KEY = "theme";
 export const VIBES_STORAGE_KEY = "vibes";
+export const MOTION_STORAGE_KEY = "motion";
 /** Where the five background modes were kept until 2026-10-12. Read once, then removed. */
 export const LEGACY_MODE_STORAGE_KEY = "bg-mode";
 
 export const DARK_QUERY = "(prefers-color-scheme: dark)";
+export const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+/** How the book moves between chapters (D13): a page turn, a slide, or no motion at all. */
+export type Motion = "turn" | "slide" | "none";
+export const MOTIONS: readonly Motion[] = ["turn", "slide", "none"];
+export const DEFAULT_MOTION: Motion = "turn";
 
 /**
  * The stored theme choice. A browser that still holds an old background mode keeps dark if
@@ -32,6 +40,15 @@ export function parseVibes(stored: string | null): boolean {
   if (stored === "on") return true;
   if (stored === "off") return false;
   return DEFAULT_VIBES;
+}
+
+export function parseMotion(stored: string | null): Motion {
+  return stored !== null && (MOTIONS as readonly string[]).includes(stored) ? (stored as Motion) : DEFAULT_MOTION;
+}
+
+/** The motion on screen: none when the system asks for reduced motion, whatever was picked. */
+export function resolveMotion(choice: Motion, systemReducesMotion: boolean): Motion {
+  return systemReducesMotion ? "none" : choice;
 }
 
 export function resolveTheme(choice: ThemeChoice, systemPrefersDark: boolean): Theme {

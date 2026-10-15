@@ -4,8 +4,10 @@ import {
   LEGACY_MODE_STORAGE_KEY,
   THEME_STORAGE_KEY,
   VIBES_STORAGE_KEY,
+  parseMotion,
   parseThemeChoice,
   parseVibes,
+  resolveMotion,
   resolveTheme,
 } from "./appearance";
 
@@ -35,6 +37,24 @@ describe("parseVibes", () => {
     expect(parseVibes("on")).toBe(true);
     expect(parseVibes("off")).toBe(false);
     expect(parseVibes("maybe")).toBe(true);
+  });
+});
+
+describe("parseMotion", () => {
+  it("keeps a stored motion, and turns pages otherwise", () => {
+    expect(parseMotion("slide")).toBe("slide");
+    expect(parseMotion("none")).toBe("none");
+    expect(parseMotion("turn")).toBe("turn");
+    expect(parseMotion(null)).toBe("turn");
+    expect(parseMotion("spin")).toBe("turn");
+  });
+});
+
+describe("resolveMotion", () => {
+  it("keeps the choice, unless the system asks for reduced motion", () => {
+    expect(resolveMotion("slide", false)).toBe("slide");
+    expect(resolveMotion("turn", true)).toBe("none");
+    expect(resolveMotion("slide", true)).toBe("none");
   });
 });
 

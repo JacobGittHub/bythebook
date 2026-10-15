@@ -1,0 +1,308 @@
+/* The book's moves between chapters (plans/book-ui.md D13, D14), as view transitions. Each page
+   is a picture named after its route, with a class for which page it is and whether it leaves
+   or arrives (Spread.tsx): page-l, page-r and page-s (the one page), and page-ink, an interim
+   page's content. The frame writes the way on <html> (`data-turn`, BookFrame.tsx), and the
+   motion setting is `data-motion` (src/context/Appearance.tsx): turn, slide or none.
+
+   A picture is one face, so a spread's turn is two halves: the old page folds to the spine,
+   then the new one opens from it. Nothing animates unless a rule below says so, so a move
+   within a chapter, and every move under None, changes at once. */
+
+:root {
+  --turn: 450ms;
+  --turn-half: calc(var(--turn) / 2);
+  --turn-depth: 2800px;
+  /* A jump of several chapters riffles up to three leaves, each this long after the one before,
+     and the turn's last page waits for them. */
+  --riffle-step: 70ms;
+  --riffle-delay: 0ms;
+  --turn-total: calc(var(--turn) + var(--riffle-delay));
+  --slide-offset: 100vw;
+}
+:root[data-riffles="1"] { --riffle-delay: var(--riffle-step); }
+:root[data-riffles="2"] { --riffle-delay: calc(2 * var(--riffle-step)); }
+:root[data-riffles="3"] { --riffle-delay: calc(3 * var(--riffle-step)); }
+
+/* Clicks pass through to the page while a turn runs. */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation: none;
+}
+/* Every picture is opaque: no cross-fade blending. */
+::view-transition-old(*),
+::view-transition-new(*) {
+  mix-blend-mode: normal;
+}
+/* What isn't a page (the desk, the cover, the edges) changes at once, under the moving pages. */
+::view-transition-old(root) {
+  display: none;
+}
+/* The strip and the chapter column have no paper behind them, so their old picture goes at
+   once unless a turn keeps it to the middle. */
+::view-transition-old(.turn-strip) {
+  display: none;
+}
+
+/* ── Page turn ─────────────────────────────────────────────────────────── */
+
+/* The strip's and the chapter column's current tab change halfway, as the new page shows. */
+:root[data-motion="turn"][data-turn]::view-transition-old(.turn-strip) {
+  display: block;
+  animation: turn-out-at-half var(--turn) linear both;
+}
+:root[data-motion="turn"][data-turn]::view-transition-new(.turn-strip) {
+  animation: turn-in-at-half var(--turn) linear both;
+}
+
+/* Forward: the right page folds to the spine, then the next left page opens from it. */
+:root[data-motion="turn"][data-turn="forward"]::view-transition-group(.page-r-out),
+:root[data-motion="turn"][data-turn="forward"]::view-transition-group(.page-l-in) {
+  z-index: 10;
+}
+:root[data-motion="turn"][data-turn="forward"]::view-transition-old(.page-r-out) {
+  transform-origin: left center;
+  animation: turn-fold-right var(--turn-half) ease-in both;
+}
+:root[data-motion="turn"][data-turn="forward"]::view-transition-new(.page-r-in) {
+  animation: turn-uncover var(--turn-half) ease-out both;
+}
+:root[data-motion="turn"][data-turn="forward"]::view-transition-new(.page-l-in) {
+  transform-origin: right center;
+  animation: turn-open-left var(--turn-half) ease-out calc(var(--turn-half) + var(--riffle-delay)) both;
+}
+
+/* Back: the left page folds to the spine, then the previous right page opens from it. */
+:root[data-motion="turn"][data-turn="back"]::view-transition-group(.page-l-out),
+:root[data-motion="turn"][data-turn="back"]::view-transition-group(.page-r-in) {
+  z-index: 10;
+}
+:root[data-motion="turn"][data-turn="back"]::view-transition-old(.page-l-out) {
+  transform-origin: right center;
+  animation: turn-fold-left var(--turn-half) ease-in both;
+}
+:root[data-motion="turn"][data-turn="back"]::view-transition-new(.page-l-in) {
+  animation: turn-uncover var(--turn-half) ease-out both;
+}
+:root[data-motion="turn"][data-turn="back"]::view-transition-new(.page-r-in) {
+  transform-origin: left center;
+  animation: turn-open-right var(--turn-half) ease-out calc(var(--turn-half) + var(--riffle-delay)) both;
+}
+
+/* An interim page's content spans the spine, so it can't turn with a leaf. It stays on the
+   pages that lie still: forward, the old content on the left page until the new left page
+   covers it, and the new content on the right page as the old one folds off it. The turning
+   leaves are blank. The content's box is centered on the spine, so its halves are 50%. */
+:root[data-motion="turn"][data-turn]::view-transition-group(.page-ink-out),
+:root[data-motion="turn"][data-turn]::view-transition-group(.page-ink-in) {
+  z-index: 1;
+}
+:root[data-motion="turn"][data-turn="forward"]::view-transition-old(.page-ink-out),
+:root[data-motion="turn"][data-turn="back"]::view-transition-new(.page-ink-in) {
+  animation: turn-ink-left var(--turn-total) linear both;
+}
+:root[data-motion="turn"][data-turn="forward"]::view-transition-new(.page-ink-in),
+:root[data-motion="turn"][data-turn="back"]::view-transition-old(.page-ink-out) {
+  animation: turn-ink-right var(--turn-total) linear both;
+}
+
+/* Riffled leaves (Spread.tsx): each a whole leaf, blank but for its bookmark, turned over the
+   spine in one picture, since a blank leaf's back looks like its front. They start under the
+   page that folds first and end under the page that opens last. The one turning first lies on
+   top of the others before the spine and under them after it, so each leaf's z-index swaps
+   halfway. */
+::view-transition-group(.riffle-spread-0),
+::view-transition-group(.riffle-single-0) { --k: 0; }
+::view-transition-group(.riffle-spread-1),
+::view-transition-group(.riffle-single-1) { --k: 1; }
+::view-transition-group(.riffle-spread-2),
+::view-transition-group(.riffle-single-2) { --k: 2; }
+
+:root[data-motion="turn"][data-turn]::view-transition-group(.riffle-spread-0),
+:root[data-motion="turn"][data-turn]::view-transition-group(.riffle-spread-1),
+:root[data-motion="turn"][data-turn]::view-transition-group(.riffle-spread-2) {
+  --riffle-at: calc(var(--turn-half) / 2 + var(--k) * var(--riffle-step));
+  --riffle-turn: calc(var(--turn) * 0.8);
+  --z-before: calc(5 - var(--k));
+  --z-after: calc(5 + var(--k));
+  animation: turn-riffle-z var(--riffle-turn) linear var(--riffle-at) both;
+}
+:root[data-motion="turn"][data-turn="forward"]::view-transition-new(.riffle-spread-0),
+:root[data-motion="turn"][data-turn="forward"]::view-transition-new(.riffle-spread-1),
+:root[data-motion="turn"][data-turn="forward"]::view-transition-new(.riffle-spread-2) {
+  transform-origin: left center;
+  animation: turn-riffle-forward var(--riffle-turn) linear var(--riffle-at) both;
+}
+:root[data-motion="turn"][data-turn="back"]::view-transition-new(.riffle-spread-0),
+:root[data-motion="turn"][data-turn="back"]::view-transition-new(.riffle-spread-1),
+:root[data-motion="turn"][data-turn="back"]::view-transition-new(.riffle-spread-2) {
+  transform-origin: right center;
+  animation: turn-riffle-back var(--riffle-turn) linear var(--riffle-at) both;
+}
+
+/* One page, the left page of an open book: leaves turn on the gutter at its right. Forward, the
+   next leaf comes over from the gutter and lies down, after any riffled leaves; back, this one
+   lifts and goes over it, and riffled leaves follow it. */
+:root[data-motion="turn"][data-turn="forward"]::view-transition-group(.page-s-in),
+:root[data-motion="turn"][data-turn="back"]::view-transition-group(.page-s-out) {
+  z-index: 10;
+}
+:root[data-motion="turn"][data-turn="forward"]::view-transition-new(.page-s-in) {
+  animation:
+    turn-lift-single var(--turn) cubic-bezier(0.45, 0.02, 0.3, 1) var(--riffle-delay) reverse both,
+    turn-lift-fade var(--turn) linear var(--riffle-delay) reverse both;
+}
+:root[data-motion="turn"][data-turn="back"]::view-transition-old(.page-s-out) {
+  animation:
+    turn-lift-single var(--turn) cubic-bezier(0.45, 0.02, 0.3, 1) both,
+    turn-lift-fade var(--turn) linear both;
+}
+:root[data-motion="turn"][data-turn="back"]::view-transition-new(.page-s-in) {
+  animation: turn-uncover var(--turn-total) ease-out both;
+}
+/* Riffled leaves come over before the new page, each on the one before (forward), or lift after
+   the old page, each from under the one before (back). */
+:root[data-motion="turn"][data-turn="forward"]::view-transition-group(.riffle-single-0),
+:root[data-motion="turn"][data-turn="forward"]::view-transition-group(.riffle-single-1),
+:root[data-motion="turn"][data-turn="forward"]::view-transition-group(.riffle-single-2) {
+  z-index: calc(5 + var(--k));
+}
+:root[data-motion="turn"][data-turn="back"]::view-transition-group(.riffle-single-0),
+:root[data-motion="turn"][data-turn="back"]::view-transition-group(.riffle-single-1),
+:root[data-motion="turn"][data-turn="back"]::view-transition-group(.riffle-single-2) {
+  z-index: calc(5 - var(--k));
+}
+:root[data-motion="turn"][data-turn="forward"]::view-transition-new(.riffle-single-0),
+:root[data-motion="turn"][data-turn="forward"]::view-transition-new(.riffle-single-1),
+:root[data-motion="turn"][data-turn="forward"]::view-transition-new(.riffle-single-2) {
+  animation:
+    turn-lift-single var(--turn) cubic-bezier(0.45, 0.02, 0.3, 1) calc(var(--k) * var(--riffle-step)) reverse both,
+    turn-lift-fade var(--turn) linear calc(var(--k) * var(--riffle-step)) reverse both;
+}
+:root[data-motion="turn"][data-turn="back"]::view-transition-new(.riffle-single-0),
+:root[data-motion="turn"][data-turn="back"]::view-transition-new(.riffle-single-1),
+:root[data-motion="turn"][data-turn="back"]::view-transition-new(.riffle-single-2) {
+  animation:
+    turn-lift-single var(--turn) cubic-bezier(0.45, 0.02, 0.3, 1) calc((var(--k) + 1) * var(--riffle-step)) both,
+    turn-lift-fade var(--turn) linear calc((var(--k) + 1) * var(--riffle-step)) both;
+}
+
+/* ── Slide ─────────────────────────────────────────────────────────────── */
+/* The spread slides across the window in book order and the next one follows it in, like
+   slides in a tray: only transforms, no 3D, fades or filters, so it is the lighter motion.
+   Forward, the old pages leave to the left and the new come in from the right. Fading paper
+   would show the cover through it. */
+
+:root[data-motion="slide"][data-turn="forward"] { --slide-from: var(--slide-offset); }
+:root[data-motion="slide"][data-turn="back"] { --slide-from: calc(-1 * var(--slide-offset)); }
+
+:root[data-motion="slide"][data-turn]::view-transition-old(.page-l-out),
+:root[data-motion="slide"][data-turn]::view-transition-old(.page-r-out),
+:root[data-motion="slide"][data-turn]::view-transition-old(.page-s-out),
+:root[data-motion="slide"][data-turn]::view-transition-old(.page-ink-out) {
+  animation: turn-slide-out var(--turn) ease-in-out both;
+}
+:root[data-motion="slide"][data-turn]::view-transition-new(.page-l-in),
+:root[data-motion="slide"][data-turn]::view-transition-new(.page-r-in),
+:root[data-motion="slide"][data-turn]::view-transition-new(.page-s-in),
+:root[data-motion="slide"][data-turn]::view-transition-new(.page-ink-in) {
+  animation: turn-slide-in var(--turn) ease-in-out both;
+}
+
+/* ── Riffled leaves in the page ───────────────────────────────────────── */
+/* Drawn under the pages, where only the turn's pictures show them (Spread.tsx). */
+.book > .book-page.book-riffle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.book > .book-riffle[data-side="left"] {
+  left: 0;
+  width: var(--left-width);
+}
+.book > .book-riffle[data-side="right"] {
+  left: var(--left-width);
+  right: 0;
+}
+.book > .book-riffle[data-side="single"] {
+  left: 0;
+  right: calc(var(--facing-shown, 56px) + var(--facing-hidden, 48px));
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────── */
+
+@keyframes turn-fold-right {
+  from { transform: perspective(var(--turn-depth)) rotateY(0deg); filter: brightness(1); }
+  to { transform: perspective(var(--turn-depth)) rotateY(-90deg); filter: brightness(0.6); }
+}
+@keyframes turn-fold-left {
+  from { transform: perspective(var(--turn-depth)) rotateY(0deg); filter: brightness(1); }
+  to { transform: perspective(var(--turn-depth)) rotateY(90deg); filter: brightness(0.6); }
+}
+@keyframes turn-open-left {
+  from { transform: perspective(var(--turn-depth)) rotateY(90deg); filter: brightness(0.6); }
+  to { transform: perspective(var(--turn-depth)) rotateY(0deg); filter: brightness(1); }
+}
+@keyframes turn-open-right {
+  from { transform: perspective(var(--turn-depth)) rotateY(-90deg); filter: brightness(0.6); }
+  to { transform: perspective(var(--turn-depth)) rotateY(0deg); filter: brightness(1); }
+}
+/* A riffled leaf goes over the spine in one swing: speeding up to edge-on, then slowing as it
+   lies down. Each pair of keyframes takes its own easing. */
+@keyframes turn-riffle-forward {
+  0% { transform: perspective(var(--turn-depth)) rotateY(0deg); filter: brightness(1); animation-timing-function: ease-in; }
+  50% { transform: perspective(var(--turn-depth)) rotateY(-90deg); filter: brightness(0.6); animation-timing-function: ease-out; }
+  100% { transform: perspective(var(--turn-depth)) rotateY(-180deg); filter: brightness(0.9); }
+}
+@keyframes turn-riffle-back {
+  0% { transform: perspective(var(--turn-depth)) rotateY(0deg); filter: brightness(1); animation-timing-function: ease-in; }
+  50% { transform: perspective(var(--turn-depth)) rotateY(90deg); filter: brightness(0.6); animation-timing-function: ease-out; }
+  100% { transform: perspective(var(--turn-depth)) rotateY(180deg); filter: brightness(0.9); }
+}
+@keyframes turn-riffle-z {
+  0%, 49.9% { z-index: var(--z-before); }
+  50%, 100% { z-index: var(--z-after); }
+}
+/* The one-page leaf hinges on its right edge but is seen from the page's middle: perspective()
+   projects from the transform origin, so the origin stays central and the hinge is reached by
+   translating to the right edge and back. A CSS easing applies to each pair of keyframes, not to
+   the whole animation, so the swing has only two (a middle one would stall it there) and the fade
+   past the edge-on angle is a second animation, from 58% of the time (80° on the curve). */
+@keyframes turn-lift-single {
+  from { transform: perspective(var(--turn-depth)) translateX(50%) rotateY(0deg) translateX(-50%); filter: brightness(1); }
+  to { transform: perspective(var(--turn-depth)) translateX(50%) rotateY(98deg) translateX(-50%); filter: brightness(0.7); }
+}
+@keyframes turn-lift-fade {
+  0%, 58% { opacity: 1; }
+  100% { opacity: 0; }
+}
+/* The page a turning leaf uncovers starts in its shade. */
+@keyframes turn-uncover {
+  from { filter: brightness(0.8); }
+  to { filter: brightness(1); }
+}
+@keyframes turn-ink-left {
+  from, to { clip-path: inset(0 50% 0 0); }
+}
+@keyframes turn-ink-right {
+  from, to { clip-path: inset(0 0 0 50%); }
+}
+@keyframes turn-out-at-half {
+  0%, 49.9% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes turn-in-at-half {
+  0%, 49.9% { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}
+@keyframes turn-slide-out {
+  to { translate: calc(-1 * var(--slide-from)); }
+}
+@keyframes turn-slide-in {
+  from { translate: var(--slide-from); }
+}

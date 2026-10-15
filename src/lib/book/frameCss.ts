@@ -9,6 +9,7 @@ import {
   PHONE,
   PHONE_MAX_WIDTH,
   SINGLE,
+  SLIDE_SHOWN,
   SPREAD,
   SPREAD_MIN_WIDTH,
 } from "./layout";
@@ -65,6 +66,7 @@ export function bookFrameCss(): string {
     "cover-side": SPREAD.cover.side,
     "edge-min": SPREAD.edges.min,
     "edge-max": SPREAD.edges.max,
+    slide: SLIDE_SHOWN,
     ...pageVars(SPREAD.page),
   };
   const halvesSideBySide = 2 * HALF_MIN + SINGLE.halfGap;

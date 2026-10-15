@@ -178,7 +178,19 @@ and get to the test of turns").
       Done: a board page is `h-full` in its page's body, and the Explorer's narrow board is
       capped at a share of the page's height (`cqh`), not the window's. `--dash-offset` and
       `bodyOffset` are gone.
-- [ ] (agent) Turns, riffles, Slide and None, and the motion setting (D13, D14).
+- [x] (agent) Turns, riffles, Slide and None, and the motion setting (D13, D14).
+      Done: the spike's turns, in both forms, are `src/components/book/turns.css`, and the
+      spike route is gone. The frame works out the way from book order (`turnBetween`) and
+      writes it on `<html>`, so every link turns, not only the tabs; the browser's back and
+      forward buttons change pages at once, since Next doesn't run them as transitions. React
+      gives a page its enter and exit only when none of the page's own elements lies above it,
+      so the book moved into the frame and pages render their pages into it; a second level
+      now says only that it slides, by `SLIDE_SHOWN` (D8, D9's 300 px or so), and the book
+      takes it from its left page. Riffled leaves carry their chapters' bookmarks or page tabs.
+      Slide moves the spreads across the window like slides, since fading paper showed the
+      cover through it. An interim page's content can't be cut at the spine, so it stays on
+      the pages that lie still while blank leaves turn. The setting is on the Settings page
+      until Phase 3 rebuilds it.
 - [ ] (agent) The book slide for second levels, with the Bookstore's strip (D8, D9).
 - [ ] (agent) The one-page form: the open left page with its gutter at the right and the
       facing page running off the window, turns on the gutter, the page tabs and the phone's

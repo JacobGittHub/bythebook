@@ -25,23 +25,35 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  ViewTransition,
   type ReactNode,
 } from "react";
+import { Book } from "@/components/book/Book";
 import { BugReportButton } from "@/components/layout/BugReportButton";
 import { Button } from "@/components/shadcn/button";
 import { Switch } from "@/components/shadcn/switch";
 import { useAppearance } from "@/context/Appearance";
 import type { ChapterIcon } from "@/lib/auth/access";
-import { chapterAt } from "@/lib/book/chapters";
+import { bookOrder, chapterAt } from "@/lib/book/chapters";
 import { FORM_COOKIE, SPREAD_QUERY, bookFrameCss } from "@/lib/book/frameCss";
 import type { BookForm, Size, Span } from "@/lib/book/layout";
+import { turnBetween, type TurnWay } from "@/lib/book/turns";
+import type { Motion } from "@/lib/appearance";
 import { cn } from "@/lib/utils";
+import "./turns.css";
 
 // The book frame (plans/book-ui.md D1, D12, D15): the desk, with the strip above it (the
-// spread) or the chapter column beside it (the one-page form). The pages are the route's: each
-// renders its book on the desk (Spread.tsx), so a page says what its two pages hold and how far
-// its book slides. The frame tells the pages where they are in the book, and where the strip's
-// tabs are, for their bookmarks.
+// spread) or the chapter column beside it (the one-page form), and the book on it. The pages
+// are the route's: each renders its pages into the book (Spread.tsx), so a page says what its
+// two pages hold and whether its book slides. The frame tells the pages where they are in the
+// book, and where the strip's tabs are, for their bookmarks.
+//
+// A move to another chapter turns the page (D13, D14). Each page is a named view transition
+// (Spread.tsx), so the page leaving and the page arriving are pictures the browser animates
+// (turns.css). React gives a view transition its enter and exit only when no element of the
+// page's own lies above it, so the book, which holds the pages, is the frame's. The frame works out which way the book turns from the chapter it was at, and
+// writes it to <html> as `data-turn`: a leaving page last rendered before the move, so its
+// classes can't say the way.
 
 export type Chapter = { href: string; label: string; icon: ChapterIcon };
 
@@ -56,8 +68,18 @@ const ICONS: Record<ChapterIcon, LucideIcon> = {
   sliders: SlidersHorizontal,
 };
 
+/** The last move between pages: which way the book turned and which chapters riffled past. */
+export type FrameTurn = {
+  /** Counts the moves, so each turn's riffled leaves are new ones. */
+  id: number;
+  way: TurnWay | null;
+  riffled: number[];
+};
+
 type BookFrameContext = {
   form: BookForm;
+  motion: Motion;
+  turn: FrameTurn;
   chapters: Chapter[];
   /** The current page's chapter, or -1 outside every chapter. */
   at: number;
@@ -68,6 +90,8 @@ type BookFrameContext = {
 
 const FrameContext = createContext<BookFrameContext>({
   form: "spread",
+  motion: "turn",
+  turn: { id: 0, way: null, riffled: [] },
   chapters: [],
   at: -1,
   window: null,
@@ -118,6 +142,8 @@ export function BookFrame({
   const at = chapterAt(pathname, chapters.map((c) => c.href));
   const [tabs, setTabs] = useState<Span[] | null>(null);
   const tabRefs = useRef<(HTMLElement | null)[]>([]);
+  const { motion } = useAppearance();
+  const turn = useTurn(pathname, at, motion);
 
   useEffect(() => {
     document.cookie = `${FORM_COOKIE}=${form}; path=/; max-age=31536000; samesite=lax`;
@@ -148,68 +174,132 @@ export function BookFrame({
   const account = <AccountLinks viewer={viewer} debug={debug} signOut={signOut} form={form} />;
 
   return (
-    <FrameContext.Provider value={{ form, chapters, at, window: size, tabs }}>
+    <FrameContext.Provider value={{ form, motion, turn, chapters, at, window: size, tabs }}>
       <style href="book-frame" precedence="default">
         {bookFrameCss()}
       </style>
       <div className="book-frame" data-form={form}>
+        {/* The strip and the chapter column show the new chapter halfway through a turn. */}
         {form === "spread" ? (
-          <header className="book-strip">
-            <Brand />
-            <nav aria-label="Chapters" className="ml-2 flex items-center text-[13px] text-muted-foreground">
-              {chapters.map((chapter, i) => (
-                <Link
-                  key={chapter.href}
-                  ref={(el) => {
-                    tabRefs.current[i] = el;
-                  }}
-                  href={chapter.href}
-                  aria-current={i === at ? "page" : undefined}
-                  className={cn(
-                    "px-2 py-[7px] hover:text-foreground",
-                    i === at && "font-bold text-foreground shadow-[inset_0_-2px_0_var(--bookmark)]",
-                  )}
-                >
-                  {chapter.label}
-                </Link>
-              ))}
-            </nav>
-            <span className="grow" />
-            {account}
-          </header>
-        ) : (
-          <nav aria-label="Chapters" className="book-chapters">
-            <div className="book-chapters-head">
+          <ViewTransition name="book-strip" update={motion === "none" ? "none" : "turn-strip"} default="none">
+            <header className="book-strip">
               <Brand />
-            </div>
-            <div className="book-chapter-list">
-              {chapters.map((chapter, i) => {
-                const Icon = ICONS[chapter.icon];
-                return (
+              <nav aria-label="Chapters" className="ml-2 flex items-center text-[13px] text-muted-foreground">
+                {chapters.map((chapter, i) => (
                   <Link
                     key={chapter.href}
+                    ref={(el) => {
+                      tabRefs.current[i] = el;
+                    }}
                     href={chapter.href}
                     aria-current={i === at ? "page" : undefined}
-                    aria-label={chapter.label}
-                    title={chapter.label}
                     className={cn(
-                      "book-chapter text-[13px] text-muted-foreground hover:text-foreground",
-                      i === at && "font-bold text-foreground",
+                      "px-2 py-[7px] hover:text-foreground",
+                      i === at && "font-bold text-foreground shadow-[inset_0_-2px_0_var(--bookmark)]",
                     )}
                   >
-                    <Icon aria-hidden className="size-4 flex-none" />
-                    <span className="book-chapter-text">{chapter.label}</span>
+                    {chapter.label}
                   </Link>
-                );
-              })}
-            </div>
-            <div className="book-chapters-foot text-[13px] text-muted-foreground">{account}</div>
-          </nav>
+                ))}
+              </nav>
+              <span className="grow" />
+              {account}
+            </header>
+          </ViewTransition>
+        ) : (
+          <ViewTransition name="book-chapters" update={motion === "none" ? "none" : "turn-strip"} default="none">
+            <nav aria-label="Chapters" className="book-chapters">
+              <div className="book-chapters-head">
+                <Brand />
+              </div>
+              <div className="book-chapter-list">
+                {chapters.map((chapter, i) => {
+                  const Icon = ICONS[chapter.icon];
+                  return (
+                    <Link
+                      key={chapter.href}
+                      href={chapter.href}
+                      aria-current={i === at ? "page" : undefined}
+                      aria-label={chapter.label}
+                      title={chapter.label}
+                      className={cn(
+                        "book-chapter text-[13px] text-muted-foreground hover:text-foreground",
+                        i === at && "font-bold text-foreground",
+                      )}
+                    >
+                      <Icon aria-hidden className="size-4 flex-none" />
+                      <span className="book-chapter-text">{chapter.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+              <div className="book-chapters-foot text-[13px] text-muted-foreground">{account}</div>
+            </nav>
+          </ViewTransition>
         )}
-        <div className="book-desk">{children}</div>
+        <div className="book-desk">
+          <Book form={form} order={bookOrder(at, chapters.length)}>
+            {children}
+          </Book>
+        </div>
       </div>
     </FrameContext.Provider>
   );
+}
+
+/** How often the frame looks whether a turn is over, to take its riffled leaves away. */
+const RIFFLE_CHECK_MS = 1000;
+
+/** Whether a view transition is animating. Removing a picture's element mid-turn would end it. */
+const turning = () =>
+  document.getAnimations().some((a) => (a.effect as KeyframeEffect | null)?.pseudoElement?.startsWith("::view-transition"));
+
+const NO_TURN: FrameTurn = { id: 0, way: null, riffled: [] };
+
+/**
+ * The turn of the move to `pathname`, worked out as the page renders, so the arriving page
+ * renders its riffled leaves in the same commit. A move within a chapter, or with motion off,
+ * doesn't turn; under Slide nothing riffles.
+ */
+function useTurn(pathname: string, at: number, motion: Motion): FrameTurn {
+  const [state, setState] = useState({ pathname, at, turn: NO_TURN });
+  let current = state;
+  if (state.pathname !== pathname) {
+    const turn = motion === "none" ? null : turnBetween(state.at, at);
+    current = {
+      pathname,
+      at,
+      turn: {
+        id: state.turn.id + 1,
+        way: turn?.way ?? null,
+        riffled: motion === "turn" && turn ? turn.riffled : [],
+      },
+    };
+    setState(current);
+  }
+  const { turn } = current;
+
+  // turns.css reads the way, and how many leaves riffle, from <html>. Layout effects run before
+  // the browser starts the turn's animations.
+  useLayoutEffect(() => {
+    const html = document.documentElement;
+    if (turn.way) html.setAttribute("data-turn", turn.way);
+    else html.removeAttribute("data-turn");
+    html.setAttribute("data-riffles", String(turn.riffled.length));
+  }, [turn]);
+
+  useEffect(() => {
+    if (turn.riffled.length === 0) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const clear = () => {
+      if (turning()) timer = setTimeout(clear, RIFFLE_CHECK_MS);
+      else setState((s) => (s.turn.id === turn.id ? { ...s, turn: { ...s.turn, riffled: [] } } : s));
+    };
+    timer = setTimeout(clear, RIFFLE_CHECK_MS);
+    return () => clearTimeout(timer);
+  }, [turn]);
+
+  return turn;
 }
 
 /** The brand; in the narrow chapter column, its first letter. */

@@ -98,6 +98,9 @@ export const PHONE_MAX_WIDTH = 640;
 /** The chapter column shows names from this window width up, and icons below it. */
 export const CHAPTER_NAMES_MIN_WIDTH = 900;
 
+/** How much of the left page a second level leaves in view at the window's edge (D8, D9). */
+export const SLIDE_SHOWN = 300;
+
 /** The spread's side margin: room for the thickest stack of page edges and the cover beside it. */
 const SPREAD_SIDE = SPREAD.deskGap + SPREAD.cover.side + SPREAD.edges.max;
 

@@ -2,13 +2,14 @@
 
 **Status:** Live
 **Files:** `src/app/dashboard/layout.tsx` (the frame and Sign out),
-`src/components/book/` (the book frame and its parts), `src/lib/book/` (the book's layout),
+`src/components/book/` (the book frame, its parts and its turns), `src/lib/book/` (the book's
+layout and turns),
 `src/components/overview/OverviewShowcase.tsx`,
 `src/app/dashboard/visualizations/page.tsx`, `src/components/ui/RouteCard.tsx`,
 `src/components/books/BookViewPage.tsx` (the small visualizations), `src/components/library/`
 (the Library and the Bookstore), `src/lib/auth/access.ts` (what the strip and both pages
 list), `src/app/globals.css` (theme tokens), `src/context/Appearance.tsx` and
-`src/lib/appearance.ts` (the theme and vibes settings), `src/components/ui/Panel.tsx`,
+`src/lib/appearance.ts` (the theme, vibes and motion settings), `src/components/ui/Panel.tsx`,
 `src/components/settings/AppearancePanel.tsx`
 
 The rules for these pieces are under "UI" and "Guests and accounts" in `AGENTS.md`. This doc
@@ -25,9 +26,10 @@ Phase 4 rewrites this section).
   in the one-page form, the chapter column beside it. Windows narrower than
   `SPREAD_MIN_WIDTH` get the one-page form (`formFor`), and a phone's column shows icons
   only.
-- **Each page renders its own book** with `Spread` (`src/components/book/Spread.tsx`): its
-  left page, its right page and, for a second level, how far the book slides. A page that
-  isn't a spread yet is wrapped in `InterimSpread`, which lays it across both pages.
+- **The book is the frame's, and each page renders its pages into it** with `Spread`
+  (`src/components/book/Spread.tsx`): its left page, its right page and, for a second level,
+  whether the book slides, until `SLIDE_SHOWN` of the left page shows. A page that isn't a
+  spread yet is wrapped in `InterimSpread`, which lays it across both pages.
 - **Where everything sits comes from `layoutBook`** (`src/lib/book/layout.ts`), whose property
   tests hold its invariants. The frame draws it with CSS: `bookFrameCss`
   (`src/lib/book/frameCss.ts`) turns the layout's constants into custom properties, so the
@@ -47,6 +49,32 @@ Phase 4 rewrites this section).
   button can read the page beside it.
 - **The sign-in pages** (`src/app/auth/layout.tsx`) are outside the book, one panel on the
   backdrop, until Phase 3 puts them on the desk.
+
+## Moving between chapters
+
+A move to another chapter turns the page (`plans/book-ui.md` D13, D14), as a view transition.
+
+- **Each page is a picture named after its route** (`PagePicture` in `Spread.tsx`): the left
+  page, the right page, the one page, and an interim page's content (its "ink"). Their classes
+  say only which page each is and whether it leaves or arrives; `src/components/book/turns.css`
+  animates them. React gives a page its enter and exit only when none of the page's own
+  elements lies above it, which is why the book is the frame's.
+- **The frame works out the way** from the chapter it was at (`turnBetween`,
+  `src/lib/book/turns.ts`) and writes it on `<html>` as `data-turn`, since a leaving page last
+  rendered before the move. A move within a chapter doesn't turn. Every link turns, the tabs'
+  and the pages' own; the browser's back and forward buttons change pages at once, since Next
+  doesn't run them as transitions.
+- **A jump of several chapters riffles** up to `MAX_RIFFLES` blank leaves between, each carrying
+  its chapter's bookmark or page tab (`riffleBookmarkX` mirrors a bookmark onto a leaf that
+  starts on the other side of the spine). They lie under the pages, where only the turn's
+  pictures show them, and the frame takes them away once no turn is running.
+- **An interim page's content spans the spine,** so in a turn it stays on the pages that lie
+  still and the turning leaves are blank, until Phase 3 makes each page a spread.
+- **The motion setting** (`MOTIONS`: page turn, slide or none) is on the Settings page
+  (`AppearancePanel`), saved in the browser like the theme, and written on `<html>` as
+  `data-motion`. Slide moves the spreads across the window with transforms only. None, and
+  any setting while the system asks for reduced motion (`resolveMotion`), changes pages at
+  once with no transition at all. `e2e/turns.spec.ts` runs each move once per setting.
 
 ## Overview
 

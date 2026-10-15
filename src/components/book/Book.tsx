@@ -13,14 +13,12 @@ export type { BookForm, PageSide };
  * The book: its cover, the stacks of page edges on either side and, as children, its pages.
  * The stacks' thickness says how far into the book the current page is: `order`, from 0 at the
  * first page to 1 at the last, scaled by the frame (globals.css § "The book"), or `edges` in
- * pixels. `slide` is how much of the left page stays in view when a second level slides the
- * book (D8). A vibe sets its tokens on this element.
+ * pixels. A vibe sets its tokens on this element.
  */
 export function Book({
   form,
   order,
   edges,
-  slide,
   className,
   style,
   children,
@@ -29,18 +27,15 @@ export function Book({
   form: BookForm;
   order?: number;
   edges?: { left: number; right: number };
-  slide?: number | null;
 } & ComponentProps<"div">) {
   const vars = {
     ...(order !== undefined && { "--book-order": order }),
     ...(edges && { "--edge-left": `${edges.left}px`, "--edge-right": `${edges.right}px` }),
-    ...(slide != null && { "--slide": `${slide}px` }),
   } as CSSProperties;
   return (
     <div
       data-slot="book"
       data-form={form}
-      data-slid={slide != null ? "" : undefined}
       className={cn("book", className)}
       style={{ ...vars, ...style }}
       {...props}
@@ -64,6 +59,7 @@ export function BookPage({
   head,
   folio,
   marks,
+  slid,
   className,
   children,
   ...props
@@ -72,9 +68,17 @@ export function BookPage({
   head?: ReactNode;
   folio?: ReactNode;
   marks?: ReactNode;
+  /** On a left page: a second level has slid the book (D8), which the book takes from here. */
+  slid?: boolean;
 } & ComponentProps<"section">) {
   return (
-    <section data-slot="page" data-side={side} className={cn("book-page", className)} {...props}>
+    <section
+      data-slot="page"
+      data-side={side}
+      data-slid={slid ? "" : undefined}
+      className={cn("book-page", className)}
+      {...props}
+    >
       <div className="book-page-inner">
         <header data-slot="running-head" className="book-running-head">
           {head}

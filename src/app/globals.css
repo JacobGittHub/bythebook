@@ -264,14 +264,15 @@ body {
 
 /* The spread: the left page is half of the book between its side margins. A second level
    slides the book left until `--slide` of the left page shows (D8); the right page keeps its
-   right edge and takes the rest. */
+   right edge and takes the rest. The book is the frame's, so it takes the slide from its left
+   page. */
 .book-frame[data-form="spread"] .book {
   --left-width: calc((100cqw - 2 * var(--book-side)) / 2);
   --spine: calc(var(--book-side) + var(--left-width));
   flex: 1;
   margin: var(--book-top) var(--book-side) var(--book-bottom) calc(var(--spine) - var(--left-width));
 }
-.book-frame[data-form="spread"] .book[data-slid] {
+.book-frame[data-form="spread"] .book:has(> .book-page[data-slid]) {
   --spine: min(var(--slide), var(--book-side) + var(--left-width));
 }
 .book-frame[data-form="spread"] .book > .book-page[data-side="left"] {
