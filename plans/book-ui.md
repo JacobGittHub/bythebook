@@ -221,9 +221,15 @@ and get to the test of turns").
       with the Library and Bookstore pages. Playwright's WebKit on Windows draws the zoom out
       wrong (the leaf over the strip, the new pages unmoved), like its turns in the spike; the
       Safari step in Phase 4 covers it.
-- [ ] (agent) The one-page form: the open left page with its gutter at the right and the
+- [x] (agent) The one-page form: the open left page with its gutter at the right and the
       facing page running off the window, turns on the gutter, the page tabs and the phone's
       icon tabs (D15).
+      Done: most of it came with the shell and turns steps. This step added round seven's
+      button that narrows the chapter column to icons or widens it to names, kept in a cookie
+      so the server renders the pick (a phone has icons only and no button); the way back in a
+      second level's running head; and a page tab that reaches onto the page short of its
+      text, which on a phone it covered. The figures beside the mockup's chapter names (book
+      counts, "soon") are left to Phase 3, with the Overview's contents.
 
 ### Phase 3. The pages, each with its browser tests
 

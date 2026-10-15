@@ -24,8 +24,10 @@ Phase 4 rewrites this section).
 - **`BookFrame` frames every dashboard page:** the desk, with the strip above it (the brand,
   a tab per `NAV_ITEMS` entry the viewer may open, the vibes switch and the account links) or,
   in the one-page form, the chapter column beside it. Windows narrower than
-  `SPREAD_MIN_WIDTH` get the one-page form (`formFor`), and a phone's column shows icons
-  only.
+  `SPREAD_MIN_WIDTH` get the one-page form (`formFor`). Its column shows chapter names, or
+  icons below `CHAPTER_NAMES_MIN_WIDTH` (`chaptersFor`); a button in its head narrows or widens
+  it, and the frame keeps the pick in the `CHAPTERS_COOKIE` cookie. A phone's column shows
+  icons only, with no button. The page's tab reaches onto the page short of its text.
 - **The book is the frame's, and each page renders its pages into it** with `Spread`
   (`src/components/book/Spread.tsx`): its left page and its right page. A page that isn't a
   spread yet is wrapped in `InterimSpread`, which lays it across both pages.
@@ -38,12 +40,13 @@ Phase 4 rewrites this section).
   as tall as the page shows (`shownHeight`), and set onto the page that much smaller, so they
   read at the usual size; the left page's content stands against the spine (`.book-shown`).
   An interim second level puts its content on the right page and a way back on the left. The
-  one-page form has no camera.
+  one-page form has no camera: a second level shows only its right page, with the way back in
+  its running head.
 - **Where everything sits comes from `layoutBook`** (`src/lib/book/layout.ts`), whose property
   tests hold its invariants. The frame draws it with CSS: `bookFrameCss`
   (`src/lib/book/frameCss.ts`) turns the layout's constants into custom properties, so the
-  server render is in place before any script runs. Only the bookmarks and page tabs, which
-  depend on where the strip's tabs are, wait for the browser.
+  server render is in place before any script runs. Only the bookmarks, which depend on where
+  the strip's tabs are, and the page tabs wait for the browser.
 - **The server can't see the window,** so it renders the form the last visit had (the
   `FORM_COOKIE` cookie), or the spread; until the script has the right form, a frame of the
   wrong one isn't laid out.

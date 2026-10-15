@@ -10,7 +10,7 @@ import { ViewerProvider } from "@/context/Viewer";
 import { visibleNavItems } from "@/lib/auth/access";
 import { canDebug } from "@/lib/auth/debug";
 import { getViewer } from "@/lib/auth/viewer";
-import { FORM_COOKIE } from "@/lib/book/frameCss";
+import { CHAPTERS_COOKIE, FORM_COOKIE } from "@/lib/book/frameCss";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
 async function signOutAction() {
@@ -30,7 +30,10 @@ export default async function DashboardLayout({
   const viewer = await getViewer();
   const debug = canDebug(viewer);
   const chapters = visibleNavItems(viewer.signedIn).map(({ href, label, icon }) => ({ href, label, icon }));
-  const initialForm = (await cookies()).get(FORM_COOKIE)?.value === "single" ? "single" : "spread";
+  const cookieStore = await cookies();
+  const initialForm = cookieStore.get(FORM_COOKIE)?.value === "single" ? "single" : "spread";
+  const column = cookieStore.get(CHAPTERS_COOKIE)?.value;
+  const initialColumn = column === "names" || column === "icons" ? column : null;
 
   return (
     // The bug report provider wraps the frame too, so its button can read the page.
@@ -41,6 +44,7 @@ export default async function DashboardLayout({
             <BookFrame
               chapters={chapters}
               initialForm={initialForm}
+              initialColumn={initialColumn}
               viewer={{ signedIn: viewer.signedIn, displayName: viewer.signedIn ? viewer.displayName : null }}
               debug={debug}
               signOut={signOutAction}

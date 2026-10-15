@@ -6,7 +6,6 @@ import {
   BOOKMARK_INSET,
   BOOKMARK_WIDTH,
   PAGE_BORDER,
-  PAGE_TAB_IN,
   PHONE_MAX_WIDTH,
   SPREAD_BOARD_MIN,
   SPREAD_MIN_WIDTH,
@@ -256,7 +255,7 @@ describe("layoutBook", () => {
     inputs.forEach((input, run) => {
       const layout = layoutBook(input);
       if (layout.form !== "single") return;
-      const page = layout.pages[0].rect;
+      const { rect: page, body } = layout.pages[0];
       const listed = run < BOOK_WINDOW_SIZES.length;
       layout.pageTabs.forEach((tab, i) => {
         const slot = layout.slots[i];
@@ -264,7 +263,8 @@ describe("layoutBook", () => {
         const y = tab.y + page.y + PAGE_BORDER;
         if (Math.abs(y - slot.y) > EPS || tab.height !== slot.height) wrong.push(`run ${run}: page tab ${i} isn't level with its slot`);
         if (Math.abs(x - right(slot)) > EPS) wrong.push(`run ${run}: page tab ${i} doesn't reach its slot`);
-        if (Math.abs(x + tab.width - (page.x + PAGE_BORDER + PAGE_TAB_IN)) > EPS) wrong.push(`run ${run}: page tab ${i} doesn't reach onto its page`);
+        if (x + tab.width <= page.x + PAGE_BORDER + EPS) wrong.push(`run ${run}: page tab ${i} doesn't reach onto its page`);
+        if (x + tab.width >= body.x - EPS) wrong.push(`run ${run}: page tab ${i} reaches the page's text`);
         if (layout.edges.left.x < right(slot)) wrong.push(`run ${run}: the page edges reach the column`);
         // On a listed window, every chapter's tab lies on its page's fore-edge, clear of the corners.
         if (listed && (y < page.y + 9 || y + tab.height > bottom(page) - 9)) wrong.push(`${input.window.width}×${input.window.height}: page tab ${i} leaves its page`);

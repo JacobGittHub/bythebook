@@ -51,13 +51,17 @@ async function moveTo(page: Page, label: string, href: string): Promise<string[]
   return follow(page, page.getByRole("navigation", { name: "Chapters" }).getByRole("link", { name: label, exact: true }), href);
 }
 
+/** How long a move may take to start once the address has changed. */
+const MOVE_WAIT_MS = 3_000;
+
 /** Follows a link to `href` and returns the move's animations. */
 async function follow(page: Page, link: Locator, href: string): Promise<string[]> {
   const before = await page.evaluate(() => window.__moves.length);
   await link.click();
   await expect(page).toHaveURL(new RegExp(`${href}$`));
-  // Under None no transition starts, so there is nothing to wait for.
-  await page.waitForTimeout(300);
+  // The move is recorded once the browser has its pictures, which a slow browser takes a while
+  // over. Under None no transition starts, so the wait runs out.
+  await page.waitForFunction((n) => window.__moves.length > n, before, { timeout: MOVE_WAIT_MS }).catch(() => {});
   const moves = await page.evaluate(() => window.__moves);
   return moves.length > before ? moves[moves.length - 1] : [];
 }
@@ -139,6 +143,23 @@ test("Page turn: a second level zooms in, then turns, and turns back, then zooms
   expect(out).toContain(`turn-fold-left ::view-transition-old(page-l${route(href)})`);
   expect(out).toContain(`camera ::view-transition-image-pair(page-r-dashboard-bookstore)`);
   await expect.poll(() => rightPageAt(page)).toBe(spine);
+});
+
+test("Page turn: in the one-page form a second level turns forward, and back by its back link (D15)", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await recordMoves(page, "turn");
+  await page.goto("/dashboard/bookstore");
+  test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
+  await expect(page.locator(".book-frame")).toHaveAttribute("data-form", "single");
+
+  const link = page.locator('a[href^="/dashboard/bookstore/"]').first();
+  const href = (await link.getAttribute("href"))!;
+  const into = await follow(page, link, href);
+  expect(into).toContain(expected("forward", false, "-dashboard-bookstore", route(href)));
+  expect(into.some((a) => a.startsWith("camera"))).toBe(false);
+
+  const out = await follow(page, page.getByRole("link", { name: "Back to Bookstore" }), "/dashboard/bookstore");
+  expect(out).toContain(expected("back", false, route(href), "-dashboard-bookstore"));
 });
 
 test("None: pages change at once", async ({ page }) => {

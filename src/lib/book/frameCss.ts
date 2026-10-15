@@ -45,6 +45,7 @@ function singleVars(m: typeof SINGLE | typeof PHONE, column: number): Vars {
     "edge-min": m.edges.min,
     "edge-max": m.edges.max,
     "tab-out": m.edges.max + m.tabReach,
+    "tab-in": m.tabIn,
     "facing-shown": m.facing.shown,
     "facing-hidden": m.facing.hidden,
     "cover-top": m.cover.top,
@@ -54,6 +55,20 @@ function singleVars(m: typeof SINGLE | typeof PHONE, column: number): Vars {
     "half-gap": m.halfGap,
     ...pageVars(m.page),
   };
+}
+
+/**
+ * The rules that narrow the one-page form's chapter column, under `frame`, to icons `width`
+ * wide. Its head keeps the button that widens it, or, on a phone, which has none, the brand.
+ */
+function iconColumn(frame: string, width: number, phone = false): string[] {
+  return [
+    `${frame} { --column: ${width}px; }`,
+    `${frame} :is(.book-chapter-text, .book-chapters-head > .grow) { display: none; }`,
+    `${frame} ${phone ? ".book-chapters-toggle" : ".book-chapters-brand"} { display: none; }`,
+    ...(phone ? [`${frame} .book-chapters-brand { display: revert; }`] : []),
+    `${frame} :is(.book-chapters-head, .book-chapter, .book-chapters-foot > *) { justify-content: center; padding-inline: 0; }`,
+  ];
 }
 
 /** The frame's style sheet. */
@@ -81,14 +96,16 @@ export function bookFrameCss(): string {
     `:root[data-zoom="in"] { --turn-start: ${ZOOM_IN_TURN_START}ms; }`,
     `.book-frame[data-form="spread"] { ${declare(spread)} }`,
     `.book-frame[data-form="single"] { ${declare(singleVars(SINGLE, SINGLE.column.names))} }`,
-    // Narrower, the chapter column shows icons; on a phone, everything around the page thins.
+    // The chapter column shows icons where the reader narrowed it (`data-chapters`) or, unless they
+    // widened it, in a narrower window. On a phone it is always icons, and everything around the
+    // page thins; the doubled class outranks the reader's pick.
+    ...iconColumn(`.book-frame[data-form="single"][data-chapters="icons"]`, SINGLE.column.icons),
     `@media (width < ${CHAPTER_NAMES_MIN_WIDTH}px) {`,
-    `  .book-frame[data-form="single"] { --column: ${SINGLE.column.icons}px; }`,
-    `  .book-frame[data-form="single"] .book-chapter-text { display: none; }`,
-    `  .book-frame[data-form="single"] :is(.book-chapters-head, .book-chapter, .book-chapters-foot > *) { justify-content: center; padding-inline: 0; }`,
+    ...iconColumn(`.book-frame[data-form="single"]:not([data-chapters="names"])`, SINGLE.column.icons),
     `}`,
     `@media (width < ${PHONE_MAX_WIDTH}px) {`,
-    `  .book-frame[data-form="single"] { ${declare(singleVars(PHONE, PHONE.column.icons))} }`,
+    `  .book-frame.book-frame[data-form="single"] { ${declare(singleVars(PHONE, PHONE.column.icons))} }`,
+    ...iconColumn(`.book-frame.book-frame[data-form="single"]`, PHONE.column.icons, true),
     `}`,
     // The server can't see the window, so it renders the form the last visit had (or the
     // spread); until the script has the right one, a frame of the wrong form isn't laid out.
@@ -109,3 +126,6 @@ export const SPREAD_QUERY = `(width >= ${SPREAD_MIN_WIDTH}px)`;
 
 /** The cookie that keeps the form the last visit had, so the server renders that one. */
 export const FORM_COOKIE = "book-form";
+
+/** The cookie that keeps the reader's pick of the one-page form's chapter column, names or icons. */
+export const CHAPTERS_COOKIE = "book-chapters";

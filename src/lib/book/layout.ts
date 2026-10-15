@@ -60,8 +60,9 @@ export const SINGLE = {
   /** The chapter rows: the first one's top, and each one's height and the gap below it. */
   slots: { top: 78, height: 32, gap: 2 },
   edges: { min: 3, max: 10 },
-  /** How far the page tab reaches past the thickest stack, to meet the column. */
+  /** How far the page tab reaches past the thickest stack, to meet the column, and onto the page, short of its text. */
   tabReach: 10,
+  tabIn: 15,
   /** The facing page past the gutter: how much of it shows, and how much runs off the window. */
   facing: { shown: 56, hidden: 48 },
   cover: { top: 7, bottom: 9, side: 7, lip: 1 },
@@ -77,14 +78,13 @@ export const PHONE = {
   slots: { top: 54, height: 40, gap: 4 },
   edges: { min: 2, max: 8 },
   tabReach: 4,
+  tabIn: 8,
   facing: { shown: 12, hidden: 20 },
   cover: { top: 7, bottom: 9, side: 7, lip: 1 },
   page: { top: 12, bottom: 10, outer: 12, gutter: 20, head: 22, folio: 22, body: 12 } satisfies PagePadding,
   halfGap: 25,
 } as const;
 
-/** A page's tab reaches this far onto the page past its fore-edge (D15). */
-export const PAGE_TAB_IN = 15;
 /** The bookmark's width (D4), and how far it keeps from either side of its page. */
 export const BOOKMARK_WIDTH = 14;
 export const BOOKMARK_INSET = 10;
@@ -254,7 +254,7 @@ function layoutSingle({ window, at, pages, chapters }: BookInput): SingleLayout 
   const pageTabs = slots.map((slot) => ({
     x: slot.x + slot.width - inside.x,
     y: slot.y - inside.y,
-    width: inside.x + PAGE_TAB_IN - (slot.x + slot.width),
+    width: inside.x + m.tabIn - (slot.x + slot.width),
     height: slot.height,
   }));
 

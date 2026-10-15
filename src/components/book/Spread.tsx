@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ViewTransition, type ReactNode } from "react";
 import { BookPage, Bookmark, PageTab } from "@/components/book/Book";
-import { useBookFrame } from "@/components/book/BookFrame";
+import { useBookFrame, type Chapter } from "@/components/book/BookFrame";
 import { roman } from "@/lib/book/chapters";
-import { chaptersFor, layoutBook, type BookLayout } from "@/lib/book/layout";
+import { layoutBook, type BookLayout } from "@/lib/book/layout";
 import { riffleBookmarkX } from "@/lib/book/turns";
+import { cn } from "@/lib/utils";
 
 // What a page of the dashboard renders: its pages, in the frame's book (plans/book-ui.md D1,
 // D4, D8, D15). A spread is a left page and a right page; in the one-page form they are the
@@ -26,9 +27,9 @@ export type PageContent = { head?: ReactNode; folio?: ReactNode; body: ReactNode
 
 /** The book's layout for the current chapter, once the browser has the window. */
 function useLayout(): BookLayout | null {
-  const { form, chapters, at, window, tabs } = useBookFrame();
+  const { form, chapters, at, column, window, tabs } = useBookFrame();
   if (at < 0 || !window) return null;
-  return layoutBook({ window, form, at, pages: chapters.length, tabs: tabs ?? [], chapters: chaptersFor(window) });
+  return layoutBook({ window, form, at, pages: chapters.length, tabs: tabs ?? [], chapters: column });
 }
 
 /** Where the current page's bookmark or page tab goes. */
@@ -104,24 +105,43 @@ function RiffledLeaves({ layout }: { layout: BookLayout | null }) {
   });
 }
 
+/** The way back from a second level to its chapter's own page. */
+function BackLink({ chapter, className }: { chapter: Chapter; className?: string }) {
+  return (
+    <Link href={chapter.href} className={cn("book-back", className)}>
+      Back to {chapter.label}
+    </Link>
+  );
+}
+
 /**
  * A page's spread. On a second level the camera zooms in (D8, D9): the right page fills the
  * window, and the left page's content stands against the spine, in the part of it that shows.
- * In the one-page form a second level shows only its right page.
+ * In the one-page form a second level shows only its right page, with the way back to its
+ * chapter in the running head (D15).
  */
 export function Spread({ left, right }: { left: PageContent; right: PageContent }) {
-  const { form, at, level, tabs } = useBookFrame();
+  const { form, chapters, at, level, tabs } = useBookFrame();
   const layout = useLayout();
   const { bookmark, pageTab } = marksOf(layout, at, tabs !== null);
   const tab = pageTab && <PageTab top={pageTab.y} height={pageTab.height} />;
-  const second = level === 2;
+  const second = level === 2 && at >= 0;
 
   if (form === "single") {
+    const head = second ? (
+      <>
+        <BackLink chapter={chapters[at]} />
+        <span className="grow" />
+        {right.head}
+      </>
+    ) : (
+      left.head
+    );
     return (
       <>
         <RiffledLeaves layout={layout} />
         <PagePicture part="s">
-          <BookPage side="single" head={second ? right.head : left.head} folio={right.folio ?? left.folio} marks={tab}>
+          <BookPage side="single" head={head} folio={right.folio ?? left.folio} marks={tab}>
             {!second ? (
               <div className="book-halves">
                 <div className="book-half">{left.body}</div>
@@ -192,7 +212,12 @@ export function InterimSpread({ children }: { children: ReactNode }) {
       <>
         <RiffledLeaves layout={layout} />
         <PagePicture part="s">
-          <BookPage side="single" head={head} folio={folio} marks={pageTab && <PageTab top={pageTab.y} height={pageTab.height} />}>
+          <BookPage
+            side="single"
+            head={level === 2 && chapter ? <BackLink chapter={chapter} /> : head}
+            folio={folio}
+            marks={pageTab && <PageTab top={pageTab.y} height={pageTab.height} />}
+          >
             <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
           </BookPage>
         </PagePicture>
@@ -207,9 +232,7 @@ export function InterimSpread({ children }: { children: ReactNode }) {
         <PagePicture part="l">
           <BookPage side="left" zoomed marks={bookmark?.side === "left" && <Bookmark x={bookmark.x} />}>
             <div className="book-shown">
-              <Link href={chapter.href} className="self-end text-[13px] font-bold text-muted-foreground hover:text-foreground">
-                Back to {chapter.label}
-              </Link>
+              <BackLink chapter={chapter} className="self-end" />
             </div>
           </BookPage>
         </PagePicture>

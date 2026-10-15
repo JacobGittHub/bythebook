@@ -424,6 +424,12 @@ body {
 }
 .book-running-head { height: var(--page-head, 22px); font: italic 500 13px/1 var(--font-display); }
 .book-folio { height: var(--page-folio, 22px); font: 500 11.5px/1 var(--font-figures); }
+/* The way back from a second level to its chapter, in words (AGENTS.md § "UI"). */
+.book-back {
+  font: 700 13px/1 var(--font-body);
+  color: var(--muted-foreground);
+}
+.book-back:hover { color: var(--foreground); }
 .book-page-body {
   position: relative;
   z-index: 1;
@@ -547,13 +553,13 @@ body {
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 6px), 0 100%);
 }
 /* A page's tab in the one-page form: from the chapter column's edge (--tab-out past the page),
-   in by 15px, with a fold where it turns around the fore-edge. */
+   in by --tab-in, short of the page's text, with a fold where it turns around the fore-edge. */
 .book-page-tab {
   --tab-reach: var(--tab-out, calc(var(--edge-left) + 10px));
   position: absolute;
   left: calc(-1 * var(--tab-reach) - 1px);
   z-index: 9;
-  width: calc(var(--tab-reach) + 16px);
+  width: calc(var(--tab-reach) + 1px + var(--tab-in, 15px));
   padding-block: 6px;
   pointer-events: none;
   filter: drop-shadow(-1px 1px 1px var(--mark-shadow));

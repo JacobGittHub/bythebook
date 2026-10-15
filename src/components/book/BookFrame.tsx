@@ -7,6 +7,8 @@ import {
   House,
   LogIn,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
   Puzzle,
   SlidersHorizontal,
   Store,
@@ -37,8 +39,16 @@ import { useAppearance } from "@/context/Appearance";
 import type { ChapterIcon } from "@/lib/auth/access";
 import { NO_CAMERA, cameraTransform, shownHeight, zoomCamera, type Camera } from "@/lib/book/camera";
 import { bookOrder, chapterAt, levelAt, type Level } from "@/lib/book/chapters";
-import { FORM_COOKIE, SPREAD_QUERY, bookFrameCss } from "@/lib/book/frameCss";
-import { chaptersFor, layoutBook, type BookForm, type Size, type Span, type SpreadLayout } from "@/lib/book/layout";
+import { CHAPTERS_COOKIE, FORM_COOKIE, SPREAD_QUERY, bookFrameCss } from "@/lib/book/frameCss";
+import {
+  chaptersFor,
+  layoutBook,
+  type BookForm,
+  type ChapterColumn,
+  type Size,
+  type Span,
+  type SpreadLayout,
+} from "@/lib/book/layout";
 import { moveBetween, moveTiming, type Place, type TurnWay, type Zoom } from "@/lib/book/turns";
 import type { Motion } from "@/lib/appearance";
 import { cn } from "@/lib/utils";
@@ -94,6 +104,8 @@ type BookFrameContext = {
   /** The current page's chapter, or -1 outside every chapter, and its level there (D8). */
   at: number;
   level: Level;
+  /** The one-page form's chapter column: the reader's pick, or the window's default (a phone shows icons whatever it says). */
+  column: ChapterColumn;
   /** The window, and the strip's tabs as measured; null until the browser has them. */
   window: Size | null;
   tabs: Span[] | null;
@@ -110,6 +122,7 @@ const FrameContext = createContext<BookFrameContext>({
   chapters: [],
   at: -1,
   level: 1,
+  column: "names",
   window: null,
   tabs: null,
   onPicture: () => undefined,
@@ -139,6 +152,7 @@ const readWindow = (): Size => {
 export function BookFrame({
   chapters,
   initialForm,
+  initialColumn,
   viewer,
   debug,
   signOut,
@@ -148,6 +162,8 @@ export function BookFrame({
   chapters: Chapter[];
   /** The form to render on the server, from `FORM_COOKIE`. */
   initialForm: BookForm;
+  /** The reader's pick of the chapter column, from `CHAPTERS_COOKIE`, or null to follow the window. */
+  initialColumn: ChapterColumn | null;
   viewer: { signedIn: boolean; displayName: string | null };
   debug: boolean;
   signOut: () => Promise<void>;
@@ -158,6 +174,8 @@ export function BookFrame({
   const size = useSyncExternalStore(subscribeWindow, readWindow, () => null);
   const at = chapterAt(pathname, chapters.map((c) => c.href));
   const level = at < 0 ? 1 : levelAt(pathname, chapters[at].href);
+  const [columnPick, setColumnPick] = useState(initialColumn);
+  const column = columnPick ?? (size ? chaptersFor(size) : "names");
   const [tabs, setTabs] = useState<Span[] | null>(null);
   const tabRefs = useRef<(HTMLElement | null)[]>([]);
   const { motion } = useAppearance();
@@ -165,7 +183,7 @@ export function BookFrame({
   // The camera for a place in the book: a second level's zoom in the spread (D8), or none.
   const spreadAt = (chapter: number): SpreadLayout | null => {
     if (!size || form !== "spread") return null;
-    const layout = layoutBook({ window: size, form, at: chapter, pages: chapters.length, tabs: [], chapters: chaptersFor(size) });
+    const layout = layoutBook({ window: size, form, at: chapter, pages: chapters.length, tabs: [], chapters: column });
     return layout.form === "spread" ? layout : null;
   };
   const cameraAt = (place: Place): Camera => {
@@ -188,6 +206,9 @@ export function BookFrame({
   useEffect(() => {
     document.cookie = `${FORM_COOKIE}=${form}; path=/; max-age=31536000; samesite=lax`;
   }, [form]);
+  useEffect(() => {
+    if (columnPick) document.cookie = `${CHAPTERS_COOKIE}=${columnPick}; path=/; max-age=31536000; samesite=lax`;
+  }, [columnPick]);
 
   const measure = useCallback(() => {
     if (form !== "spread") return setTabs(null);
@@ -214,11 +235,11 @@ export function BookFrame({
   const account = <AccountLinks viewer={viewer} debug={debug} signOut={signOut} form={form} />;
 
   return (
-    <FrameContext.Provider value={{ form, motion, turn, chapters, at, level, window: size, tabs, onPicture }}>
+    <FrameContext.Provider value={{ form, motion, turn, chapters, at, level, column, window: size, tabs, onPicture }}>
       <style href="book-frame" precedence="default">
         {bookFrameCss()}
       </style>
-      <div className="book-frame" data-form={form}>
+      <div className="book-frame" data-form={form} data-chapters={columnPick ?? undefined}>
         {/* The strip and the chapter column show the new chapter halfway through a turn. */}
         {form === "spread" ? (
           <ViewTransition name="book-strip" update={motion === "none" ? "none" : "turn-strip"} default="none">
@@ -250,7 +271,11 @@ export function BookFrame({
           <ViewTransition name="book-chapters" update={motion === "none" ? "none" : "turn-strip"} default="none">
             <nav aria-label="Chapters" className="book-chapters">
               <div className="book-chapters-head">
-                <Brand />
+                <span className="book-chapters-brand">
+                  <Brand />
+                </span>
+                <span className="grow" />
+                <ColumnToggle column={column} onPick={setColumnPick} />
               </div>
               <div className="book-chapter-list">
                 {chapters.map((chapter, i) => {
@@ -372,7 +397,27 @@ function useTurn(
   return { turn, onPicture };
 }
 
-/** The brand; in the narrow chapter column, its first letter. */
+/** Narrows the chapter column to icons, or widens it to names (D15). A phone has no such button. */
+function ColumnToggle({ column, onPick }: { column: ChapterColumn; onPick: (column: ChapterColumn) => void }) {
+  const names = column === "names";
+  const label = names ? "Narrow the chapters to icons" : "Widen the chapters to names";
+  const Icon = names ? PanelLeftClose : PanelLeftOpen;
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="book-chapters-toggle size-7 text-muted-foreground"
+      aria-label={label}
+      title={label}
+      aria-pressed={!names}
+      onClick={() => onPick(names ? "icons" : "names")}
+    >
+      <Icon aria-hidden className="size-4" />
+    </Button>
+  );
+}
+
+/** The brand; on a phone's chapter column, its first letter. */
 function Brand() {
   return (
     <span className="font-heading text-[19px] leading-[30px] font-semibold tracking-[-0.01em]">
