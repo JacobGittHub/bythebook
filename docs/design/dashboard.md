@@ -2,10 +2,11 @@
 
 **Status:** Live
 **Files:** `src/app/dashboard/layout.tsx` (the frame and Sign out),
-`src/components/layout/DashboardShell.tsx`, `src/components/overview/OverviewShowcase.tsx`,
+`src/components/book/` (the book frame and its parts), `src/lib/book/` (the book's layout),
+`src/components/overview/OverviewShowcase.tsx`,
 `src/app/dashboard/visualizations/page.tsx`, `src/components/ui/RouteCard.tsx`,
 `src/components/books/BookViewPage.tsx` (the small visualizations), `src/components/library/`
-(the Library and the Bookstore), `src/lib/auth/access.ts` (what the sidebar and both pages
+(the Library and the Bookstore), `src/lib/auth/access.ts` (what the strip and both pages
 list), `src/app/globals.css` (theme tokens), `src/context/Appearance.tsx` and
 `src/lib/appearance.ts` (the theme and vibes settings), `src/components/ui/Panel.tsx`,
 `src/components/settings/AppearancePanel.tsx`
@@ -16,23 +17,36 @@ covers how they work. The decisions behind them are `plans/deployment.md` D16–
 
 ## The frame
 
-- **`DashboardShell` frames every dashboard page.** On a wide screen the sidebar stays in
-  view while the page scrolls and can collapse to a rail; on a phone it is a drawer opened
-  from a top bar.
-- **It sets `--dash-offset`,** the height of everything around the content (padding, the
-  frame's border and, on a phone, the top bar), which board pages subtract from `100dvh`.
-- **It draws the vibe areas around the page** (`plans/vibes.md` D13): the backdrop layer
-  behind everything, the sidebar (and the phone's top bar) and the frame that holds the page.
-  The auth pages (`src/app/auth/layout.tsx`) have the same backdrop and one panel.
-- **The sidebar lists `NAV_ITEMS`** for the viewer, with sign-in links for a guest and Sign
-  out for a user.
-- **Debug mode adds "Copy bug report"** (`BugReportButton`) above the account block, for the
+The dashboard is an open book on a desk (`plans/book-ui.md`, which is being built; its
+Phase 4 rewrites this section).
+
+- **`BookFrame` frames every dashboard page:** the desk, with the strip above it (the brand,
+  a tab per `NAV_ITEMS` entry the viewer may open, the vibes switch and the account links) or,
+  in the one-page form, the chapter column beside it. Windows narrower than
+  `SPREAD_MIN_WIDTH` get the one-page form (`formFor`), and a phone's column shows icons
+  only.
+- **Each page renders its own book** with `Spread` (`src/components/book/Spread.tsx`): its
+  left page, its right page and, for a second level, how far the book slides. A page that
+  isn't a spread yet is wrapped in `InterimSpread`, which lays it across both pages.
+- **Where everything sits comes from `layoutBook`** (`src/lib/book/layout.ts`), whose property
+  tests hold its invariants. The frame draws it with CSS: `bookFrameCss`
+  (`src/lib/book/frameCss.ts`) turns the layout's constants into custom properties, so the
+  server render is in place before any script runs. Only the bookmarks and page tabs, which
+  depend on where the strip's tabs are, wait for the browser.
+- **The server can't see the window,** so it renders the form the last visit had (the
+  `FORM_COOKIE` cookie), or the spread; until the script has the right form, a frame of the
+  wrong one isn't laid out.
+- **It sets `--dash-offset`,** the height of everything around a page's body, which board
+  pages subtract from `100dvh` (`bodyOffset`).
+- **Debug mode adds "Copy bug report"** (`BugReportButton`) beside the account links, for the
   viewers `canDebug` (`src/lib/auth/debug.ts`) allows: everyone under `next dev` when
   `DEBUG_MODE=true`, and deployed, only the accounts whose email is on `DEBUG_EMAILS`. It copies
   `formatBugReport`'s text: the address, time, window size, theme and vibes setting, guest or
   signed in, the browser, and a section from each page that adds one through `useBugReportSection`
-  (`src/context/BugReport.tsx`). `BugReportProvider` wraps the whole frame, so the sidebar's
+  (`src/context/BugReport.tsx`). `BugReportProvider` wraps the whole frame, so the strip's
   button can read the page beside it.
+- **The sign-in pages** (`src/app/auth/layout.tsx`) are outside the book, one panel on the
+  backdrop, until Phase 3 puts them on the desk.
 
 ## Overview
 
@@ -171,7 +185,7 @@ block that sets the tokens below and decorates the marked areas.
   (`--desk`, `--page`, `--page-alt`, `--rule`, `--cover`, `--page-edge`, `--gutter`,
   `--turn-shade`, `--bookmark`, `plans/book-ui.md` D2, D3) and shadcn/ui's names
   (`--background`, `--card`, `--muted`, `--border`, `--primary` and the rest), most of which
-  are made from the book's, plus the app's own: the sidebar's, the move bars'
+  are made from the book's, plus the app's own: the move bars'
   (`--bar-white`, `--bar-draw`, `--bar-black`), the board's arrows, `--warning`, `--success`
   and `--overlay`. Code that needs a color string, such as the board's arrows, reads one with
   `useThemeColor`. Every `rounded-*` class is a multiple of `--radius`, and the fonts are
@@ -183,12 +197,12 @@ block that sets the tokens below and decorates the marked areas.
 - **Controls are shadcn/ui's,** from `src/components/shadcn/` (`components.json`), on those
   tokens. A bare `border` takes the theme's border color.
 - **A box that holds a page's content is a `Panel`,** with a `PanelLabel` for its small
-  heading. It and the frame's areas carry `data-slot` (`backdrop`, `topbar`, `sidebar`,
-  `frame`, `panel`, and `move-bar` on the move bars), beside shadcn/ui's own slots, and their
-  `::before` and `::after` are left for a vibe's ornaments.
+  heading, until the pages are spreads (`plans/book-ui.md` Phase 3). It carries
+  `data-slot="panel"`, as the sign-in pages' backdrop carries `backdrop` and the move bars
+  `move-bar`, beside shadcn/ui's own slots, and their `::before` and `::after` are left for a
+  vibe's ornaments.
 - **The book's parts** (`src/components/book/Book.tsx`) carry the book's vibe areas: `book`,
   `cover`, `page`, `page-edge`, `gutter`, `running-head`, `folio` and `margin`
-  (`plans/vibes.md` D14). They replace the frame's areas when the book shell replaces the
-  frame (`plans/book-ui.md` Phase 2).
+  (`plans/vibes.md` D14).
 - **The link reset in `globals.css` sits in the base layer.** Outside a layer it overrode
   every text-color utility on a link, which made links styled as dark buttons unreadable.

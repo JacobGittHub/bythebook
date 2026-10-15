@@ -110,11 +110,12 @@ failure in its report like any failing test.
 - `src/app/` holds routes, and `src/app/api/` holds route handlers.
 - `src/components/` is organized by feature: `board/`, `openings/`, `repertoire/`,
   `books/` (the book views), `library/` (the Library and Bookstore pages), `training/`,
-  `puzzles/`, `overview/`, `layout/` (the dashboard frame), `lab/` (the visualization
-  prototypes). `shadcn/` holds shadcn/ui's components, added with `npx shadcn@latest add`
+  `puzzles/`, `overview/`, `book/` (the dashboard's book frame and its parts), `layout/` (the
+  bug report button), `lab/` (the visualization prototypes). `shadcn/` holds shadcn/ui's components, added with `npx shadcn@latest add`
   and owned from then on (`docs/architecture.md` § "Dependencies").
 - `src/lib/chess/` holds chess logic and the opening catalog. `src/lib/books/` holds what is
-  worked out about books, the book views' layouts and the example books. `src/lib/library/`
+  worked out about books, the book views' layouts and the example books; `src/lib/book/`
+  (singular) holds the layout of the dashboard's book frame (`plans/book-ui.md`). `src/lib/library/`
   holds the library: validation, summaries, backups, the two stores and their write rules.
   `src/lib/db/` holds
   all Supabase access. `src/lib/validators/schemas.ts` holds the Zod schemas.
@@ -209,8 +210,8 @@ edit these files.
 
 **Guests and accounts**
 
-- A sidebar page is declared in `NAV_ITEMS`, and a visualization in `VISUALIZATIONS`, each
-  with whether it needs an account (`src/lib/auth/access.ts`). The sidebar, the proxy, the
+- A page of the book (a tab in the strip) is declared in `NAV_ITEMS`, and a visualization in `VISUALIZATIONS`, each
+  with whether it needs an account (`src/lib/auth/access.ts`). The book frame, the proxy, the
   Overview page and the Visualizations page read them; don't list pages anywhere else.
 - A button that routes to a page says so in words, as `RouteCard`
   (`src/components/ui/RouteCard.tsx`) does with its "Jump to page" tag. Don't use an arrow
@@ -242,8 +243,8 @@ edit these files.
 - A page with a main interactive board (explorer, trainer, puzzles) must fit the viewport.
   The page body never scrolls, the board scales to fit (`size="full"`), and only side panels
   scroll internally. Such a page is `h-[calc(100dvh-var(--dash-offset))]` tall; the offset
-  is set by `DashboardShell` (`src/components/layout/`), so don't hardcode one, and don't
-  use `100vh`.
+  is set by the book frame (`bodyOffset`, `src/lib/book/frameCss.ts`), so don't hardcode
+  one, and don't use `100vh`.
 - Build controls from shadcn/ui's components (`src/components/shadcn/`): Button, Dialog,
   AlertDialog, DropdownMenu, NativeSelect, ToggleGroup and the rest. A control asks with an
   AlertDialog before anything that can't be undone and reports with a toast (`sonner`), not
@@ -289,7 +290,7 @@ public like this file, so keep secrets out of both.
 | The Opening Explorer, its tree window or the book views (small visualizations) | `docs/design/explorer.md` |
 | The Treemap page's opening tree | `docs/design/opening-tree.md` |
 | Guest and account access, or sign-in | `docs/architecture.md` § "Auth and API routes" |
-| The dashboard frame, sidebar, Overview, Visualizations, Library or Bookstore page, or theme colors | `docs/design/dashboard.md` |
+| The dashboard's book frame, Overview, Visualizations, Library or Bookstore page, or theme colors | `docs/design/dashboard.md` |
 | The territory map (candidate) | `docs/design/territory-map.md` |
 | The hyperbolic panel (candidate) | `docs/design/hyperbolic-panel.md` |
 | The Visualizations page's prototypes: globe, ChessMap, or branch view | `docs/design/lab-prototypes.md` |

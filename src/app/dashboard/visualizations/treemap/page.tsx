@@ -1,4 +1,5 @@
 import { DashboardTree } from "@/components/repertoire/DashboardTree";
+import { InterimSpread } from "@/components/book/Spread";
 
 type Props = {
   searchParams: Promise<{ bookId?: string }>;
@@ -10,8 +11,10 @@ export default async function TreemapPage({ searchParams }: Props) {
   const { bookId } = await searchParams;
 
   return (
-    <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">
-      <DashboardTree initialBookId={bookId ?? null} />
-    </div>
+    <InterimSpread>
+      <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">
+        <DashboardTree initialBookId={bookId ?? null} />
+      </div>
+    </InterimSpread>
   );
 }

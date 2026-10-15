@@ -1,5 +1,10 @@
 import { LabHarness } from "@/components/lab/LabHarness";
+import { InterimSpread } from "@/components/book/Spread";
 
 export default function MapPrototypePage() {
-  return <LabHarness view="map" />;
+  return (
+    <InterimSpread>
+      <LabHarness view="map" />
+    </InterimSpread>
+  );
 }

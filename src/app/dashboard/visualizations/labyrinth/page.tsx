@@ -1,5 +1,6 @@
 import { RegionMapView } from "@/components/lab/RegionMapView";
 import { parseRootCamera } from "@/lib/regions/camera";
+import { InterimSpread } from "@/components/book/Spread";
 
 type Props = {
   /** `camera` reopens a view, as a bug report's "Reproduce" address does. */
@@ -12,8 +13,10 @@ export default async function LabyrinthPage({ searchParams }: Props) {
   const { camera } = await searchParams;
 
   return (
-    <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">
-      <RegionMapView initialCamera={parseRootCamera(camera)} />
-    </div>
+    <InterimSpread>
+      <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">
+        <RegionMapView initialCamera={parseRootCamera(camera)} />
+      </div>
+    </InterimSpread>
   );
 }

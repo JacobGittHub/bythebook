@@ -1,35 +1,46 @@
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import type { BookForm, PageSide } from "@/lib/book/layout";
 import { cn } from "@/lib/utils";
 
 // The book's parts (plans/book-ui.md D1, D3, D4, D15). Each vibe area carries a `data-slot`
 // and leaves its ::before and ::after to vibes (globals.css § "Vibe areas"); the paint is in
-// globals.css § "The book". Where a part sits comes from the caller for now, and from the
-// book's layout function once it exists (book-ui.md Phase 2).
+// globals.css § "The book". Where a part sits is the frame's (BookFrame), drawn from the
+// book's layout (src/lib/book/layout.ts).
 
-export type BookForm = "spread" | "single";
-export type PageSide = "left" | "right" | "single";
+export type { BookForm, PageSide };
 
 /**
  * The book: its cover, the stacks of page edges on either side and, as children, its pages.
- * `edges` gives the stacks' thickness in pixels, which says how far into the book the current
- * page is. A vibe sets its tokens on this element.
+ * The stacks' thickness says how far into the book the current page is: `order`, from 0 at the
+ * first page to 1 at the last, scaled by the frame (globals.css § "The book"), or `edges` in
+ * pixels. `slide` is how much of the left page stays in view when a second level slides the
+ * book (D8). A vibe sets its tokens on this element.
  */
 export function Book({
   form,
+  order,
   edges,
+  slide,
   className,
   style,
   children,
   ...props
 }: {
   form: BookForm;
-  edges: { left: number; right: number };
+  order?: number;
+  edges?: { left: number; right: number };
+  slide?: number | null;
 } & ComponentProps<"div">) {
-  const vars = { "--edge-left": `${edges.left}px`, "--edge-right": `${edges.right}px` } as CSSProperties;
+  const vars = {
+    ...(order !== undefined && { "--book-order": order }),
+    ...(edges && { "--edge-left": `${edges.left}px`, "--edge-right": `${edges.right}px` }),
+    ...(slide != null && { "--slide": `${slide}px` }),
+  } as CSSProperties;
   return (
     <div
       data-slot="book"
       data-form={form}
+      data-slid={slide != null ? "" : undefined}
       className={cn("book", className)}
       style={{ ...vars, ...style }}
       {...props}

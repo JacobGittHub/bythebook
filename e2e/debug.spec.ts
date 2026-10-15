@@ -10,8 +10,6 @@ const DEBUG_ON = process.env.DEBUG_MODE?.trim().toLowerCase() === "true" && !pro
 const copyButton = { name: "Copy bug report" } as const;
 
 test.describe("Debug mode, as a guest", () => {
-  test.skip(({ isMobile }) => isMobile, "The button is in the sidebar, a closed drawer on a phone.");
-
   test("shows the button only when debug mode is on", async ({ page }) => {
     await page.goto("/dashboard");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

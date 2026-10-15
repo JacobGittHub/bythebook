@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { BookViewPage } from "@/components/books/BookViewPage";
 import { isBookViewId } from "@/lib/books/views";
+import { InterimSpread } from "@/components/book/Spread";
 
 type Props = {
   params: Promise<{ view: string }>;
@@ -16,8 +17,10 @@ export default async function BookViewRoute({ params, searchParams }: Props) {
   if (!isBookViewId(view)) notFound();
 
   return (
-    <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">
-      <BookViewPage view={view} initialBookId={book ?? null} />
-    </div>
+    <InterimSpread>
+      <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">
+        <BookViewPage view={view} initialBookId={book ?? null} />
+      </div>
+    </InterimSpread>
   );
 }

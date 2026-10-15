@@ -1,0 +1,37 @@
+// Which chapter of the book an address is in (plans/book-ui.md D13): the chapters are the
+// book's pages in `NAV_ITEMS` order, and a page below one, such as a Library book's page, is
+// in its chapter.
+
+/**
+ * The index of the chapter `pathname` is in: the one whose address is the path, or the
+ * longest one the path goes on below. -1 when it is in none.
+ */
+export function chapterAt(pathname: string, hrefs: readonly string[]): number {
+  let best = -1;
+  hrefs.forEach((href, i) => {
+    const inside = pathname === href || pathname.startsWith(`${href}/`);
+    if (inside && (best === -1 || href.length > hrefs[best].length)) best = i;
+  });
+  return best;
+}
+
+/** How far into the book chapter `at` of `pages` is, from 0 at the first to 1 at the last. */
+export function bookOrder(at: number, pages: number): number {
+  return pages <= 1 || at < 0 ? 0 : Math.min(1, at / (pages - 1));
+}
+
+/** A chapter's number as the folio shows it, in Roman numerals: 1 is "I", 8 is "VIII". */
+export function roman(n: number): string {
+  const steps: [number, string][] = [
+    [1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"],
+    [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+  ];
+  let out = "";
+  for (const [value, numeral] of steps) {
+    while (n >= value) {
+      out += numeral;
+      n -= value;
+    }
+  }
+  return out;
+}

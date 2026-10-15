@@ -23,15 +23,20 @@ export type PageLink = {
   small?: boolean;
 };
 
+/** A chapter's icon in the book's narrow chapter column (plans/book-ui.md D15), by name. */
+export type ChapterIcon = "house" | "compass" | "eye" | "book" | "store" | "target" | "puzzle" | "sliders";
+
 /**
- * A sidebar page. `details` is the longer text beside its demo on the Overview page, and
- * `demo` is that demo, a looping GIF recorded by `npm run demos:record` into `public/demos/`.
+ * A page of the book, with its tab in the strip. `details` is the longer text beside its demo
+ * on the Overview page, and `demo` is that demo, a looping GIF recorded by
+ * `npm run demos:record` into `public/demos/`.
  */
-export type NavItem = PageLink & { details?: string; demo?: string };
+export type NavItem = PageLink & { icon: ChapterIcon; details?: string; demo?: string };
 
 export const NAV_ITEMS: NavItem[] = [
   {
     href: "/dashboard",
+    icon: "house",
     label: "Overview",
     access: "everyone",
     status: "live",
@@ -39,6 +44,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/explorer",
+    icon: "compass",
     demo: "/demos/explorer.gif",
     label: "Explorer",
     access: "everyone",
@@ -49,6 +55,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/visualizations",
+    icon: "eye",
     demo: "/demos/visualizations.gif",
     label: "Visualizations",
     access: "everyone",
@@ -59,6 +66,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/library",
+    icon: "book",
     demo: "/demos/library.gif",
     label: "Library",
     access: "everyone",
@@ -69,6 +77,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/bookstore",
+    icon: "store",
     demo: "/demos/bookstore.gif",
     label: "Bookstore",
     access: "everyone",
@@ -79,6 +88,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/train",
+    icon: "target",
     label: "Train",
     access: "everyone",
     status: "coming_soon",
@@ -88,6 +98,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/puzzles",
+    icon: "puzzle",
     label: "Puzzles",
     access: "everyone",
     status: "coming_soon",
@@ -97,6 +108,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/dashboard/settings",
+    icon: "sliders",
     demo: "/demos/settings.gif",
     label: "Settings",
     access: "everyone",
@@ -157,7 +169,7 @@ export const VISUALIZATIONS: PageLink[] = [
   },
 ];
 
-/** The sidebar links for this viewer. */
+/** The book's pages (its tabs) for this viewer, in book order. */
 export function visibleNavItems(signedIn: boolean): NavItem[] {
   return NAV_ITEMS.filter((item) => signedIn || item.access === "everyone");
 }

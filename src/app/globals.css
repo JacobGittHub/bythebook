@@ -51,13 +51,6 @@
   /* Things that went right, such as a correct move in a drill. */
   --success: #15803d;
 
-  /* The sidebar frame's, until the book replaces it (plans/book-ui.md Phase 2). */
-  --sidebar: #0f172a;
-  --sidebar-foreground: #f1f5f9;
-  --sidebar-muted-foreground: #94a3b8;
-  --sidebar-accent: rgb(255 255 255 / 0.1);
-  --sidebar-border: rgb(255 255 255 / 0.12);
-
   /* The move bars (white, draw, black): light, middle and dark in every theme and vibe
      (plans/vibes.md D13). */
   --bar-white: #dcd8cc;
@@ -95,12 +88,6 @@
   --warning: #f0a64a;
   --success: #4ade80;
 
-  --sidebar: #09090e;
-  --sidebar-foreground: #e8e6f2;
-  --sidebar-muted-foreground: #807f94;
-  --sidebar-accent: rgb(255 255 255 / 0.08);
-  --sidebar-border: rgb(255 255 255 / 0.1);
-
   --bar-white: #d6d2c6;
   --bar-draw: #8b8676;
   --bar-black: #0d0e10;
@@ -123,7 +110,6 @@
   --accent-foreground: var(--foreground);
   --input: var(--border);
   --ring: var(--muted-foreground);
-  --sidebar-accent-foreground: var(--sidebar-foreground);
 }
 
 :root {
@@ -177,12 +163,6 @@
   --color-bookmark: var(--bookmark);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-muted-foreground: var(--sidebar-muted-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
   --color-bar-white: var(--bar-white);
   --color-bar-draw: var(--bar-draw);
   --color-bar-black: var(--bar-black);
@@ -234,28 +214,133 @@ body {
 /* ── Vibe areas (plans/vibes.md D13, D14) ──────────────────────────────── */
 /* The parts a vibe decorates carry a `data-slot`, beside shadcn/ui's own slots. The book's
    are `book` (the whole book, where a vibe sets its tokens), `cover`, `page`, `page-edge`
-   (the stacks of leaves), `gutter`, `running-head`, `folio` and `margin`. The frame's
-   (`backdrop`, `sidebar`, `frame` and `panel`) stay until the book replaces the frame
-   (plans/book-ui.md Phase 2). Their ::before and ::after are left free for a vibe's
+   (the stacks of leaves), `gutter`, `running-head`, `folio` and `margin`. `panel` (a box on a
+   page) and `backdrop` (behind the sign-in pages) stay until the pages are spreads
+   (plans/book-ui.md Phase 3). Their ::before and ::after are left free for a vibe's
    ornaments, so the base UI never uses them on these elements. An ornament is decoration
    only: it ignores the pointer, never covers the board or text, and stops moving under
    reduced motion. */
 
-[data-slot="frame"],
 [data-slot="panel"],
-[data-slot="sidebar"],
 [data-slot="cover"],
 [data-slot="page"],
 [data-slot="margin"] {
   isolation: isolate;
 }
 
-/* ── The book (src/components/book/, plans/book-ui.md) ───────────────────── */
-/* The paint of the book's parts. Its layout (where the book sits, how wide each page is) is the
-   caller's. Nothing here uses ::before or ::after on a vibe area. */
+/* ── The book frame (src/components/book/BookFrame.tsx, plans/book-ui.md) ── */
+/* The desk, with the strip above it (the spread) or the chapter column beside it (the one-page
+   form). Its measurements are custom properties that the frame's style sheet sets from the
+   book's layout (src/lib/book/frameCss.ts); the rules here only use them. */
 
-/* The book is its own stacking context, so the cover (z-index -1) lies on the desk, not under it. */
+.book-frame {
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--desk);
+  color: var(--foreground);
+}
+.book-frame[data-form="spread"] {
+  flex-direction: column;
+}
+.book-strip {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 14px;
+  height: var(--strip);
+  /* Level with the outside of the page edges' stack. */
+  padding-inline: calc(var(--book-side) - var(--cover-side));
+  white-space: nowrap;
+}
+.book-desk {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  container: book-desk / inline-size;
+}
+
+/* The spread: the left page is half of the book between its side margins. A second level
+   slides the book left until `--slide` of the left page shows (D8); the right page keeps its
+   right edge and takes the rest. */
+.book-frame[data-form="spread"] .book {
+  --left-width: calc((100cqw - 2 * var(--book-side)) / 2);
+  --spine: calc(var(--book-side) + var(--left-width));
+  flex: 1;
+  margin: var(--book-top) var(--book-side) var(--book-bottom) calc(var(--spine) - var(--left-width));
+}
+.book-frame[data-form="spread"] .book[data-slid] {
+  --spine: min(var(--slide), var(--book-side) + var(--left-width));
+}
+.book-frame[data-form="spread"] .book > .book-page[data-side="left"] {
+  flex: 0 0 var(--left-width);
+}
+.book-frame[data-form="spread"] .book > .book-page[data-side="right"] {
+  flex: 1 1 0;
+}
+
+/* The one-page form: the chapter column, then the page, past the page tab's reach, with the
+   facing page running off the window. */
+.book-frame[data-form="single"] .book {
+  flex: 1;
+  margin: var(--book-margin) calc(-1 * var(--facing-hidden)) var(--book-margin) var(--tab-out);
+}
+.book-frame[data-form="single"] .book > .book-page {
+  flex: 1 1 0;
+}
+.book-chapters {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: var(--column);
+  padding-bottom: var(--book-margin);
+  white-space: nowrap;
+}
+/* The brand, above the chapters: its height puts the first chapter at --slot-top. */
+.book-chapters-head {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  height: var(--slot-top);
+  padding: var(--book-margin) 10px 0 18px;
+}
+.book-chapter-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slot-gap);
+}
+.book-chapter,
+.book-chapters-foot > * {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px 0 18px;
+}
+.book-chapter {
+  height: var(--slot-height);
+}
+.book-chapters-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: auto;
+}
+.book-chapters-foot > * {
+  min-height: 30px;
+}
+
+/* ── The book (src/components/book/, plans/book-ui.md) ───────────────────── */
+/* The paint of the book's parts. Where they sit is the frame's (above); the fallbacks in the
+   var()s are for a book outside it. Nothing here uses ::before or ::after on a vibe area. */
+
+/* The book is its own stacking context, so the cover (z-index -1) lies on the desk, not under it.
+   The stacks of page edges run from --edge-min at the start of the book to --edge-max at its
+   end; --book-order is how far into it the current page is, from 0 to 1. */
 .book {
+  --edge-left: calc(var(--edge-min, 4px) + (var(--edge-max, 20px) - var(--edge-min, 4px)) * var(--book-order, 0));
+  --edge-right: calc(var(--edge-min, 4px) + (var(--edge-max, 20px) - var(--edge-min, 4px)) * (1 - var(--book-order, 0)));
   position: relative;
   isolation: isolate;
   display: flex;
@@ -263,14 +348,18 @@ body {
 }
 [data-slot="cover"] {
   position: absolute;
-  inset: -8px calc(-1 * var(--edge-right) - 9px) -10px calc(-1 * var(--edge-left) - 9px);
+  inset:
+    calc(-1 * var(--cover-top, 8px))
+    calc(-1 * var(--edge-right) - var(--cover-side, 9px))
+    calc(-1 * var(--cover-bottom, 10px))
+    calc(-1 * var(--edge-left) - var(--cover-side, 9px));
   z-index: -1;
   border-radius: var(--radius-lg);
   background: var(--cover);
   box-shadow: var(--cover-shadow);
 }
 .book[data-form="single"] > [data-slot="cover"] {
-  left: calc(-1 * var(--edge-left) - 1px);
+  left: calc(-1 * var(--edge-left) - var(--cover-lip, 1px));
 }
 [data-slot="page-edge"] {
   position: absolute;
@@ -312,23 +401,24 @@ body {
   flex-direction: column;
   overflow: hidden;
   border-radius: inherit;
-  padding: 30px 34px 14px;
+  padding: var(--page-top, 30px) var(--page-outer, 34px) var(--page-bottom, 14px);
 }
-.book-page[data-side="left"] .book-page-inner { padding-right: 40px; }
-.book-page[data-side="right"] .book-page-inner { padding-left: 40px; }
-.book-page[data-side="single"] .book-page-inner { padding: 16px 44px 12px 30px; }
+.book-page[data-side="left"] .book-page-inner { padding-right: var(--page-gutter, 40px); }
+.book-page[data-side="right"] .book-page-inner { padding-left: var(--page-gutter, 40px); }
+.book-page[data-side="single"] .book-page-inner {
+  padding: var(--page-top, 16px) var(--page-gutter, 44px) var(--page-bottom, 12px) var(--page-outer, 30px);
+}
 .book-running-head,
 .book-folio {
   display: flex;
   flex: none;
   align-items: center;
   gap: 10px;
-  height: 22px;
   white-space: nowrap;
   color: var(--muted-foreground);
 }
-.book-running-head { font: italic 500 13px/1 var(--font-display); }
-.book-folio { font: 500 11.5px/1 var(--font-figures); }
+.book-running-head { height: var(--page-head, 22px); font: italic 500 13px/1 var(--font-display); }
+.book-folio { height: var(--page-folio, 22px); font: 500 11.5px/1 var(--font-figures); }
 .book-page-body {
   position: relative;
   z-index: 1;
@@ -337,7 +427,30 @@ body {
   flex: 1;
   flex-direction: column;
   gap: 14px;
-  padding-block: 12px;
+  padding-block: var(--page-body, 12px);
+  container: book-body / inline-size;
+}
+/* A spread's two halves on one page: side by side where each has room (frameCss.ts), stacked and
+   scrolling where not. The rule between them shows only side by side. */
+.book-halves {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: calc((var(--half-gap, 25px) - 1px) / 2);
+  overflow-y: auto;
+}
+.book-halves > .book-half {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+}
+.book-halves > .book-half-rule {
+  display: none;
+  width: 1px;
+  flex: none;
+  background: var(--rule);
 }
 [data-slot="gutter"] {
   position: absolute;
@@ -360,17 +473,27 @@ body {
    past the window's right edge, --facing-shown of it in view. The book's negative right margin
    takes the rest, and the facing page's far edge, the page edges and the cover, out of view. */
 .book[data-form="single"] {
-  --facing-shown: 56px;
-  --facing-hidden: 48px;
-  margin-right: calc(-1 * var(--facing-hidden));
+  margin-right: calc(-1 * var(--facing-hidden, 48px));
 }
 .book-facing {
-  width: calc(var(--facing-shown) + var(--facing-hidden));
+  width: calc(var(--facing-shown, 56px) + var(--facing-hidden, 48px));
   flex: none;
   border: 1px solid var(--border);
   border-left: 1px solid var(--crease);
   border-radius: 0 3px 3px 0;
   background: linear-gradient(to right, var(--gutter), transparent calc(var(--gutter-width) * 0.75)), var(--page);
+}
+
+/* What a page shows until it is made a spread (plans/book-ui.md Phase 3): the page as it was,
+   across both pages of the spread, over the spine. */
+.book-interim {
+  position: absolute;
+  inset:
+    calc(1px + var(--page-top) + var(--page-head) + var(--page-body))
+    calc(1px + var(--page-outer))
+    calc(1px + var(--page-bottom) + var(--page-folio) + var(--page-body));
+  z-index: 1;
+  overflow-y: auto;
 }
 
 /* A page's bookmark: the ribbon's shadow is on the box and its shape on ::before, since a
@@ -394,21 +517,21 @@ body {
     var(--bookmark);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 6px), 0 100%);
 }
-/* A page's tab in the one-page form: out past the page edges by --tab-out, in by 15px, with a
-   fold where it turns around the fore-edge. */
+/* A page's tab in the one-page form: from the chapter column's edge (--tab-out past the page),
+   in by 15px, with a fold where it turns around the fore-edge. */
 .book-page-tab {
-  --tab-out: calc(var(--edge-left) + 10px);
+  --tab-reach: var(--tab-out, calc(var(--edge-left) + 10px));
   position: absolute;
-  left: calc(-1 * var(--tab-out) - 1px);
+  left: calc(-1 * var(--tab-reach) - 1px);
   z-index: 9;
-  width: calc(var(--tab-out) + 16px);
+  width: calc(var(--tab-reach) + 16px);
   padding-block: 6px;
   pointer-events: none;
   filter: drop-shadow(-1px 1px 1px var(--mark-shadow));
   background-clip: content-box;
   border-radius: 3px 0 0 3px;
   background-image:
-    linear-gradient(to right, transparent calc(var(--tab-out) - 2px), var(--mark-fold) calc(var(--tab-out) + 1px), transparent calc(var(--tab-out) + 5px)),
+    linear-gradient(to right, transparent calc(var(--tab-reach) - 2px), var(--mark-fold) calc(var(--tab-reach) + 1px), transparent calc(var(--tab-reach) + 5px)),
     linear-gradient(var(--bookmark), var(--bookmark));
   background-origin: content-box;
 }

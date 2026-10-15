@@ -251,9 +251,9 @@ walks trees or aggregates runs client-side.
 - Sign-in uses `signInWithPassword()`. The server resolves the user with
   `supabase.auth.getUser()`.
 - **Guests use the app without an account.** There is no landing page: `/` redirects to
-  `/dashboard` (`next.config.ts`). `src/lib/auth/access.ts` lists the sidebar pages and the
+  `/dashboard` (`next.config.ts`). `src/lib/auth/access.ts` lists the book's pages and the
   visualizations, which of them need an account, and the guest and account differences
-  shown on the Overview page. The sidebar, `src/proxy.ts`, the Overview and the
+  shown on the Overview page. The book frame, `src/proxy.ts`, the Overview and the
   Visualizations page all read it, and the pages themselves are in `design/dashboard.md`.
   The decisions and the full table are in `plans/deployment.md` (D16–D20).
 - **Three layers enforce it.** The proxy redirects a guest away from an account-only page.

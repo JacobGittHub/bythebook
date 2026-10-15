@@ -34,9 +34,9 @@ const PAIRS: [string, string, number][] = [
   ["destructive-foreground", "destructive", TEXT],
   ["warning", "page", TEXT],
   ["success", "page", TEXT],
-  ["sidebar-foreground", "sidebar", TEXT],
-  ["sidebar-muted-foreground", "sidebar", TEXT],
   ["bookmark", "page", MARK],
+  // The current tab's underline in the strip.
+  ["bookmark", "desk", MARK],
   ["ring", "page", MARK],
 ];
 

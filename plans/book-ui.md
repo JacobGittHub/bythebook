@@ -1,6 +1,6 @@
 # Book UI
 
-Status: active · Updated: 2026-10-14 · Depends on: —
+Status: active · Updated: 2026-10-15 · Depends on: —
 
 **Goal:** rebuild the dashboard as an open book: every page a spread of two pages on a desk,
 with page turns, bookmarks that turn with their pages, a one-page form for narrow windows and
@@ -149,16 +149,30 @@ and get to the test of turns").
       applies between each pair of keyframes, so a middle keyframe stalled the swing there;
       the swing now has two keyframes and a separate fade. Safari didn't look right; the user
       put it off to Phase 4. The route goes once the shell is built.
-- [ ] (agent) A pure layout function for the book: given the window, the form and the slide,
+- [x] (agent) A pure layout function for the book: given the window, the form and the slide,
       the rectangles of the pages, the cover, the page edges, each tab's bookmark and, in the
       one-page form, each page tab. Property tests: the pages never overlap, everything fits
       the desk, the board's square fits its page at every listed window size, edge thickness
       grows with book order, every bookmark lies under its tab and on the page below it,
       every page tab lines up with its slot, and identical input gives identical output.
-- [ ] (agent) The book shell in place of `DashboardShell`: the strip (brand, tabs from
+      Done as `layoutBook` (`src/lib/book/layout.ts`), which also lists the window sizes
+      (`BOOK_WINDOW_SIZES`) for Phase 4's browser tests. The spread starts at 1,100 px, where
+      the left page's body is 440 px wide; it is worked out from the margins, not set. The
+      stacks run from thin to thick over the whole book whatever its length, and turning
+      moves no page. On phones the Explorer's board is 255–285 px, against about 325–355 px
+      today, since the chapter column, the page tab and the facing page take their share.
+- [x] (agent) The book shell in place of `DashboardShell`: the strip (brand, tabs from
       `NAV_ITEMS`, vibes switch, account links), the desk, the cover, the page edges, two page
       slots and the bookmarks. A page renders a spread component with its left page, its
       right page and, for a second level, how far the book slides.
+      Done as `BookFrame` and `Spread` (`src/components/book/`). Each page renders its own
+      book, so its slide is its own. The frame is drawn with CSS made from the layout's
+      constants (`bookFrameCss`), so the server render is in place before any script; the
+      server renders the form the last visit had (a cookie). It also draws the one-page form's
+      chapter column (names, or icons on a phone), page and page tabs, so narrow windows work
+      meanwhile; that step keeps its turns and polish. Until Phase 3, every page sits in
+      `InterimSpread`, its old content laid across both pages. `DashboardShell` and the
+      sidebar's colors are gone. The spike stays until the turns step moves its CSS.
 - [ ] (agent) Board pages fit their page instead of the viewport. `--dash-offset` gives way to
       the page's own height, and the board-page rule in `AGENTS.md` changes with it.
 - [ ] (agent) Turns, riffles, Slide and None, and the motion setting (D13, D14).

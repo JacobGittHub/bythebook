@@ -16,8 +16,11 @@ test.describe("Small visualizations, as a guest", () => {
 
   test("select a clicked position and show it on the board", async ({ page }) => {
     await page.goto("/dashboard/visualizations/books/ply-columns");
-    await page.locator('[data-move="1...d5"]').click();
+    const move = page.locator('[data-move="1...d5"]');
+    await move.click();
     // While the pointer is on the position the panel previews it; away from it, it is selected.
+    // The view pans to keep a selection in view, so the pointer goes back to where it moved.
+    await move.hover();
     await expect(page.getByText("Preview", { exact: true })).toBeVisible();
     await page.mouse.move(0, 0);
     await expect(page.getByText("Selected", { exact: true })).toBeVisible();
