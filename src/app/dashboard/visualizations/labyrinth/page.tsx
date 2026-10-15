@@ -14,7 +14,7 @@ export default async function LabyrinthPage({ searchParams }: Props) {
 
   return (
     <InterimSpread>
-      <div className="h-[calc(100dvh-var(--dash-offset))] min-h-0">
+      <div className="h-full min-h-0">
         <RegionMapView initialCamera={parseRootCamera(camera)} />
       </div>
     </InterimSpread>

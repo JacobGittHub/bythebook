@@ -14,12 +14,13 @@ tree in `src/lib/books/explorerTree.ts`
   `OpeningCatalogResults`. All playback belongs to the top-bar navigator.
 - **Forward navigation must be gated on alignment.** Never add forward navigation that
   bypasses the `isBoardOnHighlightedLine` check.
-- **The page fits the viewport at every width,** by the board-page rule under "UI" in
+- **The page fits its page of the book at every width,** by the board-page rule under "UI" in
   `AGENTS.md`. Below the `xl` breakpoint the board sits on top, as a square capped at a
-  share of the viewport height (the `max-w-[…dvh]` class on the board's container), and the
-  panels sit under it in one column that scrolls on its own: the move row first (pinned),
-  then the statistics, the engine and the tree window. At `xl` and wider the board is beside
-  the panel column and only the statistics panel scrolls.
+  share of the page's height (the `max-w-[…cqh]` class on the board's container, against the
+  page's root, a size container), and the panels sit under it in one column that scrolls on
+  its own: the move row first (pinned), then the statistics, the engine and the tree window.
+  At `xl` and wider the board is beside the panel column and only the statistics panel
+  scrolls.
 - **The book views use pure React + SVG.** No D3 and no Three.js.
 - **The tree window makes no API calls of its own.** It receives everything as props from
   `OpeningExplorer`, and all Lichess data flows through `OpeningExplorer`.

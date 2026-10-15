@@ -11,9 +11,6 @@ import {
   SINGLE,
   SPREAD,
   SPREAD_MIN_WIDTH,
-  layoutBook,
-  type BookForm,
-  type Size,
 } from "./layout";
 
 type Vars = Record<string, number>;
@@ -22,15 +19,6 @@ const declare = (vars: Vars) =>
   Object.entries(vars)
     .map(([name, px]) => `--${name}: ${px}px;`)
     .join(" ");
-
-/**
- * The height of everything around a page's body, which a page that fits its window subtracts
- * from `100dvh` (`--dash-offset`, AGENTS.md § "UI"). It is the same at every window height.
- */
-export function bodyOffset(form: BookForm, window: Size): number {
-  const layout = layoutBook({ window, form, at: 0, pages: 1, slide: null, tabs: [], chapters: "names" });
-  return window.height - layout.pages[0].body.height;
-}
 
 function pageVars(page: (typeof SPREAD)["page"] | (typeof SINGLE)["page"] | (typeof PHONE)["page"]): Vars {
   return {
@@ -44,7 +32,7 @@ function pageVars(page: (typeof SPREAD)["page"] | (typeof SINGLE)["page"] | (typ
   };
 }
 
-function singleVars(m: typeof SINGLE | typeof PHONE, column: number, window: Size): Vars {
+function singleVars(m: typeof SINGLE | typeof PHONE, column: number): Vars {
   return {
     column,
     "book-margin": m.margin,
@@ -62,7 +50,6 @@ function singleVars(m: typeof SINGLE | typeof PHONE, column: number, window: Siz
     "cover-lip": m.cover.lip,
     "half-gap": m.halfGap,
     ...pageVars(m.page),
-    "dash-offset": bodyOffset("single", window),
   };
 }
 
@@ -79,15 +66,12 @@ export function bookFrameCss(): string {
     "edge-min": SPREAD.edges.min,
     "edge-max": SPREAD.edges.max,
     ...pageVars(SPREAD.page),
-    "dash-offset": bodyOffset("spread", { width: SPREAD_MIN_WIDTH, height: 1000 }),
   };
-  const tablet = { width: CHAPTER_NAMES_MIN_WIDTH, height: 1000 };
-  const phone = { width: PHONE_MAX_WIDTH - 1, height: 1000 };
   const halvesSideBySide = 2 * HALF_MIN + SINGLE.halfGap;
 
   return [
     `.book-frame[data-form="spread"] { ${declare(spread)} }`,
-    `.book-frame[data-form="single"] { ${declare(singleVars(SINGLE, SINGLE.column.names, tablet))} }`,
+    `.book-frame[data-form="single"] { ${declare(singleVars(SINGLE, SINGLE.column.names))} }`,
     // Narrower, the chapter column shows icons; on a phone, everything around the page thins.
     `@media (width < ${CHAPTER_NAMES_MIN_WIDTH}px) {`,
     `  .book-frame[data-form="single"] { --column: ${SINGLE.column.icons}px; }`,
@@ -95,7 +79,7 @@ export function bookFrameCss(): string {
     `  .book-frame[data-form="single"] :is(.book-chapters-head, .book-chapter, .book-chapters-foot > *) { justify-content: center; padding-inline: 0; }`,
     `}`,
     `@media (width < ${PHONE_MAX_WIDTH}px) {`,
-    `  .book-frame[data-form="single"] { ${declare(singleVars(PHONE, PHONE.column.icons, phone))} }`,
+    `  .book-frame[data-form="single"] { ${declare(singleVars(PHONE, PHONE.column.icons))} }`,
     `}`,
     // The server can't see the window, so it renders the form the last visit had (or the
     // spread); until the script has the right one, a frame of the wrong form isn't laid out.

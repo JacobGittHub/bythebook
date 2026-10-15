@@ -8,16 +8,24 @@ test.describe("Explorer, as a guest", () => {
     await expect(page.getByRole("button", { name: /^e4 White/ })).toBeVisible();
   });
 
-  test("fits the viewport, so the page itself never scrolls", async ({ page }) => {
+  test("fits its page, so neither the window nor the page scrolls", async ({ page }) => {
     const overflow = await page.evaluate(() => {
       const root = document.documentElement;
+      // Every box that could scroll between the board and the book frame: the page's body,
+      // and whatever holds the board on it.
+      let pageDown = 0;
+      for (let el = document.querySelector('[data-square="e2"]')?.parentElement; el && !el.classList.contains("book-frame"); el = el.parentElement) {
+        if (/auto|scroll/.test(getComputedStyle(el).overflowY)) pageDown = Math.max(pageDown, el.scrollHeight - el.clientHeight);
+      }
       return {
         down: root.scrollHeight - root.clientHeight,
         across: root.scrollWidth - root.clientWidth,
+        pageDown,
       };
     });
     expect(overflow.down).toBeLessThanOrEqual(0);
     expect(overflow.across).toBeLessThanOrEqual(0);
+    expect(overflow.pageDown).toBeLessThanOrEqual(0);
   });
 
   test("plays a move clicked on the board, and takes it back", async ({ page }) => {

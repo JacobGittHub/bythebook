@@ -361,10 +361,11 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
   const moveTokensWrap = wrapMoves ? "xl:flex-wrap xl:whitespace-normal" : "";
 
   return (
-    // The page fits the viewport at every width. Wide: the board beside a panel column.
-    // Narrow (a phone or a small window): the board on top, sized from the viewport height,
-    // and the panels below it in one column that scrolls on its own.
-    <div className="flex h-[calc(100dvh-var(--dash-offset))] flex-col gap-2 xl:grid xl:grid-cols-[1.1fr_0.9fr]">
+    // The page fits its page of the book at every width. Wide: the board beside a panel column.
+    // Narrow (a phone or a small window): the board on top, sized from the page's height (a
+    // size container, for the board's cap below), and the panels below it in one column that
+    // scrolls on its own.
+    <div className="flex h-full flex-col gap-2 [container-type:size] xl:grid xl:grid-cols-[1.1fr_0.9fr]">
       {/* ── Left: board + search ── */}
       <section className="grid min-w-0 shrink-0 gap-2 xl:h-full" style={{ gridTemplateRows: "auto 1fr" }}>
         {/* Header: title row + book row */}
@@ -511,11 +512,11 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
 
         {/* Board + right-side eval bar */}
         <Panel className="flex min-h-0 justify-center gap-1.5 p-1.5">
-          {/* Narrow: a square as wide as the panel, but capped at about half the viewport's
+          {/* Narrow: a square as wide as the panel, but capped at about half the page's
               height (max-w below), so the panels under it always keep some room. Wide: it
               fills the panel and the inner square takes the smaller side. */}
           <div
-            className="aspect-square min-h-0 w-full max-w-[52dvh] flex-1 xl:aspect-auto xl:max-w-none"
+            className="aspect-square min-h-0 w-full max-w-[52cqh] flex-1 xl:aspect-auto xl:max-w-none"
             style={{ containerType: "size" }}
           >
             <div style={{ width: "min(100cqw, 100cqh)", height: "min(100cqw, 100cqh)" }}>

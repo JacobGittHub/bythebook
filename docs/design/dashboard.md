@@ -36,8 +36,8 @@ Phase 4 rewrites this section).
 - **The server can't see the window,** so it renders the form the last visit had (the
   `FORM_COOKIE` cookie), or the spread; until the script has the right form, a frame of the
   wrong one isn't laid out.
-- **It sets `--dash-offset`,** the height of everything around a page's body, which board
-  pages subtract from `100dvh` (`bodyOffset`).
+- **A page's body has a definite height,** set by the book, so a page that fits its window
+  (the board-page rule in `AGENTS.md` § "UI") is `h-full` in it.
 - **Debug mode adds "Copy bug report"** (`BugReportButton`) beside the account links, for the
   viewers `canDebug` (`src/lib/auth/debug.ts`) allows: everyone under `next dev` when
   `DEBUG_MODE=true`, and deployed, only the accounts whose email is on `DEBUG_EMAILS`. It copies

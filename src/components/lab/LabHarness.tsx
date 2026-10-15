@@ -197,7 +197,7 @@ export function LabHarness({ view }: { view: LabView }) {
     setConfig((c) => ({ ...c, [key]: v }));
 
   return (
-    <div className="flex h-[calc(100dvh-var(--dash-offset))] flex-col">
+    <div className="flex h-full flex-col">
       {/* Header */}
       <div className="flex items-center gap-4 pb-3">
         <div>

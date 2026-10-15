@@ -240,11 +240,11 @@ edit these files.
 
 **UI**
 
-- A page with a main interactive board (explorer, trainer, puzzles) must fit the viewport.
-  The page body never scrolls, the board scales to fit (`size="full"`), and only side panels
-  scroll internally. Such a page is `h-[calc(100dvh-var(--dash-offset))]` tall; the offset
-  is set by the book frame (`bodyOffset`, `src/lib/book/frameCss.ts`), so don't hardcode
-  one, and don't use `100vh`.
+- A page with a main interactive board (explorer, trainer, puzzles) must fit its page of the
+  book. The page body never scrolls, the board scales to fit (`size="full"`), and only side
+  panels scroll internally. Such a page is `h-full` in the page's body, which the book frame
+  sizes; size its parts from that height (container units), never from the viewport's
+  (`dvh`, `vh`).
 - Build controls from shadcn/ui's components (`src/components/shadcn/`): Button, Dialog,
   AlertDialog, DropdownMenu, NativeSelect, ToggleGroup and the rest. A control asks with an
   AlertDialog before anything that can't be undone and reports with a toast (`sonner`), not

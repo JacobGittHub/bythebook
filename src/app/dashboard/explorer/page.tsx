@@ -15,7 +15,7 @@ export default async function ExplorerPage({ searchParams }: Props) {
   const { fen, book, line } = await searchParams;
   return (
     <InterimSpread>
-      <main className="space-y-6">
+      <main className="h-full">
         <OpeningExplorer initialFen={fen} initialLine={parseLineParam(line)} initialBookId={book} />
       </main>
     </InterimSpread>

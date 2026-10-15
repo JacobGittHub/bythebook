@@ -173,8 +173,11 @@ and get to the test of turns").
       meanwhile; that step keeps its turns and polish. Until Phase 3, every page sits in
       `InterimSpread`, its old content laid across both pages. `DashboardShell` and the
       sidebar's colors are gone. The spike stays until the turns step moves its CSS.
-- [ ] (agent) Board pages fit their page instead of the viewport. `--dash-offset` gives way to
+- [x] (agent) Board pages fit their page instead of the viewport. `--dash-offset` gives way to
       the page's own height, and the board-page rule in `AGENTS.md` changes with it.
+      Done: a board page is `h-full` in its page's body, and the Explorer's narrow board is
+      capped at a share of the page's height (`cqh`), not the window's. `--dash-offset` and
+      `bodyOffset` are gone.
 - [ ] (agent) Turns, riffles, Slide and None, and the motion setting (D13, D14).
 - [ ] (agent) The book slide for second levels, with the Bookstore's strip (D8, D9).
 - [ ] (agent) The one-page form: the open left page with its gutter at the right and the
