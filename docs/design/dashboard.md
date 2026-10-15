@@ -27,9 +27,18 @@ Phase 4 rewrites this section).
   `SPREAD_MIN_WIDTH` get the one-page form (`formFor`), and a phone's column shows icons
   only.
 - **The book is the frame's, and each page renders its pages into it** with `Spread`
-  (`src/components/book/Spread.tsx`): its left page, its right page and, for a second level,
-  whether the book slides, until `SLIDE_SHOWN` of the left page shows. A page that isn't a
+  (`src/components/book/Spread.tsx`): its left page and its right page. A page that isn't a
   spread yet is wrapped in `InterimSpread`, which lays it across both pages.
+- **A page below a chapter's own page is its second level** (`levelAt`,
+  `src/lib/book/chapters.ts`), such as a Library book's page. In the spread a camera zooms in
+  on it (`zoomCamera`, `src/lib/book/camera.ts`): the right page fills the window but for
+  `ZOOM_SHOWN` of the left page at its left edge, and the book runs on past its bottom. The
+  frame sets the camera as the book's transform; the book itself keeps its layout. A second
+  level's pages are laid out for the zoomed view (`.book-zoomed`): at the window's own pixels,
+  as tall as the page shows (`shownHeight`), and set onto the page that much smaller, so they
+  read at the usual size; the left page's content stands against the spine (`.book-shown`).
+  An interim second level puts its content on the right page and a way back on the left. The
+  one-page form has no camera.
 - **Where everything sits comes from `layoutBook`** (`src/lib/book/layout.ts`), whose property
   tests hold its invariants. The frame draws it with CSS: `bookFrameCss`
   (`src/lib/book/frameCss.ts`) turns the layout's constants into custom properties, so the
@@ -50,20 +59,30 @@ Phase 4 rewrites this section).
 - **The sign-in pages** (`src/app/auth/layout.tsx`) are outside the book, one panel on the
   backdrop, until Phase 3 puts them on the desk.
 
-## Moving between chapters
+## Moving between pages
 
-A move to another chapter turns the page (`plans/book-ui.md` D13, D14), as a view transition.
+A move to another chapter, or down to a second level and back, turns the page
+(`plans/book-ui.md` D8, D13, D14), as a view transition.
 
 - **Each page is a picture named after its route** (`PagePicture` in `Spread.tsx`): the left
   page, the right page, the one page, and an interim page's content (its "ink"). Their classes
   say only which page each is and whether it leaves or arrives; `src/components/book/turns.css`
   animates them. React gives a page its enter and exit only when none of the page's own
   elements lies above it, which is why the book is the frame's.
-- **The frame works out the way** from the chapter it was at (`turnBetween`,
-  `src/lib/book/turns.ts`) and writes it on `<html>` as `data-turn`, since a leaving page last
-  rendered before the move. A move within a chapter doesn't turn. Every link turns, the tabs'
-  and the pages' own; the browser's back and forward buttons change pages at once, since Next
-  doesn't run them as transitions.
+- **The frame works out the move** from the place it was at (`moveBetween`,
+  `src/lib/book/turns.ts`) and writes it on `<html>`, the way as `data-turn` and the camera's
+  move as `data-zoom`, since a leaving page last rendered before the move. Going down a level
+  turns forward and coming up turns back; another page of the same level, such as another
+  Library book, doesn't turn. Every link turns, the tabs' and the pages' own; the browser's
+  back and forward buttons change pages at once, since Next doesn't run them as transitions.
+- **The camera moves with a second level's turn** (`moveTiming`): zooming in, it goes first
+  and the turn starts `ZOOM_OVERLAP` of the way into it; zooming out, the turn goes first.
+  The live book is at the new camera from the start; each picture, the book's own (`book`)
+  included, is moved on its own as the browser takes it (`onPicture` in `BookFrame`,
+  `moveWithCamera` in `src/components/book/camera.ts`, `pictureMove`), because not every browser
+  moves a picture with its live page. The strip is a picture over the pages, so a leaf that
+  rises past the desk's top passes under it. The timings are constants in `turns.ts`, which
+  `bookFrameCss` writes for `turns.css`.
 - **A jump of several chapters riffles** up to `MAX_RIFFLES` blank leaves between, each carrying
   its chapter's bookmark or page tab (`riffleBookmarkX` mirrors a bookmark onto a leaf that
   starts on the other side of the spine). They lie under the pages, where only the turn's

@@ -6,7 +6,7 @@ Status: active · Updated: 2026-10-15 · Depends on: —
 with page turns, bookmarks that turn with their pages, a one-page form for narrow windows and
 phones, and vibes that dress only the book.
 **Done when:** every dashboard page is a spread (or one page in the one-page form), the turns
-and the book slide run in current Chrome, Safari and Firefox and change instantly under
+and the second levels' zoom run in current Chrome, Safari and Firefox and change instantly under
 reduced motion, a phone gets the one-page form, and the browser tests and docs cover all of
 it.
 
@@ -15,7 +15,9 @@ it.
 From the user's messages of 2026-10-13 and 2026-10-14, about the mockup
 `plans/mockups/dashboard-spread.html` (rounds three to seven, the "Spread Pages" artifact).
 Q1–Q9 were answered on 2026-10-14; D4, D8 and D13–D19 hold the answers. D4 and D15 were
-amended the same day from the user's notes on round five.
+amended the same day from the user's notes on round five. Q10 was answered on 2026-10-15,
+from `plans/mockups/library-zoom.html` (the "Library Zoom" artifact); D4, D5, D8 and D9 hold
+it, replacing the book slide.
 
 - D1. **The dashboard is an open book on a desk**, the Spread layout of the Paperback
   direction (`plans/mockups/dashboard-paperback.html`). One strip above the book holds the
@@ -37,10 +39,11 @@ amended the same day from the user's notes on round five.
   back, the old one leaves on it. It never slides along the strip. The tab lights when its
   bookmark comes into view. A bookmark lands on whichever page lies under its tab, so a tab
   over the right page drops its bookmark there. Riffled pages carry their own bookmarks past
-  their tabs. While the book is slid (D8), the bookmark stays under its tab.
+  their tabs. While a second level is zoomed in (D8), the chapter's bookmark is on the left
+  page, out of view, and its tab in the strip stays lit.
 - D5. **No spine control and no flat pages** (round five, replacing round four's spine
-  arrows). The spine stays in the middle. Only a second level moves the book, by the slide
-  (D8, D9).
+  arrows). The spine stays in the middle. Only a second level moves the view, by the zoom
+  (D8, D9); the book itself never changes size or shape.
 - D6. **The Explorer is the Even layout.** Left page: search, the book and line controls,
   and the board. Right page: the book view on top, the engine in the middle, master moves at
   the bottom, and the line in the outer margin as a scoresheet with the ply. The scoresheet is
@@ -50,13 +53,27 @@ amended the same day from the user's notes on round five.
   size, and the board to the right page's top slot, small but still playable. One button does
   both ways, and it stays in one place: the right end of the right page's top slot. The point
   is a bigger view with the board still at hand.
-- D8. **A second level slides the whole book.** Opening a Library book's page turns no page:
-  the book slides left until only the list's last 300 px or so show at the window's edge,
-  right-aligned toward the spine with "All books" above it, enough to switch books without
-  sliding back (Q8's answer). The book's page takes the rest. "All books" slides it back.
-- D9. **The Bookstore keeps search and filters on its left page.** A store book's page slides
-  the book the same way (D8), so the shelf's page is out of sight but for a strip at the
-  window's edge, and that strip goes back to the shelf. Nothing else of the left page shows.
+- D8. **A second level zooms in, then turns** (Q10, replacing the book slide). Opening a
+  Library book's page zooms the view in on the right page until it fills the window but for
+  about 290 px of the left page at the window's left edge; the book runs on past the
+  window's bottom. The leaf then turns, starting about 45% of the way into the zoom, to a
+  spread whose left page shows the book list, right-aligned toward the spine with "All
+  books" above it, enough to switch books without going back (Q8's answer), and whose right
+  page is the book's page. Going back runs it in reverse: the leaf turns back, and the zoom
+  out starts about 45% of the way into the turn. Both run at the mockup's Fast speed (a zoom
+  of about 375 ms). Picking another book in the list re-inks the right page (D13). The
+  strip stays above the book, unzoomed. A second level's pages are laid out for the zoomed
+  view: drawn at the window's size and set onto the page that much smaller, so zoomed in
+  their type reads at the usual size, and only the part in view is laid out. The view never
+  scrolls. The user chose this order over turning first and then zooming with a scrolling
+  view: the book still runs off the frame, the strip isn't forced onto the book, and the
+  user never sees that the rest of a second level's page isn't there. Under None or reduced
+  motion it changes at once, as do the browser's back and forward buttons.
+- D9. **The Bookstore keeps search and filters on its left page.** A store book's page zooms
+  and turns the same way (D8), and the part of the second level's left page in view lists
+  the shelf's books, as the search and filters left them, right-aligned toward the spine
+  with a link back to the shelf above them, as the Library's does (the user's answer of
+  2026-10-15).
 - D10. **The Overview and Settings are spreads.** The Overview's left page is the book's
   contents, a chapter per page in book order with dotted leaders, and its right page shows
   the picked chapter's demo and description. Pressing works as it does today: the first
@@ -109,7 +126,9 @@ amended the same day from the user's notes on round five.
 - D18. **Visualizations is a chapter with its own tab again** (Q7), between the Explorer and
   the Library as in `NAV_ITEMS`. This rolls back the page merge of round four, as a trial.
   Its left page lists the visualizations as contents, grouped; its right page shows the picked
-  one with a preview, its summary and "Jump to page". Each one opens on a page of its own.
+  one with a preview, its summary and "Jump to page". Each one opens on a page of its own,
+  a second level (D8) whose left page lists the visualizations to switch between (the
+  user's answer of 2026-10-15).
 - D19. **The book comes now** (Q9). Everything else builds on it, so `deployment.md`'s
   Phases 6 (phones and themes) and 7 (launch, with the Overview's demos) are done on the book.
 
@@ -191,13 +210,17 @@ and get to the test of turns").
       An interim page's content can't be cut at the spine, so it stays on the pages that lie
       still while blank leaves turn. The setting is on the Settings page until Phase 3
       rebuilds it. Slide was dropped afterwards (D13).
-- [ ] (agent) The book slide for second levels, with the Bookstore's strip (D8, D9).
-      Open (Q10, 2026-10-15): the user proposes a turn and a zoom instead of the slide. Opening
-      a second level turns the leaf to a spread whose right page is the book's page, then the
-      view zooms in until the right page fills the window but for the left page's last 300 px
-      or so, and the book runs off the window's bottom; going back zooms out, then turns
-      back. Either the view can be scrolled down to the rest of the book, or the page shows
-      only what fits. D5, D8 and D9 change if it's taken.
+- [x] (agent) The zoom and turn for second levels, with the Bookstore's strip (D8, D9).
+      Done: a page below a chapter's own page is its second level (`levelAt`), and the
+      spread's camera (`src/lib/book/camera.ts`) zooms in on it; `SLIDE_SHOWN` is gone. The
+      live book sits at the new camera from the start, and each picture of the turn is moved
+      with the camera on its own, since Firefox doesn't move a picture with its live page. The
+      book is a picture of its own, and the strip lies over the pages, since zoomed in a
+      turning leaf rises past the desk's top. Until Phase 3 an interim second level shows its
+      content on the right page and only "Back to …" on the left; the lists of D8 and D9 come
+      with the Library and Bookstore pages. Playwright's WebKit on Windows draws the zoom out
+      wrong (the leaf over the strip, the new pages unmoved), like its turns in the spike; the
+      Safari step in Phase 4 covers it.
 - [ ] (agent) The one-page form: the open left page with its gutter at the right and the
       facing page running off the window, turns on the gutter, the page tabs and the phone's
       icon tabs (D15).
@@ -207,8 +230,8 @@ and get to the test of turns").
 - [ ] (agent) Overview (D10): the contents, with the Vibes chapter, and the demo window as a
       spread. The Vibes chapter is declared beside `NAV_ITEMS`, so the Overview still reads
       one list.
-- [ ] (agent) Library (D8): the first level as a spread, the second by the book slide.
-- [ ] (agent) Bookstore (D9): the first level as a spread, a book's page by the book slide.
+- [ ] (agent) Library (D8): the first level as a spread, the second by the zoom and turn.
+- [ ] (agent) Bookstore (D9): the first level as a spread, a book's page by the zoom and turn.
 - [ ] (agent) Explorer (D6, D7, D16, D17): the Even layout, the scoresheet, the swap, the
       chosen book in the book view, and the Labyrinth tab marked coming soon.
 - [ ] (agent) Visualizations (D18): the contents and the preview as a spread, and each
@@ -224,11 +247,11 @@ and get to the test of turns").
       never scrolls; each bookmark and page tab meets its tab; turns go the right way; None
       and reduced motion change pages instantly. New screenshot baselines
       (this takes over `vibes.md` Phase 1's open step).
-- [ ] (user, agent) Safari: the turns and the slide on a real iPhone or Mac, from a
+- [ ] (user, agent) Safari: the turns and the zoom on a real iPhone or Mac, from a
       production build on the local network. The spike's turns didn't look right there
       (2026-10-14); find out what Safari draws wrong and fix it, or give Safari None until
       it can. The Done-when needs Safari.
-- [ ] (agent) A slow-device check: turns and the slide with Chromium's CPU throttled four
+- [ ] (agent) A slow-device check: turns and the zoom with Chromium's CPU throttled four
       times. If they stutter, the user decides whether None becomes the default anywhere,
       phones first.
 - [ ] (agent) Docs: `docs/design/dashboard.md` and `docs/design/explorer.md` rewritten for
@@ -239,11 +262,11 @@ and get to the test of turns").
 
 ## Notes
 
-**One mechanism.** Almost everything in the book is the leaf's turn and the book's slide. A
-spread is two pages at the middle spine; a second level slides the book rather than turning;
+**One mechanism.** Almost everything in the book is the leaf's turn and the zoom. A
+spread is two pages at the middle spine; a second level zooms in and turns;
 the one-page form is the same turn hinged on the right edge. Bookmarks and page tabs are part
 of their pages, so they need no animation of their own. Pages state what each page holds and
-how far a second level slides, which keeps the narrow form from becoming a second app to
+whether a page is a second level, which keeps the narrow form from becoming a second app to
 test.
 
 **What stays.** shadcn/ui's controls (`vibes.md` D12). The board's squares and pieces, and

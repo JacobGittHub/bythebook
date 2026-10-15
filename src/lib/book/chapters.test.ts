@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { NAV_ITEMS } from "@/lib/auth/access";
-import { bookOrder, chapterAt, roman } from "./chapters";
+import { bookOrder, chapterAt, levelAt, roman } from "./chapters";
 
 const HREFS = NAV_ITEMS.map((item) => item.href);
 const index = (href: string) => HREFS.indexOf(href);
@@ -19,6 +19,14 @@ describe("chapterAt", () => {
   it("finds no chapter outside the book, or for a path that only shares a prefix", () => {
     expect(chapterAt("/auth/login", HREFS)).toBe(-1);
     expect(chapterAt("/dashboardx", HREFS)).toBe(-1);
+  });
+});
+
+describe("levelAt", () => {
+  it("puts a chapter's own page at the first level and every page below it at the second", () => {
+    expect(levelAt("/dashboard/library", "/dashboard/library")).toBe(1);
+    expect(levelAt("/dashboard/library/abc", "/dashboard/library")).toBe(2);
+    expect(levelAt("/dashboard/visualizations/books/icicle", "/dashboard/visualizations")).toBe(2);
   });
 });
 

@@ -1,9 +1,12 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { MOTION_STORAGE_KEY, type Motion } from "@/lib/appearance";
+import { ZOOM_SHOWN } from "@/lib/book/camera";
+import { SPREAD_MIN_WIDTH } from "@/lib/book/layout";
 import { expect, test } from "./fixtures/test";
 
-// The book's moves between chapters (plans/book-ui.md D13, D14): page turns, or none. A move is
-// recorded as the browser starts its animations: each animation's name and the picture it moves.
+// The book's moves between pages (plans/book-ui.md D8, D13, D14): page turns, or none, and a
+// second level's zoom. A move is recorded as the browser starts its animations: each animation's
+// name and the picture it moves, and `camera` for each picture the camera moves.
 
 declare global {
   interface Window {
@@ -20,13 +23,19 @@ async function recordMoves(page: Page, motion: Motion) {
       if (!start) return;
       Document.prototype.startViewTransition = function (this: Document, ...args: Parameters<Document["startViewTransition"]>) {
         const transition = start.apply(this, args);
+        // A frame after the pictures are ready, so the camera's animations have started too.
         transition.ready.then(
           () =>
-            window.__moves.push(
-              document
-                .getAnimations()
-                .filter((a) => a instanceof CSSAnimation && (a.effect as KeyframeEffect | null)?.pseudoElement?.startsWith("::view-transition"))
-                .map((a) => `${(a as CSSAnimation).animationName} ${(a.effect as KeyframeEffect).pseudoElement}`),
+            requestAnimationFrame(() =>
+              window.__moves.push(
+                document
+                  .getAnimations()
+                  .filter((a) => {
+                    const pseudo = (a.effect as KeyframeEffect | null)?.pseudoElement ?? "";
+                    return a instanceof CSSAnimation ? pseudo.startsWith("::view-transition") : pseudo.startsWith("::view-transition-image-pair");
+                  })
+                  .map((a) => `${a instanceof CSSAnimation ? a.animationName : "camera"} ${(a.effect as KeyframeEffect).pseudoElement}`),
+              ),
             ),
           () => window.__moves.push([]),
         );
@@ -39,8 +48,13 @@ async function recordMoves(page: Page, motion: Motion) {
 
 /** Goes to a chapter by its tab, or its row in the one-page form's column, and returns the move's animations. */
 async function moveTo(page: Page, label: string, href: string): Promise<string[]> {
+  return follow(page, page.getByRole("navigation", { name: "Chapters" }).getByRole("link", { name: label, exact: true }), href);
+}
+
+/** Follows a link to `href` and returns the move's animations. */
+async function follow(page: Page, link: Locator, href: string): Promise<string[]> {
   const before = await page.evaluate(() => window.__moves.length);
-  await page.getByRole("navigation", { name: "Chapters" }).getByRole("link", { name: label, exact: true }).click();
+  await link.click();
   await expect(page).toHaveURL(new RegExp(`${href}$`));
   // Under None no transition starts, so there is nothing to wait for.
   await page.waitForTimeout(300);
@@ -49,6 +63,12 @@ async function moveTo(page: Page, label: string, href: string): Promise<string[]
 }
 
 const form = (page: Page) => page.locator(".book-frame").getAttribute("data-form");
+/** Where the right page starts on the window: at the spine, or `ZOOM_SHOWN` in on a second level. */
+const rightPageAt = (page: Page) =>
+  page.locator('.book > .book-page[data-side="right"]').evaluate((el) => Math.round(el.getBoundingClientRect().left));
+const route = (href: string) => href.replace(/[^a-z0-9]+/gi, "-");
+/** Whether the window gets the spread; read from its width, since the server renders the last visit's form until the page starts. */
+const spreadWindow = (page: Page) => page.viewportSize()!.width >= SPREAD_MIN_WIDTH;
 const supportsTurns = (page: Page) => page.evaluate(() => "startViewTransition" in document);
 
 /**
@@ -98,10 +118,42 @@ test("Page turn: a jump of several chapters riffles the leaves between, up to th
   expect(riffles(await moveTo(page, "Overview", "/dashboard"))).toHaveLength(3);
 });
 
+test("Page turn: a second level zooms in, then turns, and turns back, then zooms out (D8)", async ({ page }) => {
+  await recordMoves(page, "turn");
+  await page.goto("/dashboard/bookstore");
+  test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
+  test.skip(!spreadWindow(page), "Only the spread zooms; the one-page form turns as between chapters.");
+  const spine = await rightPageAt(page);
+
+  const link = page.locator('a[href^="/dashboard/bookstore/"]').first();
+  const href = (await link.getAttribute("href"))!;
+  const into = await follow(page, link, href);
+  expect(into).toContain(`turn-fold-right ::view-transition-old(page-r-dashboard-bookstore)`);
+  expect(into).toContain(`camera ::view-transition-image-pair(page-r-dashboard-bookstore)`);
+  expect(into).toContain(`camera ::view-transition-image-pair(page-l${route(href)})`);
+  expect(into).toContain("camera ::view-transition-image-pair(book)");
+  // Zoomed in, the left page shows ZOOM_SHOWN at the window's edge.
+  await expect.poll(() => rightPageAt(page)).toBe(ZOOM_SHOWN);
+
+  const out = await follow(page, page.getByRole("link", { name: "Back to Bookstore" }), "/dashboard/bookstore");
+  expect(out).toContain(`turn-fold-left ::view-transition-old(page-l${route(href)})`);
+  expect(out).toContain(`camera ::view-transition-image-pair(page-r-dashboard-bookstore)`);
+  await expect.poll(() => rightPageAt(page)).toBe(spine);
+});
+
 test("None: pages change at once", async ({ page }) => {
   await recordMoves(page, "none");
   await page.goto("/dashboard/library");
   expect(await moveTo(page, "Bookstore", "/dashboard/bookstore")).toEqual([]);
+});
+
+test("None: a second level zooms at once", async ({ page }) => {
+  await recordMoves(page, "none");
+  await page.goto("/dashboard/bookstore");
+  test.skip(!spreadWindow(page), "Only the spread zooms.");
+  const link = page.locator('a[href^="/dashboard/bookstore/"]').first();
+  expect(await follow(page, link, (await link.getAttribute("href"))!)).toEqual([]);
+  await expect.poll(() => rightPageAt(page)).toBe(ZOOM_SHOWN);
 });
 
 test("Reduced motion: pages change at once, whatever the setting", async ({ page }) => {

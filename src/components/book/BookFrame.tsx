@@ -28,32 +28,37 @@ import {
   ViewTransition,
   type ReactNode,
 } from "react";
-import { Book } from "@/components/book/Book";
+import { Book, type BookCamera } from "@/components/book/Book";
+import { moveWithCamera, type CameraMove } from "@/components/book/camera";
 import { BugReportButton } from "@/components/layout/BugReportButton";
 import { Button } from "@/components/shadcn/button";
 import { Switch } from "@/components/shadcn/switch";
 import { useAppearance } from "@/context/Appearance";
 import type { ChapterIcon } from "@/lib/auth/access";
-import { bookOrder, chapterAt } from "@/lib/book/chapters";
+import { NO_CAMERA, cameraTransform, shownHeight, zoomCamera, type Camera } from "@/lib/book/camera";
+import { bookOrder, chapterAt, levelAt, type Level } from "@/lib/book/chapters";
 import { FORM_COOKIE, SPREAD_QUERY, bookFrameCss } from "@/lib/book/frameCss";
-import type { BookForm, Size, Span } from "@/lib/book/layout";
-import { turnBetween, type TurnWay } from "@/lib/book/turns";
+import { chaptersFor, layoutBook, type BookForm, type Size, type Span, type SpreadLayout } from "@/lib/book/layout";
+import { moveBetween, moveTiming, type Place, type TurnWay, type Zoom } from "@/lib/book/turns";
 import type { Motion } from "@/lib/appearance";
 import { cn } from "@/lib/utils";
 import "./turns.css";
 
-// The book frame (plans/book-ui.md D1, D12, D15): the desk, with the strip above it (the
+// The book frame (plans/book-ui.md D1, D8, D12, D15): the desk, with the strip above it (the
 // spread) or the chapter column beside it (the one-page form), and the book on it. The pages
 // are the route's: each renders its pages into the book (Spread.tsx), so a page says what its
-// two pages hold and whether its book slides. The frame tells the pages where they are in the
-// book, and where the strip's tabs are, for their bookmarks.
+// two pages hold. The frame tells the pages where they are in the book, at which level, and
+// where the strip's tabs are, for their bookmarks. A page below a chapter's own page is its
+// second level, which the spread's camera zooms in on (src/lib/book/camera.ts).
 //
-// A move to another chapter turns the page (D13, D14). Each page is a named view transition
+// A move to another page turns it (D8, D13, D14). Each page is a named view transition
 // (Spread.tsx), so the page leaving and the page arriving are pictures the browser animates
 // (turns.css). React gives a view transition its enter and exit only when no element of the
-// page's own lies above it, so the book, which holds the pages, is the frame's. The frame works out which way the book turns from the chapter it was at, and
-// writes it to <html> as `data-turn`: a leaving page last rendered before the move, so its
-// classes can't say the way.
+// page's own lies above it, so the book, which holds the pages, is the frame's. The frame
+// works out which way the book turns from the place it was at, and writes it to <html> as
+// `data-turn`, with the camera's move as `data-zoom`: a leaving page last rendered before the
+// move, so its classes can't say the way. As each picture of the turn appears, the page tells
+// the frame (`onPicture`), which moves it with the camera (camera.ts).
 
 export type Chapter = { href: string; label: string; icon: ChapterIcon };
 
@@ -68,34 +73,46 @@ const ICONS: Record<ChapterIcon, LucideIcon> = {
   sliders: SlidersHorizontal,
 };
 
-/** The last move between pages: which way the book turned and which chapters riffled past. */
+/** The last move between pages: which way the book turned, which chapters riffled past, and how the camera moved. */
 export type FrameTurn = {
   /** Counts the moves, so each turn's riffled leaves are new ones. */
   id: number;
   way: TurnWay | null;
   riffled: number[];
+  zoom: Zoom | null;
+  camera: CameraMove | null;
 };
+
+/** A picture of the turn the browser has taken: of the page that leaves (`old`) or the one that arrives (`new`). */
+export type PictureTaken = "old" | "new";
 
 type BookFrameContext = {
   form: BookForm;
   motion: Motion;
   turn: FrameTurn;
   chapters: Chapter[];
-  /** The current page's chapter, or -1 outside every chapter. */
+  /** The current page's chapter, or -1 outside every chapter, and its level there (D8). */
   at: number;
+  level: Level;
   /** The window, and the strip's tabs as measured; null until the browser has them. */
   window: Size | null;
   tabs: Span[] | null;
+  /** Moves the turn's picture `name` with the camera; returns what stops it. */
+  onPicture: (name: string, taken: PictureTaken) => (() => void) | undefined;
 };
+
+const NO_TURN: FrameTurn = { id: 0, way: null, riffled: [], zoom: null, camera: null };
 
 const FrameContext = createContext<BookFrameContext>({
   form: "spread",
   motion: "turn",
-  turn: { id: 0, way: null, riffled: [] },
+  turn: NO_TURN,
   chapters: [],
   at: -1,
+  level: 1,
   window: null,
   tabs: null,
+  onPicture: () => undefined,
 });
 
 export const useBookFrame = () => useContext(FrameContext);
@@ -140,10 +157,33 @@ export function BookFrame({
   const form = useSyncExternalStore(subscribeForm, readForm, () => initialForm);
   const size = useSyncExternalStore(subscribeWindow, readWindow, () => null);
   const at = chapterAt(pathname, chapters.map((c) => c.href));
+  const level = at < 0 ? 1 : levelAt(pathname, chapters[at].href);
   const [tabs, setTabs] = useState<Span[] | null>(null);
   const tabRefs = useRef<(HTMLElement | null)[]>([]);
   const { motion } = useAppearance();
-  const turn = useTurn(pathname, at, motion);
+
+  // The camera for a place in the book: a second level's zoom in the spread (D8), or none.
+  const spreadAt = (chapter: number): SpreadLayout | null => {
+    if (!size || form !== "spread") return null;
+    const layout = layoutBook({ window: size, form, at: chapter, pages: chapters.length, tabs: [], chapters: chaptersFor(size) });
+    return layout.form === "spread" ? layout : null;
+  };
+  const cameraAt = (place: Place): Camera => {
+    const layout = place.level === 2 ? spreadAt(place.at) : null;
+    return layout ? zoomCamera(layout) : NO_CAMERA;
+  };
+  const { turn, onPicture } = useTurn(pathname, { at, level }, motion, form, cameraAt);
+
+  let camera: BookCamera | undefined;
+  if (form === "spread" && level === 2) {
+    const layout = spreadAt(at);
+    if (!layout) camera = "pending";
+    else {
+      const zoom = zoomCamera(layout);
+      const { x, y } = layout.pages[0].rect;
+      camera = { transform: cameraTransform(zoom, { x, y }), scale: zoom.scale, pageHeight: shownHeight(layout, zoom) };
+    }
+  }
 
   useEffect(() => {
     document.cookie = `${FORM_COOKIE}=${form}; path=/; max-age=31536000; samesite=lax`;
@@ -174,7 +214,7 @@ export function BookFrame({
   const account = <AccountLinks viewer={viewer} debug={debug} signOut={signOut} form={form} />;
 
   return (
-    <FrameContext.Provider value={{ form, motion, turn, chapters, at, window: size, tabs }}>
+    <FrameContext.Provider value={{ form, motion, turn, chapters, at, level, window: size, tabs, onPicture }}>
       <style href="book-frame" precedence="default">
         {bookFrameCss()}
       </style>
@@ -238,7 +278,7 @@ export function BookFrame({
           </ViewTransition>
         )}
         <div className="book-desk">
-          <Book form={form} order={bookOrder(at, chapters.length)}>
+          <Book form={form} order={bookOrder(at, chapters.length)} camera={camera}>
             {children}
           </Book>
         </div>
@@ -254,39 +294,69 @@ const RIFFLE_CHECK_MS = 1000;
 const turning = () =>
   document.getAnimations().some((a) => (a.effect as KeyframeEffect | null)?.pseudoElement?.startsWith("::view-transition"));
 
-const NO_TURN: FrameTurn = { id: 0, way: null, riffled: [] };
-
 /**
- * The turn of the move to `pathname`, worked out as the page renders, so the arriving page
- * renders its riffled leaves in the same commit. A move within a chapter, or with motion off,
- * doesn't turn.
+ * The turn of the move to `pathname`, at `place`, worked out as the page renders, so the
+ * arriving page renders its riffled leaves in the same commit, and the camera's move with it
+ * (`cameraAt` gives a place's camera). Another page of the same level, or any move with motion
+ * off, doesn't turn. Also returns `onPicture`, which moves each of the turn's pictures with the
+ * camera as the browser takes it, and the book's own picture with the first.
  */
-function useTurn(pathname: string, at: number, motion: Motion): FrameTurn {
-  const [state, setState] = useState({ pathname, at, turn: NO_TURN });
+function useTurn(
+  pathname: string,
+  place: Place,
+  motion: Motion,
+  form: BookForm,
+  cameraAt: (place: Place) => Camera,
+): { turn: FrameTurn; onPicture: BookFrameContext["onPicture"] } {
+  const [state, setState] = useState({ pathname, place, turn: NO_TURN });
   let current = state;
   if (state.pathname !== pathname) {
-    const turn = motion === "none" ? null : turnBetween(state.at, at);
+    const move = motion === "none" ? null : moveBetween(state.place, place, form);
+    let camera: CameraMove | null = null;
+    if (move?.zoom) {
+      const timing = moveTiming(move);
+      camera = { from: cameraAt(state.place), to: cameraAt(place), start: timing.zoomStart, duration: timing.zoomEnd - timing.zoomStart };
+    }
     current = {
       pathname,
-      at,
+      place,
       turn: {
         id: state.turn.id + 1,
-        way: turn?.way ?? null,
-        riffled: turn?.riffled ?? [],
+        way: move?.way ?? null,
+        riffled: move?.riffled ?? [],
+        zoom: move?.zoom ?? null,
+        camera,
       },
     };
     setState(current);
   }
   const { turn } = current;
 
-  // turns.css reads the way, and how many leaves riffle, from <html>. Layout effects run before
-  // the browser starts the turn's animations.
+  // The turn whose pictures the browser is taking, and whether the book's own has moved.
+  const taking = useRef({ turn: NO_TURN, bookMoved: false });
+
+  // turns.css reads the way, how many leaves riffle and how the camera moves from <html>. Layout
+  // effects run before the browser takes the turn's new pictures and starts their animations.
   useLayoutEffect(() => {
     const html = document.documentElement;
     if (turn.way) html.setAttribute("data-turn", turn.way);
     else html.removeAttribute("data-turn");
     html.setAttribute("data-riffles", String(turn.riffled.length));
+    if (turn.way && turn.zoom) html.setAttribute("data-zoom", turn.zoom);
+    else html.removeAttribute("data-zoom");
+    taking.current = { turn, bookMoved: false };
   }, [turn]);
+
+  const onPicture = useCallback((name: string, taken: PictureTaken) => {
+    const move = taking.current.turn.camera;
+    if (!move) return undefined;
+    const moving = [moveWithCamera(name, taken === "old" ? move.from : move.to, move)];
+    if (!taking.current.bookMoved) {
+      taking.current.bookMoved = true;
+      moving.push(moveWithCamera("book", move.to, move));
+    }
+    return () => moving.forEach((animation) => animation.cancel());
+  }, []);
 
   useEffect(() => {
     if (turn.riffled.length === 0) return;
@@ -299,7 +369,7 @@ function useTurn(pathname: string, at: number, motion: Motion): FrameTurn {
     return () => clearTimeout(timer);
   }, [turn]);
 
-  return turn;
+  return { turn, onPicture };
 }
 
 /** The brand; in the narrow chapter column, its first letter. */

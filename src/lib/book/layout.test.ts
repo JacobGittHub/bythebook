@@ -67,7 +67,6 @@ function randomInput(rng: Rng, form?: BookForm): BookInput {
     form: picked,
     at: Math.floor(rng() * pages),
     pages,
-    slide: rng() < 0.4 ? Math.round(150 + rng() * 400) : null,
     tabs: randomTabs(rng, window),
     chapters: rng() < 0.5 ? "names" : "icons",
   };
@@ -75,7 +74,7 @@ function randomInput(rng: Rng, form?: BookForm): BookInput {
 
 /** The input a listed window size gets by default. */
 function listedInput(size: Size, at = 0, pages = 8): BookInput {
-  return { window: size, form: formFor(size), at, pages, slide: null, tabs: [], chapters: chaptersFor(size) };
+  return { window: size, form: formFor(size), at, pages, tabs: [], chapters: chaptersFor(size) };
 }
 
 /** Every rectangle in a layout, named. */
@@ -147,9 +146,6 @@ describe("layoutBook", () => {
       const { desk, cover, edges } = layout;
 
       if (layout.form === "spread") {
-        // Slid, the left page, its stack and the cover's left side run off the window's left edge.
-        const slid = input.slide !== null;
-        const off: ("left" | "right")[] = slid ? ["left"] : [];
         const parts: [string, Rect][] = [
           ["cover", cover],
           ["left edges", edges.left],
@@ -158,10 +154,7 @@ describe("layoutBook", () => {
           ["right page", layout.pages[1].rect],
         ];
         for (const [name, r] of parts) {
-          if (!inside(r, desk, off)) wrong.push(`run ${run}: the ${name} ${show(r)} leaves the desk ${show(desk)}`);
-        }
-        if (slid && Math.abs(right(layout.pages[0].rect) - Math.min(input.slide!, right(layoutBook({ ...input, slide: null }).pages[0].rect))) > EPS) {
-          wrong.push(`run ${run}: slid by ${input.slide}, the left page ends at ${right(layout.pages[0].rect)}`);
+          if (!inside(r, desk)) wrong.push(`run ${run}: the ${name} ${show(r)} leaves the desk ${show(desk)}`);
         }
         if (layout.nav.height !== desk.y) wrong.push(`run ${run}: the strip and the desk don't meet`);
       } else {
@@ -207,7 +200,7 @@ describe("layoutBook", () => {
     const wrong: string[] = [];
     for (const size of BOOK_WINDOW_SIZES) {
       for (let pages = 2; pages <= 12; pages++) {
-        const at = (i: number) => layoutBook({ ...listedInput(size, i, pages), slide: null });
+        const at = (i: number) => layoutBook(listedInput(size, i, pages));
         const first = at(0);
         for (let i = 0; i + 1 < pages; i++) {
           const here = at(i);
@@ -290,9 +283,6 @@ describe("layoutBook", () => {
       const b = JSON.stringify(layoutBook(structuredClone(input)));
       if (a !== b) wrong.push(`run ${run}: two layouts differ`);
     }
-    // The one-page form doesn't slide (D8 is the spread's).
-    const single = randomInput(mulberry32(7), "single");
-    expect(layoutBook({ ...single, slide: 300 })).toEqual(layoutBook({ ...single, slide: null }));
     expectNoViolations(wrong);
   });
 });

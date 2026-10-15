@@ -1,20 +1,23 @@
-/* The book's moves between chapters (plans/book-ui.md D13, D14), as view transitions. Each page
+/* The book's moves between pages (plans/book-ui.md D8, D13, D14), as view transitions. Each page
    is a picture named after its route, with a class for which page it is and whether it leaves
    or arrives (Spread.tsx): page-l, page-r and page-s (the one page), and page-ink, an interim
-   page's content. The frame writes the way on <html> (`data-turn`, BookFrame.tsx), and the
-   motion setting is `data-motion` (src/context/Appearance.tsx): turn or none.
+   page's content. The book, with its cover and page edges, is a picture of its own (`book`).
+   The frame writes the way on <html> (`data-turn`, BookFrame.tsx), and how the camera moves
+   with a second level (`data-zoom`: in, out or across); the motion setting is `data-motion`
+   (src/context/Appearance.tsx): turn or none. The timings are the frame's (frameCss.ts).
 
    A picture is one face, so a spread's turn is two halves: the old page folds to the spine,
-   then the new one opens from it. Nothing animates unless a rule below says so, so a move
-   within a chapter, and every move under None, changes at once. */
+   then the new one opens from it. Nothing animates unless a rule below says so, so another page
+   of the same level, and every move under None, changes at once. The camera moves each picture
+   from the script (src/components/book/camera.ts), since only it knows where the camera was. */
 
 :root {
-  --turn: 450ms;
   --turn-half: calc(var(--turn) / 2);
   --turn-depth: 2800px;
-  /* A jump of several chapters riffles up to three leaves, each this long after the one before,
-     and the turn's last page waits for them. */
-  --riffle-step: 70ms;
+  /* A zoom in's turn waits for the camera (D8). */
+  --turn-start: 0ms;
+  /* A jump of several chapters riffles up to three leaves, each --riffle-step after the one
+     before, and the turn's last page waits for them. */
   --riffle-delay: 0ms;
   --turn-total: calc(var(--turn) + var(--riffle-delay));
 }
@@ -36,14 +39,28 @@
 ::view-transition-new(*) {
   mix-blend-mode: normal;
 }
-/* What isn't a page (the desk, the cover, the edges) changes at once, under the moving pages. */
-::view-transition-old(root) {
+/* What isn't a page (the desk, the book's cover and edges) changes at once, under the moving
+   pages. */
+::view-transition-old(root),
+::view-transition-old(book) {
   display: none;
 }
-/* The strip and the chapter column have no paper behind them, so their old picture goes at
-   once unless a turn keeps it to the middle. */
+/* The camera's moves transform each picture's image pair from its top left (camera.ts). */
+::view-transition-image-pair(*) {
+  transform-origin: 0 0;
+}
+/* The strip's and the chapter column's old picture goes at once unless a turn keeps it to the
+   middle. */
 ::view-transition-old(.turn-strip) {
   display: none;
+}
+/* The strip is a picture in every move, over the pages, so a leaf that rises toward you passes
+   under it: zoomed in on a second level, the leaves rise past the desk's top (D8). */
+.book-strip {
+  view-transition-name: book-strip;
+}
+::view-transition-group(book-strip) {
+  z-index: 50;
 }
 
 /* ── Page turn ─────────────────────────────────────────────────────────── */
@@ -51,10 +68,10 @@
 /* The strip's and the chapter column's current tab change halfway, as the new page shows. */
 :root[data-motion="turn"][data-turn]::view-transition-old(.turn-strip) {
   display: block;
-  animation: turn-out-at-half var(--turn) linear both;
+  animation: turn-out-at-half var(--turn) linear var(--turn-start) both;
 }
 :root[data-motion="turn"][data-turn]::view-transition-new(.turn-strip) {
-  animation: turn-in-at-half var(--turn) linear both;
+  animation: turn-in-at-half var(--turn) linear var(--turn-start) both;
 }
 
 /* Forward: the right page folds to the spine, then the next left page opens from it. */
@@ -64,14 +81,14 @@
 }
 :root[data-motion="turn"][data-turn="forward"]::view-transition-old(.page-r-out) {
   transform-origin: left center;
-  animation: turn-fold-right var(--turn-half) ease-in both;
+  animation: turn-fold-right var(--turn-half) ease-in var(--turn-start) both;
 }
 :root[data-motion="turn"][data-turn="forward"]::view-transition-new(.page-r-in) {
-  animation: turn-uncover var(--turn-half) ease-out both;
+  animation: turn-uncover var(--turn-half) ease-out var(--turn-start) both;
 }
 :root[data-motion="turn"][data-turn="forward"]::view-transition-new(.page-l-in) {
   transform-origin: right center;
-  animation: turn-open-left var(--turn-half) ease-out calc(var(--turn-half) + var(--riffle-delay)) both;
+  animation: turn-open-left var(--turn-half) ease-out calc(var(--turn-start) + var(--turn-half) + var(--riffle-delay)) both;
 }
 
 /* Back: the left page folds to the spine, then the previous right page opens from it. */
@@ -81,31 +98,35 @@
 }
 :root[data-motion="turn"][data-turn="back"]::view-transition-old(.page-l-out) {
   transform-origin: right center;
-  animation: turn-fold-left var(--turn-half) ease-in both;
+  animation: turn-fold-left var(--turn-half) ease-in var(--turn-start) both;
 }
 :root[data-motion="turn"][data-turn="back"]::view-transition-new(.page-l-in) {
-  animation: turn-uncover var(--turn-half) ease-out both;
+  animation: turn-uncover var(--turn-half) ease-out var(--turn-start) both;
 }
 :root[data-motion="turn"][data-turn="back"]::view-transition-new(.page-r-in) {
   transform-origin: left center;
-  animation: turn-open-right var(--turn-half) ease-out calc(var(--turn-half) + var(--riffle-delay)) both;
+  animation: turn-open-right var(--turn-half) ease-out calc(var(--turn-start) + var(--turn-half) + var(--riffle-delay)) both;
 }
 
 /* An interim page's content spans the spine, so it can't turn with a leaf. It stays on the
    pages that lie still: forward, the old content on the left page until the new left page
    covers it, and the new content on the right page as the old one folds off it. The turning
-   leaves are blank. The content's box is centered on the spine, so its halves are 50%. */
+   leaves are blank. The content's box is centered on the spine, so its halves are 50%. Until a
+   zoom in's turn starts, the old content lies whole on top of its blank leaves. */
 :root[data-motion="turn"][data-turn]::view-transition-group(.page-ink-out),
 :root[data-motion="turn"][data-turn]::view-transition-group(.page-ink-in) {
   z-index: 1;
 }
+:root[data-motion="turn"][data-turn]::view-transition-group(.page-ink-out) {
+  animation: turn-ink-on-top var(--turn-start) linear;
+}
 :root[data-motion="turn"][data-turn="forward"]::view-transition-old(.page-ink-out),
 :root[data-motion="turn"][data-turn="back"]::view-transition-new(.page-ink-in) {
-  animation: turn-ink-left var(--turn-total) linear both;
+  animation: turn-ink-left var(--turn-total) linear var(--turn-start) forwards;
 }
 :root[data-motion="turn"][data-turn="forward"]::view-transition-new(.page-ink-in),
 :root[data-motion="turn"][data-turn="back"]::view-transition-old(.page-ink-out) {
-  animation: turn-ink-right var(--turn-total) linear both;
+  animation: turn-ink-right var(--turn-total) linear var(--turn-start) forwards;
 }
 
 /* Riffled leaves (Spread.tsx): each a whole leaf, blank but for its bookmark, turned over the
@@ -123,7 +144,7 @@
 :root[data-motion="turn"][data-turn]::view-transition-group(.riffle-spread-0),
 :root[data-motion="turn"][data-turn]::view-transition-group(.riffle-spread-1),
 :root[data-motion="turn"][data-turn]::view-transition-group(.riffle-spread-2) {
-  --riffle-at: calc(var(--turn-half) / 2 + var(--k) * var(--riffle-step));
+  --riffle-at: calc(var(--turn-start) + var(--turn-half) / 2 + var(--k) * var(--riffle-step));
   --riffle-turn: calc(var(--turn) * 0.8);
   --z-before: calc(5 - var(--k));
   --z-after: calc(5 + var(--k));
@@ -262,6 +283,9 @@
 @keyframes turn-uncover {
   from { filter: brightness(0.8); }
   to { filter: brightness(1); }
+}
+@keyframes turn-ink-on-top {
+  from, to { z-index: 20; }
 }
 @keyframes turn-ink-left {
   from, to { clip-path: inset(0 50% 0 0); }

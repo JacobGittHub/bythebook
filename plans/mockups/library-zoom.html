@@ -1,0 +1,877 @@
+<!-- Mockup for plans/book-ui.md Q10: a second level as a camera zoom and then a page turn onto a page laid out for the zoomed view (the user's pick of 2026-10-15, with Overlapped and Fast), beside the earlier turn-then-zoom with a scrolling camera and the book slide of D8 for comparison. Drawn on the Library; the Bookstore would work the same way. Published as the "Library Zoom" artifact. -->
+<title>Library Zoom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,500;0,7..72,600;0,7..72,700;1,7..72,500&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a sticky control bar, one live window drawn large (it scales to the page), a caption that
+   says what you're looking at and what to try, then notes. The page chrome has its own quiet palette;
+   the mock carries the book's tokens on its own root. */
+:root {
+  --page: #eceeea;
+  --sheet: #fbfbf9;
+  --ink: #22262b;
+  --ink-soft: #5d646c;
+  --line: #d5d8d2;
+  --accent: #2c4a74;
+  --chip: #e2e5e0;
+  --ui: "Geist", "Segoe UI", system-ui, sans-serif;
+  --serif: "Literata", Georgia, serif;
+  --mono: "Geist Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #121417; --sheet: #1a1d21; --ink: #e8e5de; --ink-soft: #a09d97; --line: #2e3238;
+    --accent: #a9c0e6; --chip: #23272c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #121417; --sheet: #1a1d21; --ink: #e8e5de; --ink-soft: #a09d97; --line: #2e3238;
+  --accent: #a9c0e6; --chip: #23272c; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font: 15px/1.55 var(--ui); }
+.wrap { max-width: 1320px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 80px; display: grid; gap: 32px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font: 600 clamp(28px, 4vw, 38px)/1.1 var(--serif); letter-spacing: -0.01em; }
+h3 { font: 600 16px/1.3 var(--ui); }
+p { margin: 0; }
+.eyebrow { font: 600 11px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); }
+.lede { max-width: 74ch; color: var(--ink-soft); margin-top: 12px; }
+code { font: 500 0.88em var(--mono); background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+
+.studio { display: grid; gap: 14px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; padding: 12px; background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.ctl { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-soft); }
+.ctl > span { font-weight: 500; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; background: var(--chip); border-radius: 9px; }
+.seg button { font: 500 13px/1 var(--ui); color: var(--ink-soft); background: transparent; border: 0; border-radius: 7px; padding: 8px 10px; cursor: pointer; }
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / 0.12); }
+.seg button:focus-visible, .tour:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tour { margin-left: auto; font: 600 13px/1 var(--ui); color: var(--sheet); background: var(--accent); border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
+.tour[aria-pressed="true"] { background: var(--ink-soft); }
+
+figure { margin: 0; display: grid; gap: 10px; }
+.fit { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 10px; border: 1px solid var(--line); background: var(--sheet); }
+.fit > .mock { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+.caption { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 28px; font-size: 14px; }
+.caption p { min-width: 0; }
+.caption b { font-weight: 600; }
+.caption .try { color: var(--ink-soft); }
+
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 28px 40px; }
+.notes ul { margin: 10px 0 0; padding-left: 18px; display: grid; gap: 8px; max-width: 66ch; }
+.notes li::marker { color: var(--ink-soft); }
+
+@media (max-width: 760px) {
+  .controls { position: static; }
+  .caption { grid-template-columns: 1fr; }
+  .tour { margin-left: 0; }
+}
+
+/* ───────────────────────────── The mock ───────────────────────────── */
+.mock {
+  --r: 8px; --pr: calc(var(--r) * 1.25); --gw: 96px; --gdur: 420ms;
+  --desk: #e2e4df; --sheet: #fbfbf8;
+  --fg: #22252b; --muted: #eef0ea; --muted-fg: #5c636b;
+  --rule: #d9dcd5; --border: #d0d4cd;
+  --primary: #2c4a74; --primary-fg: #ffffff;
+  --sel: #e3e9f3; --ribbon: #8c2f39;
+  --input-bg: #ffffff;
+  --cover: #26364f; --edge-line: #cfd2ca;
+  --spine: rgb(70 60 40 / 0.32); --shade: rgb(30 25 15 / 0.55);
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Literata", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  /* The book views keep their own colors (plans/vibes.md D11). */
+  --view-bg: #eef0ea; --view-halo: #eef0ea;
+  --view-edge: rgba(120, 108, 95, 0.45); --view-white: #ece5d8; --view-white-edge: #9c9282; --view-black: #2a2420;
+  --fam-0: #2f6aa3; --fam-1: #1f8a7a; --fam-2: #c2622a; --fam-3: #8a6a3f; --fam-4: #7457a8; --fam-5: #6f7f2c; --fam-6: #557086; --fam-7: #b0405f;
+  color-scheme: light;
+  position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--desk); color: var(--fg); font: 13px/1.4 var(--font-body);
+}
+.mock[data-mode="dark"] {
+  --gw: 46px;
+  --desk: #0e1013; --sheet: #1c1f24;
+  --fg: #e9e5dc; --muted: #24282e; --muted-fg: #a3a19b;
+  --rule: #30343b; --border: #383c44;
+  --primary: #a9c0e6; --primary-fg: #12161d;
+  --sel: rgb(169 192 230 / 0.13); --ribbon: #c9505c;
+  --input-bg: #191c21; --cover: #1b2433; --edge-line: #2d3138;
+  --spine: rgb(0 0 0 / 0.5); --shade: rgb(0 0 0 / 0.7);
+  --view-bg: #24282e; --view-halo: #24282e;
+  --view-edge: rgba(170, 165, 200, 0.36); --view-white: #d9d4e6; --view-white-edge: #8e8aa3; --view-black: #0b0b10;
+  --fam-0: #6fa3dc; --fam-1: #4fc0ad; --fam-2: #e88e55; --fam-3: #c19a68; --fam-4: #a68adf; --fam-5: #a8b85a; --fam-6: #8aa6bd; --fam-7: #e07a96;
+  color-scheme: dark;
+}
+.mock *, .mock *::before, .mock *::after { box-sizing: border-box; }
+.mock [role="button"] { cursor: pointer; }
+.mock [role="button"]:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+/* Type */
+.h1 { font: 600 26px/1.15 var(--font-display); letter-spacing: -0.01em; }
+.sub { color: var(--muted-fg); font-size: 12px; }
+.sc { font: 600 10.5px/1 var(--font-display); letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted-fg); white-space: nowrap; }
+.rh { font: italic 500 13px/1 var(--font-display); color: var(--muted-fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.grow { flex: 1; min-width: 0; }
+
+/* Controls (shadcn/ui shapes, book paint) */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: var(--r); border: 1px solid transparent; font: 700 12px/1 var(--font-body); white-space: nowrap; color: var(--fg); flex: none; }
+.btn svg { width: 14px; height: 14px; }
+.btn.primary { background: var(--primary); color: var(--primary-fg); }
+.btn.outline { background: var(--input-bg); border-color: var(--border); }
+.btn.ghost { background: transparent; font-weight: 400; }
+.btn.icon { width: 28px; padding: 0; }
+.btn[role="button"]:hover { filter: brightness(0.96); }
+.input { display: flex; align-items: center; gap: 7px; height: 28px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--r); background: var(--input-bg); color: var(--muted-fg); font-size: 12.5px; min-width: 0; }
+.input svg { width: 14px; height: 14px; flex: none; }
+.input .val { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--border); border-radius: var(--r); background: var(--input-bg); flex: none; }
+.tg span { display: flex; align-items: center; gap: 5px; height: 21px; padding: 0 8px; border-radius: calc(var(--r) * 0.7); font-size: 12px; font-weight: 700; color: var(--muted-fg); }
+.tg .on { background: var(--primary); color: var(--primary-fg); }
+.badge { display: inline-flex; align-items: center; gap: 6px; height: 21px; padding: 0 8px; border-radius: calc(var(--r) * 0.75); font-size: 11.5px; background: var(--muted); white-space: nowrap; }
+.sq { display: inline-block; width: 9px; height: 9px; border-radius: 2px; border: 1px solid var(--fg); flex: none; }
+.sq.b { background: var(--fg); }
+.verified { display: inline-flex; align-items: center; gap: 3px; font-size: 11.5px; font-weight: 700; color: var(--fg); white-space: nowrap; }
+.verified svg { width: 13px; height: 13px; }
+.backlink { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; padding: 4px 8px 4px 2px; border-radius: var(--r); font-weight: 700; font-size: 12.5px; }
+.backlink svg { width: 15px; height: 15px; }
+.backlink:hover { background: var(--sel); }
+
+/* Board: squares and pieces never change. */
+.board { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); aspect-ratio: 1; container-type: inline-size; border-radius: 3px; overflow: hidden; box-shadow: 0 0 0 2px #3b2a1a; flex: none; }
+.board i { position: relative; display: flex; align-items: center; justify-content: center; font-style: normal; }
+.board i.l { background: #f0d9b5; }
+.board i.d { background: #b58863; }
+.board i.hl.l { background: #f5e78a; }
+.board i.hl.d { background: #d5c25a; }
+.board i small { position: absolute; font: 600 10px/1 "Geist", sans-serif; }
+.board i.l small { color: #b58863; }
+.board i.d small { color: #f0d9b5; }
+.board i small.rk { top: 3px; left: 4px; }
+.board i small.fl { bottom: 3px; right: 4px; }
+.pc { font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", "Apple Symbols", serif; line-height: 1; font-size: 9.6cqw; }
+.pc.w { color: #ffffff; -webkit-text-stroke: 1.2px #1b1b1b; paint-order: stroke fill; }
+.pc.b { color: #161616; }
+
+/* Book views */
+.view { position: relative; flex: 1; min-width: 0; min-height: 0; background: var(--view-bg); border-radius: 6px; overflow: hidden; }
+.view svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.zoomctl { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--border); background: var(--input-bg); border-radius: 6px; font-size: 11px; color: var(--muted-fg); }
+.zoomctl span { width: 22px; height: 18px; display: flex; align-items: center; justify-content: center; }
+.zoomctl span.w { width: 32px; }
+.rail { display: flex; flex-direction: column; gap: 4px; flex: none; }
+.rail span { width: 28px; height: 28px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; color: var(--muted-fg); }
+.rail span.on { background: var(--sel); color: var(--fg); }
+.rail svg { width: 15px; height: 15px; }
+.line { font: 500 13px/1.5 var(--font-mono); }
+.line b { background: var(--sel); padding: 2px 5px; border-radius: calc(var(--r) * 0.6); font-weight: 600; }
+
+/* Library parts */
+.toclist { display: flex; flex-direction: column; gap: 1px; margin-inline: -10px; }
+.toc { display: flex; align-items: baseline; gap: 8px; padding: 7px 10px; border-radius: var(--r); }
+.toc .nm { font: 500 14px/1.2 var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.lead { flex: 1; min-width: 12px; border-bottom: 1.5px dotted var(--muted-fg); opacity: 0.55; transform: translateY(-3px); }
+.toc .fig { font: 500 12px/1 var(--font-mono); color: var(--muted-fg); white-space: nowrap; }
+.toc[role="button"]:hover { background: var(--sel); }
+.toc.on { background: var(--sel); }
+.toc.on .nm { font-weight: 600; }
+.toc .sq { transform: translateY(-1px); }
+.dl { display: flex; flex-wrap: wrap; gap: 6px 26px; margin: 0; }
+.dl dt { font: 600 10px/1.2 var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-fg); }
+.dl dd { margin: 3px 0 0; font: 600 14px/1.2 var(--font-mono); }
+.reader { display: flex; gap: 10px; flex: 1; min-height: 0; }
+.posside { width: 216px; flex: none; display: flex; flex-direction: column; gap: 10px; }
+.posside .board { width: 100%; }
+.note { font-size: 14px; line-height: 1.6; max-width: 60ch; }
+.blank-lines { flex: 1; background: repeating-linear-gradient(to bottom, transparent 0 21px, var(--rule) 21px 22px); opacity: 0.55; border-radius: 2px; }
+.peek { margin-left: auto; width: 252px; display: flex; flex-direction: column; gap: 10px; }
+.peek.narrow { width: 198px; }
+.peek.wide { width: 222px; }
+
+/* A second-level page laid out for the zoomed camera: drawn at the window's pixels, then shrunk onto
+   the page, so at full zoom its type reads at the usual size. Only the part the camera shows is laid
+   out; the page below the window's edge stays blank. */
+.fine { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.page.l .fine > .pgin { padding-right: 50px; }
+.page.r .fine > .pgin { padding-left: 64px; }
+.mock[data-cam="fixed"] .camap { display: none; }
+.mock[data-cam="fixed"] .desk[data-zoomed="on"] { cursor: auto; touch-action: auto; }
+
+/* ── The window: the strip stays put; the desk below it is what the camera sees ── */
+.toprow { position: absolute; top: 0; left: 0; right: 0; height: 50px; display: flex; align-items: center; gap: 14px; padding: 0 26px; z-index: 50; background: var(--desk); }
+.brand { font: 600 19px/1 var(--font-display); letter-spacing: -0.01em; white-space: nowrap; }
+.navtabs { display: flex; align-items: center; margin-left: 8px; font-size: 13px; color: var(--muted-fg); }
+.navtabs span { padding: 7px 8px; white-space: nowrap; }
+.navtabs span:hover { color: var(--fg); }
+.navtabs span.on { color: var(--fg); font-weight: 700; box-shadow: inset 0 -2px 0 var(--ribbon); }
+.desk { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; overflow: hidden; }
+.desk[data-zoomed="on"] { cursor: grab; touch-action: none; }
+.desk.panning { cursor: grabbing; }
+.camera { position: absolute; inset: 0; transform-origin: 0 0; }
+
+/* A page's bookmark: a ribbon folded over the page's top edge, level with the page's tab in the strip. */
+.bmk { position: absolute; left: calc(var(--bx) - 7px); top: -1px; width: 14px; height: 26px; z-index: 9; pointer-events: none; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.28)); }
+.bmk::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgb(0 0 0 / 0.34), rgb(0 0 0 / 0.1) 3px, transparent 6px), var(--ribbon); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 6px), 0 100%); }
+.book.anim .bmk { transition: transform var(--gdur) cubic-bezier(0.3, 0.7, 0.2, 1); }
+.book[data-shift="on"] .bmk { transform: translateX(var(--shift)); }
+
+/* The book, at its size on the desk. The slide of D8 moves its left edge out of the window and lets
+   the right page take the room; the camera never changes it. */
+.book { position: absolute; left: 26px; top: 14px; width: 1388px; height: 814px; display: flex; perspective: 2800px; --el: 8px; --er: 8px; --shift: 0px; }
+.book.anim { transition: left var(--gdur) cubic-bezier(0.3, 0.7, 0.2, 1), width var(--gdur) cubic-bezier(0.3, 0.7, 0.2, 1); }
+.book[data-shift="on"] { left: calc(26px - var(--shift)); width: calc(1388px + var(--shift)); }
+.cover { position: absolute; top: -8px; bottom: -10px; left: calc(-1 * var(--el) - 9px); right: calc(-1 * var(--er) - 9px); z-index: -1; background: var(--cover); border-radius: 9px; box-shadow: 0 2px 3px rgb(0 0 0 / 0.18), 0 22px 44px -22px rgb(0 0 0 / 0.55); transition: left var(--gdur), right var(--gdur); }
+.edges { position: absolute; top: 3px; bottom: 3px; background: repeating-linear-gradient(to right, var(--sheet) 0 1px, var(--edge-line) 1px 2px); transition: width var(--gdur); z-index: 0; }
+.edges.el { right: 100%; width: var(--el); border-radius: 3px 0 0 3px; }
+.edges.er { left: 100%; width: var(--er); border-radius: 0 3px 3px 0; }
+.mock .page { position: relative; min-width: 0; background-color: var(--sheet); border: 1px solid var(--border); }
+.mock .page.l { border-radius: var(--pr) 0 0 var(--pr); border-right: 0; }
+.mock .page.r { border-radius: 0 var(--pr) var(--pr) 0; border-left: 0; }
+.mock .page::after { content: ""; position: absolute; top: 0; bottom: 0; width: var(--gw); pointer-events: none; z-index: 3; }
+.mock .page.l::after { right: 0; background: linear-gradient(to left, var(--spine), transparent 75%); }
+.mock .page.r::after { left: 0; background: linear-gradient(to right, var(--spine), transparent 75%); }
+.mock:not([data-mode="dark"]) .book .page.r::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: var(--spine); z-index: 3; }
+.book > .page.l { flex: 0 0 694px; }
+.book > .page.r { flex: 1 1 0; }
+
+/* Inside a page */
+.pgin { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 30px 34px 14px; overflow: hidden; border-radius: inherit; }
+.page.l .pgin { padding-right: 40px; }
+.page.r .pgin { padding-left: 40px; }
+.rhrow { display: flex; align-items: center; gap: 10px; height: 22px; flex: none; }
+.pgin > .body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding-block: 12px; position: relative; z-index: 1; }
+.foot { display: flex; align-items: center; gap: 8px; height: 22px; flex: none; font: 500 11.5px/1 var(--font-mono); color: var(--muted-fg); white-space: nowrap; }
+
+/* The turning leaf */
+.leaf { position: absolute; transform-style: preserve-3d; z-index: 30; will-change: transform; }
+.leaf.fwd { transform-origin: 0 50%; }
+.leaf.bwd { transform-origin: 100% 50%; }
+.face { position: absolute !important; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.face.back { transform: rotateY(180deg); }
+.shade, .cast { position: absolute; inset: 0; pointer-events: none; z-index: 8; opacity: 0; }
+.page.r > .shade { background: linear-gradient(to right, var(--shade), transparent 85%); }
+.page.l > .shade { background: linear-gradient(to left, var(--shade), transparent 85%); }
+.page.r > .cast { background: linear-gradient(to right, var(--shade), transparent 55%); }
+.page.l > .cast { background: linear-gradient(to left, var(--shade), transparent 55%); }
+
+/* Where the camera is over the desk: a small map in the window's corner while zoomed. */
+.camap { position: absolute; right: 16px; bottom: 16px; z-index: 40; display: grid; gap: 5px; padding: 8px 9px 7px; border-radius: var(--r); background: color-mix(in srgb, var(--sheet) 92%, transparent); border: 1px solid var(--border); box-shadow: 0 6px 18px -8px rgb(0 0 0 / 0.35); opacity: 0; transform: translateY(6px); transition: opacity 220ms, transform 220ms; pointer-events: none; }
+.desk[data-zoomed="on"] .camap { opacity: 1; transform: none; }
+.camap svg { display: block; width: 146px; height: 86px; }
+.camap span { font: 600 9.5px/1 var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-fg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .book.anim, .cover, .edges, .camap { transition: none; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Book UI · Q10 · second levels</div>
+    <h1>Library Zoom</h1>
+    <p class="lede">Opening a book's page first zooms the camera above the book in on the right page, then turns a leaf. The second level's pages are laid out for the zoomed view, so their type reads at the usual size, and the book runs on below the window with no scroll. Going back turns the leaf, then zooms out. <b>Turn, then zoom</b> is the earlier version with a scrolling camera, and <b>Slide (D8)</b> is the plan as it stands.</p>
+  </header>
+
+  <section class="studio" aria-label="Mockup">
+    <div class="controls">
+      <div class="ctl"><span id="lab-mode">Second level</span>
+        <div class="seg" role="group" aria-labelledby="lab-mode">
+          <button type="button" id="mode-zt" data-v="zt" aria-pressed="true">Zoom, then turn</button>
+          <button type="button" id="mode-zoom" data-v="zoom" aria-pressed="false">Turn, then zoom</button>
+          <button type="button" id="mode-slide" data-v="slide" aria-pressed="false">Slide (D8)</button>
+        </div>
+      </div>
+      <div class="ctl"><span id="lab-seq">Zoom and turn</span>
+        <div class="seg" role="group" aria-labelledby="lab-seq">
+          <button type="button" data-v="on" aria-pressed="true">Overlapped</button>
+          <button type="button" data-v="off" aria-pressed="false">One after the other</button>
+        </div>
+      </div>
+      <div class="ctl"><span id="lab-theme">Theme</span>
+        <div class="seg" role="group" aria-labelledby="lab-theme">
+          <button type="button" id="theme-light" data-v="light" aria-pressed="true">Light</button>
+          <button type="button" id="theme-dark" data-v="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+      <div class="ctl"><span id="lab-speed">Speed</span>
+        <div class="seg" role="group" aria-labelledby="lab-speed">
+          <button type="button" id="speed-16" data-v="1.6" aria-pressed="true">Fast</button>
+          <button type="button" id="speed-1" data-v="1" aria-pressed="false">Normal</button>
+          <button type="button" id="speed-03" data-v="0.3" aria-pressed="false">Slow motion</button>
+        </div>
+      </div>
+      <button type="button" class="tour" id="tour" aria-pressed="false">Play it through</button>
+    </div>
+    <figure>
+      <div class="fit" id="stage"></div>
+      <figcaption class="caption" id="caption" aria-live="polite"></figcaption>
+    </figure>
+  </section>
+
+  <section class="notes" aria-label="Notes">
+    <div>
+      <h3>What the plan would change</h3>
+      <ul>
+        <li><b>D8, D9.</b> A second level zooms the camera in until the right page fills the window and about 290 px of the left page stays in view, then turns a leaf to a spread of the book list (right-aligned toward the spine) and the book's page. Going back turns the leaf back, then zooms out. A Bookstore entry works the same way.</li>
+        <li><b>D5.</b> "Only a second level moves the book" becomes "only a second level moves the camera". The book itself never changes size or shape.</li>
+        <li><b>A second level's pages are laid out for the zoomed view.</b> They're drawn at the window's size and set onto the page about 1.6 times smaller, so zoomed in they read like any other page. Only the part in view is laid out, and you never see the rest, since you only see these pages zoomed in.</li>
+        <li><b>D4.</b> While zoomed in, the Library's bookmark is on the left page, out of view. Its tab in the strip stays lit.</li>
+        <li><b>The page never scrolls,</b> and neither does the camera. The strip stays where it is, off the book.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>What to look for</h3>
+      <ul>
+        <li><b>Zooming into text.</b> The first level's right page is magnified as the camera comes in, before the leaf covers it. <b>Overlapped</b> (the default) starts the turn 45% of the way into the zoom (and going back, the zoom-out 45% into the turn); <b>One after the other</b> doesn't. <b>Fast</b> (the default) shortens both.</li>
+        <li><b>The page holds more.</b> The book's page now has the whole window, so the tree view and the board get room the spread page doesn't have.</li>
+        <li><b>The one-page form</b> (phones and narrow windows) has no room to zoom, so a second level stays a turn to its own page (D15).</li>
+        <li><b>Cost.</b> The zoom is one transform on the book, the cheapest kind of animation. Text is redrawn sharp once it stops. Reduced motion and None change the page and move the camera at once.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ── Icons ── */
+  const P = {
+    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+    upload: '<path d="M12 15V3M7 8l5-5 5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
+    download: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
+    plus: '<path d="M5 12h14M12 5v14"/>',
+    prev: '<path d="m15 18-6-6 6-6"/>',
+    more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+    check: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+    tree: '<path d="M4 12h5M9 12l6-6h5M9 12l6 6h5M15 12h5"/>',
+    rows: '<path d="M4 6h16M4 12h10M4 18h13"/>',
+    branch: '<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 8v8M18 10a6 6 0 0 1-6 6H8"/>',
+    cols: '<rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="10" rx="1"/><rect x="17" y="4" width="4" height="6" rx="1"/>',
+    metro: '<circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12h5l5-5M12 12l5 5"/>',
+    bug: '<rect x="7" y="6" width="10" height="14" rx="5"/><path d="M12 20v-8M7 12H3M21 12h-4M7 17l-3 2M17 17l3 2M7 8 4 6M17 8l3-2M9 6a3 3 0 0 1 6 0"/>',
+  };
+  const ic = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+  const B = (attrs) => `${attrs} role="button" tabindex="0"`;
+  const fmt = (n) => n.toLocaleString("en-US");
+
+  /* ── Chapters, in book order (NAV_ITEMS) ── */
+  const NAV = [["overview", "Overview"], ["explorer", "Explorer"], ["visualizations", "Visualizations"], ["library", "Library"], ["bookstore", "Bookstore"], ["train", "Train"], ["puzzles", "Puzzles"], ["settings", "Settings"]];
+  const ORDER = NAV.map((n) => n[0]);
+  const NAME = Object.fromEntries(NAV);
+
+  /* ── Trees: "(" opens alternatives split by "|", and "#k" sets a family color ── */
+  const TREES = {
+    italian: "e4 e5 Nf3 Nc6 Bc4 ( Bc5#0 ( c3 Nf6 d4 exd4 | d3 Nf6 Nc3 | b4#2 Bxb4 c3 ) | Nf6#1 ( Ng5 d5 exd5 | d3 Be7 | d4 exd4 e5 ) | Be7#3 d4 d6 )",
+    sicilian: "e4 c5 ( Nf3 ( d6 ( d4 cxd4 Nxd4 Nf6 Nc3 ( a6#0 | g6#1 | Nc6#2 ) | Bb5+#4 Bd7 ) | Nc6#3 d4 cxd4 | e6#5 d4 cxd4 ) | Nc3#6 Nc6 g3 | c3#7 Nf6 e5 )",
+    qg: "d4 d5 c4 ( e6#0 ( Nc3 Nf6 ( Bg5 Be7 | cxd5 exd5 ) | Nf3 Nf6 g3 ) | c6#1 ( Nf3 Nf6 Nc3 dxc4 | Nc3 e6 ) | dxc4#2 ( Nf3 Nf6 e3 | e4 e5 ) | Nc6#3 Nc3 dxc4 | e5#4 dxe5 d4 )",
+    caro: "e4 c6 ( d4 d5 ( e5#0 Bf5 ( Nf3 e6 | Nc3 e6 ) | Nc3#1 dxe4 Nxe4 ( Bf5 Ng3 | Nd7 Nf3 ) | exd5#2 cxd5 ( c4#3 Nf6 | Bd3 Nc6 ) ) | Nc3#4 d5 Nf3 | c4#5 d5 exd5 )",
+    kg: "e4 e5 f4 ( exf4#0 ( Nf3 ( g5 h4 | d6 d4 ) | Bc4#1 Nf6 ) | Bc5#2 Nf3 d6 | d5#3 exd5 e4 )",
+    london: "d4 ( d5 Bf4 ( Nf6#0 e3 ( c5 c3 | e6 Nf3 ) | c5#1 e3 Nc6 ) | Nf6 Bf4 ( g6#2 e3 Bg7 | e6#3 e3 c5 | c5#4 e3 ) )",
+  };
+  const LINE = { italian: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5"], sicilian: ["e4", "c5", "Nf3", "d6"], qg: ["d4", "d5", "c4"], caro: ["e4", "c6", "d4", "d5"], kg: ["e4", "e5", "f4"], london: ["d4", "d5", "Bf4"] };
+  const FEN = {
+    italian: "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R",
+    sicilian: "rnbqkbnr/pp2pppp/3p4/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R",
+    qg: "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR",
+    caro: "rnbqkbnr/pp2pppp/2p5/3p4/3PP3/8/PPP2PPP/RNBQKBNR",
+    kg: "rnbqkbnr/pppp1ppp/8/4p3/4PP2/8/PPPP2PP/RNBQKBNR",
+    london: "rnbqkbnr/ppp1pppp/8/3p4/3P1B2/8/PPP1PPPP/RN1QKBNR",
+  };
+  const HL = { italian: ["f8", "c5"], sicilian: ["d7", "d6"], qg: ["c2", "c4"], caro: ["d7", "d5"], kg: ["f2", "f4"], london: ["c1", "f4"] };
+
+  function parse(src) {
+    const t = src.trim().split(/\s+/); let i = 0;
+    function seq() {
+      const head = { san: "", c: [] }; let cur = head;
+      while (i < t.length) {
+        const k = t[i];
+        if (k === "|" || k === ")") break;
+        if (k === "(") {
+          i++;
+          for (;;) { const alt = seq(); cur.c.push(...alt.c); if (t[i] === "|") { i++; continue; } i++; break; }
+          continue;
+        }
+        const [san, f] = k.split("#"); const n = { san, c: [] };
+        if (f !== undefined) n.fam = +f;
+        cur.c.push(n); cur = n; i++;
+      }
+      return head;
+    }
+    return seq();
+  }
+  function tree(key, line) {
+    const root = parse(TREES[key]);
+    if (line) { root.on = true; let cur = root; for (const san of line) { const ch = cur.c.find((c) => c.san === san); if (!ch) break; ch.on = true; cur = ch; } }
+    return root;
+  }
+  function layoutTree(root) {
+    let leaves = 0; const nodes = [], edges = [];
+    (function walk(n, d, fam, parent) {
+      n.d = d; n.f = n.fam ?? fam;
+      if (parent) edges.push([parent, n]);
+      if (!n.c.length) n.y = leaves++;
+      else { n.c.forEach((ch) => walk(ch, d + 1, n.f, n)); n.y = (n.c[0].y + n.c[n.c.length - 1].y) / 2; }
+      nodes.push(n);
+    })(root, 0, null, null);
+    return { nodes, edges, leaves, depth: Math.max(...nodes.map((n) => n.d)) };
+  }
+  const famCol = (f) => (f == null ? "var(--view-edge)" : `var(--fam-${f})`);
+  const nodeDot = (n, x, y) => {
+    if (n.d === 0) return `<circle cx="${x}" cy="${y}" r="5" fill="var(--view-bg)" stroke="var(--fg)" stroke-width="1.6"/>`;
+    const white = n.d % 2 === 1;
+    return `<circle cx="${x}" cy="${y}" r="${n.on ? 4.6 : 3.8}" fill="${white ? "var(--view-white)" : "var(--view-black)"}" stroke="${n.on ? "var(--fg)" : white ? "var(--view-white-edge)" : "var(--view-black)"}" stroke-width="${n.on ? 1.6 : 1}"/>`;
+  };
+  const label = (n, x, y, fs) => `<text x="${x}" y="${y}" font-size="${fs}" font-family="IBM Plex Mono, ui-monospace, monospace" font-weight="${n.on ? 600 : 400}" fill="${n.on ? "var(--fg)" : "var(--muted-fg)"}" paint-order="stroke" stroke="var(--view-halo)" stroke-width="3" stroke-linejoin="round">${n.san}</text>`;
+  function treeSVG(root, W, H, fs = 10) {
+    const { nodes, edges, leaves, depth } = layoutTree(root);
+    const pad = 18, room = 34;
+    const dx = (W - pad * 2 - room) / depth, dy = (H - pad * 2) / Math.max(1, leaves - 1);
+    const X = (n) => pad + n.d * dx, Y = (n) => pad + n.y * dy;
+    let s = "";
+    for (const [a, b] of edges) {
+      const ax = X(a), ay = Y(a), bx = X(b), by = Y(b), mx = (ax + bx) / 2, on = a.on && b.on;
+      s += `<path d="M${ax} ${ay}C${mx} ${ay} ${mx} ${by} ${bx} ${by}" fill="none" stroke="${on ? "var(--fg)" : famCol(b.f)}" stroke-width="${on ? 2.4 : 1.8}" stroke-linecap="round"/>`;
+    }
+    for (const n of nodes) { s += nodeDot(n, X(n), Y(n)); if (n.d) s += label(n, X(n) + 6, Y(n) - 7, fs); }
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${s}</svg>`;
+  }
+  const view = (svg) => `<div class="view">${svg}<div class="zoomctl"><span>−</span><span class="w">Fit</span><span>+</span></div></div>`;
+  const rail = () => `<div class="rail"><span class="on">${ic("tree")}</span><span>${ic("rows")}</span><span>${ic("branch")}</span><span>${ic("cols")}</span><span>${ic("metro")}</span></div>`;
+
+  /* ── Board ── */
+  const GLYPH = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
+  function board(fen, hl = []) {
+    const H = new Set(hl.map((s) => `${8 - +s[1]},${"abcdefgh".indexOf(s[0])}`));
+    let sq = "";
+    fen.split("/").forEach((row, ri) => {
+      const cells = [];
+      for (const ch of row) { if (/\d/.test(ch)) for (let k = 0; k < +ch; k++) cells.push(""); else cells.push(ch); }
+      cells.forEach((p, fi) => {
+        let inner = "";
+        if (fi === 0) inner += `<small class="rk">${8 - ri}</small>`;
+        if (ri === 7) inner += `<small class="fl">${"abcdefgh"[fi]}</small>`;
+        if (p) inner += `<span class="pc ${p === p.toUpperCase() ? "w" : "b"}">${GLYPH[p.toLowerCase()]}︎</span>`;
+        sq += `<i class="${(ri + fi) % 2 === 0 ? "l" : "d"}${H.has(ri + "," + fi) ? " hl" : ""}">${inner}</i>`;
+      });
+    });
+    return `<div class="board">${sq}</div>`;
+  }
+  const lineText = (line) => line.map((m, i) => `${i % 2 === 0 ? `${i / 2 + 1}. ` : ""}${i === line.length - 1 ? `<b>${m}</b>` : m}`).join(" ");
+
+  /* ── Books ── */
+  const LIB = [
+    { id: "caro", name: "Caro-Kann Defense", side: "b", pos: 256, tree: "caro" },
+    { id: "italian", name: "Italian Game", side: "w", pos: 338, tree: "italian" },
+    { id: "kg", name: "King's Gambit", side: "w", pos: 75, tree: "kg" },
+    { id: "london", name: "London System", side: "w", pos: 120, tree: "london", own: true },
+    { id: "qg", name: "Queen's Gambit", side: "w", pos: 198, tree: "qg" },
+    { id: "najdorf", name: "Sicilian Najdorf", side: "b", pos: 247, tree: "sicilian", own: true },
+  ];
+  const sideName = (s) => (s === "w" ? "White" : "Black");
+  const linesOf = (pos) => Math.max(6, Math.round(pos / 8.2));
+  const measures = (pos) => `<dl class="dl"><div><dt>Positions</dt><dd>${fmt(pos)} / 1,000</dd></div><div><dt>Lines</dt><dd>${linesOf(pos)}</dd></div><div><dt>Average line</dt><dd>${(8.6 + (pos % 7) * 0.4).toFixed(1)} plies</dd></div><div><dt>Longest line</dt><dd>${12 + (pos % 9)} plies</dd></div></dl>`;
+  const libBook = (id) => LIB.find((b) => b.id === id);
+  const tocRow = (x, on) => `<div class="toc${on ? " on" : ""}" ${B(`data-book="${x.id}"`)}><i class="sq ${x.side}"></i><span class="nm">${x.name}</span><span class="lead"></span><span class="fig">${x.pos}</span></div>`;
+  const originTags = (b) => (b.own ? `<span class="badge">Made by you</span>` : `<span class="badge">ByTheBook</span><span class="verified">${ic("check")}Verified</span><span class="sub">from Wikibooks</span>`);
+  const reader = (b) => `<div class="reader">${rail()}${view(treeSVG(tree(b.tree, LINE[b.tree]), 640, 420, 10.5))}
+      <aside class="posside"><span class="sc">This position</span>${board(FEN[b.tree], HL[b.tree])}<div class="line">${lineText(LINE[b.tree])}</div>
+      <span class="btn outline">Open position in Explorer</span><span class="btn ghost">Remove this move</span></aside></div>`;
+
+  /* ── Spreads: what each page holds ── */
+  function lib1(s) {
+    const b = libBook(s.book);
+    return {
+      left: {
+        rh: `<span class="rh">Library</span><span class="grow"></span><span class="sc">Kept in this browser</span>`,
+        body: `<div class="row" style="flex-wrap:wrap"><span class="h1" style="font-size:30px">Your books</span><span class="grow"></span><span class="btn ghost">${ic("upload")}Restore</span><span class="btn ghost">${ic("download")}Back up</span><span class="btn primary">${ic("plus")}New book</span></div>
+          <div class="row"><span class="input grow">${ic("search")}<span class="val">Search books</span></span><span class="tg"><span class="on">All</span><span>White</span><span>Black</span></span></div>
+          <div class="toclist">${LIB.map((x) => tocRow(x, x.id === s.book)).join("")}</div>
+          <p class="sub" style="margin-top:6px"><b style="color:var(--fg)">Game history</b> · coming soon: import your own games to see where you left the book.</p>`,
+        foot: `<span>6 books</span><span class="grow"></span><span>1,234 positions in all</span>`,
+      },
+      right: {
+        rh: `<span class="sc">${sideName(b.side)}</span><span class="grow"></span><span class="rh">${b.name}</span>`,
+        body: `<div><div class="row"><span class="h1">${b.name}</span><span class="sub row" style="gap:5px"><i class="sq ${b.side}"></i>${sideName(b.side)}</span></div><div class="row" style="margin-top:8px">${originTags(b)}</div></div>
+          <div class="row" style="gap:6px;flex-wrap:wrap"><span class="btn primary" ${B('data-go="2"')}>Open book page</span><span class="btn outline">Open in Explorer</span><span class="btn outline">Train</span><span class="btn outline icon">${ic("more")}</span></div>
+          ${measures(b.pos)}<div class="reader">${rail()}${view(treeSVG(tree(b.tree), 600, 380, 10.5))}</div>`,
+        foot: `<span>${b.own ? "Your book" : "Wikibooks, CC BY-SA 4.0"}</span><span class="grow"></span><span>${fmt(b.pos)} of 1,000 positions</span>`,
+      },
+    };
+  }
+  function lib2(s) {
+    const b = libBook(s.book), i = LIB.indexOf(b);
+    // Zoom, then turn: both pages are laid out for the zoomed camera (.fine).
+    const fine = s.mode === "zt";
+    return {
+      // The slide (D8) moves the book until only the list's last 300 px show; the zoom leaves the book alone.
+      shift: s.mode === "slide" ? 300 : 0,
+      left: {
+        fine,
+        rh: `<span class="grow"></span><span class="sc">Library · 6 books</span>`,
+        body: `<div class="peek${s.mode === "zoom" ? " narrow" : fine ? " wide" : ""}"><span class="backlink" ${B('data-go="1"')} style="align-self:flex-end">${ic("prev")}All books</span><div class="toclist">${LIB.map((x) => tocRow(x, x.id === s.book)).join("")}</div></div>`,
+        foot: `<span class="grow"></span><span>Book ${i + 1} of 6</span>`,
+      },
+      right: {
+        fine,
+        rh: `<span class="sc">${sideName(b.side)} · ${b.own ? "Your book" : "ByTheBook"}</span><span class="grow"></span><span class="rh">${b.name}</span>`,
+        body: `<div class="row" style="align-items:flex-start;gap:16px"><div class="grow"><div class="row"><span class="h1" style="font-size:30px">${b.name}</span><span class="sub row" style="gap:5px"><i class="sq ${b.side}"></i>${sideName(b.side)}</span></div><div class="row" style="margin-top:8px">${originTags(b)}</div></div>
+          <div class="row" style="gap:6px"><span class="btn outline">Open in Explorer</span><span class="btn primary">Train this book</span><span class="btn outline icon">${ic("more")}</span></div></div>
+          ${measures(b.pos)}${reader(b)}`,
+        foot: `<span>${b.own ? "Your book" : "Wikibooks, CC BY-SA 4.0"}</span><span class="grow"></span><span>${fmt(b.pos)} of 1,000 positions</span>`,
+      },
+    };
+  }
+  // Every other chapter: a blank spread, since this mockup only draws the Library.
+  function chapter(s) {
+    return {
+      left: {
+        rh: `<span class="rh">${NAME[s.page]}</span>`,
+        body: `<span class="h1" style="font-size:30px">${NAME[s.page]}</span><p class="note" style="color:var(--muted-fg)">This mockup draws only the Library. Go back to it to try a second level.</p><div class="blank-lines"></div>`,
+        foot: "",
+      },
+      right: { rh: "", body: `<div class="blank-lines"></div>`, foot: "" },
+    };
+  }
+  const compose = (s) => (s.page === "library" ? (s.level === 1 ? lib1(s) : lib2(s)) : chapter(s));
+  const blankPart = (key) => ({ rh: `<span class="rh">${NAME[key]}</span>`, body: `<div class="blank-lines"></div>`, foot: "" });
+
+  /* ── State ── */
+  const st = {
+    page: "library", level: 1, book: "italian", mode: "zt", speed: 1.6, overlap: true,
+    theme: (() => {
+      const t = document.documentElement.getAttribute("data-theme");
+      if (t === "dark" || t === "light") return t;
+      return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    })(),
+  };
+  let busy = false, mk = null, POS = {}, scale = 1;
+  const D = (ms) => (reduced ? 0 : Math.round(ms / st.speed));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const stage = $("#stage");
+
+  /* ── The camera: the window's view of the desk, in the mock's pixels ── */
+  const DESK = { w: 1440, h: 850 };
+  const BOOK = { x: 26, y: 14, w: 1388, h: 814, page: 694 };
+  // How much of the left page stays in view, at the book's own size: about 290 px of window for
+  // "Zoom, then turn" (its pages are laid out for the zoom), more for "Turn, then zoom".
+  const PEEK = { zt: 180, zoom: 242 };
+  const cam = { s: 1, x: 0, y: 0 };
+  const zoomed = () => cam.s > 1.001;
+  function zoomTarget(mode = st.mode) {
+    const spine = BOOK.x + BOOK.page, right = BOOK.x + BOOK.w + 18;
+    const x0 = spine - (PEEK[mode] ?? PEEK.zoom), s = DESK.w / (right - x0);
+    return { s, x: x0, y: BOOK.y - 8 };
+  }
+  // A page laid out for the zoomed camera: its scale, and the height the window shows of it (window pixels).
+  const ZT = zoomTarget("zt");
+  const FINE = { s: ZT.s, h: DESK.h - (BOOK.y - ZT.y) * ZT.s - 10 };
+  // How far down the camera can go: to the book's bottom edge and a strip of desk below it.
+  const maxY = (s) => Math.max(BOOK.y - 8, BOOK.y + BOOK.h + 26 - DESK.h / s);
+  const camCss = (c) => `translate(${(-c.x * c.s).toFixed(2)}px, ${(-c.y * c.s).toFixed(2)}px) scale(${c.s.toFixed(4)})`;
+  function placeCamera() {
+    const camera = $("#camera", mk);
+    camera.style.transform = camCss(cam);
+    $("#desk", mk).dataset.zoomed = zoomed() ? "on" : "off";
+    drawMap();
+  }
+  async function moveCamera(to, ms) {
+    const camera = $("#camera", mk), from = { ...cam };
+    Object.assign(cam, to);
+    if (ms > 0) {
+      camera.style.willChange = "transform";
+      const a = camera.animate([{ transform: camCss(from) }, { transform: camCss(cam) }], { duration: ms, easing: "cubic-bezier(.5,.05,.2,1)" });
+      camera.style.transform = camCss(cam);
+      if (to.s > 1) $("#desk", mk).dataset.zoomed = "on";
+      await a.finished.catch(() => {});
+      camera.style.willChange = ""; // so the text is redrawn sharp at rest
+    }
+    placeCamera();
+  }
+  function drawMap() {
+    const svg = $("#camap-svg", mk); if (!svg) return;
+    const vw = DESK.w / cam.s, vh = DESK.h / cam.s;
+    svg.innerHTML = `<rect x="${BOOK.x - 10}" y="${BOOK.y - 8}" width="${BOOK.w + 20}" height="${BOOK.h + 18}" rx="12" fill="var(--cover)"/>
+      <rect x="${BOOK.x}" y="${BOOK.y}" width="${BOOK.w}" height="${BOOK.h}" rx="6" fill="var(--sheet)"/>
+      <line x1="${BOOK.x + BOOK.page}" y1="${BOOK.y}" x2="${BOOK.x + BOOK.page}" y2="${BOOK.y + BOOK.h}" stroke="var(--border)" stroke-width="8"/>
+      <rect x="${cam.x}" y="${cam.y}" width="${vw}" height="${vh}" rx="10" fill="none" stroke="var(--ribbon)" stroke-width="22"/>`;
+  }
+
+  /* ── Rendering ── */
+  function off(el) { let x = 0, y = 0; while (el && el !== mk) { x += el.offsetLeft; y += el.offsetTop; el = el.offsetParent; } return { x, y }; }
+  // Where each tab's bookmark lands, measured once the strip is drawn (mock pixels, book unslid).
+  function measure() {
+    POS = { pl: BOOK.x + 1, spine: BOOK.x + BOOK.page, tabs: {} };
+    mk.querySelectorAll(".navtabs [data-nav]").forEach((t) => { POS.tabs[t.dataset.nav] = off(t).x + t.offsetWidth / 2; });
+  }
+  function bookmark(key, side) {
+    const x = POS.tabs && POS.tabs[key];
+    if (x == null || (side === "l") !== (x < POS.spine)) return "";
+    return `<span class="bmk" style="--bx:${(x - (side === "l" ? POS.pl : POS.spine)).toFixed(1)}px"></span>`;
+  }
+  const pgin = (part) => `<div class="pgin"><div class="rhrow">${part.rh}</div><div class="body">${part.body}</div><div class="foot">${part.foot}</div></div>`;
+  const finePage = (html) => `<div class="fine" style="width:calc(100% * ${FINE.s.toFixed(4)});height:${FINE.h.toFixed(1)}px;transform:scale(${(1 / FINE.s).toFixed(5)})">${html}</div>`;
+  const pageInner = (part, side, key) => (part.fine ? finePage(pgin(part)) : pgin(part)) + (key ? bookmark(key, side) : "");
+  function shell() {
+    return `<div class="toprow"><span class="brand">ByTheBook</span>
+        <span class="navtabs">${NAV.map(([k, l]) => `<span ${B(`data-nav="${k}"`)}>${l}</span>`).join("")}</span><span class="grow"></span>
+        <span class="btn ghost icon">${ic("bug")}</span><span class="sub">Browsing as a guest</span><span class="btn ghost" style="font-weight:700">Sign in</span><span class="btn outline">Create account</span></div>
+      <div class="desk" id="desk" data-zoomed="off"><div class="camera" id="camera">
+        <div class="book" id="bk" data-shift="off"><span class="cover"></span><span class="edges el"></span><div class="page l" id="pl"></div><div class="page r" id="pr"></div><span class="edges er"></span></div>
+      </div><div class="camap" aria-hidden="true"><span>Camera</span><svg id="camap-svg" viewBox="0 0 ${DESK.w} ${DESK.h}"></svg></div></div>`;
+  }
+  const chrome = (key = st.page) => mk.querySelectorAll(".navtabs [data-nav]").forEach((el) => el.classList.toggle("on", el.dataset.nav === key));
+  function geom(parts, animate) {
+    const bk = $("#bk", mk);
+    animate = animate && !reduced;
+    const shift = parts.shift ? "on" : "off", changed = bk.dataset.shift !== shift;
+    if (shift === "on") bk.style.setProperty("--shift", BOOK.page - parts.shift + 26 + "px");
+    bk.style.setProperty("--gdur", D(420) + "ms");
+    bk.classList.toggle("anim", !!animate);
+    bk.dataset.shift = shift;
+    const at = ORDER.indexOf(st.page);
+    bk.style.setProperty("--el", 4 + at * 2.4 + "px");
+    bk.style.setProperty("--er", 4 + (ORDER.length - 1 - at) * 2.4 + "px");
+    return changed && animate ? sleep(D(460)) : Promise.resolve();
+  }
+  function paint() {
+    const p = compose(st);
+    $("#pl", mk).innerHTML = pageInner(p.left, "l", st.page);
+    $("#pr", mk).innerHTML = pageInner(p.right, "r", st.page);
+    return p;
+  }
+  function build() {
+    stage.innerHTML = `<div class="mock" id="mk">${shell()}</div>`;
+    mk = $("#mk"); mk.dataset.mode = st.theme; mk.dataset.cam = st.mode === "zoom" ? "free" : "fixed"; chrome(); measure();
+    const p = paint(); geom(p, false); placeCamera(); fit(); wire();
+  }
+  function fit() { if (!mk) return; scale = stage.clientWidth / 1440; mk.style.transform = `scale(${scale})`; }
+  new ResizeObserver(fit).observe(stage);
+
+  /* ── Transitions ── */
+  async function fadeSwap(el, html) {
+    const g = el.querySelector(".pgin");
+    if (g && D(1)) await g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: D(110), fill: "forwards" }).finished;
+    el.innerHTML = html;
+    const n = el.querySelector(".pgin");
+    if (n && D(1)) await n.animate([{ opacity: 0 }, { opacity: 1 }], { duration: D(170) }).finished;
+  }
+  // Picking another book re-inks the right page; the list keeps its place.
+  async function ink() {
+    const p = compose(st);
+    $("#pl", mk).innerHTML = pageInner(p.left, "l", st.page);
+    await fadeSwap($("#pr", mk), pageInner(p.right, "r", st.page));
+  }
+  function between(a, b, n) {
+    const out = [], ia = ORDER.indexOf(a), ib = ORDER.indexOf(b), step = Math.sign(ib - ia) || 1;
+    for (let k = 1; k < n; k++) out.push(ORDER[Math.round(ia + (step * k * Math.abs(ib - ia)) / n)] || b);
+    return out;
+  }
+  // A leaf turns at the spine; a jump of several chapters riffles up to three, each blank but for its bookmark.
+  async function turn(next, dir, n) {
+    const bk = $("#bk", mk), pl = $("#pl", mk), pr = $("#pr", mk);
+    const cur = compose(st), nxt = compose(next);
+    const oldL = pageInner(cur.left, "l", st.page), oldR = pageInner(cur.right, "r", st.page);
+    const newL = pageInner(nxt.left, "l", next.page), newR = pageInner(nxt.right, "r", next.page);
+    if (reduced) { chrome(next.page); Object.assign(st, next); pl.innerHTML = newL; pr.innerHTML = newR; return; }
+    const ref = dir > 0 ? pr : pl;
+    const g = { left: ref.offsetLeft, top: ref.offsetTop, width: ref.offsetWidth, height: ref.offsetHeight };
+    if (dir > 0) pr.innerHTML = newR; else pl.innerHTML = newL;
+    const mid = between(st.page, next.page, n);
+    const dur = D(640), gap = D(110), blank = D(480);
+    const runs = [];
+    for (let i = 0; i < n; i++) {
+      const fs = dir > 0 ? "r" : "l", bs = dir > 0 ? "l" : "r";
+      const front = i === 0 ? (dir > 0 ? oldR : oldL) : pageInner(blankPart(mid[i - 1]), fs, mid[i - 1]);
+      const back = i === n - 1 ? (dir > 0 ? newL : newR) : pageInner(blankPart(mid[i]), bs, mid[i]);
+      const leaf = document.createElement("div");
+      leaf.className = "leaf " + (dir > 0 ? "fwd" : "bwd");
+      Object.assign(leaf.style, { left: g.left + "px", top: g.top + "px", width: g.width + "px", height: g.height + "px", zIndex: 30 + (n - i) });
+      leaf.innerHTML = `<div class="face front page ${fs}">${front}<i class="shade"></i></div><div class="face back page ${bs}">${back}<i class="shade"></i></div>`;
+      bk.appendChild(leaf);
+      const delay = i * gap, d = i === n - 1 ? dur : blank;
+      const a = leaf.animate([{ transform: "rotateY(0deg)" }, { transform: `rotateY(${dir > 0 ? -180 : 180}deg)` }], { duration: d, delay, easing: "cubic-bezier(.45,.02,.3,1)", fill: "both" });
+      leaf.querySelector(".front .shade").animate([{ opacity: 0 }, { opacity: 0.75, offset: 0.5 }, { opacity: 0.75 }], { duration: d, delay, fill: "both" });
+      leaf.querySelector(".back .shade").animate([{ opacity: 0.75 }, { opacity: 0.75, offset: 0.5 }, { opacity: 0 }], { duration: d, delay, fill: "both" });
+      setTimeout(() => (leaf.style.zIndex = 40 + i), delay + d / 2);
+      runs.push({ leaf, a });
+    }
+    const total = (n - 1) * gap + dur, landAt = (n - 1) * gap + dur * 0.62, half = ((n - 1) * gap + dur / 2) / total;
+    const reveal = dir > 0 ? pr : pl, land = dir > 0 ? pl : pr;
+    const covered = land.querySelector(".bmk");
+    if (covered) covered.animate([{ opacity: 1 }, { opacity: 0 }], { duration: D(140), delay: landAt, fill: "forwards" });
+    setTimeout(() => chrome(next.page), dir > 0 ? landAt : D(160));
+    const cast = (page, frames) => { const c = document.createElement("i"); c.className = "cast"; page.appendChild(c); c.animate(frames, { duration: total, fill: "both" }); return c; };
+    const c1 = cast(reveal, [{ opacity: 0.6 }, { opacity: 0.25, offset: half }, { opacity: 0 }]);
+    const c2 = cast(land, [{ opacity: 0 }, { opacity: 0, offset: half }, { opacity: 0.45, offset: half + (1 - half) * 0.6 }, { opacity: 0 }]);
+    await runs[n - 1].a.finished;
+    Object.assign(st, next);
+    if (dir > 0) pl.innerHTML = newL; else pr.innerHTML = newR;
+    runs.forEach((r) => r.leaf.remove()); c1.remove(); c2.remove();
+  }
+  // The plan's second level (D8): no page turns; the whole book slides over and the pages re-ink.
+  async function slideBook(next) {
+    Object.assign(st, next);
+    const p = compose(st);
+    await Promise.all([fadeSwap($("#pl", mk), pageInner(p.left, "l", st.page)), fadeSwap($("#pr", mk), pageInner(p.right, "r", st.page)), geom(p, true)]);
+  }
+  const ZOOM_MS = 600;
+  const turnMs = (n) => (n - 1) * D(110) + D(640);
+  // Runs a, then b. Overlapped, b starts during a's back end.
+  async function chain(a, aMs, b) {
+    const pa = a();
+    await (st.overlap ? sleep(aMs * 0.45) : pa);
+    await Promise.all([pa, b()]);
+  }
+  async function navigate(patch) {
+    if (busy) return; busy = true;
+    try {
+      const next = { ...st, ...patch };
+      const a = ORDER.indexOf(st.page), b = ORDER.indexOf(next.page);
+      const dir = a !== b ? Math.sign(b - a) : next.level > st.level ? 1 : -1;
+      const n = a !== b ? Math.min(3, Math.abs(b - a)) : 1;
+      const turnTo = (to) => () => turn(to, dir, n);
+      const zoomIn = () => moveCamera(zoomTarget(), D(ZOOM_MS));
+      const zoomOut = () => moveCamera({ s: 1, x: 0, y: 0 }, D(ZOOM_MS));
+      const leaving = st.level === 2 && (next.level === 1 || a !== b);
+      if (leaving && st.mode !== "slide") {
+        // Turn, then zoom: zoom out, then turn back. Zoom, then turn: the reverse of going in,
+        // so the leaf turns back while zoomed in and the camera pulls out over the first level.
+        const to = { ...next, level: 1 };
+        if (st.mode === "zoom") await chain(zoomOut, D(ZOOM_MS), turnTo(to));
+        else await chain(turnTo(to), turnMs(n), zoomOut);
+        if (a !== b) await geom(compose(st), true);
+      } else if (a !== b) {
+        if (st.level === 2) await geom({ shift: 0 }, true); // the slide goes back first
+        await turn({ ...next, level: 1 }, dir, n);
+        await geom(compose(st), true);
+      } else if (next.level !== st.level) {
+        if (st.mode === "slide") await slideBook(next);
+        else if (st.mode === "zoom") await chain(turnTo(next), turnMs(1), zoomIn);
+        else await chain(zoomIn, D(ZOOM_MS), turnTo(next));
+      } else { Object.assign(st, next); await ink(); }
+    } finally { busy = false; caption(); }
+  }
+
+  /* ── Input inside the mock ── */
+  let panned = false;
+  function wire() {
+    const desk = $("#desk", mk);
+    mk.addEventListener("click", (e) => {
+      if (panned) { panned = false; return; }
+      const el = e.target.closest("[role=button]"); if (el) act(el);
+    });
+    mk.addEventListener("keydown", (e) => {
+      const el = e.target.closest("[role=button]");
+      if (el && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); act(el); }
+    });
+    // The wheel moves the camera down the book while zoomed; at either end the page scrolls on.
+    desk.addEventListener("wheel", (e) => {
+      if (st.mode !== "zoom" || !zoomed() || busy) return;
+      const y = Math.min(maxY(cam.s), Math.max(BOOK.y - 8, cam.y + e.deltaY / scale / cam.s));
+      if (y === cam.y) return;
+      e.preventDefault(); cam.y = y; placeCamera(); caption();
+    }, { passive: false });
+    // Dragging the desk moves the camera too (touch screens, or a mouse).
+    let drag = null;
+    desk.addEventListener("pointerdown", (e) => { if (st.mode === "zoom" && zoomed() && !busy) drag = { y: e.clientY, cy: cam.y, id: e.pointerId, moved: false }; });
+    desk.addEventListener("pointermove", (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dy = e.clientY - drag.y;
+      if (!drag.moved && Math.abs(dy) < 5) return;
+      if (!drag.moved) { drag.moved = true; desk.setPointerCapture(drag.id); desk.classList.add("panning"); }
+      cam.y = Math.min(maxY(cam.s), Math.max(BOOK.y - 8, drag.cy - dy / scale / cam.s)); placeCamera();
+    });
+    const end = () => { if (drag && drag.moved) { panned = true; setTimeout(() => (panned = false), 0); caption(); } drag = null; desk.classList.remove("panning"); };
+    desk.addEventListener("pointerup", end);
+    desk.addEventListener("pointercancel", end);
+  }
+  function act(el) {
+    const d = el.dataset;
+    if (d.nav) { if (d.nav !== st.page || st.level !== 1) navigate({ page: d.nav, level: 1 }); }
+    else if (d.book) { if (d.book !== st.book) navigate({ book: d.book }); }
+    else if (d.go) navigate({ level: +d.go });
+  }
+
+  /* ── Caption ── */
+  function caption() {
+    const b = libBook(st.book);
+    let now, tryit;
+    if (st.page !== "library") { now = `<b>${NAME[st.page]}.</b> A blank spread: this mockup draws only the Library.`; tryit = "Try: the Library tab, to turn back."; }
+    else if (st.level === 1) { now = `<b>Library.</b> An even spread: your books on the left page, the chosen book on the right.`; tryit = `Try: Open book page on the right page. ${{ zt: "The camera zooms in, then a leaf turns.", zoom: "A leaf turns, then the camera zooms in.", slide: "The whole book slides left, as D8 has it." }[st.mode]}`; }
+    else if (st.mode === "zt") {
+      now = `<b>Library › ${b.name}.</b> The camera zoomed in, then the leaf turned. Both pages are laid out for the zoomed view, so their type reads at the usual size, and the book runs on below the window. The camera stays put: there is no scroll.`;
+      tryit = "Try: pick another book at the left, or All books (or any chapter tab) to turn back and zoom out.";
+    } else if (st.mode === "zoom") {
+      const bottom = cam.y >= maxY(cam.s) - 1;
+      now = `<b>Library › ${b.name}.</b> The leaf turned and the camera zoomed in: the book's page fills the window, the list stays in view at the left, and the rest of the book is below.${bottom ? " The camera is at the bottom of the book." : ""}`;
+      tryit = "Try: scroll (or drag) to move the camera down the book, pick another book at the left, or All books to zoom out and turn back.";
+    } else { now = `<b>Library › ${b.name}.</b> The plan's slide (D8): the book slid left and the right page grew to fill the room. Nothing zoomed, and the page didn't turn.`; tryit = "Try: All books to slide back, or switch to Turn and zoom above."; }
+    $("#caption").innerHTML = `<p>${now}</p><p class="try">${tryit}</p>`;
+  }
+
+  /* ── Controls ── */
+  function press(group, v) { document.querySelectorAll(`#${group} button, [aria-labelledby="${group}"] button`).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === v))); }
+  async function reset() {
+    if (busy) return false;
+    Object.assign(cam, { s: 1, x: 0, y: 0 });
+    Object.assign(st, { page: "library", level: 1 });
+    build(); caption(); return true;
+  }
+  document.querySelectorAll('[aria-labelledby="lab-mode"] button').forEach((btn) => btn.addEventListener("click", async () => {
+    if (busy) return; stopTour();
+    st.mode = btn.dataset.v; press("lab-mode", st.mode); await reset();
+  }));
+  document.querySelectorAll('[aria-labelledby="lab-theme"] button').forEach((btn) => btn.addEventListener("click", () => {
+    st.theme = btn.dataset.v; press("lab-theme", st.theme); mk.dataset.mode = st.theme; drawMap();
+  }));
+  document.querySelectorAll('[aria-labelledby="lab-seq"] button').forEach((btn) => btn.addEventListener("click", () => {
+    st.overlap = btn.dataset.v === "on"; press("lab-seq", btn.dataset.v);
+  }));
+  document.querySelectorAll('[aria-labelledby="lab-speed"] button').forEach((btn) => btn.addEventListener("click", () => {
+    st.speed = +btn.dataset.v; press("lab-speed", btn.dataset.v);
+  }));
+
+  /* ── Tour: open a book, look down the book, switch books, go back ── */
+  const tourBtn = $("#tour");
+  let touring = 0;
+  function stopTour() { if (!touring) return; touring = 0; tourBtn.setAttribute("aria-pressed", "false"); tourBtn.textContent = "Play it through"; }
+  async function glide(y, ms) {
+    const from = cam.y, t0 = performance.now();
+    await new Promise((res) => {
+      const step = (t) => {
+        const k = Math.min(1, (t - t0) / Math.max(1, ms)), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        cam.y = from + (y - from) * e; placeCamera();
+        if (k < 1 && touring) requestAnimationFrame(step); else res();
+      };
+      requestAnimationFrame(step);
+    });
+    caption();
+  }
+  async function tour() {
+    if (touring) { stopTour(); return; }
+    if (!(await reset())) return;
+    const id = ++touring; tourBtn.setAttribute("aria-pressed", "true"); tourBtn.textContent = "Stop";
+    const alive = () => touring === id;
+    const steps = [
+      async () => { await sleep(D(900)); },
+      async () => { await navigate({ level: 2 }); await sleep(D(1400)); },
+      async () => { if (st.mode === "zoom") { await glide(maxY(cam.s), D(1500)); await sleep(D(1100)); await glide(BOOK.y - 8, D(1100)); await sleep(D(700)); } },
+      async () => { await navigate({ book: "najdorf" }); await sleep(D(1400)); },
+      async () => { await navigate({ level: 1 }); await sleep(D(1000)); },
+    ];
+    for (const s of steps) { if (!alive()) return; await s(); }
+    if (alive()) stopTour();
+  }
+  tourBtn.addEventListener("click", tour);
+
+  press("lab-theme", st.theme);
+  build(); caption();
+})();
+</script>

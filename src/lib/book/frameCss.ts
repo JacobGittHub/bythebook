@@ -1,18 +1,20 @@
-// The book frame's measurements as CSS custom properties, made from the layout's constants
-// (layout.ts), so the CSS that draws the book (globals.css § "The book frame") and the layout
-// its tests check are one set of numbers. The frame renders this once, as a style sheet; the
-// server render is in place before any script runs.
+// The book frame's measurements and timings as CSS custom properties, made from the layout's
+// and the turns' constants (layout.ts, camera.ts, turns.ts), so the CSS that draws and turns the
+// book (globals.css § "The book frame", turns.css) and the code its tests check are one set of
+// numbers. The frame renders this once, as a style sheet; the server render is in place before
+// any script runs.
 
+import { ZOOM_SHOWN } from "./camera";
 import {
   CHAPTER_NAMES_MIN_WIDTH,
   HALF_MIN,
   PHONE,
   PHONE_MAX_WIDTH,
   SINGLE,
-  SLIDE_SHOWN,
   SPREAD,
   SPREAD_MIN_WIDTH,
 } from "./layout";
+import { RIFFLE_STEP_MS, TURN_MS, ZOOM_IN_TURN_START, ZOOM_TURN_MS } from "./turns";
 
 type Vars = Record<string, number>;
 
@@ -66,12 +68,17 @@ export function bookFrameCss(): string {
     "cover-side": SPREAD.cover.side,
     "edge-min": SPREAD.edges.min,
     "edge-max": SPREAD.edges.max,
-    slide: SLIDE_SHOWN,
+    "zoom-shown": ZOOM_SHOWN,
     ...pageVars(SPREAD.page),
   };
   const halvesSideBySide = 2 * HALF_MIN + SINGLE.halfGap;
 
   return [
+    // A turn's timing (turns.css); a turn that goes with the camera runs faster, and a zoom in's
+    // turn waits for the camera (D8).
+    `:root { --turn: ${TURN_MS}ms; --riffle-step: ${RIFFLE_STEP_MS}ms; }`,
+    `:root[data-zoom] { --turn: ${ZOOM_TURN_MS}ms; }`,
+    `:root[data-zoom="in"] { --turn-start: ${ZOOM_IN_TURN_START}ms; }`,
     `.book-frame[data-form="spread"] { ${declare(spread)} }`,
     `.book-frame[data-form="single"] { ${declare(singleVars(SINGLE, SINGLE.column.names))} }`,
     // Narrower, the chapter column shows icons; on a phone, everything around the page thins.

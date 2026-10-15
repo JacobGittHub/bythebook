@@ -1,4 +1,4 @@
-// The book's layout (plans/book-ui.md D1, D3, D4, D8, D15): for a window, where the pages, the
+// The book's layout (plans/book-ui.md D1, D3, D4, D15): for a window, where the pages, the
 // cover, the stacks of page edges, the bookmarks and, in the one-page form, the chapter slots
 // and page tabs lie. Pure and free of the DOM, so its invariants are tested in Node
 // (layout.test.ts) and the browser tests can hold the rendered book to it. The strip's tabs are
@@ -98,9 +98,6 @@ export const PHONE_MAX_WIDTH = 640;
 /** The chapter column shows names from this window width up, and icons below it. */
 export const CHAPTER_NAMES_MIN_WIDTH = 900;
 
-/** How much of the left page a second level leaves in view at the window's edge (D8, D9). */
-export const SLIDE_SHOWN = 300;
-
 /** The spread's side margin: room for the thickest stack of page edges and the cover beside it. */
 const SPREAD_SIDE = SPREAD.deskGap + SPREAD.cover.side + SPREAD.edges.max;
 
@@ -128,12 +125,6 @@ export type BookInput = {
   /** The current page's place in book order, from 0, and how many pages the book has. */
   at: number;
   pages: number;
-  /**
-   * A second level (D8, D9): how much of the left page stays in view at the window's left edge,
-   * or null when the book isn't slid. Only the spread slides; a second level of the one-page form
-   * is a page of its own.
-   */
-  slide: number | null;
   /** The spread's tabs in the strip, measured, in book order. */
   tabs: readonly Span[];
   /** The one-page form's chapter column. A phone shows icons whatever this says. */
@@ -199,16 +190,14 @@ export function edgeThickness(before: number, pages: number, edges: { min: numbe
   return edges.min + ((edges.max - edges.min) * clamp(before, 0, pages - 1)) / (pages - 1);
 }
 
-function layoutSpread({ window, at, pages, slide, tabs }: BookInput): SpreadLayout {
+function layoutSpread({ window, at, pages, tabs }: BookInput): SpreadLayout {
   const top = SPREAD.strip + SPREAD.top;
   const height = window.height - SPREAD.bottom - top;
   const bookLeft = SPREAD_SIDE;
   const bookRight = window.width - SPREAD_SIDE;
   const leftWidth = (bookRight - bookLeft) / 2;
 
-  // Slid, the left page keeps its width and moves left until `slide` of it shows; the right page
-  // keeps its right edge and takes the rest.
-  const spine = slide === null ? bookLeft + leftWidth : clamp(slide, 0, bookLeft + leftWidth);
+  const spine = bookLeft + leftWidth;
   const left: Rect = { x: spine - leftWidth, y: top, width: leftWidth, height };
   const right: Rect = { x: spine, y: top, width: bookRight - spine, height };
 

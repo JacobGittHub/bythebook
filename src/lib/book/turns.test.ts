@@ -1,6 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { PAGE_BORDER } from "./layout";
-import { MAX_RIFFLES, riffleBookmarkX, turnBetween } from "./turns";
+import {
+  MAX_RIFFLES,
+  RIFFLE_STEP_MS,
+  TURN_MS,
+  ZOOM_MS,
+  ZOOM_OVERLAP,
+  ZOOM_TURN_MS,
+  moveBetween,
+  moveTiming,
+  riffleBookmarkX,
+  turnBetween,
+  type Place,
+} from "./turns";
 
 describe("turnBetween", () => {
   it("turns forward to a later chapter and back to an earlier one", () => {
@@ -56,5 +68,55 @@ describe("riffleBookmarkX", () => {
     const x = leftWidth - PAGE_BORDER - 80;
     expect(riffleBookmarkX({ side: "left", x }, "right", leftWidth)).toBe(80);
     expect(riffleBookmarkX({ side: "right", x: 80 }, "left", leftWidth)).toBe(x);
+  });
+});
+
+describe("moveBetween", () => {
+  const library: Place = { at: 3, level: 1 };
+  const libraryBook: Place = { at: 3, level: 2 };
+
+  it("turns forward down to a second level and back up from it, zooming in and out in the spread (D8)", () => {
+    expect(moveBetween(library, libraryBook, "spread")).toEqual({ way: "forward", riffled: [], zoom: "in" });
+    expect(moveBetween(libraryBook, library, "spread")).toEqual({ way: "back", riffled: [], zoom: "out" });
+  });
+
+  it("never zooms in the one-page form (D15)", () => {
+    expect(moveBetween(library, libraryBook, "single")).toEqual({ way: "forward", riffled: [], zoom: null });
+    expect(moveBetween({ at: 1, level: 2 }, { at: 5, level: 2 }, "single")?.zoom).toBeNull();
+  });
+
+  it("turns between chapters as ever, zooming out of a second level or across to another", () => {
+    expect(moveBetween({ at: 0, level: 1 }, { at: 3, level: 1 }, "spread")).toEqual({ way: "forward", riffled: [1, 2], zoom: null });
+    expect(moveBetween(libraryBook, { at: 1, level: 1 }, "spread")).toEqual({ way: "back", riffled: [2], zoom: "out" });
+    expect(moveBetween({ at: 0, level: 1 }, { at: 2, level: 2 }, "spread")?.zoom).toBe("in");
+    expect(moveBetween(libraryBook, { at: 4, level: 2 }, "spread")?.zoom).toBe("across");
+  });
+
+  it("doesn't turn for another page of the same level, or outside the book (D13)", () => {
+    expect(moveBetween(libraryBook, libraryBook, "spread")).toBeNull();
+    expect(moveBetween(library, library, "spread")).toBeNull();
+    expect(moveBetween({ at: -1, level: 1 }, { at: -1, level: 2 }, "spread")).toBeNull();
+  });
+});
+
+describe("moveTiming", () => {
+  it("zooms in first and starts the turn ZOOM_OVERLAP into it (D8)", () => {
+    const t = moveTiming({ way: "forward", riffled: [], zoom: "in" });
+    expect(t).toEqual({ turn: ZOOM_TURN_MS, turnStart: ZOOM_OVERLAP * ZOOM_MS, turnEnd: ZOOM_OVERLAP * ZOOM_MS + ZOOM_TURN_MS, zoomStart: 0, zoomEnd: ZOOM_MS });
+  });
+
+  it("turns first going out and starts the zoom ZOOM_OVERLAP into the turn, riffles and all", () => {
+    const t = moveTiming({ way: "back", riffled: [2, 1], zoom: "out" });
+    const turnLength = ZOOM_TURN_MS + 2 * RIFFLE_STEP_MS;
+    expect(t).toEqual({ turn: ZOOM_TURN_MS, turnStart: 0, turnEnd: turnLength, zoomStart: ZOOM_OVERLAP * turnLength, zoomEnd: ZOOM_OVERLAP * turnLength + ZOOM_MS });
+  });
+
+  it("overlaps the zoom and the turn whenever both run, and runs a plain turn at its own speed", () => {
+    for (const zoom of ["in", "out", "across"] as const) {
+      const t = moveTiming({ way: "forward", riffled: [1], zoom });
+      expect(t.turnStart).toBeLessThan(t.zoomEnd);
+      expect(t.zoomStart).toBeLessThan(t.turnEnd);
+    }
+    expect(moveTiming({ way: "forward", riffled: [], zoom: null })).toMatchObject({ turn: TURN_MS, turnStart: 0, turnEnd: TURN_MS });
   });
 });

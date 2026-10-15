@@ -1,6 +1,6 @@
 // Which chapter of the book an address is in (plans/book-ui.md D13): the chapters are the
 // book's pages in `NAV_ITEMS` order, and a page below one, such as a Library book's page, is
-// in its chapter.
+// in its chapter, as its second level (D8).
 
 /**
  * The index of the chapter `pathname` is in: the one whose address is the path, or the
@@ -13,6 +13,14 @@ export function chapterAt(pathname: string, hrefs: readonly string[]): number {
     if (inside && (best === -1 || href.length > hrefs[best].length)) best = i;
   });
   return best;
+}
+
+/** A page's level in its chapter (D8): 1 for the chapter's own page, 2 for a page below it, such as a Library book's. */
+export type Level = 1 | 2;
+
+/** The level of `pathname` in the chapter whose address is `href`. */
+export function levelAt(pathname: string, href: string): Level {
+  return pathname === href ? 1 : 2;
 }
 
 /** How far into the book chapter `at` of `pages` is, from 0 at the first to 1 at the last. */
