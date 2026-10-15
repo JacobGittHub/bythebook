@@ -2,9 +2,8 @@ import type { Page } from "@playwright/test";
 import { MOTION_STORAGE_KEY, type Motion } from "@/lib/appearance";
 import { expect, test } from "./fixtures/test";
 
-// The book's moves between chapters (plans/book-ui.md D13, D14). Each test of a move runs once
-// per motion setting, since they share one transition. A move is recorded as the browser starts
-// its animations: each animation's name and the picture it moves.
+// The book's moves between chapters (plans/book-ui.md D13, D14): page turns, or none. A move is
+// recorded as the browser starts its animations: each animation's name and the picture it moves.
 
 declare global {
   interface Window {
@@ -54,10 +53,9 @@ const supportsTurns = (page: Page) => page.evaluate(() => "startViewTransition" 
 
 /**
  * The animation that says a move from `from` to `to` (routes as the pages name their pictures)
- * went `way` in `motion`: the leaf that turns first, or the page that slides out.
+ * went `way`: the leaf that turns first.
  */
-function expected(motion: Motion, way: "forward" | "back", spread: boolean, from: string, to: string): string {
-  if (motion === "slide") return `turn-slide-out ::view-transition-old(page-${spread ? (way === "forward" ? "r" : "l") : "s"}${from})`;
+function expected(way: "forward" | "back", spread: boolean, from: string, to: string): string {
   if (!spread) {
     // One page: forward, the next leaf comes over onto it; back, this one lifts away.
     return way === "forward"
@@ -69,22 +67,20 @@ function expected(motion: Motion, way: "forward" | "back", spread: boolean, from
     : `turn-fold-left ::view-transition-old(page-l${from})`;
 }
 
-for (const motion of ["turn", "slide"] as const) {
-  test(`${motion === "turn" ? "Page turn" : "Slide"}: moves forward and back in book order`, async ({ page }) => {
-    await recordMoves(page, motion);
-    await page.goto("/dashboard/library");
-    test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
-    await expect(page.locator("html")).toHaveAttribute("data-motion", motion);
-    const spread = (await form(page)) === "spread";
+test("Page turn: moves forward and back in book order", async ({ page }) => {
+  await recordMoves(page, "turn");
+  await page.goto("/dashboard/library");
+  test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "turn");
+  const spread = (await form(page)) === "spread";
 
-    const forward = await moveTo(page, "Bookstore", "/dashboard/bookstore");
-    expect(forward).toContain(expected(motion, "forward", spread, "-dashboard-library", "-dashboard-bookstore"));
-    expect(forward.some((a) => a.includes("riffle"))).toBe(false);
+  const forward = await moveTo(page, "Bookstore", "/dashboard/bookstore");
+  expect(forward).toContain(expected("forward", spread, "-dashboard-library", "-dashboard-bookstore"));
+  expect(forward.some((a) => a.includes("riffle"))).toBe(false);
 
-    const back = await moveTo(page, "Library", "/dashboard/library");
-    expect(back).toContain(expected(motion, "back", spread, "-dashboard-bookstore", "-dashboard-library"));
-  });
-}
+  const back = await moveTo(page, "Library", "/dashboard/library");
+  expect(back).toContain(expected("back", spread, "-dashboard-bookstore", "-dashboard-library"));
+});
 
 test("Page turn: a jump of several chapters riffles the leaves between, up to three", async ({ page }) => {
   await recordMoves(page, "turn");
@@ -120,8 +116,8 @@ test("Settings picks how pages move, and keeps it", async ({ page }) => {
   await page.goto("/dashboard/settings");
   const motion = () => page.getByRole("radiogroup", { name: "Page turns" });
   await expect(motion().getByRole("radio", { name: "Page turn" })).toBeChecked();
-  await motion().getByRole("radio", { name: "Slide" }).click();
-  await expect(page.locator("html")).toHaveAttribute("data-motion", "slide");
+  await motion().getByRole("radio", { name: "None" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "none");
   await page.reload();
-  await expect(motion().getByRole("radio", { name: "Slide" })).toBeChecked();
+  await expect(motion().getByRole("radio", { name: "None" })).toBeChecked();
 });

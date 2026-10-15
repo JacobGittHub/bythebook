@@ -14,7 +14,7 @@ const THEME_LABELS: Record<ThemeChoice, { label: string; Icon: typeof Sun }> = {
   system: { label: "System", Icon: Monitor },
 };
 
-const MOTION_LABELS: Record<Motion, string> = { turn: "Page turn", slide: "Slide", none: "None" };
+const MOTION_LABELS: Record<Motion, string> = { turn: "Page turn", none: "None" };
 
 /**
  * The theme, how pages move (plans/book-ui.md D13) and the vibes switch (plans/vibes.md D2),

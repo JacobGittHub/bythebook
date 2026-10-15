@@ -42,7 +42,7 @@ describe("parseVibes", () => {
 
 describe("parseMotion", () => {
   it("keeps a stored motion, and turns pages otherwise", () => {
-    expect(parseMotion("slide")).toBe("slide");
+    expect(parseMotion("slide")).toBe("turn");
     expect(parseMotion("none")).toBe("none");
     expect(parseMotion("turn")).toBe("turn");
     expect(parseMotion(null)).toBe("turn");
@@ -52,9 +52,9 @@ describe("parseMotion", () => {
 
 describe("resolveMotion", () => {
   it("keeps the choice, unless the system asks for reduced motion", () => {
-    expect(resolveMotion("slide", false)).toBe("slide");
+    expect(resolveMotion("turn", false)).toBe("turn");
+    expect(resolveMotion("none", false)).toBe("none");
     expect(resolveMotion("turn", true)).toBe("none");
-    expect(resolveMotion("slide", true)).toBe("none");
   });
 });
 

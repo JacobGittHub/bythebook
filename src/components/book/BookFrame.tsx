@@ -259,7 +259,7 @@ const NO_TURN: FrameTurn = { id: 0, way: null, riffled: [] };
 /**
  * The turn of the move to `pathname`, worked out as the page renders, so the arriving page
  * renders its riffled leaves in the same commit. A move within a chapter, or with motion off,
- * doesn't turn; under Slide nothing riffles.
+ * doesn't turn.
  */
 function useTurn(pathname: string, at: number, motion: Motion): FrameTurn {
   const [state, setState] = useState({ pathname, at, turn: NO_TURN });
@@ -272,7 +272,7 @@ function useTurn(pathname: string, at: number, motion: Motion): FrameTurn {
       turn: {
         id: state.turn.id + 1,
         way: turn?.way ?? null,
-        riffled: motion === "turn" && turn ? turn.riffled : [],
+        riffled: turn?.riffled ?? [],
       },
     };
     setState(current);

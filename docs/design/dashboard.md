@@ -70,11 +70,10 @@ A move to another chapter turns the page (`plans/book-ui.md` D13, D14), as a vie
   pictures show them, and the frame takes them away once no turn is running.
 - **An interim page's content spans the spine,** so in a turn it stays on the pages that lie
   still and the turning leaves are blank, until Phase 3 makes each page a spread.
-- **The motion setting** (`MOTIONS`: page turn, slide or none) is on the Settings page
+- **The motion setting** (`MOTIONS`: page turn or none) is on the Settings page
   (`AppearancePanel`), saved in the browser like the theme, and written on `<html>` as
-  `data-motion`. Slide moves the spreads across the window with transforms only. None, and
-  any setting while the system asks for reduced motion (`resolveMotion`), changes pages at
-  once with no transition at all. `e2e/turns.spec.ts` runs each move once per setting.
+  `data-motion`. None, and page turn while the system asks for reduced motion
+  (`resolveMotion`), changes pages at once with no transition at all.
 
 ## Overview
 

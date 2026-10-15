@@ -66,11 +66,12 @@ amended the same day from the user's notes on round five.
 - D11. **Train and Puzzles keep placeholder spreads** until they have plans of their own.
 - D12. **Vibes dress the book, not its surroundings** (`vibes.md` D14). The vibes switch
   sits in the strip, beside the account links.
-- D13. **Pages move in book order, with three motion settings** (Q2). Settings offers Page
-  turn, Slide and None; Page turn is the default, and None is forced when the system asks
-  for reduced motion. The user likes Page turn best and keeps all three if they don't add
-  much testing: they share one transition, so each browser test of a turn runs once per
-  setting. A jump of several pages riffles up to three leaves. Changes within a spread never
+- D13. **Pages move in book order, by page turn or not at all** (Q2). Settings offers Page
+  turn and None; Page turn is the default, and None is forced when the system asks for
+  reduced motion. Slide, a third setting that moved the spreads across the window, was built
+  and dropped on 2026-10-15: the user found it odd. Other motions may come with the game-like
+  pages that move away from the book (the trainer, puzzles), not for the book's chapters. A
+  jump of several pages riffles up to three leaves. Changes within a spread never
   turn; picking another book, swapping the board or picking an Overview chapter re-inks the
   page. A turn takes about 450 ms.
 - D14. **Turns are built with view transitions** (Q3). Next.js 16 supports React's
@@ -187,11 +188,16 @@ and get to the test of turns").
       so the book moved into the frame and pages render their pages into it; a second level
       now says only that it slides, by `SLIDE_SHOWN` (D8, D9's 300 px or so), and the book
       takes it from its left page. Riffled leaves carry their chapters' bookmarks or page tabs.
-      Slide moves the spreads across the window like slides, since fading paper showed the
-      cover through it. An interim page's content can't be cut at the spine, so it stays on
-      the pages that lie still while blank leaves turn. The setting is on the Settings page
-      until Phase 3 rebuilds it.
+      An interim page's content can't be cut at the spine, so it stays on the pages that lie
+      still while blank leaves turn. The setting is on the Settings page until Phase 3
+      rebuilds it. Slide was dropped afterwards (D13).
 - [ ] (agent) The book slide for second levels, with the Bookstore's strip (D8, D9).
+      Open (Q10, 2026-10-15): the user proposes a turn and a zoom instead of the slide. Opening
+      a second level turns the leaf to a spread whose right page is the book's page, then the
+      view zooms in until the right page fills the window but for the left page's last 300 px
+      or so, and the book runs off the window's bottom; going back zooms out, then turns
+      back. Either the view can be scrolled down to the rest of the book, or the page shows
+      only what fits. D5, D8 and D9 change if it's taken.
 - [ ] (agent) The one-page form: the open left page with its gutter at the right and the
       facing page running off the window, turns on the gutter, the page tabs and the phone's
       icon tabs (D15).
@@ -215,15 +221,16 @@ and get to the test of turns").
 ### Phase 4. Checks and docs
 
 - [ ] (agent) Browser tests: each page fits at the listed window sizes and the page body
-      never scrolls; each bookmark and page tab meets its tab; turns go the right way in
-      each motion setting; reduced motion changes pages instantly. New screenshot baselines
+      never scrolls; each bookmark and page tab meets its tab; turns go the right way; None
+      and reduced motion change pages instantly. New screenshot baselines
       (this takes over `vibes.md` Phase 1's open step).
 - [ ] (user, agent) Safari: the turns and the slide on a real iPhone or Mac, from a
       production build on the local network. The spike's turns didn't look right there
-      (2026-10-14); find out what Safari draws wrong and fix it, or give Safari Slide
-      or None until it can. The Done-when needs Safari.
+      (2026-10-14); find out what Safari draws wrong and fix it, or give Safari None until
+      it can. The Done-when needs Safari.
 - [ ] (agent) A slow-device check: turns and the slide with Chromium's CPU throttled four
-      times. The user decides whether Slide becomes the default anywhere, phones first.
+      times. If they stutter, the user decides whether None becomes the default anywhere,
+      phones first.
 - [ ] (agent) Docs: `docs/design/dashboard.md` and `docs/design/explorer.md` rewritten for
       the book, the UI rules in `AGENTS.md` (`Panel`, `--dash-offset`, the vibe areas, what
       reads `NAV_ITEMS`), and the mockup moved to `docs/design/mockups/`.

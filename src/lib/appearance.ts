@@ -19,9 +19,12 @@ export const LEGACY_MODE_STORAGE_KEY = "bg-mode";
 export const DARK_QUERY = "(prefers-color-scheme: dark)";
 export const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
-/** How the book moves between chapters (D13): a page turn, a slide, or no motion at all. */
-export type Motion = "turn" | "slide" | "none";
-export const MOTIONS: readonly Motion[] = ["turn", "slide", "none"];
+/**
+ * How the book moves between chapters (D13): a page turn, or no motion at all. A browser that
+ * kept Slide, removed on 2026-10-15, turns pages again.
+ */
+export type Motion = "turn" | "none";
+export const MOTIONS: readonly Motion[] = ["turn", "none"];
 export const DEFAULT_MOTION: Motion = "turn";
 
 /**

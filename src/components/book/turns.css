@@ -2,7 +2,7 @@
    is a picture named after its route, with a class for which page it is and whether it leaves
    or arrives (Spread.tsx): page-l, page-r and page-s (the one page), and page-ink, an interim
    page's content. The frame writes the way on <html> (`data-turn`, BookFrame.tsx), and the
-   motion setting is `data-motion` (src/context/Appearance.tsx): turn, slide or none.
+   motion setting is `data-motion` (src/context/Appearance.tsx): turn or none.
 
    A picture is one face, so a spread's turn is two halves: the old page folds to the spine,
    then the new one opens from it. Nothing animates unless a rule below says so, so a move
@@ -17,7 +17,6 @@
   --riffle-step: 70ms;
   --riffle-delay: 0ms;
   --turn-total: calc(var(--turn) + var(--riffle-delay));
-  --slide-offset: 100vw;
 }
 :root[data-riffles="1"] { --riffle-delay: var(--riffle-step); }
 :root[data-riffles="2"] { --riffle-delay: calc(2 * var(--riffle-step)); }
@@ -190,28 +189,6 @@
     turn-lift-fade var(--turn) linear calc((var(--k) + 1) * var(--riffle-step)) both;
 }
 
-/* ── Slide ─────────────────────────────────────────────────────────────── */
-/* The spread slides across the window in book order and the next one follows it in, like
-   slides in a tray: only transforms, no 3D, fades or filters, so it is the lighter motion.
-   Forward, the old pages leave to the left and the new come in from the right. Fading paper
-   would show the cover through it. */
-
-:root[data-motion="slide"][data-turn="forward"] { --slide-from: var(--slide-offset); }
-:root[data-motion="slide"][data-turn="back"] { --slide-from: calc(-1 * var(--slide-offset)); }
-
-:root[data-motion="slide"][data-turn]::view-transition-old(.page-l-out),
-:root[data-motion="slide"][data-turn]::view-transition-old(.page-r-out),
-:root[data-motion="slide"][data-turn]::view-transition-old(.page-s-out),
-:root[data-motion="slide"][data-turn]::view-transition-old(.page-ink-out) {
-  animation: turn-slide-out var(--turn) ease-in-out both;
-}
-:root[data-motion="slide"][data-turn]::view-transition-new(.page-l-in),
-:root[data-motion="slide"][data-turn]::view-transition-new(.page-r-in),
-:root[data-motion="slide"][data-turn]::view-transition-new(.page-s-in),
-:root[data-motion="slide"][data-turn]::view-transition-new(.page-ink-in) {
-  animation: turn-slide-in var(--turn) ease-in-out both;
-}
-
 /* ── Riffled leaves in the page ───────────────────────────────────────── */
 /* Drawn under the pages, where only the turn's pictures show them (Spread.tsx). */
 .book > .book-page.book-riffle {
@@ -299,10 +276,4 @@
 @keyframes turn-in-at-half {
   0%, 49.9% { opacity: 0; }
   50%, 100% { opacity: 1; }
-}
-@keyframes turn-slide-out {
-  to { translate: calc(-1 * var(--slide-from)); }
-}
-@keyframes turn-slide-in {
-  from { translate: var(--slide-from); }
 }

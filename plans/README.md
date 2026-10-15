@@ -8,8 +8,8 @@ become decisions that later work follows.
 and it holds the user's latest direction, which outranks `docs/` where they disagree ("When
 sources disagree" in `AGENTS.md`). The repository is public, so keep secrets out of here too.
 
-**Focus:** `deployment.md` (the user sets this; agents work on the focus plan unless told
-otherwise)
+**Focus:** `book-ui.md`, to be finished before other work (2026-10-15) (the user sets this;
+agents work on the focus plan unless told otherwise)
 
 ## Index
 
