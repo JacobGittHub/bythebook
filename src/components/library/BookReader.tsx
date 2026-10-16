@@ -28,6 +28,10 @@ type Props = {
   size: "compact" | "large";
   /** Buttons for the selected position, such as Remove move. */
   positionActions?: (selected: ViewNode) => ReactNode;
+  /** The drawing takes the height the reader is given, as on a page of the book, not a set one. */
+  fill?: boolean;
+  /** Whether the board for the selected position shows beside the drawing. */
+  board?: boolean;
   className?: string;
 };
 
@@ -36,7 +40,7 @@ type Props = {
  * hovered position. On a phone the board comes first, since a phone has height to spare and
  * not width. Until the views draw several trees, it shows the tree from the starting position.
  */
-export function BookReader({ book, size, positionActions, className }: Props) {
+export function BookReader({ book, size, positionActions, fill = false, board = true, className }: Props) {
   const [view, setView] = useState<BookViewId>(DEFAULT_READER_VIEW);
   const [zoom, setZoom] = useState<number>(FIT_ZOOM);
   const tree = useMemo(() => buildViewTree(startTree(book.trees)), [book.trees]);
@@ -84,8 +88,8 @@ export function BookReader({ book, size, positionActions, className }: Props) {
     );
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-3 md:flex-row", className)}>
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
+    <div className={cn("flex min-w-0 flex-col gap-3 md:flex-row", fill && "min-h-0 flex-1", className)}>
+      <div className={cn("flex min-w-0 flex-1 flex-col gap-2", fill && "min-h-0")}>
         <div className="flex flex-wrap items-center gap-2">
           {picker}
           <span className="flex-1" />
@@ -95,7 +99,7 @@ export function BookReader({ book, size, positionActions, className }: Props) {
           data-slot="panel"
           className={cn(
             "relative flex min-h-0 rounded-md border bg-muted p-1 [--bv-label-halo:var(--muted)]",
-            size === "compact" ? "h-80 md:h-[26rem]" : "h-96 md:h-[34rem]",
+            fill ? "min-h-64 flex-1" : size === "compact" ? "h-80 md:h-[26rem]" : "h-96 md:h-[34rem]",
           )}
         >
           {selectedId && spineEndId && (
@@ -115,15 +119,22 @@ export function BookReader({ book, size, positionActions, className }: Props) {
           )}
         </div>
       </div>
-      <SelectedPosition
-        node={shown}
-        preview={hovered !== null}
-        side={book.color}
-        boardClassName={size === "compact" ? "max-w-60" : "max-w-72"}
-        className={cn("order-first shrink-0 md:order-none", size === "compact" ? "md:w-60" : "md:w-72")}
-      >
-        {selected && positionActions?.(selected)}
-      </SelectedPosition>
+      {board && (
+        <SelectedPosition
+          node={shown}
+          preview={hovered !== null}
+          side={book.color}
+          boardClassName={size === "compact" ? "max-w-60" : "max-w-72"}
+          className={cn(
+            "order-first shrink-0 md:order-none",
+            size === "compact" ? "md:w-60" : "md:w-72",
+            // Beside a drawing that fills the page, the position scrolls on its own (AGENTS.md § "UI").
+            fill && "md:min-h-0 md:overflow-y-auto",
+          )}
+        >
+          {selected && positionActions?.(selected)}
+        </SelectedPosition>
+      )}
     </div>
   );
 }

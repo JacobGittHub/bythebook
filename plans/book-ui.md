@@ -69,6 +69,14 @@ it, replacing the book slide.
   view: the book still runs off the frame, the strip isn't forced onto the book, and the
   user never sees that the rest of a second level's page isn't there. Under None or reduced
   motion it changes at once, as do the browser's back and forward buttons.
+  From the user's answers of 2026-10-15, on starting the Library: the list is the mockup's
+  left page, its rows contents lines (side, name, dotted leader, positions). The positions
+  figure may one day give way to something more personal, such as success or how much of the
+  book is explored, so it is one slot of the row. On a phone, where the halves stack, a book's
+  row opens its page; where they sit side by side, it picks the book as in a spread. Notices
+  (the backup notice, the copy offered at sign-in) sit under the left page's header, a restore
+  or copy checklist takes the right page until it is done, and debug mode's panel is at the
+  foot of the left page.
 - D9. **The Bookstore keeps search and filters on its left page.** A store book's page zooms
   and turns the same way (D8), and the part of the second level's left page in view lists
   the shelf's books, as the search and filters left them, right-aligned toward the spine
@@ -252,7 +260,17 @@ and get to the test of turns").
       Lichess sit on the interim Settings page until its step. The chapter column marks the
       pages coming soon; its counts (books, visualizations) come with the pages that own
       them.
-- [ ] (agent) Library (D8): the first level as a spread, the second by the zoom and turn.
+- [x] (agent) Library (D8): the first level as a spread, the second by the zoom and turn.
+      Done: the first level is "Your books" and the list on the left page, the picked book on
+      the right with its view filling the page and no board (the board is on the book's own
+      page); an empty library has the Bookstore's books on the right. The book's page lists
+      the books beside it, and another book re-inks without a turn. Its position column
+      scrolls on its own where the page is short. The route reads `?book=` on the server: a
+      Suspense boundary around the whole spread showed nothing while the page's code loaded,
+      which started the turn without the arriving pages. The chapter column gives the
+      Library's book count (`ChapterFigure`). The zoomed gutter's gradient no longer repeats,
+      which had drawn a faint line down the right page. `OriginPanel` is gone; its credit and
+      link back to the Bookstore sit under the book's title.
 - [ ] (agent) Bookstore (D9): the first level as a spread, a book's page by the zoom and turn.
 - [ ] (agent) Explorer (D6, D7, D16, D17): the Even layout, the scoresheet, the swap, the
       chosen book in the book view, and the Labyrinth tab marked coming soon.

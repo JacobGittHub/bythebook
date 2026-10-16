@@ -464,6 +464,8 @@ body {
   flex-direction: column;
   gap: 14px;
 }
+/* Stacked, a spread that shows only its left half hides its right one (Spread's `stack`). */
+.book-halves[data-stack="left"] > .book-half:last-child { display: none; }
 .book-halves > .book-half-rule {
   display: none;
   width: 1px;
@@ -480,12 +482,13 @@ body {
 }
 .book-page:is([data-side="left"], [data-side="single"]) > [data-slot="gutter"] {
   right: 0;
-  background: linear-gradient(to left, var(--gutter), transparent 75%);
+  /* Not repeated: zoomed in (D8), a repeat wraps a sliver of the dark end to the far edge. */
+  background: linear-gradient(to left, var(--gutter), transparent 75%) no-repeat;
 }
 .book-page[data-side="right"] > [data-slot="gutter"] {
   left: 0;
   border-left: 1px solid var(--crease);
-  background: linear-gradient(to right, var(--gutter), transparent 75%);
+  background: linear-gradient(to right, var(--gutter), transparent 75%) no-repeat;
 }
 /* The one-page form is the left page of an open book: past its gutter, the facing page runs on
    past the window's right edge, --facing-shown of it in view. The book's negative right margin

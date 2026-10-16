@@ -24,10 +24,10 @@ test.describe("Bookstore, as a guest", () => {
     await page.getByRole("link", { name: /Open in Library/ }).click();
     await expect(page).toHaveURL(/\/dashboard\/library\/[^/?]+$/);
     await expect(page.getByRole("heading", { name: "Caro-Kann Defense", level: 1 })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Where this book came from" })).toContainText("From the Bookstore");
+    await expect(page.getByText(/^Saved from the Bookstore, published by ByTheBook\./)).toBeVisible();
 
     await page.goto(LIBRARY);
-    await expect(bookList(page).getByRole("button", { name: /Caro-Kann Defense/ })).toBeVisible();
+    await expect(bookList(page).getByRole("link", { name: /Caro-Kann Defense/ })).toBeVisible();
   });
 
   test("an address that names no store book says so", async ({ page }) => {

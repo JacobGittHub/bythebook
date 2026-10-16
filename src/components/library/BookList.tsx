@@ -1,34 +1,76 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
+import Link from "next/link";
 import { Search } from "lucide-react";
-import { BookMiniature } from "@/components/books/BookMiniature";
 import { Input } from "@/components/shadcn/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/shadcn/toggle-group";
+import { libraryBookHref } from "@/lib/library/links";
 import { filterBooks, type SideFilter } from "@/lib/library/search";
 import type { LibraryEntry } from "@/lib/library/types";
 import { cn } from "@/lib/utils";
-import { BookTags, SideTag, countOf } from "./BookParts";
+import { SideSquare } from "./BookParts";
 
-type Props = {
+type RowsProps = {
   books: readonly LibraryEntry[];
   selectedId: string | null;
-  onSelect: (bookId: string) => void;
+  /**
+   * Called when a row is pressed, before its link goes to the book's page; it may stop the
+   * link, as the Library's first level does to pick the book instead.
+   */
+  onPick?: (bookId: string, event: MouseEvent<HTMLAnchorElement>) => void;
   className?: string;
 };
 
 /**
- * The Library's first level (plans/deployment.md D21): every book with its icicle in
- * miniature, searchable by name and filtered by side. It reads only the summaries (D26).
+ * The books as the lines of a contents (plans/book-ui.md D8): the side, the name, a dotted
+ * leader and the book's figure, its positions. Each row links to the book's own page. It reads
+ * only the summaries (plans/deployment.md D26).
  */
-export function BookList({ books, selectedId, onSelect, className }: Props) {
+export function BookRows({ books, selectedId, onPick, className }: RowsProps) {
+  return (
+    <ul aria-label="Books" className={cn("-mx-2.5 flex flex-col gap-px", className)}>
+      {books.map((book) => {
+        const selected = book.id === selectedId;
+        return (
+          <li key={book.id}>
+            <Link
+              href={libraryBookHref(book.id)}
+              aria-current={selected ? "true" : undefined}
+              onClick={(event) => onPick?.(book.id, event)}
+              className={cn("flex items-baseline gap-2 rounded-md px-2.5 py-[7px] hover:bg-accent", selected && "bg-accent")}
+            >
+              <SideSquare side={book.color} className="-translate-y-px" />
+              <span className={cn("min-w-0 truncate font-heading text-sm leading-[1.2]", selected ? "font-semibold" : "font-medium")}>
+                {book.name}
+              </span>
+              <span aria-hidden className="min-w-3 flex-1 -translate-y-[3px] border-b-[1.5px] border-dotted border-muted-foreground opacity-55" />
+              {/* The book's figure. Its positions for now; something more personal, such as how
+                  much of it is explored, may take this place (D8). */}
+              <span className="font-mono text-xs leading-none whitespace-nowrap text-muted-foreground tabular-nums">
+                {book.summary.positions.toLocaleString("en-US")}
+                <span className="sr-only">{book.summary.positions === 1 ? " position" : " positions"}</span>
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/**
+ * The Library's book list (plans/deployment.md D21): the books as contents rows, searchable
+ * by name and filtered by side.
+ */
+export function BookList({ books, selectedId, onPick, className }: RowsProps) {
   const [query, setQuery] = useState("");
   const [side, setSide] = useState<SideFilter>("all");
   const shown = filterBooks(books, query, side);
 
   return (
-    <div data-slot="panel" className={cn("relative flex min-w-0 flex-col rounded-md border bg-card", className)}>
-      <div className="flex items-center gap-2 border-b p-2">
+    <div className={cn("flex min-h-0 min-w-0 flex-col gap-2.5", className)}>
+      <div className="flex items-center gap-2">
         <div className="relative min-w-0 flex-1">
           <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -59,38 +101,10 @@ export function BookList({ books, selectedId, onSelect, className }: Props) {
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
-      <ul aria-label="Books" className="max-h-[32rem] overflow-y-auto md:max-h-[calc(100dvh-16rem)]">
-        {shown.map((book) => {
-          const selected = book.id === selectedId;
-          return (
-            <li key={book.id} className="border-b last:border-b-0">
-              <button
-                type="button"
-                onClick={() => onSelect(book.id)}
-                aria-current={selected ? "true" : undefined}
-                className={cn(
-                  "flex w-full items-center gap-2.5 px-2.5 py-2 text-left transition-colors hover:bg-muted",
-                  selected && "bg-muted shadow-[inset_2px_0_0_var(--foreground)]",
-                )}
-              >
-                <BookMiniature miniature={book.summary.miniature} width={52} height={34} />
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate text-sm font-medium text-foreground">{book.name}</span>
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <SideTag side={book.color} />
-                    <span>·</span>
-                    <span className="tabular-nums">{countOf(book.summary.positions, "position")}</span>
-                  </span>
-                  <BookTags origin={book.origin} summary={book.summary} />
-                </span>
-              </button>
-            </li>
-          );
-        })}
-        {shown.length === 0 && (
-          <li className="px-3 py-6 text-center text-sm text-muted-foreground">No book matches.</li>
-        )}
-      </ul>
+      <div className="-mx-2.5 min-h-24 overflow-y-auto">
+        <BookRows books={shown} selectedId={selectedId} onPick={onPick} className="mx-0" />
+        {shown.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">No book matches.</p>}
+      </div>
     </div>
   );
 }

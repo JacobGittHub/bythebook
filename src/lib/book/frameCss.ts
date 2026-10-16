@@ -117,6 +117,7 @@ export function bookFrameCss(): string {
     `  .book-frame .book-halves { flex-direction: row; overflow: hidden; }`,
     `  .book-frame .book-halves > .book-half { flex: 1 1 0; overflow-y: auto; }`,
     `  .book-frame .book-halves > .book-half-rule { display: block; }`,
+    `  .book-frame .book-halves[data-stack] > .book-half { display: flex; }`,
     `}`,
   ].join("\n");
 }

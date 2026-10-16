@@ -2,84 +2,112 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { Ink } from "@/components/book/Book";
+import { useBookFrame } from "@/components/book/BookFrame";
+import { Spread } from "@/components/book/Spread";
 import { Button } from "@/components/shadcn/button";
 import { Skeleton } from "@/components/shadcn/skeleton";
 import { useLibrary, useLibraryBook, useLibraryBooks } from "@/context/Library";
 import { pathTo } from "@/lib/books/viewTree";
 import { explorerHref, libraryBookHref, storeBookHref } from "@/lib/library/links";
 import { BookMenu } from "./BookMenu";
-import { BookMeasures, BookTags, SideTag, storeVerified } from "./BookParts";
+import { BookRows } from "./BookList";
+import { BookMeasures, BookTags, OriginLine, SideTag, countOf, originFolio, originShort, positionsOfLimit, storeVerified } from "./BookParts";
 import { BookReader } from "./BookReader";
-import { OriginPanel } from "./OriginPanel";
 import { RemoveMoveButton } from "./RemoveMoveButton";
 
+const LIBRARY = "/dashboard/library";
+
 /**
- * A book's own page, the Library's second level (plans/deployment.md D21): the book in a
- * bigger view with all five views, its measures, and where it came from. Success rates,
- * difficulty and leaderboards join it with the trainer and game history.
+ * A book's own page, the Library's second level (plans/book-ui.md D8, plans/deployment.md
+ * D21), which the camera zooms in on. The part of the left page in view lists the books, against
+ * the spine under the way back to them all, to switch books without going back; another book
+ * re-inks the right page. The right page is the book in a bigger view with all five views and a
+ * board, its measures and where it came from. Success rates, difficulty and leaderboards join it
+ * with the trainer and game history.
  */
 export function LibraryBookPage({ bookId }: { bookId: string }) {
   const router = useRouter();
+  const { form, turn } = useBookFrame();
   const { label } = useLibrary();
   const { books } = useLibraryBooks();
-  const entry = books?.find((candidate) => candidate.id === bookId) ?? null;
+  const index = books?.findIndex((candidate) => candidate.id === bookId) ?? -1;
+  const entry = books?.[index] ?? null;
   const { book, status, save } = useLibraryBook(bookId);
+  // A move from another book's page doesn't turn (D13), so the page re-inks.
+  const inked = turn.id > 0 && turn.way === null;
 
-  const back = (
-    <Button asChild variant="ghost" size="sm" className="-ml-2 self-start">
-      <Link href="/dashboard/library">
-        <ChevronLeft /> Library
+  const left = (
+    <>
+      <Link href={LIBRARY} className="book-back self-end">
+        Back to all books
       </Link>
-    </Button>
+      {books ? (
+        <div className="-mx-2.5 min-h-0 overflow-y-auto">
+          <BookRows books={books} selectedId={bookId} className="mx-0" />
+        </div>
+      ) : (
+        <Skeleton className="h-40" />
+      )}
+    </>
   );
 
+  let right;
   if (books !== null && !entry && status !== "loading") {
-    return (
-      <main className="flex flex-col gap-3">
-        {back}
-        <p className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
-          {status === "failed" ? "The book couldn't be opened." : `This book isn't in your library (${label.toLowerCase()}).`}
-        </p>
-      </main>
+    right = (
+      <p className="py-6 text-sm text-muted-foreground">
+        {status === "failed" ? "The book couldn't be opened." : `This book isn't in your library (${label.toLowerCase()}).`}
+      </p>
     );
-  }
-
-  return (
-    <main className="flex flex-col gap-3">
-      {back}
-      {entry ? (
-        <header className="flex flex-wrap items-start gap-x-4 gap-y-2">
-          <div className="min-w-0 flex-1 basis-72">
-            <h1 className="flex items-center gap-2 text-2xl font-semibold leading-tight text-foreground">
-              <span className="truncate">{entry.name}</span>
-              <SideTag side={entry.color} className="shrink-0 text-sm font-normal" />
-            </h1>
-            <BookTags origin={entry.origin} summary={entry.summary} />
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Button asChild size="sm" variant="outline">
-              <Link href={explorerHref({ bookId: entry.id })}>Open in Explorer</Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href={`/dashboard/train/${entry.id}`}>Train this book</Link>
-            </Button>
-            <BookMenu
-              book={entry}
-              onDeleted={() => router.push("/dashboard/library")}
-              onDuplicated={(copy) => router.push(libraryBookHref(copy.id))}
-            />
-          </div>
-        </header>
-      ) : (
-        <Skeleton className="h-12 w-80" />
-      )}
-      {entry && <BookMeasures summary={entry.summary} className="rounded-md border bg-card px-3 py-2" />}
-      {book ? (
-        <div data-slot="panel" className="relative rounded-md border bg-card p-3">
+  } else {
+    const storeHref = entry && storeVerified(entry.origin) && entry.origin.kind === "store" ? storeBookHref(entry.origin.sourceId) : null;
+    right = (
+      <Ink key={bookId} inked={inked} className="flex min-h-0 flex-1 flex-col gap-3">
+        {entry ? (
+          <header className="flex flex-wrap items-start gap-x-4 gap-y-2">
+            <div className="min-w-0 flex-1 basis-72">
+              <h1 className="flex flex-wrap items-center gap-x-2.5 font-heading text-[30px] leading-[1.15] font-semibold tracking-[-0.01em] text-balance text-foreground">
+                <span className="min-w-0 break-words">{entry.name}</span>
+                <SideTag side={entry.color} className="shrink-0 font-sans text-sm font-normal" />
+              </h1>
+              <div className="mt-1.5 flex flex-col gap-1">
+                <BookTags origin={entry.origin} summary={entry.summary} />
+                <div className="text-xs text-muted-foreground">
+                  <OriginLine origin={entry.origin} className="inline" />
+                  {storeHref && (
+                    <>
+                      {" "}
+                      <Link href={storeHref} className="font-bold text-foreground underline">
+                        Open in the Bookstore
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Button asChild size="sm" variant="outline">
+                <Link href={explorerHref({ bookId: entry.id })}>Open in Explorer</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link href={`/dashboard/train/${entry.id}`}>Train this book</Link>
+              </Button>
+              <BookMenu
+                book={entry}
+                onDeleted={() => router.push(LIBRARY)}
+                onDuplicated={(copy) => router.push(libraryBookHref(copy.id))}
+              />
+            </div>
+          </header>
+        ) : (
+          <Skeleton className="h-12 w-80" />
+        )}
+        {entry && <BookMeasures summary={entry.summary} />}
+        {book ? (
           <BookReader
             book={book}
             size="large"
+            fill
             positionActions={(node) => (
               <div className="flex flex-col gap-1">
                 <Button asChild size="sm" variant="outline">
@@ -89,16 +117,56 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
               </div>
             )}
           />
-        </div>
-      ) : (
-        <Skeleton className="h-[34rem] w-full" />
-      )}
-      {entry && (
-        <OriginPanel
-          origin={entry.origin}
-          storeHref={storeVerified(entry.origin) && entry.origin.kind === "store" ? storeBookHref(entry.origin.sourceId) : null}
-        />
-      )}
-    </main>
+        ) : (
+          <Skeleton className="min-h-64 w-full flex-1" />
+        )}
+      </Ink>
+    );
+  }
+
+  return (
+    <Spread
+      left={{
+        head: (
+          <>
+            <span className="grow" />
+            <span className="book-sc">Library{books ? ` · ${countOf(books.length, "book")}` : ""}</span>
+          </>
+        ),
+        body: left,
+        folio: entry && books && (
+          <>
+            <span className="grow" />
+            <span>
+              Book {index + 1} of {books.length}
+            </span>
+          </>
+        ),
+      }}
+      right={{
+        head: entry && (
+          <>
+            <span className="book-sc">
+              {entry.color === "white" ? "White" : "Black"} · {originShort(entry.origin)}
+            </span>
+            {/* On one page the head also holds the way back, and the title names the book. */}
+            {form === "spread" && (
+              <>
+                <span className="grow" />
+                <span className="truncate">{entry.name}</span>
+              </>
+            )}
+          </>
+        ),
+        body: right,
+        folio: entry && (
+          <>
+            <span>{originFolio(entry.origin)}</span>
+            <span className="grow" />
+            <span>{positionsOfLimit(entry.summary)}</span>
+          </>
+        ),
+      }}
+    />
   );
 }

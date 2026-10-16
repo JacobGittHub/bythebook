@@ -27,9 +27,13 @@ Phase 4 rewrites this section).
   `SPREAD_MIN_WIDTH` get the one-page form (`formFor`). Its column shows chapter names, or
   icons below `CHAPTER_NAMES_MIN_WIDTH` (`chaptersFor`); a button in its head narrows or widens
   it, and the frame keeps the pick in the `CHAPTERS_COOKIE` cookie. A phone's column shows
-  icons only, with no button. The page's tab reaches onto the page short of its text.
+  icons only, with no button. The page's tab reaches onto the page short of its text. Beside
+  a name goes "soon" for a page coming soon, or the chapter's figure (`ChapterFigure`): the
+  Library's book count.
 - **The book is the frame's, and each page renders its pages into it** with `Spread`
-  (`src/components/book/Spread.tsx`): its left page and its right page. A page that isn't a
+  (`src/components/book/Spread.tsx`): its left page and its right page. In the one-page form
+  they are the page's two halves, side by side where both fit and stacked where not; stacked,
+  `stack` may show the left half alone, as the Library's list does. A page that isn't a
   spread yet is wrapped in `InterimSpread`, which lays it across both pages.
 - **A page below a chapter's own page is its second level** (`levelAt`,
   `src/lib/book/chapters.ts`), such as a Library book's page. In the spread a camera zooms in
@@ -157,23 +161,32 @@ are kept in this browser and a signed-in viewer's in the account, and the page n
 levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the parts are in
 `src/components/library/`.
 
-- **Level 1** (`LibraryPage.tsx`, `/dashboard/library`) is the book list beside the selected
-  book. The list (`BookList.tsx`) reads only the summaries: each row has its book's icicle in
-  miniature (`BookMiniature`, from `summary.miniature`), and a search and an All, White or
-  Black filter (`filterBooks`, `src/lib/library/search.ts`) narrow it. The selected book is
-  in the address (`?book=`, written with `history.pushState`, so it costs no request); wide,
-  the first book shows when none is named, and on a phone the list and the book take turns,
-  with Back between them. The book (`BookDetail.tsx`) shows its tags, origin and credit,
-  measures (`BookMeasures`), Open book page, Open in Explorer, Train, the "⋯" menu, and the
-  book itself (`BookReader`).
-- **Level 2** (`LibraryBookPage.tsx`, `/dashboard/library/<id>`) is a book's own page: the
-  same with a bigger view, the five views as buttons, and a panel for where it came from
-  (`OriginPanel`), which links a store book back to its Bookstore page. Success rates,
-  difficulty and leaderboards join it with the trainer and game history.
+- **Level 1** (`LibraryPage.tsx`, `/dashboard/library`) is a spread (`plans/book-ui.md` D8).
+  The left page is "Your books": New book, Back up and Restore, the notices below, and the
+  list (`BookList.tsx`), which reads only the summaries. Its rows (`BookRows`) are contents
+  lines, the side, the name, a dotted leader and the book's positions, and a search and an
+  All, White or Black filter (`filterBooks`, `src/lib/library/search.ts`) narrow it. The
+  folios count the books and their positions. The right page is the picked book
+  (`BookDetail.tsx`): its tags, origin and credit, measures (`BookMeasures`), Open book page,
+  Open in Explorer, Train, the "⋯" menu, and the book in a view that fills the page, without
+  the board. Picking a book re-inks the right page; the pick is kept in the address (`?book=`,
+  written with `history.replaceState`, so it costs no request), which the route reads on the
+  server, since a Suspense boundary around the page would start the turn without it. The first
+  book shows when none is named. Where the one-page form stacks the halves, on a phone, the
+  picked book doesn't show and a row is a link to the book's own page.
+- **Level 2** (`LibraryBookPage.tsx`, `/dashboard/library/<id>`) is a book's own page, which
+  the camera zooms in on. The part of the left page in view lists the books under "Back to all
+  books", and another book re-inks the right page without a turn. The right page is the book
+  with its credit (and, for a store book, a link back to its Bookstore page), measures, the
+  five views as buttons, and the board; its folio gives the credit in short (`originFolio`)
+  and the positions against the limit. Success rates, difficulty and leaderboards join it with
+  the trainer and game history.
 - **`BookReader`** draws one book view with zoom (`ZoomControls`, `explorer.md`) beside a
-  board for the selected or hovered position (`SelectedPosition`, `useBookSelection`). It
-  opens in the icicle, down the main line, and on a phone puts the board first. Until the
-  views draw several trees, it shows the tree from the starting position (`startTree`).
+  board for the selected or hovered position (`SelectedPosition`, `useBookSelection`), or
+  without it. On a page of the book it takes the height it is given (`fill`), and the board's
+  column scrolls on its own. It opens in the icicle, down the main line, and on a phone puts
+  the board first. Until the views draw several trees, it shows the tree from the starting
+  position (`startTree`).
 - **Editing** (D25): the "⋯" menu (`BookMenu.tsx`) renames, changes side, duplicates
   (`duplicateBook`) and deletes, and Remove move (`RemoveMoveButton.tsx`) removes the
   selected move with everything after it once the user has seen how much goes. Each saves
@@ -188,8 +201,8 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   **Restore** reads one into the checklist (`CopyChecklist`, `src/lib/library/copyPlan.ts`),
   which lists what happens to each book, and lets a book whose name is taken be kept as a
   second book or skipped.
-- **The empty state** (`LibraryEmpty.tsx`) offers New book, Restore, and the Bookstore's books
-  with Save. A saved store book records `EXAMPLE_PUBLISHER` and its credit (D24), and a name
+- **The empty state** (`LibraryEmpty.tsx`) offers New book and Restore on the left page, and
+  the Bookstore's books with Save on the right (`StoreOffer`). A saved store book records `EXAMPLE_PUBLISHER` and its credit (D24), and a name
   over the limit is cut to fit (`fitBookName`).
 - **Feedback** goes to toasts (sonner's `Toaster`, in the dashboard layout), and anything that
   can't be undone asks first in an alert dialog.
@@ -201,8 +214,10 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   viewer's browser still holds books, a notice on every other dashboard page links here,
   where the checklist copies them into the account and each copied book leaves the
   browser. "Not now" lasts for the tab's session, after which one line offers the copy
-  again; a book that wasn't copied is offered again next session.
-- **Debug mode** adds a panel with the browser library's book count, "Back up browser
+  again; a book that wasn't copied is offered again next session. `useBrowserBooksCopy` gives
+  the two parts: the checklist takes the right page while it is open, as Restore's does, and
+  the line sits under the left page's header with the backup notice.
+- **Debug mode** adds a panel at the foot of the left page with the browser library's book count, "Back up browser
   library" and "Empty browser library", for guests and accounts alike (D23), and the bug
   report gains a Library section: the store, its book count and, signed in, the books
   still in the browser.

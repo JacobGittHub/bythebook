@@ -31,6 +31,7 @@ import {
   type ReactNode,
 } from "react";
 import { Book, type BookCamera } from "@/components/book/Book";
+import { ChapterFigure } from "@/components/book/ChapterFigure";
 import { moveWithCamera, type CameraMove } from "@/components/book/camera";
 import { BugReportButton } from "@/components/layout/BugReportButton";
 import { Button } from "@/components/shadcn/button";
@@ -304,7 +305,11 @@ export function BookFrame({
                     >
                       <Icon aria-hidden className="size-4 flex-none" />
                       <span className="book-chapter-text">{chapter.label}</span>
-                      {chapter.soon && <span className="book-chapter-text ml-auto font-mono text-[11.5px] font-normal">soon</span>}
+                      {chapter.soon ? (
+                        <span className="book-chapter-text ml-auto font-mono text-[11.5px] font-normal">soon</span>
+                      ) : (
+                        <ChapterFigure href={chapter.href} />
+                      )}
                     </Link>
                   );
                 })}

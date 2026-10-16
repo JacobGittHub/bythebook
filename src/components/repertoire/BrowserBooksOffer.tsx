@@ -6,7 +6,7 @@
 // browser once the account has it, so each book lives in one place; a book that can't be
 // copied stays, with its reason. "Not now" lasts for the tab's session.
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CopyChecklist } from "@/components/repertoire/CopyChecklist";
@@ -57,8 +57,12 @@ async function readBrowserBooks(): Promise<LibraryBook[]> {
   return books;
 }
 
-/** The checklist on the Library page, or a line that reopens it after "Not now". */
-export function BrowserBooksCopy() {
+/**
+ * The copy on the Library page, in its two parts (plans/book-ui.md D8): `checklist`, the task,
+ * for the right page while it is open (or reading the books, or failing to), and `notice`, the
+ * line under the left page's header that reopens it after "Not now". Either may be null.
+ */
+export function useBrowserBooksCopy(): { checklist: ReactNode; notice: ReactNode } {
   const offer = useBrowserBooksOffer();
   const { library } = useLibrary();
   const [checklist, setChecklist] = useState<{ plan: PlanItem[]; existing: ExistingBook[] } | null>(null);
@@ -83,10 +87,10 @@ export function BrowserBooksCopy() {
   }, [open, checklist, library]);
 
   // An open checklist stays until Done, though its books leave the browser as they are copied.
-  if (!offer || (!checklist && !offer.count)) return null;
+  if (!offer || (!checklist && !offer.count)) return { checklist: null, notice: null };
 
   if (offer.dismissed && offer.count) {
-    return (
+    const notice = (
       <p className="text-sm text-muted-foreground">
         This browser also holds {booksText(offer.count)} from browsing as a guest.{" "}
         <Button variant="link" size="sm" onClick={offer.reopen} className="h-auto p-0">
@@ -94,17 +98,19 @@ export function BrowserBooksCopy() {
         </Button>
       </p>
     );
+    return { checklist: null, notice };
   }
 
   if (error) {
-    return (
-      <p role="status" className="rounded-md border px-3 py-2 text-sm text-muted-foreground">
+    const failed = (
+      <p role="status" className="text-sm text-muted-foreground">
         The books in this browser couldn&apos;t be read: {error}
       </p>
     );
+    return { checklist: failed, notice: null };
   }
 
-  if (!checklist) return <p className="text-sm text-muted-foreground">Reading the books in this browser…</p>;
+  if (!checklist) return { checklist: <p className="text-sm text-muted-foreground">Reading the books in this browser…</p>, notice: null };
 
   // The account saves its copy first, so a book leaves the browser only once it is safe.
   const copy = async (draft: BookDraft, source: IncomingBook) => {
@@ -118,7 +124,7 @@ export function BrowserBooksCopy() {
     }
   };
 
-  return (
+  const task = (
     <CopyChecklist
       title={`Copy this browser's ${checklist.plan.length === 1 ? "book" : "books"} into your account`}
       description="You made these as a guest on this browser. Copied books are saved to your account and leave the browser, so each book lives in one place."
@@ -134,4 +140,5 @@ export function BrowserBooksCopy() {
       }}
     />
   );
+  return { checklist: task, notice: null };
 }

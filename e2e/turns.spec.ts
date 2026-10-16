@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import { MOTION_STORAGE_KEY, type Motion } from "@/lib/appearance";
 import { ZOOM_SHOWN } from "@/lib/book/camera";
 import { SPREAD_MIN_WIDTH } from "@/lib/book/layout";
+import { LIBRARY, bookList, createPastedBook } from "./fixtures/library";
 import { expect, test } from "./fixtures/test";
 
 // The book's moves between pages (plans/book-ui.md D8, D13, D14): page turns, or none, and a
@@ -143,6 +144,24 @@ test("Page turn: a second level zooms in, then turns, and turns back, then zooms
   expect(out).toContain(`turn-fold-left ::view-transition-old(page-l${route(href)})`);
   expect(out).toContain(`camera ::view-transition-image-pair(page-r-dashboard-bookstore)`);
   await expect.poll(() => rightPageAt(page)).toBe(spine);
+});
+
+test("Page turn: another book on a second level neither turns nor zooms; its page re-inks (D8, D13)", async ({ page }) => {
+  await recordMoves(page, "turn");
+  await page.goto(LIBRARY);
+  test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
+  test.skip(!spreadWindow(page), "Only the spread zooms; the one-page form shows a second level's own page alone.");
+  await createPastedBook(page, "First book");
+  await createPastedBook(page, "Second book", "1. e4 e5");
+  await page.getByRole("link", { name: "Open book page" }).click();
+  await expect.poll(() => rightPageAt(page)).toBe(ZOOM_SHOWN);
+
+  const link = bookList(page).getByRole("link", { name: /First book/ });
+  const moves = await follow(page, link, (await link.getAttribute("href"))!);
+  expect(moves.filter((move) => move.startsWith("turn-") || move.startsWith("camera"))).toEqual([]);
+  await expect(page.getByRole("heading", { name: "First book", level: 1 })).toBeVisible();
+  await expect(page.locator(".book-ink")).toHaveCount(1);
+  expect(await rightPageAt(page)).toBe(ZOOM_SHOWN);
 });
 
 test("Page turn: in the one-page form a second level turns forward, and back by its back link (D15)", async ({ page }) => {

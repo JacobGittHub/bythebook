@@ -12,17 +12,25 @@ export function countOf(n: number, noun: string): string {
   return `${formatCount(n)} ${n === 1 ? noun : `${noun}s`}`;
 }
 
+/** A small square in the side's color. */
+export function SideSquare({ side, className }: { side: BookSide; className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "inline-block size-2.5 flex-none rounded-[2px] border border-[var(--view-white-edge)]",
+        side === "white" ? "bg-[var(--view-white)]" : "bg-[var(--view-black)]",
+        className,
+      )}
+    />
+  );
+}
+
 /** White or Black, as a small square in the side's color and the word. */
 export function SideTag({ side, className }: { side: BookSide; className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-1 text-xs text-muted-foreground", className)}>
-      <span
-        aria-hidden="true"
-        className={cn(
-          "size-2.5 rounded-[2px] border border-[var(--view-white-edge)]",
-          side === "white" ? "bg-[var(--view-white)]" : "bg-[var(--view-black)]",
-        )}
-      />
+      <SideSquare side={side} />
       {side === "white" ? "White" : "Black"}
     </span>
   );
@@ -69,6 +77,30 @@ export function originText(origin: BookOrigin): string {
     case "import":
       return "Imported from a file.";
   }
+}
+
+/** Whose a book is, in a word or two, for a running head: "Your book", or a store book's publisher. */
+export function originShort(origin: BookOrigin): string {
+  switch (origin.kind) {
+    case "own":
+      return "Your book";
+    case "store":
+      return origin.publisher;
+    case "combined":
+      return "Combined book";
+    case "import":
+      return "Imported book";
+  }
+}
+
+/** A book's credit in a folio's few words, such as "Wikibooks contributors, CC BY-SA 4.0", or whose it is. */
+export function originFolio(origin: BookOrigin): string {
+  return origin.kind === "store" && origin.credit ? `${origin.credit.author}, ${origin.credit.license}` : originShort(origin);
+}
+
+/** "338 of 1,000 positions": how much of the limit a book holds. */
+export function positionsOfLimit(summary: BookSummary): string {
+  return `${formatCount(summary.positions)} of ${formatCount(MAX_BOOK_POSITIONS)} positions`;
 }
 
 /** The credit a book's source asks for, or null. */

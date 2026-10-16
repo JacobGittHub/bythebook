@@ -100,7 +100,7 @@ test.describe("Books in the browser at sign-in", () => {
     await expect(checklist).toContainText(name);
     await checklist.getByRole("button", { name: "Copy 1 book" }).click();
     await checklist.getByRole("button", { name: "Done" }).click();
-    await expect(bookList(page).getByRole("button", { name: new RegExp(name) })).toBeVisible();
+    await expect(bookList(page).getByRole("link", { name: new RegExp(name) })).toBeVisible();
     await expect(page.getByText("Saved to your account", { exact: true })).toBeVisible();
 
     // The book left the browser, so nothing is offered any more.

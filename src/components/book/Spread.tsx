@@ -123,9 +123,11 @@ function BackLink({ chapter, className }: { chapter: Chapter; className?: string
  * A page's spread. On a second level the camera zooms in (D8, D9): the right page fills the
  * window, and the left page's content stands against the spine, in the part of it that shows.
  * In the one-page form a second level shows only its right page, with the way back to its
- * chapter in the running head (D15).
+ * chapter in the running head (D15). Where the one-page form stacks the halves, on a phone,
+ * `stack` says which show: both, or the left only, as the Library's list, whose books then open
+ * their own pages.
  */
-export function Spread({ left, right }: { left: PageContent; right: PageContent }) {
+export function Spread({ left, right, stack = "both" }: { left: PageContent; right: PageContent; stack?: "both" | "left" }) {
   const { form, chapters, at, level, tabs } = useBookFrame();
   const layout = useLayout();
   const { bookmark, pageTab } = marksOf(layout, at, tabs !== null);
@@ -148,7 +150,7 @@ export function Spread({ left, right }: { left: PageContent; right: PageContent 
         <PagePicture part="s">
           <BookPage side="single" head={head} folio={second ? (right.folio ?? left.folio) : (left.folio ?? right.folio)} marks={tab}>
             {!second ? (
-              <div className="book-halves">
+              <div className="book-halves" data-stack={stack === "left" ? "left" : undefined}>
                 <div className="book-half">{left.body}</div>
                 <span className="book-half-rule" aria-hidden />
                 <div className="book-half">{right.body}</div>
