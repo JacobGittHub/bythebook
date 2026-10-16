@@ -186,7 +186,8 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   picked book doesn't show and a row is a link to the book's own page.
 - **Level 2** (`LibraryBookPage.tsx`, `/dashboard/library/<id>`) is a book's own page, which
   the camera zooms in on. The part of the left page in view lists the books under "Back to all
-  books", and another book re-inks the right page without a turn. The right page's first
+  books", which returns with the book it is on picked (`libraryHref`), and another book
+  re-inks the right page without a turn. The right page's first
   screen is the book, the five views as buttons, and the board; below it, "About this book"
   has its measures and its credit (and, for a store book, a link back to its Bookstore page).
   Its folio gives the credit in short (`originFolio`) and the positions against the limit.

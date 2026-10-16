@@ -81,6 +81,9 @@ test.describe("Overview, as a guest", () => {
     await page.goto("/dashboard");
     const sideways = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(sideways).toBeLessThanOrEqual(0);
+    // Nor do the contents, whose picked row reaches past the text into the room kept for it.
+    const contents = await page.locator(".overview-contents").evaluate((el) => el.scrollWidth - el.clientWidth);
+    expect(contents).toBeLessThanOrEqual(0);
   });
 
   test("the contents fit the left page at every spread window size", async ({ page }) => {

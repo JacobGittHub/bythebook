@@ -9,14 +9,12 @@ import { Button } from "@/components/shadcn/button";
 import { Skeleton } from "@/components/shadcn/skeleton";
 import { useLibrary, useLibraryBook, useLibraryBooks } from "@/context/Library";
 import { pathTo } from "@/lib/books/viewTree";
-import { explorerHref, libraryBookHref, storeBookHref } from "@/lib/library/links";
+import { explorerHref, libraryBookHref, libraryHref, storeBookHref } from "@/lib/library/links";
 import { BookMenu } from "./BookMenu";
 import { BookRows } from "./BookList";
 import { BookMeasures, BookTags, OriginLine, SideTag, countOf, originFolio, originShort, positionsOfLimit, storeVerified } from "./BookParts";
 import { BookReader } from "./BookReader";
 import { RemoveMoveButton } from "./RemoveMoveButton";
-
-const LIBRARY = "/dashboard/library";
 
 /**
  * A book's own page, the Library's second level (plans/book-ui.md D8, plans/deployment.md
@@ -39,7 +37,8 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
 
   const left = (
     <>
-      <Link href={LIBRARY} className="book-back self-end">
+      {/* Back to the Library with this book picked, as it was when its page was opened. */}
+      <Link href={libraryHref(bookId)} className="book-back self-end">
         Back to all books
       </Link>
       {books ? (
@@ -84,7 +83,7 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
               </Button>
               <BookMenu
                 book={entry}
-                onDeleted={() => router.push(LIBRARY)}
+                onDeleted={() => router.push(libraryHref())}
                 onDuplicated={(copy) => router.push(libraryBookHref(copy.id))}
               />
             </div>

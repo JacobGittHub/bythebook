@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_LINE_MOVES, explorerHref, parseLineParam, replayUciLine, storeBookHref, storeIdOfSlug } from "./links";
+import { MAX_LINE_MOVES, explorerHref, libraryHref, parseLineParam, replayUciLine, storeBookHref, storeIdOfSlug } from "./links";
 
 describe("explorerHref", () => {
   it("names the book and the line's moves, skipping the first position", () => {
@@ -13,6 +13,14 @@ describe("explorerHref", () => {
     const href = explorerHref({ line: [{ uci: null }, { uci: "e2e4" }, { uci: "e7e8q" }] });
     const params = new URL(href, "https://x.test").searchParams;
     expect(parseLineParam(params.get("line"))).toEqual(["e2e4", "e7e8q"]);
+  });
+});
+
+describe("libraryHref", () => {
+  it("picks the book given, or none", () => {
+    expect(libraryHref("a b")).toBe("/dashboard/library?book=a%20b");
+    expect(libraryHref(null)).toBe("/dashboard/library");
+    expect(libraryHref()).toBe("/dashboard/library");
   });
 });
 

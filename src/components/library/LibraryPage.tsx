@@ -33,6 +33,7 @@ import {
 } from "@/lib/library/backup";
 import { browserKeepsData, browserLibrary } from "@/lib/library/browserStore";
 import { planCopy, type ExistingBook, type PlanItem } from "@/lib/library/copyPlan";
+import { libraryHref } from "@/lib/library/links";
 import { libraryErrorMessage, type Library, type LibraryBook } from "@/lib/library/types";
 import { BookDetail } from "./BookDetail";
 import { countOf, originFolio, positionsOfLimit } from "./BookParts";
@@ -108,7 +109,7 @@ export function LibraryPage({ initialBook }: { initialBook: string | null }) {
   const selected = books?.find((book) => book.id === wanted) ?? books?.[0] ?? null;
 
   const select = (bookId: string | null) => {
-    window.history.replaceState(null, "", bookId ? `?book=${encodeURIComponent(bookId)}` : window.location.pathname);
+    window.history.replaceState(null, "", libraryHref(bookId));
     setWanted(bookId);
     setPicked(true);
   };
@@ -196,7 +197,7 @@ export function LibraryPage({ initialBook }: { initialBook: string | null }) {
   const copyNotice = store === "account" ? copy.notice : null;
 
   const left = (
-    <div className="-mr-2 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-2">
+    <div className="-mr-2.5 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-2.5">
       <header className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <h1 className="font-heading text-[30px] leading-[1.15] font-semibold tracking-[-0.01em]">Your books</h1>
         <span className="grow" />

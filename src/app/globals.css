@@ -33,7 +33,8 @@
   /* The shade a turning leaf takes and casts. */
   --turn-shade: rgb(30 25 15 / 0.55);
   --bookmark: #8c2f39;
-  /* The light mode's crease down the middle of the gutter; dark mode has none. */
+  /* The light mode's crease down the middle of the gutter, a hard line over its shadow; dark
+     mode has none. */
   --crease: rgb(70 60 40 / 0.32);
 
   --foreground: #22252b;
@@ -546,9 +547,11 @@ body {
   /* Not repeated: zoomed in (D8), a repeat wraps a sliver of the dark end to the far edge. */
   background: linear-gradient(to left, var(--gutter), transparent 75%) no-repeat;
 }
+/* The crease lies over the shadow, an inset shadow being painted above the background, so it
+   shows darker than the shadow on either side of it. */
 .book-page[data-side="right"] > [data-slot="gutter"] {
   left: 0;
-  border-left: 1px solid var(--crease);
+  box-shadow: inset 1px 0 var(--crease);
   background: linear-gradient(to right, var(--gutter), transparent 75%) no-repeat;
 }
 /* The one-page form is the left page of an open book: past its gutter, the facing page runs on
@@ -561,8 +564,9 @@ body {
   width: calc(var(--facing-shown, 56px) + var(--facing-hidden, 48px));
   flex: none;
   border: 1px solid var(--border);
-  border-left: 1px solid var(--crease);
+  border-left: 0;
   border-radius: 0 3px 3px 0;
+  box-shadow: inset 1px 0 var(--crease);
   background: linear-gradient(to right, var(--gutter), transparent calc(var(--gutter-width) * 0.75)), var(--page);
 }
 

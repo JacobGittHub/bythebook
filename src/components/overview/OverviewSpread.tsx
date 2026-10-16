@@ -153,7 +153,7 @@ export function OverviewSpread({ entries, offer }: { entries: ContentsEntry[]; o
           </>
         ),
         body: (
-          <div className="overview-contents -mr-2 flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto pr-2" data-fit={form === "spread" || undefined}>
+          <div className="overview-contents -mr-2.5 flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto pr-2.5" data-fit={form === "spread" || undefined}>
             <div>
               <h1 className="font-heading text-[34px] leading-[1.15] font-semibold tracking-[-0.01em]">Contents</h1>
               <p className="overview-lede mt-1.5 text-xs text-muted-foreground">Every page of the book, in order. Pick a chapter to see it on the right.</p>

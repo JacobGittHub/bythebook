@@ -120,6 +120,12 @@ test.describe("Library as a spread, as a guest", () => {
     await expect(page).toHaveURL(/\/dashboard\/library\?book=/);
     await expect(bookList(page).getByRole("link", { name: /First book/ })).toHaveAttribute("aria-current", "true");
     await expect(page.locator(".book-folio", { hasText: "2 books" })).toContainText("5 positions in all");
+    // The picked row reaches past the text into the room kept for it, and nothing on the
+    // list's page scrolls sideways for it.
+    const sideways = await page.locator('[data-slot="page"]:not([data-side="right"])').evaluate((pageEl) =>
+      [pageEl, ...pageEl.querySelectorAll("*")].filter((el) => /auto|scroll/.test(getComputedStyle(el).overflowX) && el.scrollWidth > el.clientWidth).length,
+    );
+    expect(sideways).toBe(0);
   });
 
   test("a book's page lists the books, to switch between them and go back", async ({ page }) => {
@@ -135,8 +141,10 @@ test.describe("Library as a spread, as a guest", () => {
     await expect(page.locator(".book-folio", { hasText: /^Book \d/ })).toHaveText("Book 2 of 2");
 
     await page.getByRole("link", { name: "Back to all books" }).click();
-    await expect(page).toHaveURL(/\/dashboard\/library$/);
+    await expect(page).toHaveURL(/\/dashboard\/library\?book=/);
     await expect(page.getByRole("heading", { name: "Your books", level: 1 })).toBeVisible();
+    // Back with the book it was on picked, not the first one.
+    await expect(bookList(page).locator('[aria-current="true"]')).toContainText("First book");
   });
 
   test("a book's page fits its first screen at every spread window size, with what lies below in sight", async ({ page }) => {

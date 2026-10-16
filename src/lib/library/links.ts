@@ -1,5 +1,6 @@
 // Addresses into the pages that show a book: the Explorer with a book chosen and a line
-// played, a book's own page in the Library, and a store book's page in the Bookstore.
+// played, the Library with a book picked, a book's own page in the Library, and a store book's
+// page in the Bookstore.
 
 import { Chess } from "chess.js";
 import { EXAMPLE_ID_PREFIX } from "@/lib/books/examples";
@@ -54,6 +55,11 @@ export function replayUciLine(moves: readonly string[]): Move[] {
     }
   }
   return line;
+}
+
+/** The Library, with `bookId` picked on its right page if one is given (`?book=`). */
+export function libraryHref(bookId?: string | null): string {
+  return bookId ? `/dashboard/library?book=${encodeURIComponent(bookId)}` : "/dashboard/library";
 }
 
 /** A book's own page, the Library's second level (plans/deployment.md D21). */
