@@ -12,8 +12,10 @@ import { cn } from "@/lib/utils";
 import { SideSquare } from "./BookParts";
 
 type RowsProps = {
-  books: readonly LibraryEntry[];
+  books: readonly Pick<LibraryEntry, "id" | "name" | "color" | "summary">[];
   selectedId: string | null;
+  /** Where a row's link goes: the book's own page in the Library unless given. */
+  hrefOf?: (bookId: string) => string;
   /**
    * Called when a row is pressed, before its link goes to the book's page; it may stop the
    * link, as the Library's first level does to pick the book instead.
@@ -23,11 +25,11 @@ type RowsProps = {
 };
 
 /**
- * The books as the lines of a contents (plans/book-ui.md D8): the side, the name, a dotted
- * leader and the book's figure, its positions. Each row links to the book's own page. It reads
- * only the summaries (plans/deployment.md D26).
+ * The books as the lines of a contents (plans/book-ui.md D8, D9): the side, the name, a dotted
+ * leader and the book's figure, its positions. Each row links to the book's own page, in the
+ * Library or the Bookstore. It reads only the summaries (plans/deployment.md D26).
  */
-export function BookRows({ books, selectedId, onPick, className }: RowsProps) {
+export function BookRows({ books, selectedId, hrefOf = libraryBookHref, onPick, className }: RowsProps) {
   return (
     <ul aria-label="Books" className={cn("-mx-2.5 flex flex-col gap-px", className)}>
       {books.map((book) => {
@@ -35,7 +37,7 @@ export function BookRows({ books, selectedId, onPick, className }: RowsProps) {
         return (
           <li key={book.id}>
             <Link
-              href={libraryBookHref(book.id)}
+              href={hrefOf(book.id)}
               aria-current={selected ? "true" : undefined}
               onClick={(event) => onPick?.(book.id, event)}
               className={cn("flex items-baseline gap-2 rounded-md px-2.5 py-[7px] hover:bg-accent", selected && "bg-accent")}

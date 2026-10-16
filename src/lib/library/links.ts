@@ -1,11 +1,12 @@
 // Addresses into the pages that show a book: the Explorer with a book chosen and a line
-// played, the Library with a book picked, a book's own page in the Library, and a store book's
-// page in the Bookstore.
+// played, the Library with a book picked, a book's own page in the Library, and the Bookstore's
+// shelf and a store book's page, with the shelf's search and filters.
 
 import { Chess } from "chess.js";
 import { EXAMPLE_ID_PREFIX } from "@/lib/books/examples";
 import { START_FEN } from "@/lib/chess/fen";
 import type { Move } from "@/types/chess";
+import { shelfQuery, type ShelfFilters } from "./search";
 
 /** A move in UCI, as the Explorer's `line` parameter carries it. */
 const UCI = /^[a-h][1-8][a-h][1-8][qrbn]?$/;
@@ -67,10 +68,18 @@ export function libraryBookHref(bookId: string): string {
   return `/dashboard/library/${encodeURIComponent(bookId)}`;
 }
 
-/** A store book's page. Its address drops the example books' id prefix. */
-export function storeBookHref(storeId: string): string {
+/** The Bookstore's shelf, searched and filtered as `shelf` says (plans/book-ui.md D9). */
+export function bookstoreHref(shelf?: ShelfFilters): string {
+  return `/dashboard/bookstore${shelf ? shelfQuery(shelf) : ""}`;
+}
+
+/**
+ * A store book's page, carrying the shelf's search and filters if given, for the list beside it.
+ * Its address drops the example books' id prefix.
+ */
+export function storeBookHref(storeId: string, shelf?: ShelfFilters): string {
   const slug = storeId.startsWith(EXAMPLE_ID_PREFIX) ? storeId.slice(EXAMPLE_ID_PREFIX.length) : storeId;
-  return `/dashboard/bookstore/${encodeURIComponent(slug)}`;
+  return `/dashboard/bookstore/${encodeURIComponent(slug)}${shelf ? shelfQuery(shelf) : ""}`;
 }
 
 /** The store book id a Bookstore address names. */

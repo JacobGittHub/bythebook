@@ -95,6 +95,10 @@ it, replacing the book slide. On 2026-10-16 the user changed D8's order to that 
   the shelf's books, as the search and filters left them, right-aligned toward the spine
   with a link back to the shelf above them, as the Library's does (the user's answer of
   2026-10-15).
+  From the user's answer of 2026-10-16, on starting the Bookstore: the left page holds the
+  search and filters only. The mockup's shelves (all books, for White, for Black) would only
+  repeat the side filter, so real shelves, such as by opening family or publisher, wait for
+  the store's back end (`bookstore.md`).
 - D10. **The Overview and Settings are spreads.** The Overview's left page is the book's
   contents, a chapter per page in book order with dotted leaders, and its right page shows
   the picked chapter's demo and description. Pressing works as it does today: the first
@@ -295,7 +299,13 @@ and get to the test of turns").
       takes its place, coming in once the zoom is over. Firefox runs every animation, but
       Playwright's Firefox screenshots don't draw view transitions, so its frames weren't
       looked at.
-- [ ] (agent) Bookstore (D9): the first level as a spread, a book's page by the turn and zoom.
+- [x] (agent) Bookstore (D9): the first level as a spread, a book's page by the turn and zoom.
+      Done: the left page is the title, search, side and Verified only; the right page is the
+      shelf, a card per book in two columns where the page has room, the mockup's cards. The
+      filters travel in the addresses (`?q=&side=&verified=`), so a book's page lists the shelf
+      they left and "Back to the shelf" keeps them. The book's page is laid out as the Library
+      book's: its name, publisher, description, Save and the book on the first screen, its
+      measures and how it was made below.
 - [ ] (agent) Explorer (D6, D7, D16, D17): the Even layout, the scoresheet, the swap, the
       chosen book in the book view, and the Labyrinth tab marked coming soon.
 - [ ] (agent) Visualizations (D18): the contents and the preview as a spread, and each

@@ -243,13 +243,22 @@ ByTheBook's store books (`plans/deployment.md` D24), which `useStoreBooks` reads
 their static files and summarizes in the browser. There are no ratings or saves yet, so none
 are shown, and the cards sort by name. Guests use both levels (bookstore D14).
 
-- **Level 1** (`BookstorePage.tsx`, `/dashboard/bookstore`) is a card per book: its
-  miniature, title, publisher, a line of description, side, positions against the limit,
-  lines, the unconnected flag and the credit, with search, side and Verified only.
+- **Level 1** (`BookstorePage.tsx`, `/dashboard/bookstore`) is a spread
+  (`plans/book-ui.md` D9): search, side and Verified only on the left page, and on the right
+  the shelf they leave, a card per book in two columns where the page has room: its miniature,
+  title, publisher, side, positions against the limit, lines and the unconnected flag. There
+  are no shelves beyond what the filters make until the store has its back end. The filters
+  are kept in the address (`?q=&side=&verified=`, `parseShelf` and `shelfQuery` in
+  `src/lib/library/search.ts`), written with `history.replaceState` and read by the route on
+  the server, as the Library's picked book is.
 - **Level 2** (`StoreBookPage.tsx`, `/dashboard/bookstore/<slug>`, the example id without
-  its prefix, `storeBookHref`) has the full description, measures, `BookReader`, how the book
-  was made and its credit, and Save to library, which becomes "In your library" with a link
-  once the library has a copy (`origin.sourceId`).
+  its prefix, `storeBookHref`) is zoomed in on as the Library's is. A card's address carries
+  the filters, so the part of the left page in view lists the shelf as they left it
+  (`BookRows`), under "Back to the shelf" (`bookstoreHref`), which keeps them; another book
+  re-inks the right page. The right page's first screen has the name, the publisher, the full
+  description, Save to library, which becomes "In your library" with a link once the library
+  has a copy (`origin.sourceId`), and `BookReader`; below it, "About this book" has the
+  measures, how the book was made and its credit.
 - **The publisher label** (`PublisherLabel`) puts Verified or Unverified beside the name's
   highlight, never inside it (bookstore D8). Until publishers have accounts, a store book is
   verified when it is an example book (`storeVerified`).

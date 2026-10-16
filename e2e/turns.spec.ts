@@ -140,7 +140,7 @@ test("Page turn: a second level turns, then zooms in, and zooms out, then turns 
   // Zoomed in, the left page shows ZOOM_SHOWN at the window's edge.
   await expect.poll(() => rightPageAt(page)).toBe(ZOOM_SHOWN);
 
-  const out = await follow(page, page.getByRole("link", { name: "Back to Bookstore" }), "/dashboard/bookstore");
+  const out = await follow(page, page.getByRole("link", { name: "Back to the shelf" }), "/dashboard/bookstore");
   expect(out).toContain(`turn-fold-left ::view-transition-old(page-l${route(href)})`);
   expect(out).toContain(`camera ::view-transition-image-pair(page-r-dashboard-bookstore)`);
   await expect.poll(() => rightPageAt(page)).toBe(spine);
@@ -153,7 +153,10 @@ test("Page turn: another book on a second level neither turns nor zooms; its pag
   test.skip(!spreadWindow(page), "Only the spread zooms; the one-page form shows a second level's own page alone.");
   await createPastedBook(page, "First book");
   await createPastedBook(page, "Second book", "1. e4 e5");
-  await page.getByRole("link", { name: "Open book page" }).click();
+  // The way in turns and zooms; it is waited for until recorded, so a slow browser's late record
+  // of it isn't taken for the next move's.
+  const open = page.getByRole("link", { name: "Open book page" });
+  await follow(page, open, (await open.getAttribute("href"))!);
   await expect.poll(() => rightPageAt(page)).toBe(ZOOM_SHOWN);
 
   const link = bookList(page).getByRole("link", { name: /First book/ });

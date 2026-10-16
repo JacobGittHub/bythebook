@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { MAX_LINE_MOVES, explorerHref, libraryHref, parseLineParam, replayUciLine, storeBookHref, storeIdOfSlug } from "./links";
+import { MAX_LINE_MOVES, bookstoreHref, explorerHref, libraryHref, parseLineParam, replayUciLine, storeBookHref, storeIdOfSlug } from "./links";
+import { WHOLE_SHELF } from "./search";
 
 describe("explorerHref", () => {
   it("names the book and the line's moves, skipping the first position", () => {
@@ -40,6 +41,14 @@ describe("store book addresses", () => {
   it("drop the example prefix and get it back", () => {
     expect(storeBookHref("example:queens-gambit")).toBe("/dashboard/bookstore/queens-gambit");
     expect(storeIdOfSlug("queens-gambit")).toBe("example:queens-gambit");
+  });
+
+  it("carry the shelf's search and filters, and nothing for the whole shelf", () => {
+    const shelf = { query: "caro kann", side: "black" as const, verifiedOnly: true };
+    expect(bookstoreHref(shelf)).toBe("/dashboard/bookstore?q=caro+kann&side=black&verified=1");
+    expect(storeBookHref("example:caro-kann-defense", shelf)).toBe("/dashboard/bookstore/caro-kann-defense?q=caro+kann&side=black&verified=1");
+    expect(bookstoreHref(WHOLE_SHELF)).toBe("/dashboard/bookstore");
+    expect(bookstoreHref()).toBe("/dashboard/bookstore");
   });
 });
 
