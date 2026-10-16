@@ -15,7 +15,8 @@ import { cn } from "@/lib/utils";
 // two halves of one page. Each page carries its own bookmark (or, in the one-page form, its
 // page tab), placed by the book's layout under the current chapter's tab. A second level's
 // pages are laid out for the camera's zoomed view, with the left page's content against the
-// spine, where it shows (D8).
+// spine, where it shows, and the right page's first screen above the window's bottom, the
+// fold, with what the page holds below it there to scroll to (D8).
 //
 // Each page is a view transition named after its route (D14), so on a move to another page
 // the page leaving and the page arriving are separate pictures, which turns.css turns. Its
@@ -27,8 +28,12 @@ export function chapterFolio(number: number | null, count: number): string | nul
   return number === null ? null : `Chapter ${roman(number)} of ${roman(count)}`;
 }
 
-/** One page's content: its running head, its folio and its body. */
-export type PageContent = { head?: ReactNode; folio?: ReactNode; body: ReactNode };
+/**
+ * One page's content: its running head, its folio and its body. A second level's right page
+ * may hold more `below` its first screen, which the view scrolls down to (D8); in the one-page
+ * form it follows the body.
+ */
+export type PageContent = { head?: ReactNode; folio?: ReactNode; body: ReactNode; below?: ReactNode };
 
 /** The book's layout for the current chapter, once the browser has the window. */
 function useLayout(): BookLayout | null {
@@ -121,7 +126,8 @@ function BackLink({ chapter, className }: { chapter: Chapter; className?: string
 
 /**
  * A page's spread. On a second level the camera zooms in (D8, D9): the right page fills the
- * window, and the left page's content stands against the spine, in the part of it that shows.
+ * window, its body on the first screen and what it holds `below` past the window's bottom, and
+ * the left page's content stands against the spine, in the part of it that shows.
  * In the one-page form a second level shows only its right page, with the way back to its
  * chapter in the running head (D15). Where the one-page form stacks the halves, on a phone,
  * `stack` says which show: both, or the left only, as the Library's list, whose books then open
@@ -156,7 +162,10 @@ export function Spread({ left, right, stack = "both" }: { left: PageContent; rig
                 <div className="book-half">{right.body}</div>
               </div>
             ) : (
-              <div className="min-h-0 flex-1 overflow-y-auto">{right.body}</div>
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                {right.body}
+                {right.below && <div className="book-below">{right.below}</div>}
+              </div>
             )}
           </BookPage>
         </PagePicture>
@@ -186,7 +195,14 @@ export function Spread({ left, right, stack = "both" }: { left: PageContent; rig
           folio={right.folio}
           marks={bookmark?.side === "right" && <Bookmark x={bookmark.x} />}
         >
-          {right.body}
+          {second ? (
+            <>
+              <div className="book-fold">{right.body}</div>
+              {right.below && <div className="book-below">{right.below}</div>}
+            </>
+          ) : (
+            right.body
+          )}
         </BookPage>
       </PagePicture>
     </>

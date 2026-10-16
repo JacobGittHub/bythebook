@@ -22,9 +22,9 @@ const LIBRARY = "/dashboard/library";
  * A book's own page, the Library's second level (plans/book-ui.md D8, plans/deployment.md
  * D21), which the camera zooms in on. The part of the left page in view lists the books, against
  * the spine under the way back to them all, to switch books without going back; another book
- * re-inks the right page. The right page is the book in a bigger view with all five views and a
- * board, its measures and where it came from. Success rates, difficulty and leaderboards join it
- * with the trainer and game history.
+ * re-inks the right page. The right page's first screen is the book in a bigger view with all
+ * five views and a board; below it are its measures and where it came from. Success rates,
+ * difficulty and leaderboards join them there with the trainer and game history.
  */
 export function LibraryBookPage({ bookId }: { bookId: string }) {
   const router = useRouter();
@@ -53,6 +53,7 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
   );
 
   let right;
+  let below;
   if (books !== null && !entry && status !== "loading") {
     right = (
       <p className="py-6 text-sm text-muted-foreground">
@@ -70,19 +71,8 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
                 <span className="min-w-0 break-words">{entry.name}</span>
                 <SideTag side={entry.color} className="shrink-0 font-sans text-sm font-normal" />
               </h1>
-              <div className="mt-1.5 flex flex-col gap-1">
+              <div className="mt-1.5">
                 <BookTags origin={entry.origin} summary={entry.summary} />
-                <div className="text-xs text-muted-foreground">
-                  <OriginLine origin={entry.origin} className="inline" />
-                  {storeHref && (
-                    <>
-                      {" "}
-                      <Link href={storeHref} className="font-bold text-foreground underline">
-                        Open in the Bookstore
-                      </Link>
-                    </>
-                  )}
-                </div>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -102,7 +92,6 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
         ) : (
           <Skeleton className="h-12 w-80" />
         )}
-        {entry && <BookMeasures summary={entry.summary} />}
         {book ? (
           <BookReader
             book={book}
@@ -120,6 +109,27 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
         ) : (
           <Skeleton className="min-h-64 w-full flex-1" />
         )}
+      </Ink>
+    );
+    below = entry && (
+      <Ink key={bookId} inked={inked}>
+        <section aria-labelledby="book-about" className="flex flex-col gap-3 border-t border-rule pt-3">
+          <h2 id="book-about" className="book-sc">
+            About this book
+          </h2>
+          <BookMeasures summary={entry.summary} />
+          <div className="text-xs text-muted-foreground">
+            <OriginLine origin={entry.origin} className="inline" />
+            {storeHref && (
+              <>
+                {" "}
+                <Link href={storeHref} className="font-bold text-foreground underline">
+                  Open in the Bookstore
+                </Link>
+              </>
+            )}
+          </div>
+        </section>
       </Ink>
     );
   }
@@ -159,6 +169,7 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
           </>
         ),
         body: right,
+        below,
         folio: entry && (
           <>
             <span>{originFolio(entry.origin)}</span>

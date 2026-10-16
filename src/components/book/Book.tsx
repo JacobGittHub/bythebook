@@ -10,11 +10,12 @@ import { cn } from "@/lib/utils";
 export type { BookForm, PageSide };
 
 /**
- * How the camera shows a second level (D8): the book's transform, its scale, and how tall the
- * right page shows on the window, for the pages laid out for the zoomed view (`BookPage`'s
- * `zoomed`). `pending` until the frame has the window to work it out from.
+ * How the camera shows a second level (D8): the book's transform, its scale, for the pages laid
+ * out for the zoomed view (`BookPage`'s `zoomed`), and how tall the right page shows on the
+ * window before the view scrolls, which is where its first screen ends (`fold`). `pending`
+ * until the frame has the window to work it out from.
  */
-export type BookCamera = { transform: string; scale: number; pageHeight: number } | "pending";
+export type BookCamera = { transform: string; scale: number; fold: number } | "pending";
 
 /**
  * The book: its cover, the stacks of page edges on either side and, as children, its pages.
@@ -41,7 +42,7 @@ export function Book({
   const vars = {
     ...(order !== undefined && { "--book-order": order }),
     ...(edges && { "--edge-left": `${edges.left}px`, "--edge-right": `${edges.right}px` }),
-    ...(zoomed && { "--zoom": zoomed.scale, "--zoom-page-height": `${zoomed.pageHeight}px`, transform: zoomed.transform }),
+    ...(zoomed && { "--zoom": zoomed.scale, "--zoom-fold": `${zoomed.fold}px`, transform: zoomed.transform }),
   } as CSSProperties;
   return (
     <div

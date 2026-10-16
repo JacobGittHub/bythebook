@@ -1,8 +1,9 @@
 // The view of a second level (plans/book-ui.md D8): a camera zoomed in on the right page until
 // it fills the window but for `ZOOM_SHOWN` of the left page at the window's left edge, with the
-// cover's top at the desk's top and the book running on past the window's bottom. The book is
-// laid out as ever (layout.ts); the camera only maps it onto the window, so the book never
-// changes size or shape (D5). Pure, so its invariants are tested in Node (camera.test.ts).
+// cover's top at the desk's top and the book running on past the window's bottom, where the
+// view scrolls down to it. The book is laid out as ever (layout.ts); the camera only maps it
+// onto the window, so the book never changes size or shape (D5). Pure, so its invariants are
+// tested in Node (camera.test.ts).
 
 import { PAGE_BORDER, type SpreadLayout } from "./layout";
 
@@ -31,12 +32,29 @@ export function zoomCamera(layout: SpreadLayout): Camera {
 }
 
 /**
- * How tall a second level's page shows on the window, in window pixels: from inside its top
- * border to the window's bottom. A page laid out for the zoomed view is this tall (D8).
+ * How tall a second level's page shows on the window before the view scrolls, in window pixels:
+ * from inside its top border to the window's bottom. A page's first screen ends there, at the
+ * fold (D8).
  */
 export function shownHeight(layout: SpreadLayout, camera: Camera): number {
   const windowBottom = layout.desk.y + layout.desk.height;
   return windowBottom - project(camera, { x: 0, y: layout.pages[1].rect.y + PAGE_BORDER }).y;
+}
+
+/**
+ * How far down the window the view of a second level scrolls to, in window pixels from the
+ * window's top: the zoomed cover's bottom, and below it the gap the first level leaves between
+ * the cover and the window's bottom, so the book ends on the desk as it does there (D8).
+ */
+export function zoomReach(layout: SpreadLayout, camera: Camera): number {
+  const coverBottom = layout.cover.y + layout.cover.height;
+  const gap = layout.desk.y + layout.desk.height - coverBottom;
+  return project(camera, { x: 0, y: coverBottom }).y + gap;
+}
+
+/** The camera once the view has scrolled `by` window pixels down the book. */
+export function scrolledBy(camera: Camera, by: number): Camera {
+  return { ...camera, y: camera.y - by };
 }
 
 /**

@@ -139,17 +139,24 @@ test.describe("Library as a spread, as a guest", () => {
     await expect(page.getByRole("heading", { name: "Your books", level: 1 })).toBeVisible();
   });
 
-  test("a book's page fits its zoomed view at every spread window size", async ({ page }) => {
+  test("a book's page fits its first screen at every spread window size, with what lies below in sight", async ({ page }) => {
     await openLibrary(page);
     await createPastedBook(page, "Fitted book");
     await page.getByRole("link", { name: "Open book page" }).click();
     await expect(page.getByRole("heading", { name: "Fitted book", level: 1 })).toBeVisible();
+    const right = page.locator('[data-slot="page"][data-side="right"]');
     for (const size of BOOK_WINDOW_SIZES.filter((size) => size.width >= SPREAD_MIN_WIDTH)) {
       await page.setViewportSize(size);
       await expect(page.locator(".book-frame")).toHaveAttribute("data-form", "spread");
-      const right = page.locator('[data-slot="page"][data-side="right"] .book-page-body');
-      const overflow = await right.evaluate((el) => el.scrollHeight - el.clientHeight);
-      expect(overflow, size.name).toBeLessThanOrEqual(0);
+      for (const part of [".book-fold", ".book-page-body"]) {
+        const overflow = await right.locator(part).evaluate((el) => el.scrollHeight - el.clientHeight);
+        expect(overflow, `${size.name}: ${part}`).toBeLessThanOrEqual(0);
+      }
+      // The first screen ends above the window's bottom, and the top of what lies below shows.
+      const fold = await right.locator(".book-fold").evaluate((el) => el.getBoundingClientRect().bottom);
+      const below = await page.getByRole("heading", { name: "About this book" }).evaluate((el) => el.getBoundingClientRect().top);
+      expect(fold, size.name).toBeLessThan(size.height);
+      expect(below, size.name).toBeLessThan(size.height);
     }
   });
 

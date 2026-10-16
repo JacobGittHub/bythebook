@@ -14,7 +14,10 @@ import {
   SPREAD,
   SPREAD_MIN_WIDTH,
 } from "./layout";
-import { RIFFLE_STEP_MS, TURN_MS, ZOOM_IN_TURN_START, ZOOM_TURN_MS } from "./turns";
+import { RIFFLE_STEP_MS, TURN_MS, ZOOM_OUT_TURN_START, ZOOM_TURN_MS, moveTiming } from "./turns";
+
+/** When a zoom in is over, and its scroll thumb comes in. */
+const ZOOM_IN_END = moveTiming({ way: "forward", riffled: [], zoom: "in" }).zoomEnd;
 
 type Vars = Record<string, number>;
 
@@ -89,11 +92,11 @@ export function bookFrameCss(): string {
   const halvesSideBySide = 2 * HALF_MIN + SINGLE.halfGap;
 
   return [
-    // A turn's timing (turns.css); a turn that goes with the camera runs faster, and a zoom in's
+    // A turn's timing (turns.css); a turn that goes with the camera runs faster, and a zoom out's
     // turn waits for the camera (D8).
-    `:root { --turn: ${TURN_MS}ms; --riffle-step: ${RIFFLE_STEP_MS}ms; }`,
+    `:root { --turn: ${TURN_MS}ms; --riffle-step: ${RIFFLE_STEP_MS}ms; --thumb-delay: ${ZOOM_IN_END}ms; }`,
     `:root[data-zoom] { --turn: ${ZOOM_TURN_MS}ms; }`,
-    `:root[data-zoom="in"] { --turn-start: ${ZOOM_IN_TURN_START}ms; }`,
+    `:root[data-zoom="out"] { --turn-start: ${ZOOM_OUT_TURN_START}ms; }`,
     `.book-frame[data-form="spread"] { ${declare(spread)} }`,
     `.book-frame[data-form="single"] { ${declare(singleVars(SINGLE, SINGLE.column.names))} }`,
     // The chapter column shows icons where the reader narrowed it (`data-chapters`) or, unless they

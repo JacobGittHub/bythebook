@@ -100,15 +100,16 @@ describe("moveBetween", () => {
 });
 
 describe("moveTiming", () => {
-  it("zooms in first and starts the turn ZOOM_OVERLAP into it (D8)", () => {
+  it("turns first going in and starts the zoom ZOOM_OVERLAP into the turn (D8)", () => {
     const t = moveTiming({ way: "forward", riffled: [], zoom: "in" });
-    expect(t).toEqual({ turn: ZOOM_TURN_MS, turnStart: ZOOM_OVERLAP * ZOOM_MS, turnEnd: ZOOM_OVERLAP * ZOOM_MS + ZOOM_TURN_MS, zoomStart: 0, zoomEnd: ZOOM_MS });
+    expect(t).toEqual({ turn: ZOOM_TURN_MS, turnStart: 0, turnEnd: ZOOM_TURN_MS, zoomStart: ZOOM_OVERLAP * ZOOM_TURN_MS, zoomEnd: ZOOM_OVERLAP * ZOOM_TURN_MS + ZOOM_MS });
   });
 
-  it("turns first going out and starts the zoom ZOOM_OVERLAP into the turn, riffles and all", () => {
+  it("zooms out first and starts the turn ZOOM_OVERLAP into the zoom, riffles and all", () => {
     const t = moveTiming({ way: "back", riffled: [2, 1], zoom: "out" });
     const turnLength = ZOOM_TURN_MS + 2 * RIFFLE_STEP_MS;
-    expect(t).toEqual({ turn: ZOOM_TURN_MS, turnStart: 0, turnEnd: turnLength, zoomStart: ZOOM_OVERLAP * turnLength, zoomEnd: ZOOM_OVERLAP * turnLength + ZOOM_MS });
+    const turnStart = ZOOM_OVERLAP * ZOOM_MS;
+    expect(t).toEqual({ turn: ZOOM_TURN_MS, turnStart, turnEnd: turnStart + turnLength, zoomStart: 0, zoomEnd: ZOOM_MS });
   });
 
   it("overlaps the zoom and the turn whenever both run, and runs a plain turn at its own speed", () => {

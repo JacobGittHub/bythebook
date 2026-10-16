@@ -7,8 +7,10 @@ import {
   cameraTransform,
   pictureMove,
   project,
+  scrolledBy,
   shownHeight,
   zoomCamera,
+  zoomReach,
   type Camera,
   type Placed,
   type Point,
@@ -60,7 +62,7 @@ describe("zoomCamera", () => {
     expectNoViolations(wrong);
   });
 
-  it("gives a second level's page more room than a first level's, as tall as it shows (D8)", () => {
+  it("puts a second level's fold at the window's bottom, with more of the page above it than a first level has (D8)", () => {
     const wrong: string[] = [];
     for (const [name, layout] of spreads()) {
       const camera = zoomCamera(layout);
@@ -71,6 +73,25 @@ describe("zoomCamera", () => {
       if (!(height < page.height * camera.scale)) wrong.push(`${name}: the page shows whole`);
       if (!(height > page.height)) wrong.push(`${name}: the shown page (${height}px) is shorter than the first level's (${page.height}px)`);
       if (!(page.width * camera.scale > page.width)) wrong.push(`${name}: the shown page is no wider`);
+    }
+    expectNoViolations(wrong);
+  });
+
+  it("scrolls a second level down to the book's bottom, which then lies on the desk as a first level's does (D8)", () => {
+    const wrong: string[] = [];
+    for (const [name, layout] of spreads()) {
+      const camera = zoomCamera(layout);
+      const windowBottom = layout.desk.y + layout.desk.height;
+      const coverBottom = layout.cover.y + layout.cover.height;
+      const reach = zoomReach(layout, camera);
+      if (!(reach > windowBottom)) wrong.push(`${name}: nothing to scroll to (${reach}px)`);
+      // Scrolled to the end, the cover's bottom is as far above the window's bottom as unzoomed.
+      const end = scrolledBy(camera, reach - windowBottom);
+      const gap = windowBottom - project(end, { x: 0, y: coverBottom }).y;
+      if (Math.abs(gap - (windowBottom - coverBottom)) > EPS) wrong.push(`${name}: scrolled to the end, the cover ends ${gap}px above the window's bottom`);
+      if (!(gap > 0)) wrong.push(`${name}: the book's bottom is out of view at the end`);
+      // The scroll only moves the view down: the camera keeps its scale and its x.
+      if (end.scale !== camera.scale || end.x !== camera.x) wrong.push(`${name}: the scroll changes more than the view's height`);
     }
     expectNoViolations(wrong);
   });

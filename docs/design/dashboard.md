@@ -21,9 +21,9 @@ covers how they work. The decisions behind them are `plans/deployment.md` D16–
 The dashboard is an open book on a desk (`plans/book-ui.md`, which is being built; its
 Phase 4 rewrites this section).
 
-- **`BookFrame` frames every dashboard page:** the desk, with the strip above it (the brand,
-  a tab per `NAV_ITEMS` entry the viewer may open, the vibes switch and the account links) or,
-  in the one-page form, the chapter column beside it. Windows narrower than
+- **`BookFrame` frames every dashboard page:** the desk, with the strip over its top (the
+  brand, a tab per `NAV_ITEMS` entry the viewer may open, the vibes switch and the account
+  links) or, in the one-page form, the chapter column beside it. Windows narrower than
   `SPREAD_MIN_WIDTH` get the one-page form (`formFor`). Its column shows chapter names, or
   icons below `CHAPTER_NAMES_MIN_WIDTH` (`chaptersFor`); a button in its head narrows or widens
   it, and the frame keeps the pick in the `CHAPTERS_COOKIE` cookie. A phone's column shows
@@ -40,12 +40,21 @@ Phase 4 rewrites this section).
   on it (`zoomCamera`, `src/lib/book/camera.ts`): the right page fills the window but for
   `ZOOM_SHOWN` of the left page at its left edge, and the book runs on past its bottom. The
   frame sets the camera as the book's transform; the book itself keeps its layout. A second
-  level's pages are laid out for the zoomed view (`.book-zoomed`): at the window's own pixels,
-  as tall as the page shows (`shownHeight`), and set onto the page that much smaller, so they
-  read at the usual size; the left page's content stands against the spine (`.book-shown`).
-  An interim second level puts its content on the right page and a way back on the left. The
-  one-page form has no camera: a second level shows only its right page, with the way back in
-  its running head.
+  level's pages are laid out for the zoomed view (`.book-zoomed`): the whole page at the
+  window's own pixels, set onto the page that much smaller, so it reads at the usual size; the
+  left page's content stands against the spine (`.book-shown`). The right page's body is its
+  first screen (`.book-fold`), down to where the window's bottom cuts the page (`shownHeight`),
+  and what the page holds `below` follows it, with its top in sight.
+- **A second level's view scrolls down the book** to the zoomed cover's bottom (`zoomReach`):
+  the desk scrolls, over a room as tall as that (`.book-scroll-room`), with its scrollbar
+  hidden, since it would take its width from the book, and a thumb of the frame's
+  (`.book-scroll-thumb`) in its place. Scrolled down, the strip hides above the window; it
+  drops down over the book while the mouse is at the window's top edge or on the strip, while
+  the keyboard is in it, and on a touch screen once the view scrolls up (`useStrip` in
+  `BookFrame`). Each page's view starts at the top, another book's too.
+- **An interim second level** puts its content on the right page and a way back on the left.
+  The one-page form has no camera: a second level shows only its right page, with the way back
+  in its running head and what it holds below after its body.
 - **Where everything sits comes from `layoutBook`** (`src/lib/book/layout.ts`), whose property
   tests hold its invariants. The frame draws it with CSS: `bookFrameCss`
   (`src/lib/book/frameCss.ts`) turns the layout's constants into custom properties, so the
@@ -82,9 +91,10 @@ A move to another chapter, or down to a second level and back, turns the page
   turns forward and coming up turns back; another page of the same level, such as another
   Library book, doesn't turn. Every link turns, the tabs' and the pages' own; the browser's
   back and forward buttons change pages at once, since Next doesn't run them as transitions.
-- **The camera moves with a second level's turn** (`moveTiming`): zooming in, it goes first
-  and the turn starts `ZOOM_OVERLAP` of the way into it; zooming out, the turn goes first.
-  The live book is at the new camera from the start; each picture, the book's own (`book`)
+- **The camera moves with a second level's turn** (`moveTiming`): zooming in, the turn goes
+  first, so the whole new page shows before the camera moves in, and the camera starts
+  `ZOOM_OVERLAP` of the way into it; zooming out, the camera goes first, from where the view
+  had scrolled to (`scrolledBy`). The live book is at the new camera from the start; each picture, the book's own (`book`)
   included, is moved on its own as the browser takes it (`onPicture` in `BookFrame`,
   `moveWithCamera` in `src/components/book/camera.ts`, `pictureMove`), because not every browser
   moves a picture with its live page. The strip is a picture over the pages, so a leaf that
@@ -176,11 +186,12 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   picked book doesn't show and a row is a link to the book's own page.
 - **Level 2** (`LibraryBookPage.tsx`, `/dashboard/library/<id>`) is a book's own page, which
   the camera zooms in on. The part of the left page in view lists the books under "Back to all
-  books", and another book re-inks the right page without a turn. The right page is the book
-  with its credit (and, for a store book, a link back to its Bookstore page), measures, the
-  five views as buttons, and the board; its folio gives the credit in short (`originFolio`)
-  and the positions against the limit. Success rates, difficulty and leaderboards join it with
-  the trainer and game history.
+  books", and another book re-inks the right page without a turn. The right page's first
+  screen is the book, the five views as buttons, and the board; below it, "About this book"
+  has its measures and its credit (and, for a store book, a link back to its Bookstore page).
+  Its folio gives the credit in short (`originFolio`) and the positions against the limit.
+  Success rates, difficulty and leaderboards join "About this book" with the trainer and game
+  history.
 - **`BookReader`** draws one book view with zoom (`ZoomControls`, `explorer.md`) beside a
   board for the selected or hovered position (`SelectedPosition`, `useBookSelection`), or
   without it. On a page of the book it takes the height it is given (`fill`), and the board's

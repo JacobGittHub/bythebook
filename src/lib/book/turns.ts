@@ -13,10 +13,10 @@ export const RIFFLE_STEP_MS = 70;
 /** How long the camera takes to zoom in on a second level or out of one (D8), and its easing. */
 export const ZOOM_MS = 375;
 export const ZOOM_EASING = "cubic-bezier(0.5, 0.05, 0.2, 1)";
-/** How far into the first of a zoom and a turn the second starts (D8). */
+/** How far into the first of a turn and a zoom the second starts (D8). */
 export const ZOOM_OVERLAP = 0.45;
-/** When a zoom in's turn starts; turns.css delays the turn by it. */
-export const ZOOM_IN_TURN_START = ZOOM_OVERLAP * ZOOM_MS;
+/** When a zoom out's turn starts; turns.css delays the turn by it. */
+export const ZOOM_OUT_TURN_START = ZOOM_OVERLAP * ZOOM_MS;
 
 export type TurnWay = "forward" | "back";
 
@@ -100,9 +100,10 @@ export type MoveTiming = {
 };
 
 /**
- * When a move's turn and camera run (D8). Zooming in, the camera goes first and the turn starts
- * `ZOOM_OVERLAP` of the way into it; zooming out, the turn goes first and the camera starts that
- * far into it; across, they run together. A move without a zoom has none.
+ * When a move's turn and camera run (D8). Zooming in, the turn goes first, so the whole new page
+ * shows before the camera moves in, and the camera starts `ZOOM_OVERLAP` of the way into it;
+ * zooming out, the camera goes first and the turn starts that far into it; across, they run
+ * together. A move without a zoom has none.
  */
 export function moveTiming(move: Move): MoveTiming {
   const turn = move.zoom ? ZOOM_TURN_MS : TURN_MS;
@@ -116,9 +117,9 @@ export function moveTiming(move: Move): MoveTiming {
   });
   switch (move.zoom) {
     case "in":
-      return timing(ZOOM_IN_TURN_START, 0, ZOOM_MS);
-    case "out":
       return timing(0, ZOOM_OVERLAP * turnLength, ZOOM_MS);
+    case "out":
+      return timing(ZOOM_OUT_TURN_START, 0, ZOOM_MS);
     case "across":
       return timing(0, 0, turnLength);
     default:

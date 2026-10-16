@@ -1,6 +1,6 @@
 # Book UI
 
-Status: active · Updated: 2026-10-15 · Depends on: —
+Status: active · Updated: 2026-10-16 · Depends on: —
 
 **Goal:** rebuild the dashboard as an open book: every page a spread of two pages on a desk,
 with page turns, bookmarks that turn with their pages, a one-page form for narrow windows and
@@ -17,7 +17,8 @@ From the user's messages of 2026-10-13 and 2026-10-14, about the mockup
 Q1–Q9 were answered on 2026-10-14; D4, D8 and D13–D19 hold the answers. D4 and D15 were
 amended the same day from the user's notes on round five. Q10 was answered on 2026-10-15,
 from `plans/mockups/library-zoom.html` (the "Library Zoom" artifact); D4, D5, D8 and D9 hold
-it, replacing the book slide.
+it, replacing the book slide. On 2026-10-16 the user changed D8's order to that artifact's
+"Turn, then zoom", with a view that scrolls.
 
 - D1. **The dashboard is an open book on a desk**, the Spread layout of the Paperback
   direction (`plans/mockups/dashboard-paperback.html`). One strip above the book holds the
@@ -42,8 +43,8 @@ it, replacing the book slide.
   their tabs. While a second level is zoomed in (D8), the chapter's bookmark is on the left
   page, out of view, and its tab in the strip stays lit.
 - D5. **No spine control and no flat pages** (round five, replacing round four's spine
-  arrows). The spine stays in the middle. Only a second level moves the view, by the zoom
-  (D8, D9); the book itself never changes size or shape.
+  arrows). The spine stays in the middle. Only a second level moves the view, by the zoom and
+  its scroll (D8, D9); the book itself never changes size or shape.
 - D6. **The Explorer is the Even layout.** Left page: search, the book and line controls,
   and the board. Right page: the book view on top, the engine in the middle, master moves at
   the bottom, and the line in the outer margin as a scoresheet with the ply. The scoresheet is
@@ -53,22 +54,31 @@ it, replacing the book slide.
   size, and the board to the right page's top slot, small but still playable. One button does
   both ways, and it stays in one place: the right end of the right page's top slot. The point
   is a bigger view with the board still at hand.
-- D8. **A second level zooms in, then turns** (Q10, replacing the book slide). Opening a
-  Library book's page zooms the view in on the right page until it fills the window but for
-  about 290 px of the left page at the window's left edge; the book runs on past the
-  window's bottom. The leaf then turns, starting about 45% of the way into the zoom, to a
-  spread whose left page shows the book list, right-aligned toward the spine with "All
-  books" above it, enough to switch books without going back (Q8's answer), and whose right
-  page is the book's page. Going back runs it in reverse: the leaf turns back, and the zoom
-  out starts about 45% of the way into the turn. Both run at the mockup's Fast speed (a zoom
-  of about 375 ms). Picking another book in the list re-inks the right page (D13). The
-  strip stays above the book, unzoomed. A second level's pages are laid out for the zoomed
-  view: drawn at the window's size and set onto the page that much smaller, so zoomed in
-  their type reads at the usual size, and only the part in view is laid out. The view never
-  scrolls. The user chose this order over turning first and then zooming with a scrolling
-  view: the book still runs off the frame, the strip isn't forced onto the book, and the
-  user never sees that the rest of a second level's page isn't there. Under None or reduced
-  motion it changes at once, as do the browser's back and forward buttons.
+- D8. **A second level turns, then zooms in, and scrolls** (Q10, replacing the book slide;
+  the order and the scroll are the user's of 2026-10-16). Opening a Library book's page turns
+  the leaf to a spread whose left page shows the book list, right-aligned toward the spine
+  with the way back to all books above it, enough to switch books without going back (Q8's
+  answer), and whose right page is the book's page. The view then zooms in, starting about
+  45% of the way into the turn, until the right page fills the window but for about 290 px of
+  the left page at the window's left edge. Going back runs it in reverse: the view zooms out
+  from wherever it was scrolled to, and the leaf turns back about 45% of the way into the
+  zoom. Both run at the mockup's Fast speed (a zoom of about 375 ms). Picking another book in
+  the list re-inks the right page (D13) and goes back to the page's top. A second level's
+  pages are laid out for the zoomed view: drawn at the window's size and set onto the page
+  that much smaller, so zoomed in their type reads at the usual size. The whole page is laid
+  out, and the view scrolls down it to the book's bottom. The book's shape bounds that (D5):
+  about half a window more, from roughly 290 px at the narrowest spread to 690 px on a large
+  desktop. The page's first screen holds what it opens on, and what it holds below the
+  window's bottom is there to scroll to. While the view is scrolled down, the strip hides. It
+  drops down over the book when the mouse comes to the window's top edge and goes again when
+  the mouse leaves it; it also shows while the keyboard is in it, and on a touch screen when
+  the view scrolls up. Scrolled to the top, it is above the book as on every other page. The
+  user chose this over zooming first with only the part in view laid out (built on
+  2026-10-15): a tester felt something was missing below that they couldn't scroll to, and
+  found a zoom only on second levels odd; turning first shows the whole page before the view
+  moves in. They had passed the scroll over before because the strip lay over the book.
+  Under None or reduced motion it changes at once, as do the browser's back and forward
+  buttons.
   From the user's answers of 2026-10-15, on starting the Library: the list is the mockup's
   left page, its rows contents lines (side, name, dotted leader, positions). The positions
   figure may one day give way to something more personal, such as success or how much of the
@@ -77,8 +87,11 @@ it, replacing the book slide.
   (the backup notice, the copy offered at sign-in) sit under the left page's header, a restore
   or copy checklist takes the right page until it is done, and debug mode's panel is at the
   foot of the left page.
-- D9. **The Bookstore keeps search and filters on its left page.** A store book's page zooms
-  and turns the same way (D8), and the part of the second level's left page in view lists
+  From the user's answers of 2026-10-16: the book's page keeps its title, its buttons, the
+  view and the board on its first screen; its measures and where it came from go below, with
+  room for the statistics to come. The list scrolls with the page, as paper does.
+- D9. **The Bookstore keeps search and filters on its left page.** A store book's page turns,
+  zooms and scrolls the same way (D8), and the part of the second level's left page in view lists
   the shelf's books, as the search and filters left them, right-aligned toward the spine
   with a link back to the shelf above them, as the Library's does (the user's answer of
   2026-10-15).
@@ -271,7 +284,18 @@ and get to the test of turns").
       Library's book count (`ChapterFigure`). The zoomed gutter's gradient no longer repeats,
       which had drawn a faint line down the right page. `OriginPanel` is gone; its credit and
       link back to the Bookstore sit under the book's title.
-- [ ] (agent) Bookstore (D9): the first level as a spread, a book's page by the zoom and turn.
+- [x] (agent) Second levels turn, then zoom, and scroll (D8, 2026-10-16), with the strip that
+      hides while the view is scrolled down, and the Library book page's measures and origin
+      below its first screen.
+      Done: the timing is swapped (`moveTiming`), and the zoomed page is laid out whole, its
+      body the first screen (`.book-fold`) and `below` after it. The strip lies over the
+      desk's top on every page, so a second level's desk scrolls under it, to the zoomed
+      cover's bottom (`zoomReach`); a move off a scrolled page starts its camera there. The
+      desk's scrollbar is hidden, since it would narrow the book, and a thumb of the frame's
+      takes its place, coming in once the zoom is over. Firefox runs every animation, but
+      Playwright's Firefox screenshots don't draw view transitions, so its frames weren't
+      looked at.
+- [ ] (agent) Bookstore (D9): the first level as a spread, a book's page by the turn and zoom.
 - [ ] (agent) Explorer (D6, D7, D16, D17): the Even layout, the scoresheet, the swap, the
       chosen book in the book view, and the Labyrinth tab marked coming soon.
 - [ ] (agent) Visualizations (D18): the contents and the preview as a spread, and each
@@ -305,7 +329,7 @@ and get to the test of turns").
 ## Notes
 
 **One mechanism.** Almost everything in the book is the leaf's turn and the zoom. A
-spread is two pages at the middle spine; a second level zooms in and turns;
+spread is two pages at the middle spine; a second level turns and zooms in;
 the one-page form is the same turn hinged on the right edge. Bookmarks and page tabs are part
 of their pages, so they need no animation of their own. Pages state what each page holds and
 whether a page is a second level, which keeps the narrow form from becoming a second app to

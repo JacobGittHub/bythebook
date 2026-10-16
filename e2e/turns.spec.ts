@@ -1,12 +1,12 @@
 import type { Locator, Page } from "@playwright/test";
 import { MOTION_STORAGE_KEY, type Motion } from "@/lib/appearance";
 import { ZOOM_SHOWN } from "@/lib/book/camera";
-import { SPREAD_MIN_WIDTH } from "@/lib/book/layout";
+import { SPREAD, SPREAD_MIN_WIDTH } from "@/lib/book/layout";
 import { LIBRARY, bookList, createPastedBook } from "./fixtures/library";
 import { expect, test } from "./fixtures/test";
 
 // The book's moves between pages (plans/book-ui.md D8, D13, D14): page turns, or none, and a
-// second level's zoom. A move is recorded as the browser starts its animations: each animation's
+// second level's zoom and scroll. A move is recorded as the browser starts its animations: each animation's
 // name and the picture it moves, and `camera` for each picture the camera moves.
 
 declare global {
@@ -123,7 +123,7 @@ test("Page turn: a jump of several chapters riffles the leaves between, up to th
   expect(riffles(await moveTo(page, "Overview", "/dashboard"))).toHaveLength(3);
 });
 
-test("Page turn: a second level zooms in, then turns, and turns back, then zooms out (D8)", async ({ page }) => {
+test("Page turn: a second level turns, then zooms in, and zooms out, then turns back (D8)", async ({ page }) => {
   await recordMoves(page, "turn");
   await page.goto("/dashboard/bookstore");
   test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
@@ -160,8 +160,46 @@ test("Page turn: another book on a second level neither turns nor zooms; its pag
   const moves = await follow(page, link, (await link.getAttribute("href"))!);
   expect(moves.filter((move) => move.startsWith("turn-") || move.startsWith("camera"))).toEqual([]);
   await expect(page.getByRole("heading", { name: "First book", level: 1 })).toBeVisible();
-  await expect(page.locator(".book-ink")).toHaveCount(1);
+  // The right page re-inks, its first screen and what lies below; the list beside it doesn't.
+  await expect(page.locator('[data-slot="page"][data-side="right"] .book-ink')).toHaveCount(2);
+  await expect(page.locator('[data-slot="page"][data-side="left"] .book-ink')).toHaveCount(0);
   expect(await rightPageAt(page)).toBe(ZOOM_SHOWN);
+});
+
+test("Page turn: a second level's view scrolls down the book under a strip that hides, and goes back from there (D8)", async ({ page }) => {
+  await recordMoves(page, "turn");
+  await page.goto(LIBRARY);
+  test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
+  test.skip(!spreadWindow(page), "Only the spread zooms; the one-page form's page scrolls as any other.");
+  const spine = await rightPageAt(page);
+  await createPastedBook(page, "Scrolled book");
+  const open = page.getByRole("link", { name: "Open book page" });
+  const href = (await open.getAttribute("href"))!;
+  await open.click();
+  await expect.poll(() => rightPageAt(page)).toBe(ZOOM_SHOWN);
+  const strip = page.locator(".book-strip");
+  const stripBottom = () => strip.evaluate((el) => Math.round(el.getBoundingClientRect().bottom));
+  expect(await stripBottom()).toBe(SPREAD.strip);
+
+  // Scrolled down, what lies below the first screen comes into view and the strip hides.
+  await page.mouse.move(600, 400);
+  await page.mouse.wheel(0, 2000);
+  await expect(page.getByRole("heading", { name: "About this book" })).toBeInViewport();
+  await expect.poll(stripBottom).toBeLessThanOrEqual(0);
+  // The mouse at the window's top brings it back, and it goes once the mouse leaves it.
+  await page.mouse.move(600, 2);
+  await expect.poll(stripBottom).toBe(SPREAD.strip);
+  await page.mouse.move(600, 400);
+  await expect.poll(stripBottom).toBeLessThanOrEqual(0);
+
+  // Back from the scrolled view: the camera zooms out from where the view was, and the leaf turns back.
+  await page.mouse.move(600, 2);
+  await expect.poll(stripBottom).toBe(SPREAD.strip);
+  const out = await moveTo(page, "Library", LIBRARY);
+  expect(out).toContain(`turn-fold-left ::view-transition-old(page-l${route(href)})`);
+  expect(out).toContain("camera ::view-transition-image-pair(book)");
+  await expect.poll(() => rightPageAt(page)).toBe(spine);
+  await expect(strip).not.toHaveAttribute("data-hidden");
 });
 
 test("Page turn: in the one-page form a second level turns forward, and back by its back link (D15)", async ({ page }) => {

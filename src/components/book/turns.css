@@ -14,7 +14,7 @@
 :root {
   --turn-half: calc(var(--turn) / 2);
   --turn-depth: 2800px;
-  /* A zoom in's turn waits for the camera (D8). */
+  /* A zoom out's turn waits for the camera (D8). */
   --turn-start: 0ms;
   /* A jump of several chapters riffles up to three leaves, each --riffle-step after the one
      before, and the turn's last page waits for them. */
@@ -112,7 +112,7 @@
    pages that lie still: forward, the old content on the left page until the new left page
    covers it, and the new content on the right page as the old one folds off it. The turning
    leaves are blank. The content's box is centered on the spine, so its halves are 50%. Until a
-   zoom in's turn starts, the old content lies whole on top of its blank leaves. */
+   zoom out's turn starts, the old content lies whole on top of its blank leaves. */
 :root[data-motion="turn"][data-turn]::view-transition-group(.page-ink-out),
 :root[data-motion="turn"][data-turn]::view-transition-group(.page-ink-in) {
   z-index: 1;
