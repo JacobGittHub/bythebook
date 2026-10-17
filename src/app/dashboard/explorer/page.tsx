@@ -1,6 +1,5 @@
 import { OpeningExplorer } from "@/components/openings/OpeningExplorer";
 import { parseLineParam } from "@/lib/library/links";
-import { InterimSpread } from "@/components/book/Spread";
 
 type Props = {
   searchParams: Promise<{ fen?: string; book?: string; line?: string }>;
@@ -13,11 +12,5 @@ type Props = {
  */
 export default async function ExplorerPage({ searchParams }: Props) {
   const { fen, book, line } = await searchParams;
-  return (
-    <InterimSpread>
-      <main className="h-full">
-        <OpeningExplorer initialFen={fen} initialLine={parseLineParam(line)} initialBookId={book} />
-      </main>
-    </InterimSpread>
-  );
+  return <OpeningExplorer initialFen={fen} initialLine={parseLineParam(line)} initialBookId={book} />;
 }

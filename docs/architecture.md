@@ -322,6 +322,10 @@ The visualization dependencies and what each is for. Removal status is in `AGENT
 | `@xyflow/react` | Nothing | 100 KB | Its only intended consumer (`BookBranchView`) was never built |
 | `framer-motion` | Nothing | 30 KB | Was intended for globe↔branch transitions |
 
+**Board.** `react-reverse-portal` lets the Explorer move its live board between the book's
+pages on a swap without mounting it again, which would lose its game (`docs/design/explorer.md`
+§ "Explorer layout").
+
 **Interface.** shadcn/ui (`plans/vibes.md` D12) isn't a package: `npx shadcn@latest add`
 copies its components into `src/components/shadcn/` (`components.json`), and they are the
 project's own code from then on. They need `radix-ui` (the accessible primitives behind

@@ -2,8 +2,8 @@
 
 **Status:** Live
 **Files:** `src/components/openings/` (`OpeningExplorer.tsx` is the orchestrator, plus
-`ExplorerTreeWindow`, `OpeningCatalogSearch`, `OpeningCatalogResults` and
-`OpeningCatalogTreePreview`), `src/hooks/useOpeningExplorer.ts`,
+`ExplorerParts`, `Scoresheet`, `ExplorerTreeWindow`, `OpeningCatalogSearch`,
+`OpeningCatalogResults` and `OpeningCatalogTreePreview`), `src/hooks/useOpeningExplorer.ts`,
 `src/hooks/useOpeningExplorerMulti.ts`; the book views in `src/components/books/` and
 `src/lib/books/views/`, with their tree in `src/lib/books/viewTree.ts` and the Explorer's
 tree in `src/lib/books/explorerTree.ts`
@@ -14,13 +14,9 @@ tree in `src/lib/books/explorerTree.ts`
   `OpeningCatalogResults`. All playback belongs to the top-bar navigator.
 - **Forward navigation must be gated on alignment.** Never add forward navigation that
   bypasses the `isBoardOnHighlightedLine` check.
-- **The page fits its page of the book at every width,** by the board-page rule under "UI" in
-  `AGENTS.md`. Below the `xl` breakpoint the board sits on top, as a square capped at a
-  share of the page's height (the `max-w-[…cqh]` class on the board's container, against the
-  page's root, a size container), and the panels sit under it in one column that scrolls on
-  its own: the move row first (pinned), then the statistics, the engine and the tree window.
-  At `xl` and wider the board is beside the panel column and only the statistics panel
-  scrolls.
+- **The page fits its pages of the book at every width,** by the board-page rule under "UI"
+  in `AGENTS.md`. The board is as big a square as its box holds (`BoardSlot`, a size
+  container), and only the master moves, the scoresheet and the views scroll inside it.
 - **The book views use pure React + SVG.** No D3 and no Three.js.
 - **The tree window makes no API calls of its own.** It receives everything as props from
   `OpeningExplorer`, and all Lichess data flows through `OpeningExplorer`.
@@ -28,31 +24,40 @@ tree in `src/lib/books/explorerTree.ts`
 
 ## Explorer layout
 
-The panels (`Panel`) sit straight on the page frame, without a tinted box around them, and
-keep their padding small.
+The Explorer is a spread of the book (`plans/book-ui.md` D6, D7), with no boxes around its
+parts.
 
-The header panel has two rows:
-
-1. The title and inline match info on the left, then the flip button and the search bar. On
-   a phone the title is hidden and the search bar takes its place.
-2. A book selector, a "View Lines" dropdown and an "Add line" button, for guests too: the
-   books come from the viewer's library (`useLibraryBooks`, `useLibraryBook` in
-   `src/context/Library.tsx`), and the chosen book's trees are read when it is chosen. On a
-   phone "View Lines" is left out and "Add line" drops its move count, so the row stays one
-   line and the sticky header never covers the panels under it.
-   - "View Lines" lists every leaf path in the active book, and selecting one replays that
-     line.
-   - "Add line" is always visible. It is disabled when no book is selected or no moves have
-     been played, and lines are capped at 20 moves. A book that changed in another tab is
-     reloaded instead of saved, and a toast says so (`STALE_BOOK_MESSAGE`).
-
-**The side panels can be resized.** Each panel above the statistics (the engine while it is
-on, the tree window and, at `xl`, the move row) has a `ResizeHandle`
-(`src/components/ui/ResizeHandle.tsx`) under it: drag it, or focus it and use the arrow
-keys, between the limits in `PANEL_LIMITS`; double-click puts the panel back. The statistics
-take the height that is left, down to a minimum, after which the panel column scrolls. A move
-row given a height wraps its moves instead of scrolling sideways. The heights are kept in
-the browser (`useStoredString`), per viewer.
+- **The left page** holds the flip button and the search, then a row with the book selector,
+  "View lines" and "Add line", then the board with its evaluation bar.
+  - The books come from the viewer's library, guests' included (`useLibraryBooks`,
+    `useLibraryBook` in `src/context/Library.tsx`), and the chosen book's trees are read
+    when it is chosen.
+  - "View lines" lists every leaf path in the chosen book, and picking one replays that line.
+    A phone leaves it out, so the row stays one line.
+  - "Add line" is disabled when no book is chosen or no moves have been played, and saves at
+    most 20 moves. A book that changed in another tab is reloaded instead of saved, and a
+    toast says so (`STALE_BOOK_MESSAGE`).
+- **The right page** stacks three slots (`Slot` in `ExplorerParts`), each a small-capitals tab
+  over a rule: the tree window, the engine, and the master moves. The tree window's head has
+  the Book, Explored and Labyrinth tabs (D16, D17, see below) and the swap button. The
+  slots are fixed in size; the swap is the way to a bigger view.
+- **The scoresheet** (`Scoresheet`) is the page's only move list, in the right page's outer
+  margin: White's and Black's moves under their move numbers, with the ply and the
+  navigator's buttons under it. While the board is on a line picked from the search or "View
+  lines", it lists that line to its end, the moves ahead faint; otherwise it lists the moves
+  played. Pressing a move goes to it.
+- **The swap** (D7) moves the tree window to the left page at full size and the board to the
+  right page's top slot, still playable; the one button stays at the right end of that slot
+  and says "Swap back". The board keeps its game inside itself (`useChessGame`), so it is
+  rendered once into a node of its own (`react-reverse-portal`), which the swap moves
+  between the pages without mounting the board again.
+- **The running heads and folios** name the opening's family on the left and its variation
+  and ECO code on the right, the side to move and the chosen book at the left foot, and how
+  the position matched the catalog and its master games at the right.
+- **The one-page form** (D15) has the search and the book row on top, then the board, as
+  big as about half the page lets it be, and under it one column that scrolls on its own: the
+  scoresheet as a row (pinned), the master moves (whose head also says how the position
+  matched), the engine and the tree window. It has no swap.
 
 **Master stats for a guest.** The route answers 404 for a position the server hasn't saved
 (see `processes/lichess-api-and-caching.md`). The move list then says that a live lookup
@@ -110,10 +115,18 @@ user's clicks and the board's reports to it, and passes its `command` to the boa
 
 ## Tree window (`ExplorerTreeWindow`)
 
-The window under the engine draws the explored line with one of the five book views, picked
-on the vertical rail (`BookViewRail`) along its left edge. Spine and ribs is the default
-(`DEFAULT_EXPLORER_VIEW`), and the choice is kept in the browser for every viewer, guests
-included.
+The window at the right page's top draws the explored line, or the chosen book, with one of
+the five book views, picked on the vertical rail (`BookViewRail`) along its left edge. Spine
+and ribs is the default (`DEFAULT_EXPLORER_VIEW`), and the choice is kept in the browser for
+every viewer, guests included.
+
+**With a book chosen it draws the book** (`plans/book-ui.md` D17), weighted by its lines,
+with the current position selected and the spine running through it. The moves played past
+the book's end are added from where the line left it, marked `out`, and every view draws
+their edges dashed (`bookLineTree` in `src/lib/books/explorerTree.ts`, pure and tested); the
+left running head says "In book" or "Out of book". The Explored tab goes back to the
+explored line; choosing another book goes back to the book. The Labyrinth's tab says
+"coming soon" (D16).
 
 **What it draws** (`explorerTree`, pure and tested):
 
@@ -197,5 +210,4 @@ pages (`dashboard.md`) show them. They came from concept mockups the user ranked
 ## Planned
 
 - Color in the ply columns view (the user's note on the mockup, 2026-10-06).
-- Drawing the active book in the tree window, and editing a book from the views
-  (`plans/bookstore.md`, Notes).
+- Editing a book from the views (`plans/bookstore.md`, Notes).

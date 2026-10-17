@@ -1,7 +1,7 @@
 import { lineText, moveLabel } from "@/lib/books/viewTree";
 import { LABEL_CHAR_W } from "@/lib/books/views/common";
 import { BRANCH_POINTS_PAD, type BranchPointsLayout, type BranchSegment } from "@/lib/books/views/branchPoints";
-import { clashClass, markClasses, moveClass, rulerColumns, type RenderProps } from "./viewParts";
+import { clashClass, markClasses, moveClass, outClass, rulerColumns, type RenderProps } from "./viewParts";
 
 /** The stretch's moves as far as they fit before its end, else its last move, else nothing. */
 function stretchLabel(s: BranchSegment): string {
@@ -36,7 +36,7 @@ export function BranchPointsView({ tree, layout, marks, bind, side }: RenderProp
         const marked = markClasses(marks, id);
         return (
           <g key={id}>
-            <path d={`M${s.fromX},${s.fromY} V${s.y} H${s.x}`} className={`bv-seg${marked}`} />
+            <path d={`M${s.fromX},${s.fromY} V${s.y} H${s.x}`} className={`bv-seg${outClass(s.end)}${marked}`} />
             <path d={`M${s.fromX},${s.y} H${s.x}`} {...bind(s.end, "bv-seg-hit")} />
             {text && (
               <text x={s.fromX + 5} y={s.y - 4} className={`bv-label${marked}`}>

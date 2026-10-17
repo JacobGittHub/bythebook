@@ -50,6 +50,11 @@ it, replacing the book slide. On 2026-10-16 the user changed D8's order to that 
   the bottom, and the line in the outer margin as a scoresheet with the ply. The scoresheet is
   the page's only move list; the line under the right page goes (Q6's answer). The Treemap is
   not part of it; it is unfinished and stays out for now.
+  From the user's answers of 2026-10-16, on starting the Explorer: the right page's slots are
+  fixed in size, without today's resize handles, since the swap gives the bigger view. The
+  scoresheet's buttons keep Play, beside first, back, forward and last. While the board is on
+  a line picked from the search or "View lines", the scoresheet lists that line to its end,
+  the moves ahead faint, as today's move row does.
 - D7. **The book view can swap with the board.** The view moves to the left page at full
   size, and the board to the right page's top slot, small but still playable. One button does
   both ways, and it stays in one place: the right end of the right page's top slot. The point
@@ -306,8 +311,14 @@ and get to the test of turns").
       they left and "Back to the shelf" keeps them. The book's page is laid out as the Library
       book's: its name, publisher, description, Save and the book on the first screen, its
       measures and how it was made below.
-- [ ] (agent) Explorer (D6, D7, D16, D17): the Even layout, the scoresheet, the swap, the
+- [x] (agent) Explorer (D6, D7, D16, D17): the Even layout, the scoresheet, the swap, the
       chosen book in the book view, and the Labyrinth tab marked coming soon.
+      Done: the page is a spread (`OpeningExplorer` passes its one-page form to `Spread` as
+      `single`, the board on top). The swap moves the live board with `react-reverse-portal`,
+      so it keeps its game. D17's switch is two tabs on the view's head, Book and Explored,
+      beside the Labyrinth's; `bookLineTree` adds the moves played past the book's end,
+      which every view draws dashed. The screenshot baseline `explorer-start.png` is out of
+      date until Phase 4's new baselines.
 - [ ] (agent) Visualizations (D18): the contents and the preview as a spread, and each
       visualization's own page in the book.
 - [ ] (agent) Settings (D10, D13): appearance, page turns and the vibes switch on the left;

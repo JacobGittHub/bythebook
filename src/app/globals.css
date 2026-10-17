@@ -794,6 +794,10 @@ body {
 .bv-rib-count { font-weight: 600; fill: var(--foreground); }
 .bv-spine-label { font-size: 10px; font-weight: 600; fill: var(--foreground); text-anchor: middle; pointer-events: none; }
 .bv-spine-label.ahead { fill: var(--muted-foreground); font-weight: 500; }
+/* A move played past the end of the Explorer's chosen book (plans/book-ui.md D17). */
+.bv-edge.out, .bv-seg.out, .bv-track.out, .bv-rib.out, .bv-spine.out { stroke-dasharray: 5 4; }
+.bv-cell.out { stroke-dasharray: 4 3; }
+.bv-cell.out:not(.on-path, .on-hover, .is-selected) { stroke: var(--view-edge); stroke-width: 1.4; }
 .bv-spine-num { font-size: 8.5px; fill: var(--muted-foreground); text-anchor: middle; pointer-events: none; }
 
 /* ── The Overview's contents (src/components/overview/OverviewSpread.tsx) ── */

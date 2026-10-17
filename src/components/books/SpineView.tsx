@@ -1,5 +1,5 @@
 import type { SpineLayout } from "@/lib/books/views/spine";
-import { clashClass, familyColor, markClasses, moveClass, type RenderProps } from "./viewParts";
+import { clashClass, familyColor, markClasses, moveClass, outClass, type RenderProps } from "./viewParts";
 
 /**
  * E. Spine and ribs: the spine up to the selected position is solid, the rest of it dotted
@@ -27,7 +27,7 @@ export function SpineView({
             y1={midY}
             x2={x}
             y2={midY}
-            className={`bv-spine${ahead(i + 1) ? " ahead" : ""}`}
+            className={`bv-spine${ahead(i + 1) ? " ahead" : ""}${outClass(node)}`}
           />
         ))}
         {ribs.map((rib) => {
@@ -36,7 +36,7 @@ export function SpineView({
             <path
               key={rib.node.id}
               d={`M${x0},${midY} C${x0 + step * 0.5},${midY} ${rib.x - step * 0.55},${rib.y} ${rib.x},${rib.y}`}
-              className={`bv-rib${markClasses(marks, rib.node.id)}`}
+              className={`bv-rib${outClass(rib.node)}${markClasses(marks, rib.node.id)}`}
             />
           );
         })}

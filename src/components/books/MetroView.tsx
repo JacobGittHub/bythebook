@@ -1,5 +1,5 @@
 import type { MetroLayout } from "@/lib/books/views/metro";
-import { clashClass, familyColor, markClasses, type RenderProps } from "./viewParts";
+import { clashClass, familyColor, markClasses, outClass, type RenderProps } from "./viewParts";
 
 /** Half the length of the bar across a route's last station. */
 const TERMINUS = 5;
@@ -48,7 +48,7 @@ export function MetroView({
                   <path
                     key={node.id}
                     d={d}
-                    className={`bv-track${markClasses(marks, node.id)}`}
+                    className={`bv-track${outClass(node)}${markClasses(marks, node.id)}`}
                     style={{ stroke: familyColor(family.get(node.id)) }}
                     strokeWidth={width}
                   />

@@ -6,7 +6,7 @@
 import { gameCount } from "@/lib/chess/explorerData";
 import { START_FEN, fenAfterUci } from "@/lib/chess/fen";
 import { createMoveNodeId } from "@/lib/chess/moveTree";
-import type { ExplorerMove } from "@/types/chess";
+import type { ExplorerMove, MoveNode } from "@/types/chess";
 import type { ViewSource } from "./viewTree";
 
 /** How many unplayed master moves each played position shows. */
@@ -77,4 +77,40 @@ export function explorerTree({ history, before, next }: ExplorerTreeInput): Expl
   });
   current.children = leaves(current, next, null, EXPLORER_CONTINUATIONS);
   return { source: root, currentId: current.id, stats };
+}
+
+export type BookLineTree = {
+  source: ViewSource;
+  /** The current position's id. */
+  currentId: string;
+  /** Whether the line played left the book. */
+  out: boolean;
+};
+
+/**
+ * The Explorer's view of its chosen book (plans/book-ui.md D17): the book's tree, with the moves
+ * played past its end added from where the line left it, marked `out`, so the views draw them
+ * dashed. Only the nodes along the played line are copied; the rest are the book's own.
+ */
+export function bookLineTree(book: MoveNode, history: readonly Pick<Played, "san" | "uci" | "fen">[]): BookLineTree {
+  const follow = (node: ViewSource, i: number): BookLineTree => {
+    if (i === history.length) return { source: node, currentId: node.id, out: false };
+    const child = node.children.find((candidate) => candidate.uci === history[i].uci);
+    if (child) {
+      const below = follow(child, i + 1);
+      return { ...below, source: { ...node, children: node.children.map((c) => (c === child ? below.source : c)) } };
+    }
+    const ids: string[] = [];
+    for (let k = i, parentId = node.id; k < history.length; k++) {
+      parentId = createMoveNodeId(parentId, history[k].uci);
+      ids.push(parentId);
+    }
+    let chain: ViewSource | null = null;
+    for (let k = history.length - 1; k >= i; k--) {
+      const { san, uci, fen } = history[k];
+      chain = { id: ids[k - i], san, uci, fen, out: true, children: chain ? [chain] : [] };
+    }
+    return { source: { ...node, children: [...node.children, chain!] }, currentId: ids[ids.length - 1], out: true };
+  };
+  return follow(book, 0);
 }

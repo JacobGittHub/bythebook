@@ -131,9 +131,20 @@ function BackLink({ chapter, className }: { chapter: Chapter; className?: string
  * In the one-page form a second level shows only its right page, with the way back to its
  * chapter in the running head (D15). Where the one-page form stacks the halves, on a phone,
  * `stack` says which show: both, or the left only, as the Library's list, whose books then open
- * their own pages.
+ * their own pages. A page that lays out its one-page form itself, as the Explorer does with its
+ * board above the analysis (D15), passes that body as `single`, in place of the halves.
  */
-export function Spread({ left, right, stack = "both" }: { left: PageContent; right: PageContent; stack?: "both" | "left" }) {
+export function Spread({
+  left,
+  right,
+  stack = "both",
+  single,
+}: {
+  left: PageContent;
+  right: PageContent;
+  stack?: "both" | "left";
+  single?: ReactNode;
+}) {
   const { form, chapters, at, level, tabs } = useBookFrame();
   const layout = useLayout();
   const { bookmark, pageTab } = marksOf(layout, at, tabs !== null);
@@ -155,7 +166,9 @@ export function Spread({ left, right, stack = "both" }: { left: PageContent; rig
         <RiffledLeaves layout={layout} />
         <PagePicture part="s">
           <BookPage side="single" head={head} folio={second ? (right.folio ?? left.folio) : (left.folio ?? right.folio)} marks={tab}>
-            {!second ? (
+            {!second && single ? (
+              single
+            ) : !second ? (
               <div className="book-halves" data-stack={stack === "left" ? "left" : undefined}>
                 <div className="book-half">{left.body}</div>
                 <span className="book-half-rule" aria-hidden />

@@ -1,5 +1,5 @@
 import { PLY_COLUMNS_PAD, type PlyColumnsLayout } from "@/lib/books/views/plyColumns";
-import { clashClass, markClasses, moveClass, rulerColumns, type RenderProps } from "./viewParts";
+import { clashClass, markClasses, moveClass, outClass, rulerColumns, type RenderProps } from "./viewParts";
 
 /** Labels show on branches at least this big, near the root, and on the selected or hovered line. */
 const LABELLED_SIZE = 10;
@@ -35,7 +35,7 @@ export function PlyColumnsView({ tree, layout, marks, bind, side, weight }: Rend
             <path
               key={node.id}
               d={`M${p.x},${p.y} C${p.x + k},${p.y} ${c.x - k},${c.y} ${c.x},${c.y}`}
-              className={`bv-edge${markClasses(marks, node.id)}`}
+              className={`bv-edge${outClass(node)}${markClasses(marks, node.id)}`}
               strokeWidth={0.7 + 3.3 * weight(node)}
             />
           );

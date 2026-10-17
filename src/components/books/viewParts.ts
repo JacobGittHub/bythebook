@@ -46,6 +46,11 @@ export function markClasses(marks: ViewMarks, id: string): string {
   }`;
 }
 
+/** " out" for a move played past the end of the Explorer's chosen book, whose edge is dashed. */
+export function outClass(node: ViewNode): string {
+  return node.out ? " out" : "";
+}
+
 /** The fill class for whose move a node is. */
 export function moveClass(node: ViewNode): "root" | "wm" | "bm" {
   return node.depth === 0 ? "root" : isWhiteMove(node) ? "wm" : "bm";

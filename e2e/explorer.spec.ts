@@ -73,6 +73,72 @@ test.describe("Explorer, as a guest", () => {
   });
 });
 
+test.describe("Explorer as a spread", () => {
+  test.skip(({ isMobile }) => isMobile, "A phone gets the one-page form, which has no swap.");
+
+  test("the book view swaps pages with the board, which keeps its game, and the button stays put", async ({ page }) => {
+    await page.goto("/dashboard/explorer?line=e2e4,c7c5");
+    await expect(page.locator('[data-square="c5"] [data-piece="bP"]')).toBeVisible();
+    const swap = page.getByRole("button", { name: "Swap with board" });
+    const before = await swap.boundingBox();
+
+    await swap.click();
+    const back = page.getByRole("button", { name: "Swap back" });
+    await expect(back).toBeVisible();
+    // The board is still playable on the right page, at the same position.
+    await expect(page.locator('[data-square="c5"] [data-piece="bP"]')).toBeVisible();
+    await page.locator('[data-square="g1"]').click();
+    await page.locator('[data-square="f3"]').click();
+    await expect(page.locator('[data-square="f3"] [data-piece="wN"]')).toBeVisible();
+    const after = await back.boundingBox();
+    expect(Math.abs(after!.x + after!.width - (before!.x + before!.width))).toBeLessThan(2);
+
+    await back.click();
+    await expect(page.getByRole("button", { name: "Swap with board" })).toBeVisible();
+    await expect(page.locator('[data-square="f3"] [data-piece="wN"]')).toBeVisible();
+    await expect(page.getByText("Labyrinth")).toBeVisible();
+  });
+
+  test("the scoresheet lists a picked line to its end, and goes to a move pressed on it", async ({ page }) => {
+    await page.goto("/dashboard/explorer");
+    await expect(page.getByRole("button", { name: /^e4 White/ })).toBeVisible();
+    await page.getByPlaceholder(/Search/).fill("Sicilian Defense: Najdorf");
+    await page.getByRole("button", { name: /Najdorf/ }).first().click();
+
+    const sheet = page.getByRole("complementary", { name: "Line" });
+    await expect(sheet.getByRole("button", { name: "a6", exact: true })).toBeVisible();
+    await sheet.getByRole("button", { name: "Nf3", exact: true }).click();
+    await expect(page.locator('[data-square="f3"] [data-piece="wN"]')).toBeVisible();
+    await expect(sheet.getByRole("button", { name: "Nf3", exact: true })).toHaveAttribute("aria-current", "step");
+    await expect(sheet.getByText("ply 3")).toBeVisible();
+  });
+});
+
+test("Explorer draws the chosen book, with the moves played past its end dashed", async ({ page }) => {
+  await page.goto("/dashboard/bookstore/caro-kann-defense");
+  await page.getByRole("button", { name: "Save to library" }).click();
+  await expect(page.getByText("In your library")).toBeVisible();
+
+  await page.goto("/dashboard/explorer?line=e2e4,c7c6,d2d4,d7d5");
+  await expect(page.locator('[data-square="d5"] [data-piece="bP"]')).toBeVisible();
+  await page.getByRole("combobox", { name: "Book", exact: true }).selectOption({ label: "Caro-Kann Defense (black)" });
+  const head = page.locator(".book-running-head").first();
+  await expect(head).toContainText("In book");
+  await expect(page.getByRole("button", { name: "Book", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("img", { name: "Spine and ribs of Caro-Kann Defense" })).toBeVisible();
+  await expect(page.locator("svg .out")).toHaveCount(0);
+
+  // a3 isn't in the book: the line leaves it there, dashed.
+  await page.locator('[data-square="a2"]').click();
+  await page.locator('[data-square="a3"]').click();
+  await expect(head).toContainText("Out of book");
+  await expect(page.locator("svg .out").first()).toBeAttached();
+
+  // The switch on the view's header goes back to the explored line.
+  await page.getByRole("button", { name: "Explored", exact: true }).click();
+  await expect(page.getByRole("img", { name: "Spine and ribs of the explored line" })).toBeVisible();
+});
+
 test("Explorer opened at a position replays the line that reaches it", async ({ page }) => {
   // After 1. e4 c5, the Sicilian Defense.
   const fen = "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";

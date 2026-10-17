@@ -33,8 +33,10 @@ Phase 4 rewrites this section).
 - **The book is the frame's, and each page renders its pages into it** with `Spread`
   (`src/components/book/Spread.tsx`): its left page and its right page. In the one-page form
   they are the page's two halves, side by side where both fit and stacked where not; stacked,
-  `stack` may show the left half alone, as the Library's list does. A page that isn't a
-  spread yet is wrapped in `InterimSpread`, which lays it across both pages.
+  `stack` may show the left half alone, as the Library's list does. A page that lays out its
+  one-page form itself passes it as `single`, as the Explorer does with its board on top
+  (`explorer.md`). A page that isn't a spread yet is wrapped in `InterimSpread`, which lays it
+  across both pages.
 - **A page below a chapter's own page is its second level** (`levelAt`,
   `src/lib/book/chapters.ts`), such as a Library book's page. In the spread a camera zooms in
   on it (`zoomCamera`, `src/lib/book/camera.ts`): the right page fills the window but for

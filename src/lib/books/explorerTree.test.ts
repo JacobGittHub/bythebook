@@ -1,7 +1,8 @@
 import { Chess } from "chess.js";
 import { describe, expect, it } from "vitest";
 import type { ExplorerMove } from "@/types/chess";
-import { EXPLORER_ALTERNATES, explorerTree } from "./explorerTree";
+import { buildMoveTreeFromLines } from "@/lib/chess/moveTree";
+import { EXPLORER_ALTERNATES, bookLineTree, explorerTree } from "./explorerTree";
 import { buildViewTree, heavyLeaf, pathTo } from "./viewTree";
 
 const stat = (san: string, uci: string, games: number): ExplorerMove => ({ san, uci, white: games, draws: 0, black: 0 });
@@ -42,5 +43,37 @@ describe("explorerTree", () => {
     expect(tree.root.children).toHaveLength(1 + EXPLORER_ALTERNATES);
     const bare = buildViewTree(explorerTree({ history, before: [null, null], next: [] }).source);
     expect(bare.nodes.map((node) => node.san)).toEqual([null, "e4", "c5"]);
+  });
+});
+
+describe("bookLineTree", () => {
+  const book = buildMoveTreeFromLines([played(["e4", "c5", "Nf3", "d6"]), played(["e4", "c5", "Nc3"])]);
+
+  it("marks the current position inside the book and leaves the book as it was", () => {
+    const { source, currentId, out } = bookLineTree(book, played(["e4", "c5", "Nf3"]));
+    expect(out).toBe(false);
+    const tree = buildViewTree(source);
+    expect(pathTo(tree.byId.get(currentId)!).map((node) => node.san)).toEqual([null, "e4", "c5", "Nf3"]);
+    expect(tree.nodes.some((node) => node.out)).toBe(false);
+    expect(tree.nodes).toHaveLength(6);
+  });
+
+  it("adds the moves played past the book's end from where they left it, marked out", () => {
+    const before = JSON.stringify(book);
+    const { source, currentId, out } = bookLineTree(book, played(["e4", "c5", "Nf3", "Nc6", "d4"]));
+    expect(out).toBe(true);
+    const tree = buildViewTree(source);
+    const current = tree.byId.get(currentId)!;
+    const path = pathTo(current);
+    expect(path.map((node) => node.san)).toEqual([null, "e4", "c5", "Nf3", "Nc6", "d4"]);
+    expect(path.map((node) => node.out)).toEqual([false, false, false, false, true, true]);
+    // The book's own move from there is still drawn beside them.
+    expect(tree.byId.get(path[3].id)!.children.map((node) => node.san).sort()).toEqual(["Nc6", "d6"]);
+    expect(JSON.stringify(book)).toBe(before);
+  });
+
+  it("is the whole book at the starting position", () => {
+    const { source, currentId, out } = bookLineTree(book, []);
+    expect([source, currentId, out]).toEqual([book, book.id, false]);
   });
 });

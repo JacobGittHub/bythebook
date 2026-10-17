@@ -1,6 +1,6 @@
 import { isWhiteMove } from "@/lib/books/viewTree";
 import { ICICLE_GAP, ICICLE_PAD, type IcicleLayout } from "@/lib/books/views/icicle";
-import { familyColor, markClasses, rulerColumns, type RenderProps } from "./viewParts";
+import { familyColor, markClasses, outClass, rulerColumns, type RenderProps } from "./viewParts";
 
 /** A block shows its move when it is at least this tall. */
 const LABELLED_HEIGHT = 11;
@@ -32,7 +32,7 @@ export function IcicleView({ tree, layout, marks, bind, family }: RenderProps & 
               height={height}
               rx={2}
               style={{ fill: familyColor(family.get(node.id)), fillOpacity: white ? 0.4 : 0.88 }}
-              {...bind(node, `bv-cell${markClasses(marks, node.id)}`)}
+              {...bind(node, `bv-cell${outClass(node)}${markClasses(marks, node.id)}`)}
             />
             {height >= LABELLED_HEIGHT && (
               <text

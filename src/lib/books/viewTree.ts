@@ -15,6 +15,8 @@ export type ViewSource = {
   games?: number | null;
   /** Sorts before its siblings: the Explorer's played line, which every view draws as its main line. */
   pinned?: boolean;
+  /** A move played past the end of the Explorer's chosen book, which the views draw dashed. */
+  out?: boolean;
   children: readonly ViewSource[];
 };
 
@@ -35,6 +37,8 @@ export type ViewNode = {
   /** Lines through this position: its leaves. */
   leaves: number;
   games: number | null;
+  /** Played past the end of the Explorer's chosen book (`ViewSource.out`). */
+  out: boolean;
 };
 
 export type ViewTree = {
@@ -87,6 +91,7 @@ export function buildViewTree(source: ViewSource): ViewTree {
       size: 0,
       leaves: 0,
       games: from.games ?? null,
+      out: from.out ?? false,
     };
     maxDepth = Math.max(maxDepth, depth);
     if (from.pinned) pinned.add(from.id);
