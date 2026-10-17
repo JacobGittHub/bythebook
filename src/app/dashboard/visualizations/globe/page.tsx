@@ -1,10 +1,10 @@
 import { LabHarness } from "@/components/lab/LabHarness";
-import { InterimSpread } from "@/components/book/Spread";
+import { VisualizationLevel } from "@/components/visualizations/VisualizationLevel";
 
 export default function GlobePrototypePage() {
   return (
-    <InterimSpread>
+    <VisualizationLevel id="globe">
       <LabHarness view="globe" />
-    </InterimSpread>
+    </VisualizationLevel>
   );
 }

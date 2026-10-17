@@ -1,16 +1,20 @@
 import { expect, test } from "./fixtures/test";
 
 test.describe("Small visualizations, as a guest", () => {
-  test("draw an example book with its credit, and switch views and books", async ({ page }) => {
+  test("draw an example book with its credit, and switch books and views", async ({ page, isMobile }) => {
     await page.goto("/dashboard/visualizations/books/spine");
     await expect(page.getByRole("img", { name: "Spine and ribs of Queen's Gambit" })).toBeVisible();
     await expect(page.getByRole("link", { name: /Wikibooks contributors/ })).toBeVisible();
 
-    await page.getByRole("radio", { name: "Metro map" }).click();
-    await expect(page.getByRole("heading", { name: "Metro map" })).toBeVisible();
-    await expect(page).toHaveURL(/\/books\/metro\?book=example%3Aqueens-gambit$/);
-
     await page.getByLabel("Book", { exact: true }).selectOption("example:french-defense");
+    await expect(page.getByRole("img", { name: "Spine and ribs of French Defense" })).toBeVisible();
+    await expect(page).toHaveURL(/\/books\/spine\?book=example%3Afrench-defense$/);
+
+    // Another view keeps the book: from the list on the left page, or on one page from the menu.
+    if (isMobile) await page.getByLabel("View", { exact: true }).selectOption("metro");
+    else await page.getByRole("link", { name: /^Metro map/ }).click();
+    await expect(page.getByRole("heading", { name: "Metro map", level: 1 })).toBeVisible();
+    await expect(page).toHaveURL(/\/books\/metro\?book=example%3Afrench-defense$/);
     await expect(page.getByRole("img", { name: "Metro map of French Defense" })).toBeVisible();
   });
 

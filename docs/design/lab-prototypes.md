@@ -7,19 +7,21 @@ build production work on them. They are not deletion candidates (see "Kept on pu
 **Files:** `src/components/lab/LabHarness.tsx` (the harness: one prototype and its controls
 per `view`), `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`,
 `src/components/lab/LabSpinner.tsx`, `src/components/lab/LabStats.tsx`,
-`src/components/lab/CanvasErrorBoundary.tsx`, and the pages
-`src/app/dashboard/visualizations/globe/page.tsx` and `…/map/page.tsx`
+`src/components/lab/CanvasErrorBoundary.tsx`, and the page
+`src/app/dashboard/visualizations/globe/page.tsx`
 
-**Where they are shown.** There is no Lab page any more. The Visualizations page
-(`/dashboard/visualizations`) lists each prototype under "Possible future visualizations",
-from `VISUALIZATIONS` in `src/lib/auth/access.ts`, and each has its own page that renders
-`LabHarness` with one view. They need an account; a guest sees them listed but can't open
-them. "Lab" below means these prototypes and `src/components/lab/`.
+**Where they are shown.** There is no Lab page any more. The Visualizations chapter
+(`/dashboard/visualizations`) lists the globe under "Prototypes", from `VISUALIZATIONS`
+in `src/lib/auth/access.ts`, and it has its own page, a second level of the chapter
+(`dashboard.md`, "Visualizations page"), that renders `LabHarness` with its view. It needs
+an account; a guest sees it listed but can't open it. The 2D map was taken off the chapter on
+2026-10-16: `ChessMap` and the harness's `"map"` view stay, but no page shows them. "Lab"
+below means these prototypes and `src/components/lab/`.
 
 A third prototype, the Labyrinth (the region map), has its own doc, `region-map.md`, and its
 own page frame, `RegionMapView`, instead of a view of the harness. It uses the shared pieces
-below. It is in active development, so the Visualizations page features it at the top
-instead of listing it with these.
+below. It is in active development, so the Visualizations chapter lists it first, under "In
+development", instead of with these.
 
 **What the prototypes share.**
 
@@ -55,6 +57,19 @@ A slowly rotating 3D globe of opening positions. It uses React Three Fiber, drei
 - `"synthetic"` builds a tree algorithmically with `buildTree()` or
   `buildSyntheticMoveTree()`.
 - `"eco"` builds from `buildDefaultCatalogTree()`.
+- `"book"` draws one book, the `bookTree` prop: its tree from the first position where it
+  branches (`bookTrunk()` in `LabHarness.tsx`; the page names the moves before it), since a
+  single first move puts the whole book on one spoke. `breadthFirst()` keeps its first
+  `nodeCount` positions, every move at one depth before any
+  at the next, and lays them out with `layoutRecursive()` to the depth kept, whatever
+  `depthShells` and `layout` say.
+
+**The page.** A reader picks "All openings" (the catalog) or "A book" and the book, from the
+example books and their own (`BookSelect`). Both draw with `DEFAULT_CONFIG` in
+`LabHarness.tsx`: the recursive layout, labels, popularity scaling, 160 nodes and three depth
+shells. The globe can't be clicked yet, so the position panel beside it (a board and "Add to
+book") is faded and marked "Coming soon". The sidebar of display options and the frame-rate
+overlay (`Stats`) show in debug mode only (`canDebug`, `src/lib/auth/debug.ts`).
 
 **Pipeline**
 
@@ -62,7 +77,7 @@ A slowly rotating 3D globe of opening positions. It uses React Three Fiber, drei
    sphere grouped by depth shell, or `"recursive"` (`layoutRecursive()`), which places each
    parent's children in an outward cone.
 2. **Cap.** Nodes are capped at `config.nodeCount`. The DFS order guarantees that parents
-   come before children, so slicing is safe.
+   come before children, so slicing is safe. A book is capped before layout, breadth first.
 3. **Weights.** `postProcessWeights()` sets `weight` to the **subtree size** (self plus all
    descendants). The comment on `TreeNode.weight` says "direct child count", but that is
    stale; the function computes subtree size. When `scaleByWeight` is on, node size and edge

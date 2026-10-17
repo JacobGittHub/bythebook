@@ -1,14 +1,24 @@
 "use client";
 
-import { useState, useRef, useCallback, type ReactNode } from "react";
+import { useState, useRef, useCallback, useMemo, type ReactNode } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { BoardDisplay } from "@/components/board/BoardDisplay";
+import { BookSelect, FIRST_EXAMPLE_BOOK } from "@/components/books/BookSelect";
+import { useExampleBooks } from "@/components/books/useExampleBooks";
 import type { GlobeConfig, RendererStats } from "@/components/lab/GlobeTest";
 import type { ChessMapConfig } from "@/components/lab/ChessMap";
 import { CanvasErrorBoundary } from "@/components/lab/CanvasErrorBoundary";
 import { LabSpinner } from "@/components/lab/LabSpinner";
 import { LabStats, type LabStatRow, type LabStatValues } from "@/components/lab/LabStats";
+import { Badge } from "@/components/shadcn/badge";
+import { Button } from "@/components/shadcn/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/shadcn/toggle-group";
+import { useLibraryBook, useLibraryBooks } from "@/context/Library";
+import { useViewer } from "@/context/Viewer";
+import { EXAMPLE_ID_PREFIX } from "@/lib/books/examples";
+import { startTree } from "@/lib/library/trees";
+import type { MoveNode } from "@/types/chess";
 
 // ── Lazy canvas ───────────────────────────────────────────────────────────────
 
@@ -49,16 +59,20 @@ const DEFAULT_MAP_CONFIG: ChessMapConfig = {
   showGhostLines: true,
 };
 
+/**
+ * What the globe draws, for every opening (the catalog) and for a book alike. A book is drawn
+ * breadth first from its start, up to `nodeCount` positions, whatever `depthShells` says.
+ */
 const DEFAULT_CONFIG: GlobeConfig = {
-  nodeCount: 40,
+  nodeCount: 160,
   rotateSpeed: 0.4,
   nodeSize: 0.07,
   depthShells: 3,
   edgeOpacity: 0.8,
-  dataSource: "synthetic",
-  layout: "fibonacci",
-  showLabels: false,
-  scaleByWeight: false,
+  dataSource: "eco",
+  layout: "recursive",
+  showLabels: true,
+  scaleByWeight: true,
   nodeEntryAnim: "none",
   nodeAnimDuration: 0.4,
   buildAnim: false,
@@ -153,6 +167,22 @@ function Section({ title, defaultOpen = false, children }: { title: string; defa
   );
 }
 
+/**
+ * The moves every line of a book starts with, and the position after them, where the book first
+ * branches. The globe draws from there, since a single move would put the whole book on one
+ * spoke, off to one side.
+ */
+function bookTrunk(root: MoveNode): { moves: string; branch: MoveNode } {
+  const sans: string[] = [];
+  let node = root;
+  while (node.children.length === 1) {
+    node = node.children[0];
+    const ply = sans.length;
+    sans.push(ply % 2 === 0 ? `${ply / 2 + 1}.${node.san}` : `${node.san}`);
+  }
+  return { moves: sans.join(" "), branch: node };
+}
+
 function priorityLabel(v: number) {
   if (v <= 0.05) return "BFS";
   if (v >= 0.95) return "DFS";
@@ -168,17 +198,30 @@ function priorityLabel(v: number) {
 export type LabView = "globe" | "map";
 
 const VIEW_TITLES: Record<LabView, string> = {
-  globe: "Globe (R3F)",
-  map: "2D Map",
+  globe: "Globe",
+  map: "2D map",
 };
 
-const VIEW_NOTES: Record<LabView, string> = {
-  globe: "Stats overlay top-left — click to cycle FPS / MS / MB",
-  map: "A possible future visualization, kept as a prototype",
-};
-
+/**
+ * One prototype on its page. The globe draws every named opening or one book, which the reader
+ * picks; its display options, and the frame-rate overlay, are for debug mode only.
+ */
 export function LabHarness({ view }: { view: LabView }) {
+  const { debug } = useViewer();
   const [config, setConfig] = useState<GlobeConfig>(DEFAULT_CONFIG);
+  const [bookId, setBookId] = useState(FIRST_EXAMPLE_BOOK);
+  const showBook = view === "globe" && config.dataSource === "book";
+  const { entries, books: examples, failed } = useExampleBooks(showBook ? bookId : null);
+  const { books: ownBooks } = useLibraryBooks();
+  const isExample = bookId.startsWith(EXAMPLE_ID_PREFIX);
+  const { book: ownBook, status: ownStatus } = useLibraryBook(showBook && !isExample ? bookId : null);
+  const book = isExample ? (examples.get(bookId) ?? null) : ownBook;
+  const trunk = useMemo(() => (book ? bookTrunk(startTree(book.trees)) : null), [book]);
+  const bookMissing = isExample
+    ? failed && "The example books didn't load."
+    : ownStatus === "missing"
+      ? "This book isn't in your library."
+      : ownStatus === "failed" && "The book couldn't be opened.";
   const [mapConfig, setMapConfig] = useState<ChessMapConfig>(DEFAULT_MAP_CONFIG);
   const [animResetToken, setAnimResetToken] = useState(0);
   const [animProgress, setAnimProgress] = useState({ visible: 0, total: 0 });
@@ -199,27 +242,58 @@ export function LabHarness({ view }: { view: LabView }) {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center gap-4 pb-3">
-        <div>
-          <h1 className="font-heading text-base font-semibold">{VIEW_TITLES[view]} · prototype</h1>
-          <p className="text-xs text-muted-foreground">{VIEW_NOTES[view]}</p>
+      <header className="flex flex-wrap items-center gap-x-4 gap-y-2 pb-3">
+        <div className="flex items-center gap-2">
+          <h1 className="font-heading text-[30px] leading-[1.15] font-semibold tracking-[-0.01em]">{VIEW_TITLES[view]}</h1>
+          <Badge variant="outline" className="font-normal text-muted-foreground">
+            Prototype
+          </Badge>
         </div>
-        <Link
-          href="/dashboard/visualizations"
-          className="ml-auto rounded-md px-2.5 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          ← All visualizations
-        </Link>
-      </div>
+        {view === "globe" && (
+          <div className="flex flex-wrap items-center gap-2">
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              aria-label="Show"
+              value={config.dataSource === "synthetic" ? "" : config.dataSource}
+              onValueChange={(next) => {
+                if (next === "eco" || next === "book") setConfig((c) => ({ ...c, dataSource: next }));
+              }}
+            >
+              <ToggleGroupItem value="eco" className="px-2.5">All openings</ToggleGroupItem>
+              <ToggleGroupItem value="book" className="px-2.5">A book</ToggleGroupItem>
+            </ToggleGroup>
+            {showBook && <BookSelect value={bookId} onChange={setBookId} examples={entries} ownBooks={ownBooks} />}
+          </div>
+        )}
+        {showBook && trunk?.moves && (
+          <p className="basis-full text-xs text-muted-foreground">
+            Every line starts <span className="font-mono text-foreground">{trunk.moves}</span>, so the globe starts there.
+          </p>
+        )}
+      </header>
 
       {/* Body */}
-      <div className="flex flex-1 gap-2 overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 md:flex-row">
         {/* Canvas */}
-        <div data-slot="panel" className="relative flex-1 overflow-hidden rounded-md border">
+        <div data-slot="panel" className="relative min-h-80 flex-1 overflow-hidden rounded-md border">
           {view === "globe" && (
             <CanvasErrorBoundary>
-              <GlobeTest config={config} onStats={handleStats} animResetToken={animResetToken} onProgress={handleProgress} />
+              <GlobeTest
+                config={config}
+                onStats={handleStats}
+                animResetToken={animResetToken}
+                onProgress={handleProgress}
+                bookTree={trunk?.branch ?? null}
+                showStats={debug}
+              />
             </CanvasErrorBoundary>
+          )}
+          {showBook && !book && (
+            <p className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+              {bookMissing || "Opening the book…"}
+            </p>
           )}
           {view === "map" && (
             <CanvasErrorBoundary>
@@ -267,15 +341,38 @@ export function LabHarness({ view }: { view: LabView }) {
           </div>
         )}
 
-        {/* Sidebar — Globe view only */}
+        {/* The position picked on the globe, once the globe can be clicked. */}
         {view === "globe" && (
-          <div className="flex w-52 flex-col gap-2.5 overflow-y-auto rounded-md bg-sidebar p-2.5 text-sidebar-foreground">
+          <aside aria-label="Position" className="flex flex-none flex-col gap-2 md:w-60">
+            <div className="flex items-center gap-2">
+              <h2 className="book-sc">Position</h2>
+              <Badge variant="outline" className="font-normal text-muted-foreground">
+                Coming soon
+              </Badge>
+            </div>
+            <div aria-hidden className="pointer-events-none flex flex-col gap-2 opacity-40 grayscale select-none">
+              <div className="mx-auto w-full max-w-60">
+                <BoardDisplay size="md" />
+              </div>
+              <Button size="sm" variant="outline" disabled tabIndex={-1}>
+                Add to book
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Picking a position on the globe is coming soon. Its board will show here, ready to add to a book.
+            </p>
+          </aside>
+        )}
+
+        {/* Sidebar — Globe view, debug mode only */}
+        {view === "globe" && debug && (
+          <div className="flex w-52 flex-none flex-col gap-2.5 overflow-y-auto rounded-md bg-sidebar p-2.5 text-sidebar-foreground">
 
             {/* ── Always-visible quick controls ─────────────────────────── */}
             <Segments
               label="Catalog"
               value={config.dataSource}
-              options={[{ value: "synthetic", label: "Synthetic" }, { value: "eco", label: "ECO" }]}
+              options={[{ value: "synthetic", label: "Synthetic" }, { value: "eco", label: "ECO" }, { value: "book", label: "Book" }]}
               onChange={(v) => setConfig((c) => ({ ...c, dataSource: v }))}
             />
             <Segments
@@ -373,7 +470,7 @@ export function LabHarness({ view }: { view: LabView }) {
 
             <Divider />
 
-            <button onClick={() => { setConfig(DEFAULT_CONFIG); setAnimResetToken(0); }}
+            <button onClick={() => { setConfig({ ...DEFAULT_CONFIG, dataSource: config.dataSource }); setAnimResetToken(0); }}
               className="rounded-md bg-sidebar-accent px-2.5 py-1.5 text-xs text-sidebar-muted-foreground transition-colors hover:text-sidebar-foreground">
               Reset defaults
             </button>

@@ -167,6 +167,12 @@ it, replacing the book slide. On 2026-10-16 the user changed D8's order to that 
   one with a preview, its summary and "Jump to page". Each one opens on a page of its own,
   a second level (D8) whose left page lists the visualizations to switch between (the
   user's answer of 2026-10-15).
+  From the user's answers of 2026-10-16, on starting Visualizations: the preview is a
+  screenshot of each visualization for now. Only the book views' own pages are rebuilt for
+  the book; the Labyrinth, the Treemap and the prototypes keep their page frames on the right
+  page. The list on the left page switches between the book views and keeps the book, so
+  their pages lose the rail. Later the same day the user took the 2D map off the chapter, and gave the globe a choice
+  of every opening or one book (`docs/design/lab-prototypes.md`).
 - D19. **The book comes now** (Q9). Everything else builds on it, so `deployment.md`'s
   Phases 6 (phones and themes) and 7 (launch, with the Overview's demos) are done on the book.
 
@@ -319,8 +325,15 @@ and get to the test of turns").
       beside the Labyrinth's; `bookLineTree` adds the moves played past the book's end,
       which every view draws dashed. The screenshot baseline `explorer-start.png` is out of
       date until Phase 4's new baselines.
-- [ ] (agent) Visualizations (D18): the contents and the preview as a spread, and each
+- [x] (agent) Visualizations (D18): the contents and the preview as a spread, and each
       visualization's own page in the book.
+      Done: the contents are grouped as the mockup's (`VISUALIZATION_GROUPS`), and the
+      preview is a screenshot per theme, taken by `npm run demos:shots`. Each visualization's
+      page is a second level (`VisualizationLevel`); the way back picks it again
+      (`?show=`). A book view's page is laid out as a Library book's, its measures and
+      source below the first screen; on one page a View menu stands in for the list. The
+      chapter column gives the count of visualizations. `RouteCard` and `ResizeHandle` are
+      unused now, and listed as kept on purpose in `AGENTS.md`.
 - [ ] (agent) Settings (D10, D13): appearance, page turns and the vibes switch on the left;
       your books, the account and the bug report on the right, and the deployment notes, a
       thank-you to Lichess and a message from the developer.

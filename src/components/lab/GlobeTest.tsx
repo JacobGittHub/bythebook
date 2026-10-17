@@ -18,7 +18,7 @@ export type GlobeConfig = {
   nodeSize: number;
   depthShells: number;
   edgeOpacity: number;
-  dataSource: "synthetic" | "eco";
+  dataSource: "synthetic" | "eco" | "book";
   layout: "fibonacci" | "recursive";
   showLabels: boolean;
   buildAnim: boolean;
@@ -238,6 +238,33 @@ function layoutRecursive(root: MoveNode, maxDepth: number): TreeNode[] {
 
   place(root, 0, null, [0, 0, 0]);
   return out;
+}
+
+// ── Book: breadth first ──────────────────────────────────────────────────────
+
+/**
+ * A copy of `root` holding its first `limit` positions after the root, taken breadth first:
+ * every move at one depth before any at the next, siblings in the book's order. Its depth is
+ * the deepest move kept, which `layoutRecursive` is given so nothing kept is cut.
+ */
+function breadthFirst(root: MoveNode, limit: number): { tree: MoveNode; depth: number } {
+  const copy = (node: MoveNode): MoveNode => ({ ...node, children: [] });
+  const tree = copy(root);
+  const queue: { from: MoveNode; to: MoveNode; depth: number }[] = [{ from: root, to: tree, depth: 0 }];
+  let kept = 0;
+  let depth = 0;
+  for (let i = 0; i < queue.length && kept < limit; i++) {
+    const { from, to, depth: at } = queue[i];
+    for (const child of from.children) {
+      if (kept >= limit) break;
+      const next = copy(child);
+      to.children.push(next);
+      kept++;
+      depth = at + 1;
+      queue.push({ from: child, to: next, depth: at + 1 });
+    }
+  }
+  return { tree, depth };
 }
 
 // ── Build order (round-robin scheduler) ──────────────────────────────────────
@@ -593,15 +620,26 @@ export default function GlobeTest({
   onStats,
   animResetToken,
   onProgress,
+  bookTree = null,
+  showStats = true,
 }: {
   config: GlobeConfig;
   onStats: (s: RendererStats) => void;
   animResetToken: number;
   onProgress?: (visible: number, total: number) => void;
+  /** The book's tree from where the globe starts, drawn when `config.dataSource` is "book". */
+  bookTree?: MoveNode | null;
+  /** The frame-rate overlay, for debug mode. */
+  showStats?: boolean;
 }) {
   const nodes = useMemo(() => {
     let result: TreeNode[];
-    if (config.layout === "recursive") {
+    if (config.dataSource === "book") {
+      // A book is drawn from its start, breadth first, up to the node count, whatever its depth.
+      if (!bookTree) return [];
+      const { tree, depth } = breadthFirst(bookTree, config.nodeCount);
+      result = layoutRecursive(tree, depth);
+    } else if (config.layout === "recursive") {
       const tree = config.dataSource === "eco"
         ? buildDefaultCatalogTree()
         : buildSyntheticMoveTree(config.nodeCount, config.depthShells);
@@ -615,7 +653,7 @@ export default function GlobeTest({
     // so slicing is safe — all parentId references within the slice remain valid.
     if (result.length > config.nodeCount) result = result.slice(0, config.nodeCount);
     return postProcessWeights(result);
-  }, [config.layout, config.dataSource, config.nodeCount, config.depthShells]);
+  }, [config.layout, config.dataSource, config.nodeCount, config.depthShells, bookTree]);
 
   const buildOrder = useMemo(
     () => computeBuildOrder(nodes, config.buildAnimPriority, config.engineBias),
@@ -706,7 +744,7 @@ export default function GlobeTest({
   return (
     <Canvas camera={{ position: [0, 0, 7], fov: 55 }} style={{ background: "#070711" }}>
       <AdaptiveDpr pixelated />
-      <Stats />
+      {showStats && <Stats />}
       <StatsCollector onStats={onStats} />
       <AnimationController active={isPlaying} speed={config.buildAnimSpeed} onIncrement={handleIncrement} />
       <ambientLight intensity={1.0} />

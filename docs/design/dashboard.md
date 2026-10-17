@@ -5,8 +5,8 @@
 `src/components/book/` (the book frame, its parts and its turns), `src/lib/book/` (the book's
 layout and turns),
 `src/components/overview/OverviewSpread.tsx`,
-`src/app/dashboard/visualizations/page.tsx`, `src/components/ui/RouteCard.tsx`,
-`src/components/books/BookViewPage.tsx` (the small visualizations), `src/components/library/`
+`src/components/visualizations/` (the Visualizations chapter),
+`src/components/books/BookViewPage.tsx` (a book view's own page), `src/components/library/`
 (the Library and the Bookstore), `src/lib/auth/access.ts` (what the strip and both pages
 list), `src/app/globals.css` (theme tokens), `src/context/Appearance.tsx` and
 `src/lib/appearance.ts` (the theme, vibes and motion settings), `src/components/ui/Panel.tsx`,
@@ -143,21 +143,36 @@ The Overview is the info page that a landing page would otherwise be (`/` redire
 
 ## Visualizations page
 
-A route button (`RouteCard`, tagged "Jump to page") for each entry in `VISUALIZATIONS`: the
-`featured` entry first, in a larger card (the Labyrinth, while it is in active development),
-then the live Treemap, the `small` visualizations as their own group, and the prototypes
-under "Possible future visualizations". A guest sees the account-only entries listed but
-can't open them.
+The Visualizations chapter (`plans/book-ui.md` D18) lists `VISUALIZATIONS`
+(`src/lib/auth/access.ts`) group by group, in the order of `VISUALIZATION_GROUPS`. Its parts
+are in `src/components/visualizations/`.
+
+- **Its own page is a spread** (`VisualizationsSpread`). The left page is the contents: each
+  visualization a row with its name, a dotted leader and its figure (small, full page, or
+  Account for a guest on one that needs an account). The right page shows the picked one: its
+  screenshot, its summary and "Jump to page". Presses work as on the Overview. A guest is
+  shown the account-only ones with a sign-in offer in place of the jump. On a short page the
+  line under the title goes and the rows tighten (`.visualizations-contents` in
+  `globals.css`). `?show=<id>` picks one, as the way back from its page does.
+- **The screenshots** are taken from the running app by `npm run demos:shots`
+  (`scripts/demos/shootVisualizations.ts`) into `public/visualizations/`, one per theme
+  (`visualizationShot`); a book view's is cut about its moves. They stand in for previews
+  for now, and a missing one shows a placeholder.
+- **Each visualization opens on a page of its own,** the chapter's second level
+  (`VisualizationLevel`), which turns and zooms in as a Library book's page does (D8). The
+  part of the left page in view lists the visualizations under "Back to all visualizations",
+  and another one re-inks the right page. The Labyrinth, the Treemap and the globe prototype
+  keep their own page frames on the right page.
 
 **Small visualizations** are the five book views (`explorer.md`, "Book views"), one page each
-at `/dashboard/visualizations/books/<view>` (`BookViewPage`). Guests can open them. A page
-draws one book beside a board: an example book (`src/lib/books/examples.ts`), or one of the
-viewer's own books, from their library. The rail switches views without leaving the page and
-keeps the book, and the address follows (`?book=`), so a link reopens the same book. The
-panel shows the selected or hovered position, what a store card will say about the book
-(positions against `MAX_BOOK_POSITIONS`, lines, average line, clashes, the unconnected flag,
-from `src/lib/books/measures.ts`), and, for an example book, how it was made and whom it
-credits.
+at `/dashboard/visualizations/books/<view>` (`BookViewPage`), laid out as a Library book's
+page. Its first screen is the view's name and summary, the book picker, and the book in that
+view beside a board (`BookReader`, its view fixed); below are the book's measures
+(`BookMeasures`) and, for an example book, how it was made and whom it credits. Guests can
+open them. A page draws an example book (`src/lib/books/examples.ts`) or one of the viewer's
+own, from their library. The list's other book views keep the book, and the address follows
+it (`?book=`), so a link reopens the same book; on one page, where the list isn't shown, a
+View menu switches.
 
 **Example books** are static files in `public/books/examples/`, written by
 `npm run books:examples` (`scripts/buildExampleBooks.ts`) and served by the CDN, so showing

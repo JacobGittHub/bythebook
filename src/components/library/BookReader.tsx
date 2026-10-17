@@ -26,6 +26,8 @@ type Props = {
    * views as buttons and gives the drawing more room, for a book's own page.
    */
   size: "compact" | "large";
+  /** A view fixed by the page, as on a book view's own page, in place of the reader's picker. */
+  view?: BookViewId;
   /** Buttons for the selected position, such as Remove move. */
   positionActions?: (selected: ViewNode) => ReactNode;
   /** The drawing takes the height the reader is given, as on a page of the book, not a set one. */
@@ -40,8 +42,9 @@ type Props = {
  * hovered position. On a phone the board comes first, since a phone has height to spare and
  * not width. Until the views draw several trees, it shows the tree from the starting position.
  */
-export function BookReader({ book, size, positionActions, fill = false, board = true, className }: Props) {
-  const [view, setView] = useState<BookViewId>(DEFAULT_READER_VIEW);
+export function BookReader({ book, size, view: fixedView, positionActions, fill = false, board = true, className }: Props) {
+  const [pickedView, setView] = useState<BookViewId>(DEFAULT_READER_VIEW);
+  const view = fixedView ?? pickedView;
   const [zoom, setZoom] = useState<number>(FIT_ZOOM);
   const tree = useMemo(() => buildViewTree(startTree(book.trees)), [book.trees]);
   const { selectedId, spineEndId, selected, hovered, shown, select, setHovered } = useBookSelection(tree, book.id);
@@ -91,7 +94,7 @@ export function BookReader({ book, size, positionActions, fill = false, board = 
     <div className={cn("flex min-w-0 flex-col gap-3 md:flex-row", fill && "min-h-0 flex-1", className)}>
       <div className={cn("flex min-w-0 flex-1 flex-col gap-2", fill && "min-h-0")}>
         <div className="flex flex-wrap items-center gap-2">
-          {picker}
+          {!fixedView && picker}
           <span className="flex-1" />
           <ZoomControls zoom={zoom} onChange={setZoom} />
         </div>

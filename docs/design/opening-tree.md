@@ -7,9 +7,8 @@ successor. This tree stays until a successor ships and the user says otherwise.
 `OpeningTreeFull.tsx` (the radial tree) and `TreeNodePanel.tsx` (the side panel, a wrapper
 around `PositionPanel.tsx`).
 
-The Treemap is the one live visualization on the Visualizations page
-(`/dashboard/visualizations`), which has a route button for each visualization and features
-the Labyrinth above it. Until
+The Treemap is the Visualizations chapter's opening tree (`/dashboard/visualizations`), on a
+page of its own below the chapter's contents (`dashboard.md`, "Visualizations page"). Until
 2026-10-01 the tree was the dashboard's Overview at `/dashboard`, which is now an info page.
 Until 2026-10-02 the page was called the Atlas; that name now belongs to the planned static
 region map (`plans/atlas.md`), and the old addresses redirect here (`next.config.ts`).

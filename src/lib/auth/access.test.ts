@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { NAV_ITEMS, VIBES_CHAPTER, VISUALIZATIONS, bookContents, requiresAccount, visibleNavItems } from "./access";
+import {
+  NAV_ITEMS,
+  VIBES_CHAPTER,
+  VISUALIZATIONS,
+  VISUALIZATION_GROUPS,
+  bookContents,
+  requiresAccount,
+  visibleNavItems,
+} from "./access";
 
 const ALL_PAGES = [...NAV_ITEMS, ...VISUALIZATIONS];
 
@@ -25,14 +33,18 @@ describe("the page lists", () => {
     }
   });
 
-  it("feature at most one visualization", () => {
-    expect(VISUALIZATIONS.filter((page) => page.featured).length).toBeLessThanOrEqual(1);
-  });
-
-  it("keep every visualization under the Visualizations page", () => {
+  it("keep every visualization under the Visualizations page, its id ending the address", () => {
     for (const page of VISUALIZATIONS) {
       expect(page.href.startsWith("/dashboard/visualizations/")).toBe(true);
+      expect(page.href.endsWith(`/${page.id}`)).toBe(true);
     }
+    const ids = VISUALIZATIONS.map((page) => page.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("list the visualizations group by group, in the groups' order", () => {
+    const order = VISUALIZATIONS.map((page) => VISUALIZATION_GROUPS.indexOf(page.group));
+    expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 });
 

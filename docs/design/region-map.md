@@ -1,7 +1,7 @@
 # Region map (the Labyrinth, a lab prototype)
 
-**Status:** A prototype on the Visualizations page, the **Labyrinth**, featured at the top
-of it, above the Treemap and the other prototypes (`dashboard.md`, "Visualizations page"). The map itself works:
+**Status:** A prototype in the Visualizations chapter, the **Labyrinth**, listed first, under
+"In development" (`dashboard.md`, "Visualizations page"). The map itself works:
 it lays out, zooms, pans and opens "Other", and its page names the opening the view is inside
 and shows that position in a side panel. Focus, pinning and the map's own controls are not
 built yet, and the sections on them below describe the design, not the code. The name
@@ -331,7 +331,7 @@ when the position or its load status changes, and nothing in the page reaches in
 
 ## Lab integration
 
-- **Its own page frame.** The globe and the 2D map are views of `LabHarness`. The region map
+- **Its own page frame.** The globe is a view of `LabHarness`. The region map
   has `RegionMapView` instead, because its title bar and panel don't fit the harness's
   layout. It shares `LabSpinner`, `LabStats` and `CanvasErrorBoundary` with the harness.
   `RegionMap` cleans up its animation frame, `ResizeObserver`, listeners, retry timer and

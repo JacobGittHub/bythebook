@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { BookViewPage } from "@/components/books/BookViewPage";
 import { isBookViewId } from "@/lib/books/views";
-import { InterimSpread } from "@/components/book/Spread";
 
 type Props = {
   params: Promise<{ view: string }>;
@@ -9,18 +8,12 @@ type Props = {
   searchParams: Promise<{ book?: string }>;
 };
 
-// A small visualization: one book in one of the five book views, reached from the
-// Visualizations page. The example books are static files, and the viewer's own are read in
+// A book view's own page: one book in one of the five book views, a page of the
+// Visualizations chapter. The example books are static files, and the viewer's own are read in
 // the browser, from the library.
 export default async function BookViewRoute({ params, searchParams }: Props) {
   const [{ view }, { book }] = await Promise.all([params, searchParams]);
   if (!isBookViewId(view)) notFound();
 
-  return (
-    <InterimSpread>
-      <div className="h-full min-h-0">
-        <BookViewPage view={view} initialBookId={book ?? null} />
-      </div>
-    </InterimSpread>
-  );
+  return <BookViewPage key={view} view={view} initialBookId={book ?? null} />;
 }

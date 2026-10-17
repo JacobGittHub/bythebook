@@ -57,6 +57,7 @@ which is not in development.
 | Fill `position_cache` for the catalog | `npm run cache:prefill` (calls Lichess for hours; the user runs it, agents use `-- --dry-run`) |
 | Make beta invite or reset codes | `npm run invites:create` (writes to the live database; the user runs it) |
 | Record the Overview's demo GIFs | `npm run demos:record` (with the dev server running; `-- <name>` for one demo) |
+| Take the Visualizations chapter's screenshots | `npm run demos:shots` (with the dev server running; `-- <id>` for one visualization) |
 | Regenerate DB types | `npm run db:types` (see "Database changes" below) |
 
 To check a change, run the typecheck, `npm run test:agent`, and lint on the files you
@@ -110,8 +111,9 @@ failure in its report like any failing test.
 - `src/app/` holds routes, and `src/app/api/` holds route handlers.
 - `src/components/` is organized by feature: `board/`, `openings/`, `repertoire/`,
   `books/` (the book views), `library/` (the Library and Bookstore pages), `training/`,
-  `puzzles/`, `overview/`, `book/` (the dashboard's book frame and its parts), `layout/` (the
-  bug report button), `lab/` (the visualization prototypes). `shadcn/` holds shadcn/ui's components, added with `npx shadcn@latest add`
+  `puzzles/`, `overview/`, `visualizations/` (the Visualizations chapter), `book/` (the
+  dashboard's book frame and its parts), `layout/` (the bug report button), `lab/` (the
+  visualization prototypes). `shadcn/` holds shadcn/ui's components, added with `npx shadcn@latest add`
   and owned from then on (`docs/architecture.md` § "Dependencies").
 - `src/lib/chess/` holds chess logic and the opening catalog. `src/lib/books/` holds what is
   worked out about books, the book views' layouts and the example books; `src/lib/book/`
@@ -273,9 +275,11 @@ them, unless the user brings it up.
 | `src/components/repertoire/OpeningTreeFull.tsx` | It is the live opening tree on the Treemap page (under Visualizations) | A successor ships and the user says so |
 | `src/components/openings/OpeningMiniTree.tsx` | It was the explorer sidebar tree until the book views replaced it on 2026-10-06, and the user wanted it kept as-is | The user says so |
 | `d3`, `@types/d3` | `OpeningTreeFull` uses them | `OpeningTreeFull` is removed |
-| `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`, `src/components/lab/LabHarness.tsx` | They are prototypes the user may revisit, listed on the Visualizations page as possible future ones | The user says so |
+| `src/components/lab/GlobeTest.tsx`, `src/components/lab/ChessMap.tsx`, `src/components/lab/LabHarness.tsx` | They are prototypes the user may revisit. The globe is listed on the Visualizations page; the 2D map (`ChessMap`) was taken off it on 2026-10-16 and is shown nowhere | The user says so |
 | `three`, `@react-three/fiber`, `@react-three/drei` | `GlobeTest` uses them | The user says so |
 | `@xyflow/react`, `framer-motion` | They are unused, but kept for possible prototype work | The user says so |
+| `src/components/ui/RouteCard.tsx` | It was the Visualizations page's buttons until that page became contents (2026-10-16), and the route-button rule above names it | The user says so |
+| `src/components/ui/ResizeHandle.tsx` | It resized the Explorer's side panels until the Explorer became a spread with fixed slots (2026-10-16) | The user says so |
 
 ## Read before working on…
 

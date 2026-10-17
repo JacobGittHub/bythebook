@@ -27,7 +27,8 @@
     "books:examples": "tsx --env-file=.env.local scripts/buildExampleBooks.ts",
     "invites:create": "tsx --env-file=.env.local scripts/createInvites.ts",
     "db:types": "supabase gen types typescript --project-id bcpkifxnjfjzfrqvpkby > src/types/database.ts",
-    "demos:record": "tsx --env-file=.env.local scripts/demos/recordDemos.ts"
+    "demos:record": "tsx --env-file=.env.local scripts/demos/recordDemos.ts",
+    "demos:shots": "tsx --env-file=.env.local scripts/demos/shootVisualizations.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

@@ -17,10 +17,6 @@ export type PageLink = {
   status: PageStatus;
   /** One line for the page's button. */
   summary: string;
-  /** Shown first, in a larger button, on the page that lists it. */
-  featured?: boolean;
-  /** A small visualization: one book in one of the book views, listed in its own group. */
-  small?: boolean;
 };
 
 /** A chapter's icon in the book's narrow chapter column (plans/book-ui.md D15), by name. */
@@ -149,23 +145,46 @@ export function bookContents(signedIn: boolean): ContentsEntry[] {
     });
 }
 
+/** The groups of the Visualizations chapter's contents (plans/book-ui.md D18), in order. */
+export const VISUALIZATION_GROUPS = ["In development", "Book views", "Opening tree", "Prototypes"] as const;
+export type VisualizationGroup = (typeof VISUALIZATION_GROUPS)[number];
+
 /**
- * The pages behind the Visualizations page's buttons. A `prototype` is a possible future
- * visualization, kept from the former Lab, except the featured Labyrinth, which is in active
- * development. The small visualizations are the book views (`src/lib/books/views/`), each
- * on its own page.
+ * A visualization, on a page of its own below the Visualizations chapter. Its `id` is the
+ * address's last part, and names its screenshot (`visualizationShot`).
  */
-export const VISUALIZATIONS: PageLink[] = [
+export type Visualization = PageLink & { id: string; group: VisualizationGroup };
+
+/**
+ * The visualizations, as the Visualizations chapter lists them. A `prototype` is a possible
+ * future visualization, kept from the former Lab, except the Labyrinth, which is in active
+ * development. The book views (`src/lib/books/views/`) are the small ones, one book at a time.
+ */
+export const VISUALIZATIONS: Visualization[] = [
   {
+    id: "labyrinth",
+    group: "In development",
     href: "/dashboard/visualizations/labyrinth",
     label: "Labyrinth",
     access: "account",
     status: "prototype",
-    featured: true,
     summary:
       "Every move as a region inside the move before it, sized by how often masters played it. Zoom in to walk deeper into a line, with the opening's name above the map and its position on a board beside it.",
   },
+  ...BOOK_VIEWS.map(
+    (view): Visualization => ({
+      id: view.id,
+      group: "Book views",
+      href: `/dashboard/visualizations/books/${view.id}`,
+      label: view.label,
+      access: "everyone",
+      status: "live",
+      summary: view.summary,
+    }),
+  ),
   {
+    id: "treemap",
+    group: "Opening tree",
     href: "/dashboard/visualizations/treemap",
     label: "Treemap",
     access: "everyone",
@@ -173,31 +192,21 @@ export const VISUALIZATIONS: PageLink[] = [
     summary:
       "Every named opening as one radial tree. Pan, search, and click a position to see its board and master statistics.",
   },
-  ...BOOK_VIEWS.map(
-    (view): PageLink => ({
-      href: `/dashboard/visualizations/books/${view.id}`,
-      label: view.label,
-      access: "everyone",
-      status: "live",
-      small: true,
-      summary: view.summary,
-    }),
-  ),
   {
+    id: "globe",
+    group: "Prototypes",
     href: "/dashboard/visualizations/globe",
     label: "Globe",
     access: "account",
     status: "prototype",
-    summary: "Openings placed on a rotating 3D globe.",
-  },
-  {
-    href: "/dashboard/visualizations/map",
-    label: "2D map",
-    access: "account",
-    status: "prototype",
-    summary: "Openings as branches on a flat map that shows more detail as you zoom.",
+    summary: "Openings placed on a rotating 3D globe: every named opening, or one book from its start.",
   },
 ];
+
+/** Where a visualization's screenshot is, in the theme given: `npm run demos:shots` takes them. */
+export function visualizationShot(id: string, theme: "light" | "dark"): string {
+  return `/visualizations/${id}-${theme}.webp`;
+}
 
 /** The book's pages (its tabs) for this viewer, in book order. */
 export function visibleNavItems(signedIn: boolean): NavItem[] {

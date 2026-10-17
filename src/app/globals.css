@@ -813,6 +813,13 @@ body {
   .overview-contents h1 { font-size: 28px; }
   .overview-chapter { padding-block: 4px; }
 }
+/* The Visualizations chapter's contents fit the left page the same way (plans/book-ui.md D18). */
+.visualizations-contents[data-fit] { container: visualizations-contents / size; }
+@container visualizations-contents (height < 600px) {
+  .visualizations-lede { display: none; }
+  .visualizations-contents h1 { font-size: 28px; }
+  .visualizations-contents .visualization-row { padding-block: 3px; }
+}
 
 /* ── Streamed text (the Overview's demo description) ───────────────────── */
 /* Each word fades in after the one before it, so a paragraph writes itself out without
