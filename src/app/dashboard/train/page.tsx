@@ -1,25 +1,14 @@
-import { TrainBookList } from "@/components/training/TrainBookList";
-import { Panel } from "@/components/ui/Panel";
-import { InterimSpread } from "@/components/book/Spread";
+import { PlaceholderSpread } from "@/components/book/PlaceholderSpread";
 
+/** The trainer's chapter, coming soon (plans/book-ui.md D11). A book's Train button still opens its scaffold session. */
 export default function TrainPage() {
   return (
-    <InterimSpread>
-      <main className="space-y-4">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold">Select a training book</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Choose the repertoire branch you want to drill today.
-          </p>
-        </div>
-        <Panel className="border-dashed px-3 py-2">
-          <p className="text-sm font-semibold">Coming soon</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            The trainer is still being built. What is here is an early scaffold.
-          </p>
-        </Panel>
-        <TrainBookList />
-      </main>
-    </InterimSpread>
+    <PlaceholderSpread
+      line="Drills from your books."
+      text={[
+        "The computer will play into the lines of your books and you answer from memory, with the positions you miss coming back more often.",
+        "It will be a spread like the Explorer's: the board on the left page, the drill and your answers on the right.",
+      ]}
+    />
   );
 }

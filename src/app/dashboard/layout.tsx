@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { BookFrame } from "@/components/book/BookFrame";
 import { BrowserBooksNotice } from "@/components/repertoire/BrowserBooksOffer";
 import { Toaster } from "@/components/shadcn/sonner";
@@ -11,15 +10,7 @@ import { bookContents, visibleNavItems } from "@/lib/auth/access";
 import { canDebug } from "@/lib/auth/debug";
 import { getViewer } from "@/lib/auth/viewer";
 import { CHAPTERS_COOKIE, FORM_COOKIE } from "@/lib/book/frameCss";
-import { createServerSupabaseClient } from "@/lib/supabase";
-
-async function signOutAction() {
-  "use server";
-
-  const supabase = await createServerSupabaseClient();
-  await supabase.auth.signOut();
-  redirect("/dashboard");
-}
+import { signOutAction } from "./actions";
 
 /** The dashboard: the book on its desk (plans/book-ui.md), with a page of it for each route. */
 export default async function DashboardLayout({

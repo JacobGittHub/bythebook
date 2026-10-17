@@ -1,12 +1,11 @@
 "use client";
 
 import { Monitor, Moon, Sun } from "lucide-react";
-import { Label } from "@/components/shadcn/label";
-import { Separator } from "@/components/shadcn/separator";
 import { Switch } from "@/components/shadcn/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/shadcn/toggle-group";
 import { useAppearance } from "@/context/Appearance";
 import { MOTIONS, THEME_CHOICES, type Motion, type ThemeChoice } from "@/lib/appearance";
+import { SettingRow } from "./SettingRow";
 
 const THEME_LABELS: Record<ThemeChoice, { label: string; Icon: typeof Sun }> = {
   light: { label: "Light", Icon: Sun },
@@ -17,24 +16,16 @@ const THEME_LABELS: Record<ThemeChoice, { label: string; Icon: typeof Sun }> = {
 const MOTION_LABELS: Record<Motion, string> = { turn: "Page turn", none: "None" };
 
 /**
- * The theme, how pages move (plans/book-ui.md D13) and the vibes switch (plans/vibes.md D2),
- * kept in this browser.
+ * The theme, the vibes switch (plans/vibes.md D2) and how pages move (plans/book-ui.md D13),
+ * kept in this browser, as rows of the Settings page.
  */
 export function AppearancePanel() {
   const { themeChoice, setThemeChoice, vibes, setVibes, motionChoice, motion, setMotion } = useAppearance();
   const reduced = motion === "none" && motionChoice !== "none";
 
   return (
-    <div className="grid gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <div className="min-w-0">
-          <p id="theme-label" className="text-sm font-medium">
-            Theme
-          </p>
-          <p className="text-xs text-muted-foreground">
-            System follows your device&apos;s light or dark setting.
-          </p>
-        </div>
+    <div className="flex flex-col">
+      <SettingRow label="Theme" labelId="theme-label" note="System follows your device's light or dark setting.">
         <ToggleGroup
           type="single"
           variant="outline"
@@ -55,21 +46,26 @@ export function AppearancePanel() {
             );
           })}
         </ToggleGroup>
-      </div>
+      </SettingRow>
 
-      <Separator />
+      <SettingRow
+        label="Vibes"
+        labelId="vibes-label"
+        note="A vibe dresses the book for the opening on the board, never the strip around it. The first vibes are still being made; the same switch sits at the top right."
+      >
+        <Switch aria-labelledby="vibes-label" checked={vibes} onCheckedChange={setVibes} />
+        <span className="text-sm">{vibes ? "On" : "Off"}</span>
+      </SettingRow>
 
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <div className="min-w-0">
-          <p id="motion-label" className="text-sm font-medium">
-            Page turns
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {reduced
-              ? "Your device asks for reduced motion, so pages change at once."
-              : "How the book moves from one chapter to another."}
-          </p>
-        </div>
+      <SettingRow
+        label="Page turns"
+        labelId="motion-label"
+        note={
+          reduced
+            ? "Your device asks for reduced motion, so pages change at once."
+            : "How the book moves from one chapter to another. None whenever your device asks for less motion."
+        }
+      >
         <ToggleGroup
           type="single"
           variant="outline"
@@ -86,20 +82,9 @@ export function AppearancePanel() {
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-      </div>
+      </SettingRow>
 
-      <Separator />
-
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <Label htmlFor="vibes-switch">Vibes</Label>
-          <p className="text-xs text-muted-foreground">
-            The frame around the board takes on the mood of the opening on it. The first vibes
-            are still being made; with this off, you keep the plain look.
-          </p>
-        </div>
-        <Switch id="vibes-switch" checked={vibes} onCheckedChange={setVibes} />
-      </div>
+      <SettingRow label="Music" note="Comes with vibes." />
     </div>
   );
 }

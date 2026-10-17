@@ -279,6 +279,7 @@ them, unless the user brings it up.
 | `three`, `@react-three/fiber`, `@react-three/drei` | `GlobeTest` uses them | The user says so |
 | `@xyflow/react`, `framer-motion` | They are unused, but kept for possible prototype work | The user says so |
 | `src/components/ui/RouteCard.tsx` | It was the Visualizations page's buttons until that page became contents (2026-10-16), and the route-button rule above names it | The user says so |
+| `src/components/training/TrainBookList.tsx`, `src/components/repertoire/BookCard.tsx`, `src/components/puzzles/PuzzleBoard.tsx` | They were the Train and Puzzles pages' early scaffolds until those pages became coming-soon placeholders (2026-10-16) | The user says so |
 | `src/components/ui/ResizeHandle.tsx` | It resized the Explorer's side panels until the Explorer became a spread with fixed slots (2026-10-16) | The user says so |
 
 ## Read before working on…

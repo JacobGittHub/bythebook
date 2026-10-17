@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useRef, useState, type MouseEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { Download, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -23,23 +23,17 @@ import { Button } from "@/components/shadcn/button";
 import { Skeleton } from "@/components/shadcn/skeleton";
 import { useBrowserBooksOffer, useLibrary, useLibraryBooks } from "@/context/Library";
 import { useViewer } from "@/context/Viewer";
-import {
-  MAX_BACKUP_BYTES,
-  backupAdvice,
-  readBackup,
-  writeBackup,
-  type BackupAdvice,
-  type BackupProblem,
-} from "@/lib/library/backup";
-import { browserKeepsData, browserLibrary } from "@/lib/library/browserStore";
+import { MAX_BACKUP_BYTES, readBackup, type BackupProblem } from "@/lib/library/backup";
+import { browserLibrary } from "@/lib/library/browserStore";
 import { planCopy, type ExistingBook, type PlanItem } from "@/lib/library/copyPlan";
 import { libraryHref } from "@/lib/library/links";
-import { libraryErrorMessage, type Library, type LibraryBook } from "@/lib/library/types";
+import { libraryErrorMessage } from "@/lib/library/types";
 import { BookDetail } from "./BookDetail";
 import { countOf, originFolio, positionsOfLimit } from "./BookParts";
 import { BookList } from "./BookList";
 import { LibraryEmpty, StoreOffer } from "./LibraryEmpty";
 import { NewBookDialog } from "./NewBookDialog";
+import { adviceText, useBackup } from "./useBackup";
 
 const BACKUP_PROBLEMS: Record<BackupProblem, string> = {
   too_large: "That file is too large to be a library backup.",
@@ -47,37 +41,6 @@ const BACKUP_PROBLEMS: Record<BackupProblem, string> = {
   newer_version: "That backup was made by a newer version of ByTheBook. Reload the page and try again.",
   damaged: "That backup is damaged: its contents don't match its checksum, so nothing was restored.",
 };
-
-/** Hands the browser a file to save. */
-function download(text: string, fileName: string) {
-  const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1_000);
-}
-
-/** The backup notice's text (bookstore.md D12): when the library was last backed up, and why it matters. */
-function adviceText(advice: BackupAdvice): string {
-  const when = advice.lastBackupAt
-    ? new Date(advice.lastBackupAt).toLocaleDateString(undefined, { dateStyle: "medium" })
-    : null;
-  const sentences = [
-    when
-      ? advice.changed
-        ? `Last backed up ${when}, and books have changed since.`
-        : `Last backed up ${when}.`
-      : "These books haven't been backed up yet.",
-  ];
-  if (advice.mayBeDeleted) {
-    sentences.push(
-      "This browser hasn't promised to keep them: some browsers, Safari among them, delete a site's data after 7 days without a visit.",
-    );
-  }
-  sentences.push(advice.changed ? "Back up to keep a copy in a file." : "Your backup file holds them all.");
-  return sentences.join(" ");
-}
 
 /** Whether a press is meant for a new tab or window, which a link keeps doing. */
 const opensElsewhere = (event: MouseEvent) => event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
@@ -96,12 +59,12 @@ export function LibraryPage({ initialBook }: { initialBook: string | null }) {
   const offer = useBrowserBooksOffer();
   const copy = useBrowserBooksCopy();
   const [creating, setCreating] = useState(false);
-  const [busy, setBusy] = useState<"backup" | "restore" | null>(null);
+  const [restoring, setRestoring] = useState(false);
   const [restore, setRestore] = useState<{ plan: PlanItem[]; existing: ExistingBook[] } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const shown = useRef<HTMLDivElement>(null);
-  const [advice, setAdvice] = useState<BackupAdvice | null>(null);
-  const [backups, setBackups] = useState(0);
+  const { advice, backingUp, backUp, refresh: refreshAdvice } = useBackup();
+  const busy = backingUp ? "backup" : restoring ? "restore" : null;
   // Whether the reader picked the book shown, as against the first one shown at the start.
   const [picked, setPicked] = useState(false);
   const [wanted, setWanted] = useState(initialBook);
@@ -121,48 +84,10 @@ export function LibraryPage({ initialBook }: { initialBook: string | null }) {
     select(bookId);
   };
 
-  // The backup notice for a browser library, read again after every change and backup.
-  useEffect(() => {
-    if (store !== "browser" || books === null) return;
-    let current = true;
-    Promise.all([browserLibrary.backupState(), browserKeepsData()]).then(
-      ([state, kept]) => {
-        if (current) setAdvice(backupAdvice(books.length, state, kept));
-      },
-      () => {},
-    );
-    return () => {
-      current = false;
-    };
-  }, [store, books, backups]);
-
-  /** Downloads every book in `source`: the viewer's library, or in debug mode this browser's. */
-  const backUp = async (source: Library) => {
-    setBusy("backup");
-    try {
-      const full: LibraryBook[] = [];
-      for (const entry of await source.list()) {
-        const book = await source.get(entry.id);
-        if (book) full.push(book);
-      }
-      const now = new Date();
-      download(await writeBackup(full, now), `bythebook-library-${now.toISOString().slice(0, 10)}.json`);
-      if (source.store === "browser") {
-        await browserLibrary.recordBackup(now);
-        setBackups((count) => count + 1);
-      }
-      toast.success(`Backed up ${full.length} ${full.length === 1 ? "book" : "books"}.`);
-    } catch (caught) {
-      toast.error(libraryErrorMessage(caught));
-    } finally {
-      setBusy(null);
-    }
-  };
-
   const readRestoreFile = async (file: File | undefined) => {
     if (fileInput.current) fileInput.current.value = "";
     if (!file) return;
-    setBusy("restore");
+    setRestoring(true);
     try {
       if (file.size > MAX_BACKUP_BYTES) return void toast.error(BACKUP_PROBLEMS.too_large);
       const read = await readBackup(await file.text());
@@ -172,7 +97,7 @@ export function LibraryPage({ initialBook }: { initialBook: string | null }) {
     } catch (caught) {
       toast.error(libraryErrorMessage(caught));
     } finally {
-      setBusy(null);
+      setRestoring(false);
     }
   };
 
@@ -182,7 +107,7 @@ export function LibraryPage({ initialBook }: { initialBook: string | null }) {
       await browserLibrary.empty();
       if (store === "browser") await reload();
       else await offer?.recount();
-      setBackups((count) => count + 1);
+      refreshAdvice();
       toast.success("Emptied the browser library.");
     } catch (caught) {
       toast.error(libraryErrorMessage(caught));

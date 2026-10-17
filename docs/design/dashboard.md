@@ -1,7 +1,7 @@
-# Dashboard frame, Overview, Visualizations, Library and Bookstore pages
+# Dashboard frame, Overview, Visualizations, Library, Bookstore and Settings pages
 
 **Status:** Live
-**Files:** `src/app/dashboard/layout.tsx` (the frame and Sign out),
+**Files:** `src/app/dashboard/layout.tsx` (the frame), `src/app/dashboard/actions.ts` (Sign out),
 `src/components/book/` (the book frame, its parts and its turns), `src/lib/book/` (the book's
 layout and turns),
 `src/components/overview/OverviewSpread.tsx`,
@@ -10,7 +10,8 @@ layout and turns),
 (the Library and the Bookstore), `src/lib/auth/access.ts` (what the strip and both pages
 list), `src/app/globals.css` (theme tokens), `src/context/Appearance.tsx` and
 `src/lib/appearance.ts` (the theme, vibes and motion settings), `src/components/ui/Panel.tsx`,
-`src/components/settings/AppearancePanel.tsx`
+`src/components/settings/` (the Settings page), `src/components/book/PlaceholderSpread.tsx`
+(Train and Puzzles)
 
 The rules for these pieces are under "UI" and "Guests and accounts" in `AGENTS.md`. This doc
 covers how they work. The decisions behind them are `plans/deployment.md` D16–D19 and
@@ -226,7 +227,8 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   (`explorerHref`, `src/lib/library/links.ts`). "Paste moves or PGN" reads the paste with
   `readPgn` (`src/lib/library/pgn.ts`), which replays every move, makes each bracketed
   variation its own line, and names the first illegal move.
-- **Back up** downloads every book as the version 1 file (`src/lib/library/backup.ts`).
+- **Back up** downloads every book as the version 1 file (`src/lib/library/backup.ts`), through
+  `useBackup` (`src/components/library/useBackup.ts`), which the Settings page shares.
   **Restore** reads one into the checklist (`CopyChecklist`, `src/lib/library/copyPlan.ts`),
   which lists what happens to each book, and lets a book whose name is taken be kept as a
   second book or skipped.
@@ -279,6 +281,20 @@ are shown, and the cards sort by name. Guests use both levels (bookstore D14).
 - **The publisher label** (`PublisherLabel`) puts Verified or Unverified beside the name's
   highlight, never inside it (bookstore D8). Until publishers have accounts, a store book is
   verified when it is an example book (`storeVerified`).
+
+## Settings, Train and Puzzles
+
+- **Settings is a spread** (`SettingsSpread`, `plans/book-ui.md` D10). The left page is
+  Appearance, a `SettingRow` each for the theme, vibes, page turns and music (to come with
+  vibes), in `AppearancePanel`; then "About this book": the deployment notes, the thanks to
+  Lichess and the developer's message (`DEVELOPER_MESSAGE`, shown once it is written).
+- **The right page is your data and account:** where your books are kept and how many, the
+  backup notice for a browser library, Back up, and a way to the Library page to restore
+  (restoring needs its checklist, which is the Library's); then Sign in and Create account, or
+  the account's name and Sign out; and in debug mode "Copy bug report".
+- **Train and Puzzles are placeholders** (`PlaceholderSpread`, D11): the chapter's title page
+  on the left, and on the right what it will be, marked coming soon. A book's Train button
+  still opens the trainer's scaffold (`/dashboard/train/<id>`).
 
 ## Theme and vibe areas
 

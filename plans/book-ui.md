@@ -334,12 +334,21 @@ and get to the test of turns").
       source below the first screen; on one page a View menu stands in for the list. The
       chapter column gives the count of visualizations. `RouteCard` and `ResizeHandle` are
       unused now, and listed as kept on purpose in `AGENTS.md`.
-- [ ] (agent) Settings (D10, D13): appearance, page turns and the vibes switch on the left;
+- [x] (agent) Settings (D10, D13): appearance, page turns and the vibes switch on the left;
       your books, the account and the bug report on the right, and the deployment notes, a
       thank-you to Lichess and a message from the developer.
+      Done as `SettingsSpread`: the deployment notes, the thanks and the developer's message
+      sit under Appearance on the left page, which has room for them. Back up is the Library's
+      (`useBackup`); Restore is a way to the Library page, since it needs the Library's
+      checklist. The bug report row shows in debug mode only, as the strip's button does. The
+      message shows once `DEVELOPER_MESSAGE` is written.
 - [ ] (user) Write the developer's message for Settings.
 - [ ] (agent) The Train and Puzzles placeholders (D11), and the sign-in pages as one page on
       the desk.
+      The placeholders are done (`PlaceholderSpread`), from the mockup's: a title page on the
+      left, what the chapter will be on the right, marked coming soon. The scaffolds they
+      replaced are kept on purpose (`AGENTS.md`), and a book's Train button still opens the
+      trainer's scaffold. The sign-in pages are still to do.
 
 ### Phase 4. Checks and docs
 

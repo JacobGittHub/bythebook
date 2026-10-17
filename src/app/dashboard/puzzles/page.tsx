@@ -1,19 +1,14 @@
-import { PuzzleBoard } from "@/components/puzzles/PuzzleBoard";
-import { InterimSpread } from "@/components/book/Spread";
+import { PlaceholderSpread } from "@/components/book/PlaceholderSpread";
 
+/** The puzzles' chapter, coming soon (plans/book-ui.md D11). */
 export default function PuzzlesPage() {
   return (
-    <InterimSpread>
-      <main className="space-y-4">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold">Puzzle trainer</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Tactical reps and attempt tracking live here. Coming soon: the board below is an
-            early scaffold with no puzzles loaded yet.
-          </p>
-        </div>
-        <PuzzleBoard />
-      </main>
-    </InterimSpread>
+    <PlaceholderSpread
+      line="Positions to solve."
+      text={[
+        "Tactical puzzles from the Lichess puzzle database, with your attempts tracked.",
+        "It will take the same spread as the trainer: the board on the left page, the puzzle and your attempts on the right.",
+      ]}
+    />
   );
 }
