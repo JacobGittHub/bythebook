@@ -28,6 +28,7 @@ import {
   useState,
   useSyncExternalStore,
   ViewTransition,
+  type CSSProperties,
   type FocusEvent,
   type ReactNode,
   type RefObject,
@@ -63,16 +64,18 @@ import "./turns.css";
 // are the route's: each renders its pages into the book (Spread.tsx), so a page says what its
 // two pages hold. The frame tells the pages where they are in the book, at which level, and
 // where the strip's tabs are, for their bookmarks. A page below a chapter's own page is its
-// second level, which the spread's camera zooms in on (src/lib/book/camera.ts). Its view then
-// scrolls down the book, and the strip, which lies over the desk's top, hides while it is
-// scrolled down and drops down again as the mouse comes to the window's top.
+// second level, which the spread's camera zooms in on (src/lib/book/camera.ts), the desk's grain
+// with the book (D20). Its view then scrolls down the book, the desk with it, and the strip,
+// which lies over the desk's top, goes up with the desk and drops down again as the mouse comes
+// to the window's top.
 //
 // A move to another page turns it (D8, D13, D14). Each page is a named view transition
 // (Spread.tsx), so the page leaving and the page arriving are pictures the browser animates
 // (turns.css). React gives a view transition its enter and exit only when no element of the
 // page's own lies above it, so the book, which holds the pages, is the frame's. The frame
 // works out which way the book turns from the place it was at, and writes it to <html> as
-// `data-turn`, with the camera's move as `data-zoom`: a leaving page last rendered before the
+// `data-turn`, with the camera's move as `data-zoom` and whether the strip lay over the book as
+// `data-strip-over`: a leaving page last rendered before the
 // move, so its classes can't say the way. As each picture of the turn appears, the page tells
 // the frame (`onPicture`), which moves it with the camera (camera.ts).
 
@@ -101,6 +104,8 @@ export type FrameTurn = {
   riffled: number[];
   zoom: Zoom | null;
   camera: CameraMove | null;
+  /** Whether the strip had dropped down over the book as the move started (`useStrip`). */
+  stripOver: boolean;
 };
 
 /** A picture of the turn the browser has taken: of the page that leaves (`old`) or the one that arrives (`new`). */
@@ -125,7 +130,7 @@ type BookFrameContext = {
   onPicture: (name: string, taken: PictureTaken) => (() => void) | undefined;
 };
 
-const NO_TURN: FrameTurn = { id: 0, way: null, riffled: [], zoom: null, camera: null };
+const NO_TURN: FrameTurn = { id: 0, way: null, riffled: [], zoom: null, camera: null, stripOver: false };
 
 const FrameContext = createContext<BookFrameContext>({
   form: "spread",
@@ -209,6 +214,8 @@ export function BookFrame({
   const { turn, onPicture } = useTurn(pathname, { at, level }, motion, form, cameraAt);
 
   let camera: BookCamera | undefined;
+  // The camera on the desk's grain, which it moves with the book (D20).
+  let deskCamera = NO_CAMERA;
   // How far down the window a second level's view scrolls to, from the window's top.
   let reach: number | null = null;
   if (form === "spread" && level === 2) {
@@ -218,12 +225,16 @@ export function BookFrame({
       const zoom = zoomCamera(layout);
       const { x, y } = layout.pages[0].rect;
       camera = { transform: cameraTransform(zoom, { x, y }), scale: zoom.scale, fold: shownHeight(layout, zoom) };
+      deskCamera = zoom;
       reach = zoomReach(layout, zoom);
     }
   }
+  // The desk's grain is the first level's window, so the camera puts its top left at (x, y).
+  const grain = { "--grain-x": `${deskCamera.x}px`, "--grain-y": `${deskCamera.y}px`, "--grain-scale": deskCamera.scale } as CSSProperties;
   const deskRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLSpanElement>(null);
-  const strip = useStrip(pathname, reach !== null, deskRef, thumbRef);
+  const stripRef = useRef<HTMLElement>(null);
+  const strip = useStrip(pathname, reach !== null, deskRef, thumbRef, stripRef);
 
   useEffect(() => {
     document.cookie = `${FORM_COOKIE}=${form}; path=/; max-age=31536000; samesite=lax`;
@@ -261,14 +272,15 @@ export function BookFrame({
       <style href="book-frame" precedence="default">
         {bookFrameCss()}
       </style>
-      <div className="book-frame" data-form={form} data-chapters={columnPick ?? undefined}>
+      <div className="book-frame" data-form={form} data-chapters={columnPick ?? undefined} style={grain}>
         {/* The strip and the chapter column show the new chapter halfway through a turn. */}
         {form === "spread" ? (
           <ViewTransition name="book-strip" update={motion === "none" ? "none" : "turn-strip"} default="none">
             <header
+              ref={stripRef}
               className="book-strip"
-              data-hidden={strip.hidden || undefined}
               data-over={strip.over || undefined}
+              data-rising={strip.rising || undefined}
               onFocus={strip.onFocus}
               onBlur={strip.onBlur}
             >
@@ -336,6 +348,15 @@ export function BookFrame({
           </ViewTransition>
         )}
         <div ref={deskRef} className="book-desk" data-scrolls={reach !== null || undefined}>
+          {form === "spread" && (
+            <span
+              className="book-desk-wood"
+              style={reach !== null ? { height: `max(100%, ${reach}px)`, bottom: "auto" } : undefined}
+              aria-hidden
+            >
+              <span className="book-desk-grain" />
+            </span>
+          )}
           <Book form={form} order={bookOrder(at, chapters.length)} camera={camera}>
             {children}
           </Book>
@@ -353,23 +374,29 @@ const STRIP_REVEAL_EDGE = 12;
 const STRIP_TOUCH_UP = 6;
 /** The shortest the scroll thumb gets. */
 const THUMB_MIN = 32;
+/** How long the strip takes to slide back up once it stops showing over the book (globals.css). */
+const STRIP_SLIDE_MS = 180;
 
 // How far down the book a second level's view has scrolled, kept as the desk scrolls: a move
 // off the page starts its camera there (useTurn), and by the time the move renders, the desk
 // already holds the next page.
 let deskScrolled = 0;
+// Whether the strip lies over the book, dropped down or sliding back up, kept the same way.
+let stripOverBook = false;
 
 /**
- * The strip while a second level's view scrolls (D8): it hides once the view is scrolled down,
- * and shows while the mouse is at the window's top edge or on the strip, while the keyboard is
- * in it, or on a touch screen once the view scrolls up. Also keeps `deskScrolled` and the scroll
- * thumb, the desk's own scrollbar being hidden so it takes no width from the book.
+ * The strip while a second level's view scrolls (D8): it goes up with the desk as the view
+ * scrolls down (`--strip-scrolled`), and drops down over the book while the mouse is at the
+ * window's top edge or on the strip, while the keyboard is in it, or on a touch screen once the
+ * view scrolls up; when that ends it slides back up (`rising`). Also keeps `deskScrolled` and the
+ * scroll thumb, the desk's own scrollbar being hidden so it takes no width from the book.
  */
 function useStrip(
   pathname: string,
   scrolls: boolean,
   deskRef: RefObject<HTMLDivElement | null>,
   thumbRef: RefObject<HTMLSpanElement | null>,
+  stripRef: RefObject<HTMLElement | null>,
 ) {
   // The page whose view is scrolled down, and the one a touch screen scrolled back up.
   const [down, setDown] = useState<string | null>(null);
@@ -383,8 +410,9 @@ function useStrip(
     const desk = deskRef.current;
     if (desk) desk.scrollTop = 0;
     deskScrolled = 0;
+    stripRef.current?.style.setProperty("--strip-scrolled", "0px");
     touch.current.last = 0;
-  }, [pathname, deskRef]);
+  }, [pathname, deskRef, stripRef]);
 
   useLayoutEffect(() => {
     const desk = deskRef.current;
@@ -403,6 +431,7 @@ function useStrip(
     const onScroll = () => {
       const top = desk.scrollTop;
       deskScrolled = top;
+      stripRef.current?.style.setProperty("--strip-scrolled", `${top}px`);
       setDown(top > 1 ? pathname : null);
       const t = touch.current;
       const delta = top - t.last;
@@ -439,13 +468,29 @@ function useStrip(
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("resize", placeThumb);
     };
-  }, [scrolls, pathname, deskRef, thumbRef]);
+  }, [scrolls, pathname, deskRef, thumbRef, stripRef]);
 
   const scrolledDown = scrolls && down === pathname;
-  const shown = mouse || keyboard || touchUp === pathname;
+  const over = scrolledDown && (mouse || keyboard || touchUp === pathname);
+  // The strip slides back up when it stops showing over the book; otherwise it moves with the desk.
+  const [wasOver, setWasOver] = useState(over);
+  const [rising, setRising] = useState(false);
+  if (over !== wasOver) {
+    setWasOver(over);
+    setRising(!over);
+  }
+  useEffect(() => {
+    stripOverBook = over || rising;
+  }, [over, rising]);
+  useEffect(() => {
+    if (!rising) return;
+    const timer = setTimeout(() => setRising(false), STRIP_SLIDE_MS);
+    return () => clearTimeout(timer);
+  }, [rising]);
+
   return {
-    hidden: scrolledDown && !shown,
-    over: scrolledDown && shown,
+    over,
+    rising,
     // Only the keyboard's focus shows it: a click on a tab is the mouse's, already on the strip.
     onFocus: (event: FocusEvent<HTMLElement>) => {
       if (event.target.matches(":focus-visible")) setKeyboard(true);
@@ -468,7 +513,7 @@ const turning = () =>
  * arriving page renders its riffled leaves in the same commit, and the camera's move with it
  * (`cameraAt` gives a place's camera; the move off a page starts where its view had scrolled). Another page of the same level, or any move with motion
  * off, doesn't turn. Also returns `onPicture`, which moves each of the turn's pictures with the
- * camera as the browser takes it, and the book's own picture with the first.
+ * camera as the browser takes it, and the book's and the desk's own pictures with the first.
  */
 function useTurn(
   pathname: string,
@@ -500,16 +545,18 @@ function useTurn(
         riffled: move?.riffled ?? [],
         zoom: move?.zoom ?? null,
         camera,
+        stripOver: stripOverBook,
       },
     };
     setState(current);
   }
   const { turn } = current;
 
-  // The turn whose pictures the browser is taking, and whether the book's own has moved.
+  // The turn whose pictures the browser is taking, and whether the book's and the desk's have moved.
   const taking = useRef({ turn: NO_TURN, bookMoved: false });
 
-  // turns.css reads the way, how many leaves riffle and how the camera moves from <html>. Layout
+  // turns.css reads the way, how many leaves riffle, how the camera moves and whether the strip
+  // lay over the book from <html>. Layout
   // effects run before the browser takes the turn's new pictures and starts their animations.
   useLayoutEffect(() => {
     const html = document.documentElement;
@@ -518,6 +565,7 @@ function useTurn(
     html.setAttribute("data-riffles", String(turn.riffled.length));
     if (turn.way && turn.zoom) html.setAttribute("data-zoom", turn.zoom);
     else html.removeAttribute("data-zoom");
+    html.toggleAttribute("data-strip-over", turn.way !== null && turn.stripOver);
     taking.current = { turn, bookMoved: false };
   }, [turn]);
 
@@ -527,7 +575,7 @@ function useTurn(
     const moving = [moveWithCamera(name, taken === "old" ? move.from : move.to, move)];
     if (!taking.current.bookMoved) {
       taking.current.bookMoved = true;
-      moving.push(moveWithCamera("book", move.to, move));
+      moving.push(moveWithCamera("book", move.to, move), moveWithCamera("desk", move.to, move));
     }
     return () => moving.forEach((animation) => animation.cancel());
   }, []);

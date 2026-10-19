@@ -19,12 +19,10 @@ const MARK = 3;
 /** [color, ground, minimum]: text or a mark in `color` on `ground`, which lies on the page. */
 const PAIRS: [string, string, number][] = [
   ["foreground", "page", TEXT],
-  ["foreground", "desk", TEXT],
   ["foreground", "page-alt", TEXT],
   ["foreground", "muted", TEXT],
   ["foreground", "accent", TEXT],
   ["muted-foreground", "page", TEXT],
-  ["muted-foreground", "desk", TEXT],
   ["muted-foreground", "page-alt", TEXT],
   ["muted-foreground", "muted", TEXT],
   ["muted-foreground", "accent", TEXT],
@@ -35,9 +33,12 @@ const PAIRS: [string, string, number][] = [
   ["warning", "page", TEXT],
   ["success", "page", TEXT],
   ["bookmark", "page", MARK],
-  // The current tab's underline in the strip.
-  ["bookmark", "desk", MARK],
   ["ring", "page", MARK],
+  // What lies on the walnut desk (D20): the strip's and the chapter column's text, and the
+  // current tab's underline in the strip.
+  ["desk-foreground", "desk", TEXT],
+  ["desk-muted", "desk", TEXT],
+  ["desk-mark", "desk", MARK],
 ];
 
 function violations(theme: string, tokens: Tokens): string[] {

@@ -169,7 +169,7 @@ test("Page turn: another book on a second level neither turns nor zooms; its pag
   expect(await rightPageAt(page)).toBe(ZOOM_SHOWN);
 });
 
-test("Page turn: a second level's view scrolls down the book under a strip that hides, and goes back from there (D8)", async ({ page }) => {
+test("Page turn: a second level's view scrolls down the book, the strip going up with the desk, and goes back from there (D8)", async ({ page }) => {
   await recordMoves(page, "turn");
   await page.goto(LIBRARY);
   test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
@@ -183,6 +183,13 @@ test("Page turn: a second level's view scrolls down the book under a strip that 
   const strip = page.locator(".book-strip");
   const stripBottom = () => strip.evaluate((el) => Math.round(el.getBoundingClientRect().bottom));
   expect(await stripBottom()).toBe(SPREAD.strip);
+
+  // The strip goes up with the desk as the view scrolls, as part of it, rather than sliding.
+  const desk = page.locator(".book-desk");
+  await desk.evaluate((el) => (el.scrollTop = 20));
+  await expect.poll(stripBottom).toBe(SPREAD.strip - 20);
+  await desk.evaluate((el) => (el.scrollTop = 0));
+  await expect.poll(stripBottom).toBe(SPREAD.strip);
 
   // Scrolled down, what lies below the first screen comes into view and the strip hides.
   await page.mouse.move(600, 400);
@@ -202,7 +209,7 @@ test("Page turn: a second level's view scrolls down the book under a strip that 
   expect(out).toContain(`turn-fold-left ::view-transition-old(page-l${route(href)})`);
   expect(out).toContain("camera ::view-transition-image-pair(book)");
   await expect.poll(() => rightPageAt(page)).toBe(spine);
-  await expect(strip).not.toHaveAttribute("data-hidden");
+  await expect.poll(stripBottom).toBe(SPREAD.strip);
 });
 
 test("Page turn: in the one-page form a second level turns forward, and back by its back link (D15)", async ({ page }) => {

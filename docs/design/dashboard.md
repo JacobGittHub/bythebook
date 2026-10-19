@@ -22,7 +22,8 @@ covers how they work. The decisions behind them are `plans/deployment.md` D16–
 The dashboard is an open book on a desk (`plans/book-ui.md`, which is being built; its
 Phase 4 rewrites this section).
 
-- **`BookFrame` frames every dashboard page:** the desk, with the strip over its top (the
+- **`BookFrame` frames every dashboard page:** the walnut desk (`plans/book-ui.md` D20), with
+  the strip over its top (the
   brand, a tab per `NAV_ITEMS` entry the viewer may open, the vibes switch and the account
   links) or, in the one-page form, the chapter column beside it. Windows narrower than
   `SPREAD_MIN_WIDTH` get the one-page form (`formFor`). Its column shows chapter names, or
@@ -42,7 +43,9 @@ Phase 4 rewrites this section).
   `src/lib/book/chapters.ts`), such as a Library book's page. In the spread a camera zooms in
   on it (`zoomCamera`, `src/lib/book/camera.ts`): the right page fills the window but for
   `ZOOM_SHOWN` of the left page at its left edge, and the book runs on past its bottom. The
-  frame sets the camera as the book's transform; the book itself keeps its layout. A second
+  frame sets the camera as the book's transform; the book itself keeps its layout. The camera
+  moves the desk's grain too (`.book-desk-grain`, `plans/book-ui.md` D20), so the desk zooms
+  and scrolls with the book. A second
   level's pages are laid out for the zoomed view (`.book-zoomed`): the whole page at the
   window's own pixels, set onto the page that much smaller, so it reads at the usual size; the
   left page's content stands against the spine (`.book-shown`). The right page's body is its
@@ -51,10 +54,13 @@ Phase 4 rewrites this section).
 - **A second level's view scrolls down the book** to the zoomed cover's bottom (`zoomReach`):
   the desk scrolls, over a room as tall as that (`.book-scroll-room`), with its scrollbar
   hidden, since it would take its width from the book, and a thumb of the frame's
-  (`.book-scroll-thumb`) in its place. Scrolled down, the strip hides above the window; it
-  drops down over the book while the mouse is at the window's top edge or on the strip, while
-  the keyboard is in it, and on a touch screen once the view scrolls up (`useStrip` in
-  `BookFrame`). Each page's view starts at the top, another book's too.
+  (`.book-scroll-thumb`) in its place. The strip has no wood of its own, so the desk's
+  shows through it; it goes up with the desk as the view scrolls down, until it is above the
+  window, and comes back down with it. It drops down over the book, as a board of the desk's
+  wood where the camera would show it, while the mouse is at the window's top edge or
+  on the strip, while the keyboard is in it, and on a touch screen once the view scrolls up,
+  and slides back up after (`useStrip` in `BookFrame`). Each page's view starts at the top,
+  another book's too.
 - **An interim second level** puts its content on the right page and a way back on the left.
   The one-page form has no camera: a second level shows only its right page, with the way back
   in its running head and what it holds below after its body.
@@ -76,7 +82,7 @@ Phase 4 rewrites this section).
   (`src/context/BugReport.tsx`). `BugReportProvider` wraps the whole frame, so the strip's
   button can read the page beside it.
 - **The sign-in pages** (`src/app/auth/layout.tsx`) are outside the book, one panel on the
-  backdrop, until Phase 3 puts them on the desk.
+  backdrop, which is painted as the walnut desk, until Phase 3 lays a book on it.
 
 ## Moving between pages
 
@@ -98,10 +104,12 @@ A move to another chapter, or down to a second level and back, turns the page
   first, so the whole new page shows before the camera moves in, and the camera starts
   `ZOOM_OVERLAP` of the way into it; zooming out, the camera goes first, from where the view
   had scrolled to (`scrolledBy`). The live book is at the new camera from the start; each picture, the book's own (`book`)
-  included, is moved on its own as the browser takes it (`onPicture` in `BookFrame`,
+  and the desk's (`desk`) included, is moved on its own as the browser takes it (`onPicture` in `BookFrame`,
   `moveWithCamera` in `src/components/book/camera.ts`, `pictureMove`), because not every browser
-  moves a picture with its live page. The strip is a picture over the pages, so a leaf that
-  rises past the desk's top passes under it. The timings are constants in `turns.ts`, which
+  moves a picture with its live page. The strip is a picture over the desk and the book but
+  under the leaves, so a leaf that rises past the desk's top passes over it whole; dropped down
+  over the book as the move starts, it stays on top until it changes halfway
+  (`data-strip-over`). The timings are constants in `turns.ts`, which
   `bookFrameCss` writes for `turns.css`.
 - **A jump of several chapters riffles** up to `MAX_RIFFLES` blank leaves between, each carrying
   its chapter's bookmark or page tab (`riffleBookmarkX` mirrors a bookmark onto a leaf that
@@ -310,7 +318,12 @@ block that sets the tokens below and decorates the marked areas.
   and written, and no vibe reads it yet.
 - **Every color, corner and font is a token** in `globals.css`: the book's paper palette
   (`--desk`, `--page`, `--page-alt`, `--rule`, `--cover`, `--page-edge`, `--gutter`,
-  `--turn-shade`, `--bookmark`, `plans/book-ui.md` D2, D3) and shadcn/ui's names
+  `--turn-shade`, `--bookmark`, `plans/book-ui.md` D2, D3), the walnut desk's (D20: `--desk`
+  and `--desk-low` under a grain drawn by `scripts/renderDeskGrain.ts`, all laid by
+  `--desk-paint`; the spread lays the shade, `--desk-shade`, on the window and the grain on a
+  layer of the desk's that the camera moves, and `--desk-foreground`, `--desk-muted`, `--desk-line`, `--desk-hover` and
+  `--desk-mark` for what lies on it; the strip and the chapter column set shadcn/ui's names
+  from these, and the desk is the same under every vibe) and shadcn/ui's names
   (`--background`, `--card`, `--muted`, `--border`, `--primary` and the rest), most of which
   are made from the book's, plus the app's own: the move bars'
   (`--bar-white`, `--bar-draw`, `--bar-black`), the board's arrows, `--warning`, `--success`

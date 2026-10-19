@@ -1,9 +1,11 @@
 /* The book's moves between pages (plans/book-ui.md D8, D13, D14), as view transitions. Each page
    is a picture named after its route, with a class for which page it is and whether it leaves
    or arrives (Spread.tsx): page-l, page-r and page-s (the one page), and page-ink, an interim
-   page's content. The book, with its cover and page edges, is a picture of its own (`book`).
-   The frame writes the way on <html> (`data-turn`, BookFrame.tsx), and how the camera moves
-   with a second level (`data-zoom`: in, out or across); the motion setting is `data-motion`
+   page's content. The book, with its cover and page edges, is a picture of its own (`book`),
+   and so is the spread's desk, its grain (`desk`, globals.css).
+   The frame writes the way on <html> (`data-turn`, BookFrame.tsx), how the camera moves with a
+   second level (`data-zoom`: in, out or across), and whether the strip had dropped down over the
+   book (`data-strip-over`); the motion setting is `data-motion`
    (src/context/Appearance.tsx): turn or none. The timings are the frame's (frameCss.ts).
 
    A picture is one face, so a spread's turn is two halves: the old page folds to the spine,
@@ -40,8 +42,9 @@
   mix-blend-mode: normal;
 }
 /* What isn't a page (the desk, the book's cover and edges) changes at once, under the moving
-   pages. */
+   pages; the camera moves the desk and the book from where the old page showed them. */
 ::view-transition-old(root),
+::view-transition-old(desk),
 ::view-transition-old(book) {
   display: none;
 }
@@ -54,13 +57,21 @@
 ::view-transition-old(.turn-strip) {
   display: none;
 }
-/* The strip is a picture in every move, over the pages, so a leaf that rises toward you passes
-   under it: zoomed in on a second level, the leaves rise past the desk's top (D8). */
+/* The strip is a picture in every move, words on the desk (D20): over the desk and the book,
+   which the camera moves under it, and under the leaves, so a leaf that rises toward you, past
+   the desk's top, passes over it whole. Dropped down over the book, it is a board on top of it,
+   until it changes halfway through the turn. */
 .book-strip {
   view-transition-name: book-strip;
 }
 ::view-transition-group(book-strip) {
+  z-index: 2;
+}
+:root[data-strip-over]::view-transition-group(book-strip) {
   z-index: 50;
+}
+:root[data-motion="turn"][data-turn][data-strip-over]::view-transition-group(book-strip) {
+  animation: turn-strip-over-z var(--turn) linear var(--turn-start) both;
 }
 
 /* ── Page turn ─────────────────────────────────────────────────────────── */
@@ -292,6 +303,10 @@
 }
 @keyframes turn-ink-right {
   from, to { clip-path: inset(0 0 0 50%); }
+}
+@keyframes turn-strip-over-z {
+  0%, 49.9% { z-index: 50; }
+  50%, 100% { z-index: 2; }
 }
 @keyframes turn-out-at-half {
   0%, 49.9% { opacity: 1; }

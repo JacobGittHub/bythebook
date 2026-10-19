@@ -1,6 +1,6 @@
 # Book UI
 
-Status: active · Updated: 2026-10-16 · Depends on: —
+Status: active · Updated: 2026-10-19 · Depends on: —
 
 **Goal:** rebuild the dashboard as an open book: every page a spread of two pages on a desk,
 with page turns, bookmarks that turn with their pages, a one-page form for narrow windows and
@@ -175,6 +175,21 @@ it, replacing the book slide. On 2026-10-16 the user changed D8's order to that 
   of every opening or one book (`docs/design/lab-prototypes.md`).
 - D19. **The book comes now** (Q9). Everything else builds on it, so `deployment.md`'s
   Phases 6 (phones and themes) and 7 (launch, with the Overview's demos) are done on the book.
+- D20. **The desk is dark walnut**, behind the dashboard, every page of the book and the
+  sign-in page, in both themes (the user's answer of 2026-10-19 to
+  `plans/mockups/sign-in-cover.html`). It replaces D2's plain desk color. The desk is not a
+  vibe: it stays a walnut desk under every vibe (`vibes.md` D14). The strip lies on the desk,
+  so its text and tabs sit on wood, with its grain lined up with the desk's.
+  From the user's message of 2026-10-19, after trying it: the desk moves with the camera. A
+  second level's zoom zooms the desk with the book, and its view scrolls the desk with it; a
+  desk that stood still felt strange. At the top of a second level the strip scrolls with the
+  desk, as the part of it it is. It is a board of its own only when it drops down over the
+  book: sliding down over bare desk as the view came back to the top looked awkward. The wood
+  strip still has to prove itself in use.
+  From the user's next message the same day: the desk is a desk with the book on it, and the
+  strip's tabs are words that happen to lie over the desk, so the wood behind them is the
+  desk's own. The strip has no wood of its own, the desk's zoom shows through it, and a leaf
+  that rises past the desk's top passes over it, not under it.
 
 ## Steps
 
@@ -349,6 +364,32 @@ and get to the test of turns").
       left, what the chapter will be on the right, marked coming soon. The scaffolds they
       replaced are kept on purpose (`AGENTS.md`), and a book's Train button still opens the
       trainer's scaffold. The sign-in pages are still to do.
+      Put off on 2026-10-19: the user isn't happy with the direction yet and will come back to
+      it. From three rounds of mockups (`plans/mockups/sign-in.html`, `sign-in-desk.html`,
+      `sign-in-cover.html`): the closed cover signs you in and never changes size. Creating an
+      account and resetting a password happen on separate sheets laid over the cover (round
+      two's B1), with the invitation lying mostly over the reset card on the desk to the
+      book's right. The user's notes on round three: the camera should be closer in; nothing
+      lies under the book; a notice such as "Your password is changed" must not change the
+      sign-in panel's size; the look should be the app's own, not cartoonish. Varied desk
+      objects per visit are welcome but not required, and the pawn is a placeholder. A living
+      book (a shake, light from the pages, ink that writes back) may become a vibe later.
+- [x] (agent) The walnut desk (D20): the desk's tokens and grain in `globals.css`, the strip's
+      text and tabs on wood, and the strip and the desk on one fixed background. Check the
+      contrast test's pairs for the strip's text.
+      Done 2026-10-19. The grain is the mockup's, drawn once into a picture
+      (`scripts/renderDeskGrain.ts`), since WebKit is slow to draw SVG noise filters live. The
+      strip and the chapter column take the desk's own text, line, hover and mark colors, and
+      shadcn/ui's `--background` became the paper's, so dialogs and outline buttons stay paper.
+      The sign-in pages lie on the walnut too. Rather than a fixed background, which Safari on
+      iOS ignores, the strip and the frame each lay the paint from the window's top left.
+      Later the same day, from the user's notes (D20): in the spread the grain is a layer of
+      the desk's, which the camera zooms and the view scrolls with the book and which is a
+      picture of its own in a turn, while the shade stays with the window; the strip's grain
+      follows the camera, and the strip goes up and comes back with the scrolling desk.
+      Then, from the user's next notes: the strip lost its own wood, so the desk shows through
+      it, and leaves turn over it; only dropped down over the book is it a board, cut from the
+      desk's grain where the camera would show it.
 
 ### Phase 4. Checks and docs
 
@@ -360,6 +401,8 @@ and get to the test of turns").
       production build on the local network. The spike's turns didn't look right there
       (2026-10-14); find out what Safari draws wrong and fix it, or give Safari None until
       it can. The Done-when needs Safari.
+      > ME (2026-10-19, on an iPhone): the app seems a little thin, I wish the sidebar were
+      > collapsible, and the pages don't flip as well on the iPhone.
 - [ ] (agent) A slow-device check: turns and the zoom with Chromium's CPU throttled four
       times. If they stutter, the user decides whether None becomes the default anywhere,
       phones first.

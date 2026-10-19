@@ -1,0 +1,696 @@
+<!-- Mockup for plans/book-ui.md, Phase 3: the sign-in pages, round two (2026-10-19).
+     Direction A from plans/mockups/sign-in.html (the bookplate on the closed cover), on a wooden desk,
+     with a cover of fixed size: sign-in stays on the cover, and Create account and Reset password move
+     to separate sheets. Three ways to bring in the sheets, and the dashboard on the same desk.
+     Colors follow src/app/globals.css's paper palette; the wood, the desk's objects and the sheets are
+     mockup-only tokens. -->
+<title>Sign-in Desk Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Caveat:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
+<style>
+:root {
+  --paper: #fbfbf8;
+  --page: #fbfbf8;
+  --rule: #d9dcd5;
+  --page-edge: #cfd2ca;
+  --cover: #26364f;
+  --cover-2: #1c2a3f;
+  --weave: rgb(255 255 255 / 0.035);
+  --foil: #dcc891;
+  --fg: #22252b;
+  --muted: #5c636b;
+  --border: #d0d4cd;
+  --primary: #2c4a74;
+  --primary-fg: #ffffff;
+  --accent: #e3e9f3;
+  --success: #2f6b3f;
+  --plate-rule: #8f949a;
+  --gutter-shade: rgb(70 60 40 / 0.28);
+  --shadow: rgb(40 24 8 / 0.42);
+  --shadow-soft: rgb(40 24 8 / 0.2);
+  --endpaper-a: #2c4a74;
+  --endpaper-b: #3a5c8b;
+  --ribbon: #8e2f2c;
+  --ribbon-fold: #6c2220;
+
+  /* The desk: light oak. */
+  --wood-a: #c99f71;
+  --wood-b: #be9366;
+  --wood-seam: rgb(92 56 24 / 0.45);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1800' height='900'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0033333 0.12' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.2  0 0 0 0 0.07  1.5 0 0 0 -0.62'/%3E%3C/filter%3E%3Crect width='1800' height='900' filter='url(%23g)'/%3E%3C/svg%3E");
+  --lamp: rgb(255 242 214 / 0.5);
+  --vignette: rgb(70 40 14 / 0.3);
+  --strip-ink: #2a1b0d;
+  --strip-muted: #5b4129;
+  --tab-on: rgb(251 251 248 / 0.75);
+
+  /* The desk's objects and the sheets. */
+  --mug: #f1eee7;
+  --mug-rim: #d6d0c4;
+  --coffee: #4a2c17;
+  --crema: #8c5c33;
+  --ring: rgb(96 52 18 / 0.28);
+  --sticky: #f5d86c;
+  --sticky-ink: #3b2f0a;
+  --pencil: #d9a441;
+  --pencil-2: #c08a2c;
+  --wood-tip: #e9cfa4;
+  --graphite: #3a3a3a;
+  --ferrule: #a9adb1;
+  --eraser: #d98c8c;
+  --pad: #f4e58f;
+  --pad-under: #e7d679;
+  --pad-rule: #a9bdd4;
+  --pad-margin: #d98a8a;
+  --pad-ink: #263866;
+  --pad-label: #5d5630;
+  --pad-binding: #7a2d2a;
+  --invite: #f7f1e2;
+  --invite-ink: #2b261c;
+  --invite-muted: #6b604b;
+  --invite-rule: #b39a63;
+  --index: #fcfcf9;
+  --index-rule: #b9c8da;
+  --index-red: #d98a8a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #131518; --page: #1c1f24; --rule: #30343b; --page-edge: #2d3138; --cover: #1b2433; --cover-2: #131a26;
+    --weave: rgb(255 255 255 / 0.025); --foil: #bfae7c; --fg: #e9e5dc; --muted: #a3a19b; --border: #383c44;
+    --primary: #a9c0e6; --primary-fg: #12161d; --accent: rgb(169 192 230 / 0.13); --success: #8fc79c; --plate-rule: #6a6e76;
+    --gutter-shade: rgb(0 0 0 / 0.5); --shadow: rgb(0 0 0 / 0.62); --shadow-soft: rgb(0 0 0 / 0.38);
+    --endpaper-a: #1f2d45; --endpaper-b: #2b3f62; --ribbon: #a8443f; --ribbon-fold: #7d2f2b;
+    --wood-a: #4a3121; --wood-b: #422b1d; --wood-seam: rgb(0 0 0 / 0.55);
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1800' height='900'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0033333 0.12' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.04  0 0 0 0 0.01  1.7 0 0 0 -0.66'/%3E%3C/filter%3E%3Crect width='1800' height='900' filter='url(%23g)'/%3E%3C/svg%3E");
+    --lamp: rgb(255 186 110 / 0.16); --vignette: rgb(0 0 0 / 0.6); --strip-ink: #f0e4cf; --strip-muted: #cdb899; --tab-on: rgb(28 31 36 / 0.8);
+    --mug: #2c2f34; --mug-rim: #3d4148; --coffee: #23130a; --crema: #4d2f19; --ring: rgb(0 0 0 / 0.38);
+    --sticky: #8b7531; --sticky-ink: #f7eecb; --pencil: #b98a35; --pencil-2: #9a7029; --wood-tip: #b59a72;
+    --graphite: #151515; --ferrule: #7b7f84; --eraser: #a86868;
+    --pad: #3b3722; --pad-under: #322e1c; --pad-rule: #4c5566; --pad-margin: #7d4444; --pad-ink: #c9d5f2; --pad-label: #c2b98c; --pad-binding: #4f1f1d;
+    --invite: #2a2720; --invite-ink: #eee6d2; --invite-muted: #b8ab8c; --invite-rule: #8c7a4f;
+    --index: #23262b; --index-rule: #3c4555; --index-red: #7d4444;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #131518; --page: #1c1f24; --rule: #30343b; --page-edge: #2d3138; --cover: #1b2433; --cover-2: #131a26;
+  --weave: rgb(255 255 255 / 0.025); --foil: #bfae7c; --fg: #e9e5dc; --muted: #a3a19b; --border: #383c44;
+  --primary: #a9c0e6; --primary-fg: #12161d; --accent: rgb(169 192 230 / 0.13); --success: #8fc79c; --plate-rule: #6a6e76;
+  --gutter-shade: rgb(0 0 0 / 0.5); --shadow: rgb(0 0 0 / 0.62); --shadow-soft: rgb(0 0 0 / 0.38);
+  --endpaper-a: #1f2d45; --endpaper-b: #2b3f62; --ribbon: #a8443f; --ribbon-fold: #7d2f2b;
+  --wood-a: #4a3121; --wood-b: #422b1d; --wood-seam: rgb(0 0 0 / 0.55);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1800' height='900'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0033333 0.12' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.04  0 0 0 0 0.01  1.7 0 0 0 -0.66'/%3E%3C/filter%3E%3Crect width='1800' height='900' filter='url(%23g)'/%3E%3C/svg%3E");
+  --lamp: rgb(255 186 110 / 0.16); --vignette: rgb(0 0 0 / 0.6); --strip-ink: #f0e4cf; --strip-muted: #cdb899; --tab-on: rgb(28 31 36 / 0.8);
+  --mug: #2c2f34; --mug-rim: #3d4148; --coffee: #23130a; --crema: #4d2f19; --ring: rgb(0 0 0 / 0.38);
+  --sticky: #8b7531; --sticky-ink: #f7eecb; --pencil: #b98a35; --pencil-2: #9a7029; --wood-tip: #b59a72;
+  --graphite: #151515; --ferrule: #7b7f84; --eraser: #a86868;
+  --pad: #3b3722; --pad-under: #322e1c; --pad-rule: #4c5566; --pad-margin: #7d4444; --pad-ink: #c9d5f2; --pad-label: #c2b98c; --pad-binding: #4f1f1d;
+  --invite: #2a2720; --invite-ink: #eee6d2; --invite-muted: #b8ab8c; --invite-rule: #8c7a4f;
+  --index: #23262b; --index-rule: #3c4555; --index-red: #7d4444;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--fg); font: 15px/1.55 "Atkinson Hyperlegible", system-ui, sans-serif; }
+h1, h2, h3 { font-family: Literata, Georgia, serif; font-weight: 600; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 36px 72px; display: grid; gap: 60px; }
+.eyebrow { font: 500 11px/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.top { display: grid; gap: 12px; }
+.top h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; letter-spacing: -0.01em; }
+.top > p { color: var(--muted); max-width: 72ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin-top: 6px; }
+.control { display: flex; gap: 8px; align-items: center; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 8px; padding: 2px; background: var(--page); }
+.seg button { border: 0; background: none; padding: 5px 10px; border-radius: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--fg); }
+.btn { border: 0; border-radius: 6px; background: var(--primary); color: var(--primary-fg); padding: 8px 14px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.linkish { border: 0; background: none; padding: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-size: inherit; }
+:is(.seg button, .btn, .linkish, .guest-ribbon, .sheet-over):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.v { display: grid; gap: 16px; }
+.v-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 18px; align-items: start; }
+.letter { font: 600 44px/1 Literata, Georgia, serif; color: var(--muted); }
+.v-head h2 { font-size: 26px; line-height: 1.15; }
+.v-head .kind { font: 500 11px/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.v-head .pitch { max-width: 70ch; margin-top: 6px; }
+.v-head .row { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-top: 4px; font-size: 13px; color: var(--muted); }
+.notes { margin: 0; padding-left: 20px; display: grid; gap: 4px; max-width: 76ch; color: var(--muted); font-size: 14px; }
+.notes strong { color: var(--fg); }
+
+/* ---------- The desk ---------- */
+.stage {
+  --shift: 0px;
+  container-type: inline-size;
+  position: relative; height: 720px; overflow: hidden; border-radius: 8px;
+  margin-inline: auto; width: 100%;
+  background:
+    radial-gradient(ellipse 70% 60% at 18% 12%, var(--lamp), transparent 70%),
+    radial-gradient(ellipse at 50% 50%, transparent 45%, var(--vignette) 100%),
+    var(--grain) var(--shift) 0 / 1800px 900px,
+    repeating-linear-gradient(to bottom, var(--wood-a) 0 170px, var(--wood-seam) 170px 172px, var(--wood-b) 172px 342px, var(--wood-seam) 342px 344px);
+  transition: background-position 0.85s cubic-bezier(0.45, 0, 0.2, 1);
+}
+:root[data-frame="phone"] .stage { width: 390px; max-width: 100%; height: 780px; }
+.canvas { position: absolute; inset: 0; transform: translateX(var(--shift)); transition: transform 0.85s cubic-bezier(0.45, 0, 0.2, 1); }
+:root[data-clutter="tidy"] .lived { display: none !important; }
+
+/* The objects on it. */
+.mug { position: absolute; top: 34px; right: 70px; width: 96px; height: 96px; border-radius: 50%; background: var(--mug); box-shadow: inset 0 0 0 6px var(--mug-rim), 8px 12px 18px var(--shadow-soft); }
+.mug::before { content: ""; position: absolute; inset: 11px; border-radius: 50%; background: radial-gradient(circle at 38% 34%, var(--crema) 0 14%, var(--coffee) 62%); }
+.mug::after { content: ""; position: absolute; right: -27px; top: 31px; width: 34px; height: 34px; border: 9px solid var(--mug); border-left: 0; border-radius: 0 18px 18px 0; }
+.ring { position: absolute; width: 92px; height: 92px; border-radius: 50%; border: 3px solid var(--ring); -webkit-mask: conic-gradient(#000 0 250deg, transparent 250deg 290deg, #000 290deg); mask: conic-gradient(#000 0 250deg, transparent 250deg 290deg, #000 290deg); }
+.ring.one { top: 150px; right: 150px; }
+.ring.two { bottom: 64px; left: 60px; transform: rotate(140deg) scale(0.92); opacity: 0.8; }
+.sticky { position: absolute; top: 58px; left: 64px; width: 150px; height: 140px; background: var(--sticky); color: var(--sticky-ink); transform: rotate(-5deg); padding: 12px 14px; font: 600 21px/1.15 Caveat, "Comic Sans MS", cursive; box-shadow: 2px 8px 12px -6px var(--shadow); }
+.pencil { position: absolute; left: 90px; bottom: 120px; width: 230px; height: 11px; transform: rotate(-16deg); display: flex; filter: drop-shadow(0 6px 5px var(--shadow-soft)); }
+.pencil .tip { width: 28px; background: linear-gradient(to right, var(--graphite) 0 8px, var(--wood-tip) 8px); clip-path: polygon(0 50%, 100% 0, 100% 100%); }
+.pencil .body { flex: 1; background: linear-gradient(var(--pencil) 0 50%, var(--pencil-2) 50%); }
+.pencil .ferrule { width: 15px; background: repeating-linear-gradient(to right, var(--ferrule) 0 3px, var(--plate-rule) 3px 4px); }
+.pencil .eraser { width: 17px; background: var(--eraser); border-radius: 0 3px 3px 0; }
+.crumbs { position: absolute; left: 330px; bottom: 150px; width: 40px; height: 20px; background: radial-gradient(circle at 10% 40%, var(--eraser) 0 2px, transparent 3px), radial-gradient(circle at 45% 80%, var(--eraser) 0 1.5px, transparent 2.5px), radial-gradient(circle at 80% 30%, var(--eraser) 0 2px, transparent 3px); opacity: 0.8; }
+
+/* ---------- The book (A from round one, now a fixed size) ---------- */
+.book {
+  --bw: min(360px, calc(100cqw - 48px));
+  position: absolute; left: var(--bx, 50%); top: 50%; translate: -50% -50%;
+  width: var(--bw); aspect-ratio: 2 / 3; perspective: 1800px; z-index: 2;
+  transition: transform 1.1s cubic-bezier(0.3, 0.1, 0.2, 1);
+}
+.book::before { content: ""; position: absolute; top: 5px; bottom: 2px; right: -9px; width: 12px; background: repeating-linear-gradient(to right, var(--page-edge) 0 1px, var(--page) 1px 3px); border-radius: 0 3px 3px 0; }
+.book::after { content: ""; position: absolute; left: 6px; right: -8px; bottom: -9px; height: 12px; background: repeating-linear-gradient(to bottom, var(--page-edge) 0 1px, var(--page) 1px 3px); border-radius: 0 0 3px 3px; box-shadow: 0 30px 44px -14px var(--shadow); }
+.score-corner { position: absolute; z-index: -1; left: -96px; bottom: 34px; width: 210px; height: 270px; background: var(--page); transform: rotate(-9deg); box-shadow: 0 10px 20px -8px var(--shadow); padding: 14px 14px 0 16px; font: 12px/22px "IBM Plex Mono", monospace; color: var(--muted); background-image: repeating-linear-gradient(to bottom, transparent 0 21px, var(--rule) 21px 22px); background-position: 0 36px; overflow: hidden; }
+.inside { position: absolute; inset: 0; background: var(--page); border-radius: 2px 4px 4px 2px; box-shadow: inset 18px 0 22px -16px var(--gutter-shade); padding: 40px 32px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.inside .sc { font: 500 11px/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.inside h3 { font-size: 34px; line-height: 1.1; }
+.inside .linkish { align-self: flex-start; color: var(--muted); font-size: 13px; }
+.cover { position: absolute; inset: 0; transform-origin: left center; transform-style: preserve-3d; transition: transform 1.2s cubic-bezier(0.3, 0.1, 0.2, 1), opacity 0.5s; }
+.front {
+  position: absolute; inset: 0; backface-visibility: hidden;
+  background: repeating-linear-gradient(45deg, var(--weave) 0 1px, transparent 1px 4px), var(--cover);
+  color: var(--foil); border-radius: 3px 6px 6px 3px;
+  box-shadow: inset 13px 0 0 var(--cover-2), 0 2px 3px var(--shadow-soft);
+  padding: 28px 26px 22px 40px; display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.back { position: absolute; inset: 0; transform: rotateY(180deg); backface-visibility: hidden; border-radius: 6px 3px 3px 6px; background: radial-gradient(circle at 30% 30%, var(--endpaper-b) 0 22%, transparent 23%) 0 0 / 18px 18px, radial-gradient(circle at 75% 70%, var(--endpaper-b) 0 14%, transparent 15%) 0 0 / 26px 26px, var(--endpaper-a); }
+.foil-title { font: 600 32px/1 Literata, Georgia, serif; letter-spacing: 0.08em; font-variant: small-caps; }
+.foil-sub { font: italic 15px/1.2 Literata, Georgia, serif; }
+.foil-rule { width: 64%; height: 1px; background: var(--foil); opacity: 0.6; }
+.foil-knight { font-size: 22px; line-height: 1; }
+.foil-vol { margin-top: auto; font: 500 11px/1 "IBM Plex Mono", monospace; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.85; }
+.plate { width: 100%; background: var(--page); color: var(--fg); padding: 18px 22px 14px; border-radius: 2px; transform: rotate(-0.6deg); box-shadow: inset 0 0 0 5px var(--page), inset 0 0 0 6px var(--plate-rule), inset 0 0 0 8px var(--page), inset 0 0 0 9px var(--plate-rule), 0 2px 4px var(--shadow-soft); display: grid; gap: 9px; margin-top: 4px; }
+.plate .ex { text-align: center; font: italic 24px/1.1 Literata, Georgia, serif; }
+.plate .belongs { text-align: center; font: 500 10px/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-top: -4px; }
+.plate .notice { font-size: 12.5px; color: var(--success); text-align: center; }
+.pf { display: grid; }
+.pf span { font: 500 10px/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.pf input { border: 0; border-bottom: 1px solid var(--plate-rule); background: transparent; color: var(--fg); font: italic 17px/1.3 Literata, Georgia, serif; padding: 2px 0 4px; outline: none; width: 100%; }
+.pf input:focus { border-bottom: 2px solid var(--primary); padding-bottom: 3px; }
+.plate .btn { justify-self: center; margin-top: 2px; }
+.plate-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+.guest-ribbon { position: absolute; top: calc(100% - 6px); right: 50px; z-index: 1; display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 10px; border: 0; background: none; padding: 0; cursor: pointer; color: var(--strip-ink); font-size: 13px; }
+.guest-ribbon i { display: block; width: 26px; height: 74px; background: linear-gradient(var(--ribbon-fold) 0 8px, var(--ribbon) 8px); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%); transition: height 0.3s; filter: drop-shadow(0 4px 3px var(--shadow-soft)); }
+.guest-ribbon:hover i { height: 86px; }
+.guest-ribbon span { margin-top: 36px; text-decoration: underline; text-underline-offset: 3px; text-shadow: 0 0 6px var(--wood-a); }
+.v[data-open] .cover { transform: rotateY(-172deg); }
+.v[data-open] .book { transform: translateX(46%); }
+.v[data-open] .guest-ribbon { visibility: hidden; }
+@container (max-width: 640px) {
+  .v[data-open] .book { transform: none; }
+  .v[data-open] .cover { transform: none; opacity: 0; pointer-events: none; }
+  .mug { top: -30px; right: -34px; }
+  .ring.one, .crumbs { display: none; }
+  .sticky { top: -40px; left: -30px; }
+  .pencil { left: -60px; bottom: 30px; }
+  .score-corner { display: none; }
+}
+
+/* ---------- B1. A sheet laid over the cover ---------- */
+.sheet-over {
+  position: absolute; left: 14px; right: -16px; z-index: 3; cursor: default;
+  box-shadow: 0 2px 3px var(--shadow-soft), 0 24px 34px -18px var(--shadow);
+  transition: transform 0.7s cubic-bezier(0.3, 0.1, 0.2, 1), opacity 0.35s;
+  opacity: 0; pointer-events: none;
+}
+.sheet-over.invite { top: 92px; transform: translate(130%, 40%) rotate(18deg); }
+.sheet-over.lost { top: 150px; transform: translate(130%, 70%) rotate(-12deg); }
+/* Waiting on the desk, to the book's right, until asked for. */
+.v[data-waiting="on"] .sheet-over { opacity: 1; pointer-events: auto; cursor: pointer; }
+.v[data-waiting="on"] .sheet-over.invite { transform: translate(112%, -14%) rotate(8deg) scale(0.88); }
+.v[data-waiting="on"] .sheet-over.lost { transform: translate(104%, 40%) rotate(-7deg) scale(0.86); }
+.v[data-waiting="on"] .sheet-over :is(input, button) { pointer-events: none; }
+.v[data-sheet="up"] .sheet-over.invite, .v[data-sheet="reset"] .sheet-over.lost { transform: rotate(-1.3deg); opacity: 1; pointer-events: auto; cursor: default; z-index: 4; }
+.v[data-sheet="up"] .sheet-over.invite :is(input, button), .v[data-sheet="reset"] .sheet-over.lost :is(input, button) { pointer-events: auto; }
+@container (max-width: 640px) { .v[data-waiting="on"] .sheet-over:not(.sheet-on) { opacity: 0; } }
+
+.invite { background: var(--invite); color: var(--invite-ink); border-radius: 2px; padding: 20px 24px 16px; display: grid; gap: 8px; }
+.invite::before { content: ""; position: absolute; inset: 7px; border: 1px solid var(--invite-rule); pointer-events: none; }
+.invite .kicker { text-align: center; font: 500 10px/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.18em; text-transform: uppercase; color: var(--invite-muted); }
+.invite h3 { text-align: center; font: italic 400 27px/1.1 Literata, Georgia, serif; }
+.invite .lede { text-align: center; font-size: 13px; color: var(--invite-muted); margin-bottom: 2px; }
+.invite .pf span { color: var(--invite-muted); }
+.invite .pf input { border-bottom-color: var(--invite-rule); color: var(--invite-ink); }
+.invite .pf input.code { font: 500 15px/1.3 "IBM Plex Mono", monospace; letter-spacing: 0.05em; text-transform: uppercase; }
+.sheet-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 6px; font-size: 13px; }
+.lost { background: var(--index); color: var(--fg); border-radius: 2px; padding: 12px 22px 16px; display: grid; gap: 6px; background-image: linear-gradient(to bottom, transparent 0 40px, var(--index-red) 40px 41px, transparent 41px); }
+.lost h3 { font: 600 20px/28px Literata, Georgia, serif; }
+.lost .lede { font-size: 13px; color: var(--muted); }
+
+/* ---------- B2 and B3. The legal pad ---------- */
+.pad {
+  --pw: min(300px, calc(100cqw - 60px));
+  position: absolute; left: var(--px); top: 50%; translate: 0 -50%;
+  width: var(--pw); height: 486px; z-index: 2;
+  transform: rotate(2deg);
+}
+.pad::after { /* the pages under the top ones */ content: ""; position: absolute; inset: 6px -4px -6px 4px; z-index: -1; background: var(--pad-under); border-radius: 0 0 3px 3px; box-shadow: 0 2px 0 var(--pad-under), 0 26px 40px -16px var(--shadow); }
+.pad-binding { position: absolute; top: -4px; left: -3px; right: -3px; height: 34px; z-index: 5; background: var(--pad-binding); border-radius: 3px 3px 1px 1px; box-shadow: 0 2px 3px var(--shadow-soft); }
+.pad-page {
+  position: absolute; inset: 0; background: var(--pad); border-radius: 0 0 2px 2px;
+  background-image: linear-gradient(to right, transparent 0 38px, var(--pad-margin) 38px 39px, transparent 39px), repeating-linear-gradient(to bottom, transparent 0 27px, var(--pad-rule) 27px 28px);
+  background-position: 0 0, 0 50px;
+  padding: 50px 18px 0 48px; color: var(--pad-ink);
+}
+.pad-page.notes { z-index: 3; font: 500 21px/28px Caveat, "Comic Sans MS", cursive; transform-origin: 50% 0; }
+.pad-page.notes .t { text-decoration: underline; text-underline-offset: 4px; }
+.pad-page.notes s { opacity: 0.75; }
+.pad-page.notes .tear { font: inherit; color: inherit; border: 0; background: none; padding: 0; text-decoration: underline wavy; text-underline-offset: 5px; cursor: pointer; }
+.pad-page.under { z-index: 2; display: none; }
+.v[data-pad="up"] .pad-page.under.up, .v[data-pad="reset"] .pad-page.under.reset { display: block; }
+.v[data-torn] .pad-page.notes { animation: tear 1s cubic-bezier(0.4, 0, 0.6, 1) forwards; pointer-events: none; }
+@keyframes tear {
+  0% { transform: none; }
+  22% { transform: rotate(-3deg) translate(-4px, 10px); }
+  100% { transform: translate(170px, 600px) rotate(31deg); }
+}
+.pad-form h3 { font: 600 27px/56px Caveat, "Comic Sans MS", cursive; height: 56px; color: var(--pad-ink); }
+.pad-form .pp { display: grid; grid-template-rows: 28px 28px; }
+.pad-form .pp span { font-size: 12px; color: var(--pad-label); align-self: end; padding-bottom: 2px; }
+.pad-form .pp input { border: 0; background: transparent; outline: none; width: 100%; height: 28px; padding: 0 0 2px; color: var(--pad-ink); font: italic 17px/28px Literata, Georgia, serif; }
+.pad-form .pp input:focus { background: linear-gradient(to top, var(--pad-ink) 0 2px, transparent 2px); }
+.pad-form .pp input.code { font: 500 14px/28px "IBM Plex Mono", monospace; text-transform: uppercase; }
+.pad-form .foot .btn { padding: 6px 11px; font-size: 13px; }
+.pad-form .foot { height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+.pad-form .lede { font-size: 13px; line-height: 28px; color: var(--pad-label); }
+.pad-form .lede.two { height: 56px; line-height: 28px; }
+
+/* B2: the pad lies beside the book. B3 (and B2 on a phone): it waits at the desk's edge and the
+   camera moves to it. */
+.v[data-camera="side"] .book { --bx: calc(50% - 175px); }
+.v[data-camera="side"] .pad { --px: calc(50% + 40px); }
+.v[data-camera="pan"] .pad { --px: calc(100% - 70px); }
+@container (max-width: 760px) {
+  .v[data-camera="side"] .book { --bx: 50%; }
+  .v[data-camera="side"] .pad { --px: calc(100% - 46px); }
+}
+
+.result { display: none; position: absolute; left: 50%; bottom: 18px; translate: -50% 0; z-index: 9; width: max-content; max-width: calc(100% - 32px); background: var(--page); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 13px; color: var(--muted); text-align: center; box-shadow: 0 12px 24px -14px var(--shadow); }
+.v[data-open] .result { display: block; }
+
+/* ---------- C. The dashboard on the same desk ---------- */
+.dash .canvas { display: grid; grid-template-rows: 52px 1fr; padding: 0 44px 34px; }
+.d-strip { display: flex; align-items: center; gap: 18px; white-space: nowrap; color: var(--strip-ink); font-size: 14px; z-index: 3; }
+.d-strip .brand { font: 600 18px/1 Literata, Georgia, serif; }
+.d-strip nav { display: flex; gap: 4px; overflow: hidden; }
+.d-strip nav span { padding: 5px 10px; border-radius: 6px; color: var(--strip-ink); }
+.d-strip nav .on { background: var(--tab-on); color: var(--fg); }
+.d-strip .grow { flex: 1; }
+.d-strip .acct { color: var(--strip-muted); }
+.d-book { position: relative; display: grid; grid-template-columns: 1fr 1fr; margin: 10px 14px 6px; z-index: 2; }
+.d-book::before { /* the cover behind the pages */ content: ""; position: absolute; inset: -10px -14px -12px; z-index: -2; background: repeating-linear-gradient(45deg, var(--weave) 0 1px, transparent 1px 4px), var(--cover); border-radius: 6px; box-shadow: 0 34px 50px -24px var(--shadow); }
+.d-book::after { /* page edges */ content: ""; position: absolute; inset: -4px -7px -6px; z-index: -1; background: repeating-linear-gradient(to right, var(--page-edge) 0 1px, var(--page) 1px 3px); border-radius: 3px; }
+.d-page { position: relative; background: var(--page); padding: 22px 34px 18px; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+.d-page.l { box-shadow: inset -26px 0 28px -22px var(--gutter-shade); border-radius: 2px 0 0 2px; }
+.d-page.r { box-shadow: inset 26px 0 28px -22px var(--gutter-shade); border-radius: 0 2px 2px 0; }
+.d-head { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule); padding-bottom: 7px; }
+.d-page h3 { font-size: 30px; line-height: 1.1; }
+.d-line { height: 10px; border-radius: 3px; background: var(--rule); }
+.d-row { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: center; border-top: 1px solid var(--rule); padding-top: 12px; }
+.d-row i { width: 34px; height: 46px; border-radius: 2px; background: var(--cover); }
+.d-row div { display: grid; gap: 7px; }
+.d-folio { margin-top: auto; font: 500 12px/1 Literata, Georgia, serif; font-variant: small-caps; color: var(--muted); }
+.d-mark { position: absolute; top: -2px; left: 196px; width: 22px; height: 46px; background: linear-gradient(var(--ribbon-fold) 0 6px, var(--ribbon) 6px); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%); }
+.dash .mug { top: auto; bottom: 26px; right: -30px; }
+.dash .pencil { left: -40px; bottom: 6px; transform: rotate(-4deg); }
+.dash .sticky { display: none; }
+@container (max-width: 640px) {
+  .dash .canvas { padding: 0 14px 20px; }
+  .d-strip nav span:not(.on) { display: none; }
+  .d-strip .acct:first-of-type { display: none; }
+  .d-book { grid-template-columns: 1fr; margin: 6px 6px 4px; }
+  .d-page.r { display: none; }
+  .d-page.l { box-shadow: none; padding: 20px 20px 16px; }
+}
+
+.questions { border: 1px solid var(--border); border-radius: 8px; background: var(--page); padding: 18px 20px; display: grid; gap: 10px; max-width: 80ch; }
+.questions h2 { font-size: 20px; }
+.questions ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; transition-delay: 0s !important; animation-delay: 0s !important; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">ByTheBook · plans/book-ui.md · Phase 3 · Sign-in, round two</p>
+    <h1>The bookplate, on a desk</h1>
+    <p>The cover from round one's A, now a fixed size. It only ever signs you in. Creating an account and resetting a password happen on separate sheets, and these mockups try three ways to bring a sheet in: laid over the cover, torn off a legal pad beside the book, or with the camera moving across to the pad. The last one shows the dashboard on the same desk. Light is oak and dark is walnut, following the theme.</p>
+    <div class="controls">
+      <div class="control"><span class="eyebrow">Theme</span>
+        <div class="seg" role="group" aria-label="Theme"><button type="button" data-theme-set="system">System</button><button type="button" data-theme-set="light">Light · oak</button><button type="button" data-theme-set="dark">Dark · walnut</button></div></div>
+      <div class="control"><span class="eyebrow">Desk</span>
+        <div class="seg" role="group" aria-label="Desk"><button type="button" data-clutter-set="tidy">Tidy</button><button type="button" data-clutter-set="lived">Lived in</button></div></div>
+      <div class="control"><span class="eyebrow">Window</span>
+        <div class="seg" role="group" aria-label="Window"><button type="button" data-frame-set="wide">Wide</button><button type="button" data-frame-set="phone">Phone</button></div></div>
+    </div>
+  </header>
+
+  <section class="v" id="b1" data-camera="none" data-waiting="off" aria-labelledby="b1-title">
+    <div class="v-head">
+      <span class="letter">B1</span>
+      <div>
+        <p class="kind">Your second option</p>
+        <h2 id="b1-title">A sheet laid over the cover</h2>
+        <p class="pitch">The cover never changes. “Create an account” slides an invitation card onto the book, over the bookplate, with its invite code at the top. “Forgot your password?” brings an index card instead. “Back to signing in” takes the sheet away again. The sheets can wait on the desk beside the book, so you can see them before you ask, or stay out of sight until you do.</p>
+      </div>
+      <div class="row">
+        <span>Sheets before they're asked for:</span>
+        <div class="seg" role="group" aria-label="Sheets before they're asked for"><button type="button" data-waiting-set="off">Out of sight</button><button type="button" data-waiting-set="on">Waiting on the desk</button></div>
+        <button type="button" class="linkish" data-restore>Reset this desk</button>
+      </div>
+    </div>
+    <div class="stage"><div class="canvas" data-book="over"></div><p class="result" data-result-line></p></div>
+    <ul class="notes">
+      <li><strong>No camera:</strong> everything happens where you're already looking, and it works the same on a phone, because the sheet fits on the cover.</li>
+      <li><strong>The invitation suits the beta:</strong> an account needs an invite code, so the sheet that makes one is an invitation.</li>
+      <li><strong>Cost:</strong> the bookplate is covered rather than replaced. That's what you asked for, but it means two layers of paper on the cover at once.</li>
+    </ul>
+  </section>
+
+  <section class="v" id="b2" data-camera="side" aria-labelledby="b2-title">
+    <div class="v-head">
+      <span class="letter">B2</span>
+      <div>
+        <p class="kind">Your first option</p>
+        <h2 id="b2-title">The legal pad beside the book</h2>
+        <p class="pitch">A yellow legal pad lies to the book's right, its top page full of scratch notes on openings. Ask to create an account and that page tears off and falls onto the desk, revealing the form written on the page underneath. The pad is big enough to show the form where it lies, so on a wide window the camera doesn't move. On a phone the pad sits at the desk's edge and the camera goes to it (B3).</p>
+      </div>
+      <div class="row"><button type="button" class="linkish" data-restore>Reset this desk</button></div>
+    </div>
+    <div class="stage"><div class="canvas" data-book="pad"></div><p class="result" data-result-line></p></div>
+    <ul class="notes">
+      <li><strong>Lived in by design:</strong> the notes are the clutter, and a torn page stays on the desk afterwards.</li>
+      <li><strong>Size:</strong> book and pad side by side need about 760px of width. Below that, this turns into B3.</li>
+      <li><strong>Handwriting:</strong> the notes use Caveat, a handwriting face. That's a fourth font beyond D2's three; the form's fields stay in the book's fonts.</li>
+    </ul>
+  </section>
+
+  <section class="v" id="b3" data-camera="pan" aria-labelledby="b3-title">
+    <div class="v-head">
+      <span class="letter">B3</span>
+      <div>
+        <p class="kind">Your first option, with the camera</p>
+        <h2 id="b3-title">The camera moves to the pad</h2>
+        <p class="pitch">The pad waits at the desk's right edge, mostly out of view. Asking to create an account slides the desk across until the pad is in the middle, then tears off the notes. “Back to signing in” slides back to the book. This lets you judge whether the move feels odd. It's the same kind of camera move as the Library's zoom, but sideways.</p>
+      </div>
+      <div class="row"><button type="button" class="linkish" data-restore>Reset this desk</button></div>
+    </div>
+    <div class="stage"><div class="canvas" data-book="pad"></div><p class="result" data-result-line></p></div>
+    <ul class="notes">
+      <li><strong>Where it helps:</strong> on a phone there's no room beside the book, so B1 or B3 is needed there whatever happens on a wide window.</li>
+      <li><strong>What it costs:</strong> the camera has to move twice for each detour. Also, the desk moving under a still lamp light looks right, but only because the light isn't painted onto the wood.</li>
+    </ul>
+  </section>
+
+  <section class="v" id="c" aria-labelledby="c-title">
+    <div class="v-head">
+      <span class="letter">C</span>
+      <div>
+        <p class="kind">The app, same desk</p>
+        <h2 id="c-title">The dashboard on wood</h2>
+        <p class="pitch">The open book from the dashboard (a sketch of the Library spread) on the same desk, to see how wood works behind the app. The book covers most of the desk, so only the strip and a margin of wood show, and any objects can only peek in at the edges.</p>
+      </div>
+    </div>
+    <div class="stage dash" style="height: 600px;">
+      <div class="canvas">
+        <span class="mug lived" aria-hidden="true"></span>
+        <div class="pencil lived" aria-hidden="true"><span class="tip"></span><span class="body"></span><span class="ferrule"></span><span class="eraser"></span></div>
+        <div class="d-strip">
+          <span class="brand">ByTheBook</span>
+          <nav><span>Overview</span><span class="on">Library</span><span>Bookstore</span><span>Explorer</span><span>Visualizations</span><span>Train</span></nav>
+          <span class="grow"></span><span class="acct">Vibes</span><span class="acct">Sign in</span>
+        </div>
+        <div class="d-book">
+          <div class="d-page l">
+            <span class="d-mark" aria-hidden="true"></span>
+            <div class="d-head"><span>Library</span><span>Your books</span></div>
+            <h3>Library</h3>
+            <div class="d-line" style="width: 70%"></div><div class="d-line" style="width: 55%"></div>
+            <div class="d-row"><i></i><div><div class="d-line" style="width: 60%"></div><div class="d-line" style="width: 35%"></div></div></div>
+            <div class="d-row"><i></i><div><div class="d-line" style="width: 48%"></div><div class="d-line" style="width: 30%"></div></div></div>
+            <div class="d-row"><i></i><div><div class="d-line" style="width: 66%"></div><div class="d-line" style="width: 40%"></div></div></div>
+            <span class="d-folio">ii</span>
+          </div>
+          <div class="d-page r">
+            <div class="d-head"><span></span><span>Sicilian, Najdorf</span></div>
+            <div class="d-line" style="width: 40%; height: 14px"></div>
+            <div class="d-line" style="width: 90%"></div><div class="d-line" style="width: 84%"></div><div class="d-line" style="width: 62%"></div>
+            <div class="d-line" style="width: 100%; height: 150px; opacity: 0.5"></div>
+            <span class="d-folio" style="align-self: flex-end">Chapter II of VIII</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul class="notes">
+      <li><strong>The strip sits on the wood.</strong> Its text needs a dark ink on oak and a light one on walnut. Both pass AA here, but the grain behind lowers readability. The highlighted tab gets a paper chip so it stays clear.</li>
+      <li><strong>The desk is painted behind the strip</strong> to hide a leaf turning under it (<code>turns.css</code>). With wood, the strip and the desk have to share one fixed background so the grain lines up.</li>
+      <li><strong>The book never moves on its desk</strong>, so objects at the edges stay put from page to page. They'd only appear where the window leaves room, never under the book.</li>
+    </ul>
+  </section>
+
+  <aside class="questions">
+    <h2>Open questions</h2>
+    <ol>
+      <li><strong>Is wood the base look or a vibe?</strong> Vibes D14 says vibes leave the desk alone, so wood behind the app would be a change to book-ui's base look (D2/D3), not a vibe. Or should only the sign-in page get the wood, with the app keeping its plain desk?</li>
+      <li><strong>How lived in?</strong> Should the objects be decoration only (hidden from screen readers, never clickable), or should some do something, like the mug opening Settings? I'd keep them decorative.</li>
+      <li><strong>Are the objects the same every visit?</strong> They could be, or the pad's notes could come from your own books, and the pencilled line from the catalog.</li>
+      <li><strong>A fourth font?</strong> Caveat for the handwriting, or keep the notes in the book's fonts in italic?</li>
+      <li><strong>Phones:</strong> is the camera move (B3) fine there even if a wide window uses B1 or B2?</li>
+      <li><strong>Should the sheets wait on the desk?</strong> In B1, do you want to see the invitation before you ask for it, or keep a tidy desk?</li>
+    </ol>
+  </aside>
+</div>
+
+<template id="book-tpl">
+  <span class="ring one lived" aria-hidden="true"></span>
+  <span class="ring two lived" aria-hidden="true"></span>
+  <span class="mug lived" aria-hidden="true"></span>
+  <p class="sticky lived" aria-hidden="true">Club night Thu, bring the Najdorf notes!</p>
+  <div class="pencil lived" aria-hidden="true"><span class="tip"></span><span class="body"></span><span class="ferrule"></span><span class="eraser"></span></div>
+  <span class="crumbs lived" aria-hidden="true"></span>
+  <div class="book">
+    <div class="score-corner lived" aria-hidden="true">1. e4 c5<br>2. Nf3 d6<br>3. d4 cxd4<br>4. Nxd4 Nf6<br>5. Nc3 a6<br>6. Bg5 e6<br>7. f4 Qb6</div>
+    <div class="inside" aria-live="polite">
+      <p class="sc">Chapter I of VIII</p>
+      <h3>Overview</h3>
+      <p data-result="in" hidden>Welcome back. The book opens where you left it.</p>
+      <p data-result="up" hidden>Your account is made and you're signed in. The book offers to copy in the books this browser holds.</p>
+      <p data-result="guest" hidden>You're reading as a guest. Your books stay in this browser until you sign in.</p>
+      <button type="button" class="linkish" data-close>Close the book again</button>
+    </div>
+    <div class="cover">
+      <form class="front" data-form="in" autocomplete="on">
+        <span class="foil-knight" aria-hidden="true">♘</span>
+        <p class="foil-title">ByTheBook</p>
+        <div class="foil-rule"></div>
+        <p class="foil-sub">An opening trainer</p>
+        <div class="plate">
+          <p class="ex">Ex libris</p>
+          <p class="belongs">This book belongs to</p>
+          <p class="notice" data-notice hidden>Your password is changed. Sign in with the new one.</p>
+          <label class="pf"><span>Email</span><input name="email" type="email" autocomplete="email"></label>
+          <label class="pf"><span>Password</span><input name="password" type="password" autocomplete="current-password"></label>
+          <button class="btn" type="submit">Open my book</button>
+          <p class="plate-links">
+            <button type="button" class="linkish" data-go="up">Create an account</button>
+            <button type="button" class="linkish" data-go="reset">Forgot your password?</button>
+          </p>
+        </div>
+        <p class="foil-vol">Vol. I · Beta edition</p>
+      </form>
+      <div class="back" aria-hidden="true"></div>
+    </div>
+    <button type="button" class="guest-ribbon" data-guest><i aria-hidden="true"></i><span>Read as a guest</span></button>
+  </div>
+</template>
+
+<template id="over-tpl">
+  <form class="sheet-over invite" data-form="up" data-go-sheet="up" autocomplete="on">
+    <p class="kicker">ByTheBook · Beta</p>
+    <h3>You're invited</h3>
+    <p class="lede">An account keeps your books on every device. Each invite code works once.</p>
+    <label class="pf"><span>Invite code</span><input class="code" name="code" autocomplete="off" placeholder="XXXXX-XXXXX-XXXXX-XXXXX"></label>
+    <label class="pf"><span>Username</span><input name="username" autocomplete="username"></label>
+    <label class="pf"><span>Email</span><input name="email" type="email" autocomplete="email"></label>
+    <label class="pf"><span>Password</span><input name="password" type="password" autocomplete="new-password"></label>
+    <label class="pf"><span>Password again</span><input name="confirm" type="password" autocomplete="new-password"></label>
+    <div class="sheet-foot"><button type="button" class="linkish" data-go="in">Back to signing in</button><button class="btn" type="submit">Create account</button></div>
+  </form>
+  <form class="sheet-over lost" data-form="reset" data-go-sheet="reset" autocomplete="on">
+    <h3>Lost your password?</h3>
+    <p class="lede">Enter the reset code the developer sent you.</p>
+    <label class="pf"><span>Reset code</span><input name="reset" autocomplete="off"></label>
+    <label class="pf"><span>New password</span><input name="password" type="password" autocomplete="new-password"></label>
+    <label class="pf"><span>Password again</span><input name="confirm" type="password" autocomplete="new-password"></label>
+    <div class="sheet-foot"><button type="button" class="linkish" data-go="in">Back to signing in</button><button class="btn" type="submit">Change password</button></div>
+  </form>
+</template>
+
+<template id="pad-tpl">
+  <div class="pad">
+    <div class="pad-binding" aria-hidden="true"></div>
+    <div class="pad-page under up">
+      <form class="pad-form" data-form="up" autocomplete="on">
+        <h3>New reader</h3>
+        <p class="lede">Each invite code works once.</p>
+        <label class="pp"><span>Invite code</span><input class="code" name="code" autocomplete="off" placeholder="XXXXX-XXXXX-…"></label>
+        <label class="pp"><span>Username</span><input name="username" autocomplete="username"></label>
+        <label class="pp"><span>Email</span><input name="email" type="email" autocomplete="email"></label>
+        <label class="pp"><span>Password</span><input name="password" type="password" autocomplete="new-password"></label>
+        <label class="pp"><span>Again</span><input name="confirm" type="password" autocomplete="new-password"></label>
+        <div class="foot"><button type="button" class="linkish" data-go="in">Never mind</button><button class="btn" type="submit">Create account</button></div>
+      </form>
+    </div>
+    <div class="pad-page under reset">
+      <form class="pad-form" data-form="reset" autocomplete="on">
+        <h3>Lost password</h3>
+        <p class="lede two">Enter the reset code the developer sent you, and a new password.</p>
+        <label class="pp"><span>Reset code</span><input name="reset" autocomplete="off"></label>
+        <label class="pp"><span>New password</span><input name="password" type="password" autocomplete="new-password"></label>
+        <label class="pp"><span>Again</span><input name="confirm" type="password" autocomplete="new-password"></label>
+        <div class="foot"><button type="button" class="linkish" data-go="in">Never mind</button><button class="btn" type="submit">Save password</button></div>
+      </form>
+    </div>
+    <div class="pad-page notes" aria-hidden="true">
+      <p class="t">To look at:</p>
+      <p>Najdorf, 6.Bg5 e6 7.f4 Qb6!?</p>
+      <p>(poisoned pawn, scary)</p>
+      <p>Caro-Kann Adv: 3...c5 instead?</p>
+      <p>Marshall: <s>8.c3</s> 8.a4!</p>
+      <p>London vs early ...Qb6?</p>
+      <p>&nbsp;</p>
+      <p>Drill the Sveshnikov by Fri</p>
+      <p>&nbsp;</p>
+      <p><button type="button" class="tear" data-go="up" tabindex="-1">no account? tear off a page</button></p>
+    </div>
+  </div>
+</template>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Page controls: theme, desk, window.
+  root.dataset.clutter = "lived";
+  root.dataset.frame = "wide";
+  const groups = [
+    ["data-theme-set", () => root.getAttribute("data-theme") || "system", (v) => (v === "system" ? root.removeAttribute("data-theme") : root.setAttribute("data-theme", v))],
+    ["data-clutter-set", () => root.dataset.clutter, (v) => (root.dataset.clutter = v)],
+    ["data-frame-set", () => root.dataset.frame, (v) => { root.dataset.frame = v; document.querySelectorAll(".v").forEach(restore); }],
+  ];
+  const sync = () => groups.forEach(([attr, get]) => document.querySelectorAll(`[${attr}]`).forEach((b) => b.setAttribute("aria-pressed", String(b.getAttribute(attr) === get()))));
+  groups.forEach(([attr, , set]) => document.querySelectorAll(`[${attr}]`).forEach((b) => b.addEventListener("click", () => { set(b.getAttribute(attr)); sync(); })));
+  sync();
+
+  // Fill each desk from the templates.
+  document.querySelectorAll(".canvas[data-book]").forEach((canvas) => {
+    canvas.append(document.getElementById("book-tpl").content.cloneNode(true));
+    if (canvas.dataset.book === "over") canvas.querySelector(".book").append(document.getElementById("over-tpl").content.cloneNode(true));
+    if (canvas.dataset.book === "pad") canvas.append(document.getElementById("pad-tpl").content.cloneNode(true));
+  });
+
+  const RESULT_LINE = {
+    in: "Signed in: the cover opens onto the Overview.",
+    up: "Account made: you're signed in and the cover opens.",
+    guest: "Guest: the cover opens, and books stay in this browser.",
+  };
+
+  const pans = (v) => v.dataset.camera === "pan" || (v.dataset.camera === "side" && v.querySelector(".stage").clientWidth <= 760);
+
+  function camera(v, toPad) {
+    const stage = v.querySelector(".stage");
+    if (!toPad) { stage.style.setProperty("--shift", "0px"); return 0; }
+    const s = stage.getBoundingClientRect();
+    const p = v.querySelector(".pad").getBoundingClientRect();
+    const current = parseFloat(stage.style.getPropertyValue("--shift")) || 0;
+    const shift = current + (s.left + s.width / 2) - (p.left + p.width / 2);
+    stage.style.setProperty("--shift", `${shift}px`);
+    return reduced() ? 0 : 850;
+  }
+
+  function open(v, result) {
+    v.dataset.open = result;
+    v.querySelectorAll(".inside [data-result]").forEach((el) => { el.hidden = el.dataset.result !== result; });
+    v.querySelector("[data-result-line]").textContent = RESULT_LINE[result];
+  }
+
+  function go(v, mode) {
+    v.querySelector("[data-notice]").hidden = true;
+    if (v.dataset.camera === "none") {
+      if (mode === "in") delete v.dataset.sheet; else v.dataset.sheet = mode;
+      const sheet = v.querySelector(`.sheet-over[data-form="${mode}"]`);
+      if (sheet) setTimeout(() => sheet.querySelector("input")?.focus({ preventScroll: true }), reduced() ? 0 : 700);
+      return;
+    }
+    if (mode === "in") { camera(v, false); return; }
+    const wait = pans(v) ? camera(v, true) : 0;
+    setTimeout(() => {
+      v.dataset.pad = mode;
+      v.dataset.torn = "";
+      setTimeout(() => v.querySelector(`.pad-form[data-form="${mode}"] input`)?.focus({ preventScroll: true }), reduced() ? 0 : 500);
+    }, wait);
+  }
+
+  function restore(v) {
+    ["open", "sheet", "pad", "torn"].forEach((k) => delete v.dataset[k]);
+    v.querySelector(".stage")?.style.setProperty("--shift", "0px");
+    v.querySelectorAll("[data-notice]").forEach((n) => (n.hidden = true));
+  }
+
+  document.querySelectorAll(".v").forEach((v) => {
+    v.addEventListener("click", (e) => {
+      const t = e.target;
+      const goButton = t.closest("[data-go]");
+      if (goButton) { e.preventDefault(); go(v, goButton.dataset.go); return; }
+      const waiting = t.closest(".sheet-over");
+      if (waiting && v.dataset.waiting === "on" && !v.dataset.sheet) { go(v, waiting.dataset.goSheet); return; }
+      if (t.closest("[data-guest]")) { open(v, "guest"); return; }
+      if (t.closest("[data-close]")) { delete v.dataset.open; return; }
+      if (t.closest("[data-restore]")) { restore(v); return; }
+      const w = t.closest("[data-waiting-set]");
+      if (w) { v.dataset.waiting = w.dataset.waitingSet; delete v.dataset.sheet; syncWaiting(v); }
+    });
+    v.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const form = e.target.dataset.form;
+      if (form === "in") { open(v, "in"); return; }
+      // Both detours end back at the book: a new account opens it, a reset returns to the bookplate.
+      go(v, "in");
+      const delay = v.dataset.camera === "none" || !pans(v) ? (reduced() ? 0 : 650) : (reduced() ? 0 : 900);
+      setTimeout(() => {
+        if (form === "up") open(v, "up");
+        else v.querySelector("[data-notice]").hidden = false;
+      }, delay);
+    });
+    syncWaiting(v);
+  });
+
+  function syncWaiting(v) {
+    v.querySelectorAll("[data-waiting-set]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.waitingSet === v.dataset.waiting)));
+  }
+})();
+</script>

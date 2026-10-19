@@ -16,8 +16,20 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  /* The book: the desk it lies on, its paper, and what is drawn on and around it. */
-  --desk: #e2e4df;
+  /* The desk: dark walnut in every theme and vibe (plans/book-ui.md D20), a shade from --desk at
+     the window's top to --desk-low at its foot under the grain (--desk-paint). What lies on it,
+     the strip and the chapter column, reads in --desk-foreground and --desk-muted, with
+     --desk-line for its rules and borders, --desk-hover for a hovered control's ground and
+     --desk-mark for the current tab. */
+  --desk: #553826;
+  --desk-low: #3a2518;
+  --desk-foreground: #f1e8da;
+  --desk-muted: #cdb9a1;
+  --desk-line: rgb(241 232 218 / 0.24);
+  --desk-hover: rgb(241 232 218 / 0.1);
+  --desk-mark: #e07a84;
+
+  /* The book: its paper, and what is drawn on and around it. */
   --page: #fbfbf8;
   /* A shade off the page, for wells on it: an input's well, a selected row's ground. */
   --page-alt: #f1f2ed;
@@ -65,7 +77,11 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --desk: #0e1013;
+  --desk: #33221a;
+  --desk-low: #1f140e;
+  --desk-foreground: #e9e1d3;
+  --desk-muted: #bba892;
+
   --page: #1c1f24;
   --page-alt: #23272d;
   --rule: #30343b;
@@ -98,10 +114,11 @@
 
 /* The names shadcn/ui's components read that are made from the ones above. A custom property
    made from others is worked out where it is declared, so this block is declared again on the
-   book: a vibe that sets the book's paper there changes these with it. */
+   book: a vibe that sets the book's paper there changes these with it. The background is the
+   paper's, so a dialog or an outline button is paper; the desk is walnut, under it all. */
 :root,
 [data-slot="book"] {
-  --background: var(--desk);
+  --background: var(--page);
   --card: var(--page);
   --card-foreground: var(--foreground);
   --popover: var(--page);
@@ -113,7 +130,36 @@
   --ring: var(--muted-foreground);
 }
 
+/* What lies on the desk reads on the wood (D20): the strip and the chapter column take the
+   desk's colors for the names their text and controls use, and declare the made names again,
+   which would otherwise keep the paper's. A menu or dialog opened from them is paper. */
+.book-strip,
+.book-chapters {
+  --foreground: var(--desk-foreground);
+  --muted-foreground: var(--desk-muted);
+  --border: var(--desk-line);
+  --accent: var(--desk-hover);
+  --primary: var(--desk-foreground);
+  --primary-foreground: var(--desk);
+  --bookmark: var(--desk-mark);
+  --background: var(--desk);
+  --accent-foreground: var(--foreground);
+  --input: var(--border);
+  --ring: var(--muted-foreground);
+  color: var(--foreground);
+}
+
 :root {
+  /* The walnut desk's paint: its grain, a tile drawn by scripts/renderDeskGrain.ts, over its
+     shade, laid from the painted box's top left. The shade is the window's light, so it stays
+     with the window; in the spread the grain is the desk's own layer, which the camera moves
+     (`.book-desk-grain`). */
+  --desk-grain: url("/desk/walnut-grain.webp");
+  --desk-grain-width: 1800px;
+  --desk-grain-height: 900px;
+  --desk-shade: linear-gradient(var(--desk), var(--desk-low)) 0 0 / 100% 100dvh no-repeat;
+  --desk-paint: var(--desk-grain) 0 0 / var(--desk-grain-width) var(--desk-grain-height), var(--desk-shade);
+
   /* The shade behind a dialog or the phone menu. */
   --overlay: rgb(0 0 0 / 0.5);
   /* The cover's shadow on the desk, and the fold and shadow of a bookmark or page tab. */
@@ -198,7 +244,7 @@
 }
 
 body {
-  background: var(--background);
+  background: var(--desk);
   color: var(--foreground);
   font-family: var(--font-body);
 }
@@ -238,16 +284,20 @@ body {
   display: flex;
   height: 100dvh;
   overflow: hidden;
-  background: var(--desk);
+  background: var(--desk-paint);
   color: var(--foreground);
 }
 .book-frame[data-form="spread"] {
   position: relative;
   flex-direction: column;
+  background: var(--desk-shade);
 }
-/* The strip lies over the desk's top, which leaves it room, so a second level's view can scroll
-   under it (D8). Scrolled down, it hides above the window, and it drops down over the book when
-   the frame shows it (`data-over`). */
+/* The strip is words on the desk's top, which leaves it room, so a second level's view can
+   scroll under it (D8). It has no wood of its own: the desk's shows through it, so it zooms and
+   scrolls with the desk (D20). As the view scrolls down, the strip goes up with the desk, until
+   it is above the window (`--strip-scrolled`, which the frame keeps); scrolled back up, it comes
+   back the same way. It drops down over the book when the frame shows it (`data-over`), a board
+   cut from the desk at the window's top, and slides back up when that ends (`data-rising`). */
 .book-strip {
   position: absolute;
   top: 0;
@@ -261,17 +311,27 @@ body {
   /* Level with the outside of the page edges' stack. */
   padding-inline: calc(var(--book-side) - var(--cover-side));
   white-space: nowrap;
-  /* The desk, so a leaf that turns under the strip is hidden there (turns.css). */
-  background-color: var(--desk);
+  translate: 0 calc(-1 * min(var(--strip-scrolled, 0px), var(--strip)));
+  transition: box-shadow 180ms ease-out;
+}
+.book-strip[data-over] {
+  translate: 0 0;
+  box-shadow: 0 1px 0 var(--border);
+}
+/* Over the book, the strip is the wood the camera would show of the desk at the window's top,
+   the view's scroll taken off (`--grain-*`, the frame's). */
+.book-strip[data-over],
+.book-strip[data-rising] {
+  background:
+    var(--desk-grain) var(--grain-x, 0px) calc(var(--grain-y, 0px) - var(--strip-scrolled, 0px)) /
+      calc(var(--desk-grain-width) * var(--grain-scale, 1)) calc(var(--desk-grain-height) * var(--grain-scale, 1)),
+    var(--desk-shade);
+}
+.book-strip[data-over],
+.book-strip[data-rising] {
   transition:
     translate 180ms ease-out,
     box-shadow 180ms ease-out;
-}
-.book-strip[data-hidden] {
-  translate: 0 -100%;
-}
-.book-strip[data-over] {
-  box-shadow: 0 1px 0 var(--border);
 }
 :root[data-motion="none"] .book-strip {
   transition: none;
@@ -298,6 +358,28 @@ body {
 .book-desk[data-scrolls]::-webkit-scrollbar {
   display: none;
 }
+/* The spread's desk is a layer of its own (D20), so the camera moves its grain with the book: it
+   zooms in on both, and a second level's view scrolls both. Under the camera the grain is the
+   first level's window, moved as the book is (`--grain-*`, the frame's), and the layer clips it
+   to the desk, the room a second level scrolls included. In a turn it is a picture, which the
+   camera moves (turns.css). */
+.book-desk-wood {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+}
+.book-desk-grain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100dvh;
+  background: var(--desk-grain) 0 0 / var(--desk-grain-width) var(--desk-grain-height);
+  transform-origin: 0 0;
+  transform: translate(var(--grain-x, 0px), var(--grain-y, 0px)) scale(var(--grain-scale, 1));
+  view-transition-name: desk;
+}
 .book-scroll-room {
   position: absolute;
   top: 0;
@@ -317,7 +399,7 @@ body {
   z-index: 30;
   width: 4px;
   border-radius: 2px;
-  background: var(--muted-foreground);
+  background: var(--desk-muted);
   opacity: 0.45;
   pointer-events: none;
   animation: book-thumb-in 200ms ease-out var(--thumb-delay, 0ms) both;

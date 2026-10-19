@@ -1,0 +1,701 @@
+<!-- Mockup for plans/book-ui.md, Phase 3: the sign-in page, round three (2026-10-19).
+     B1 from plans/mockups/sign-in-desk.html made concrete: the closed book signs you in, and the
+     invitation (create an account) and the index card (reset a password) lie tucked under its right
+     side until asked for, then come over the cover. The desk is dark walnut in both themes.
+     The book's paint is src/app/globals.css's (--cover, --page, --page-edge, --border, --primary,
+     --bookmark, --radius) and its controls are shadcn/ui's Input and Button; the wood, the desk's
+     objects and the two sheets' paper are mockup-only tokens. The second section tries the
+     "living book" animations as a possible future vibe (plans/vibes.md). -->
+<title>Sign-in Cover Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400;1,7..72,500&display=swap">
+<style>
+:root {
+  /* The app's tokens (src/app/globals.css, light). */
+  --surround: #e2e4df;
+  --page: #fbfbf8;
+  --rule: #d9dcd5;
+  --page-edge: #cfd2ca;
+  --cover: #26364f;
+  --fg: #22252b;
+  --muted-fg: #5c636b;
+  --border: #d0d4cd;
+  --primary: #2c4a74;
+  --primary-fg: #ffffff;
+  --accent: #e3e9f3;
+  --success: #15803d;
+  --bookmark: #8c2f39;
+  --mark-fold: rgb(0 0 0 / 0.32);
+  --gutter: rgb(70 60 40 / 0.32);
+  --radius: 6px;
+  --radius-lg: 9px;
+
+  /* The cover's print and the light on it. */
+  --cover-ink: #e7ddc7;
+  --cover-ink-dim: rgb(231 221 199 / 0.62);
+  --cover-light: rgb(255 255 255 / 0.07);
+  --cover-hinge: rgb(0 0 0 / 0.28);
+
+  /* The desk: dark walnut in both themes, lit by a lamp. */
+  --wood: #553826;
+  --wood-low: #3a2518;
+  --lamp: rgb(255 232 196 / 0.2);
+  --vignette: rgb(16 8 3 / 0.5);
+  --sheen: rgb(255 240 220 / 0.045);
+  --desk-ink: #f0e5d3;
+  --shadow: rgb(12 6 2 / 0.55);
+  --shadow-soft: rgb(12 6 2 / 0.3);
+
+  /* The sheets. */
+  --invite: #f6f1e6;
+  --invite-ink: #2b261c;
+  --invite-muted: #6b604b;
+  --invite-rule: #b9a174;
+  --index: #fdfdfb;
+  --index-red: #d98a8a;
+
+  /* The desk's objects. */
+  --score: #f3f1ea;
+  --score-ink: #3a3d44;
+  --score-rule: #cfccc2;
+  --cloth-a: #2f4a3a;
+  --cloth-b: #5b2b2d;
+  --cloth-c: #3b3550;
+  --graphite: #2b2b2e;
+  --graphite-hi: #4a4a4f;
+  --cedar: #d8b48a;
+  --ferrule: #b7a46a;
+  --boxwood: #e2c79c;
+  --boxwood-low: #a07c4c;
+  --ebony: #2b2523;
+  --ebony-hi: #6a5e58;
+  --steel: #c9ccd1;
+  --ring: rgb(20 8 2 / 0.32);
+
+  /* The living book. */
+  --glow: rgb(255 214 140 / 0.95);
+  --glow-soft: rgb(255 196 110 / 0.35);
+  --ink: #1d2a44;
+
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1800' height='900'%3E%3Cfilter id='d'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0016667 0.08' numOctaves='4' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.09  0 0 0 0 0.05  0 0 0 0 0.02  1.9 0 0 0 -0.86'/%3E%3C/filter%3E%3Cfilter id='l'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0011111 0.04' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.86  0 0 0 0 0.62  0 0 0 0 0.4  2.2 0 0 0 -1.12'/%3E%3C/filter%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0055556 0.9' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.07  0 0 0 0 0.04  0 0 0 0 0.02  1.3 0 0 0 -0.6'/%3E%3C/filter%3E%3Crect width='1800' height='900' filter='url(%23l)' opacity='0.28'/%3E%3Crect width='1800' height='900' filter='url(%23d)'/%3E%3Crect width='1800' height='900' filter='url(%23f)' opacity='0.8'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surround: #0e1013; --page: #1c1f24; --rule: #30343b; --page-edge: #2d3138; --cover: #1b2433;
+    --fg: #e9e5dc; --muted-fg: #a3a19b; --border: #383c44; --primary: #a9c0e6; --primary-fg: #12161d;
+    --accent: rgb(169 192 230 / 0.13); --success: #4ade80; --bookmark: #c9505c; --gutter: rgb(0 0 0 / 0.5);
+    --cover-ink: #cfc3a6; --cover-ink-dim: rgb(207 195 166 / 0.55); --cover-light: rgb(255 255 255 / 0.04); --cover-hinge: rgb(0 0 0 / 0.4);
+    --wood: #33221a; --wood-low: #1f140e; --lamp: rgb(255 184 110 / 0.13); --vignette: rgb(0 0 0 / 0.66); --sheen: rgb(255 220 180 / 0.03);
+    --desk-ink: #e6d9c4; --shadow: rgb(0 0 0 / 0.7); --shadow-soft: rgb(0 0 0 / 0.42);
+    --invite: #29261f; --invite-ink: #eee6d2; --invite-muted: #b8ab8c; --invite-rule: #7d6c47;
+    --index: #23262b; --index-red: #7d4444;
+    --score: #26282c; --score-ink: #c9c6bd; --score-rule: #3b3e44;
+    --cloth-a: #223529; --cloth-b: #43201f; --cloth-c: #2b273b; --cedar: #a88a66; --ferrule: #8a7a4c;
+    --boxwood: #b89e78; --boxwood-low: #6f5636; --steel: #8e9298; --ring: rgb(0 0 0 / 0.4);
+    --ink: #c9d5f2;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --surround: #0e1013; --page: #1c1f24; --rule: #30343b; --page-edge: #2d3138; --cover: #1b2433;
+  --fg: #e9e5dc; --muted-fg: #a3a19b; --border: #383c44; --primary: #a9c0e6; --primary-fg: #12161d;
+  --accent: rgb(169 192 230 / 0.13); --success: #4ade80; --bookmark: #c9505c; --gutter: rgb(0 0 0 / 0.5);
+  --cover-ink: #cfc3a6; --cover-ink-dim: rgb(207 195 166 / 0.55); --cover-light: rgb(255 255 255 / 0.04); --cover-hinge: rgb(0 0 0 / 0.4);
+  --wood: #33221a; --wood-low: #1f140e; --lamp: rgb(255 184 110 / 0.13); --vignette: rgb(0 0 0 / 0.66); --sheen: rgb(255 220 180 / 0.03);
+  --desk-ink: #e6d9c4; --shadow: rgb(0 0 0 / 0.7); --shadow-soft: rgb(0 0 0 / 0.42);
+  --invite: #29261f; --invite-ink: #eee6d2; --invite-muted: #b8ab8c; --invite-rule: #7d6c47;
+  --index: #23262b; --index-red: #7d4444;
+  --score: #26282c; --score-ink: #c9c6bd; --score-rule: #3b3e44;
+  --cloth-a: #223529; --cloth-b: #43201f; --cloth-c: #2b273b; --cedar: #a88a66; --ferrule: #8a7a4c;
+  --boxwood: #b89e78; --boxwood-low: #6f5636; --steel: #8e9298; --ring: rgb(0 0 0 / 0.4);
+  --ink: #c9d5f2;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surround); color: var(--fg); font: 15px/1.55 "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif; }
+h1, h2, h3 { font-family: Literata, Georgia, serif; font-weight: 600; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button, input { font: inherit; color: inherit; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 16px; padding-block: 36px 72px; display: grid; gap: 56px; }
+.sc { font: 500 11px/1.4 "IBM Plex Mono", ui-monospace, monospace; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-fg); }
+.top { display: grid; gap: 12px; }
+.top h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; letter-spacing: -0.01em; }
+.top > p { color: var(--muted-fg); max-width: 72ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin-top: 6px; }
+.control { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2px; background: var(--page); }
+.seg button { border: 0; background: none; padding: 5px 10px; border-radius: var(--radius); font-size: 13px; color: var(--muted-fg); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--fg); }
+.ghost { border: 1px solid var(--border); background: var(--page); border-radius: var(--radius); padding: 5px 12px; font-size: 13px; cursor: pointer; }
+.ghost[aria-pressed="true"] { background: var(--accent); }
+.visit { font: 500 12px/1 "IBM Plex Mono", monospace; color: var(--muted-fg); }
+
+.v { display: grid; gap: 16px; }
+.v-head { display: grid; gap: 6px; max-width: 76ch; }
+.v-head h2 { font-size: 26px; line-height: 1.15; }
+.v-head .row { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin-top: 6px; }
+.notes { margin: 0; padding-left: 20px; display: grid; gap: 5px; max-width: 78ch; color: var(--muted-fg); font-size: 14px; }
+.notes strong { color: var(--fg); }
+
+/* ---------- The desk ---------- */
+.stage {
+  container-type: inline-size;
+  position: relative; height: 760px; overflow: hidden; border-radius: var(--radius-lg);
+  margin-inline: auto; width: 100%;
+  background:
+    radial-gradient(ellipse 62% 70% at 24% 18%, var(--lamp), transparent 72%),
+    radial-gradient(ellipse 120% 95% at 50% 46%, transparent 52%, var(--vignette) 100%),
+    linear-gradient(112deg, transparent 32%, var(--sheen) 44%, transparent 58%),
+    var(--grain) 0 0 / 1800px 900px,
+    linear-gradient(to bottom, var(--wood), var(--wood-low));
+}
+.stage.alive-stage { height: 640px; }
+:root[data-frame="phone"] .stage { width: 390px; max-width: 100%; height: 800px; }
+:root[data-frame="phone"] .stage.alive-stage { height: 660px; }
+
+/* The desk's objects: real things at the edges, under everything that holds text. */
+.obj { position: absolute; z-index: 0; pointer-events: none; }
+.obj.books { width: 250px; height: 330px; }
+.obj.books .vol { position: absolute; inset: 0; border-radius: 7px; box-shadow: 0 1px 2px var(--shadow-soft), 0 18px 30px -16px var(--shadow); }
+.obj.books .vol::after { /* the page block's edge along the fore-edge */ content: ""; position: absolute; top: 6px; bottom: 6px; right: -7px; width: 8px; border-radius: 0 3px 3px 0; background: repeating-linear-gradient(to right, var(--page) 0 1px, var(--page-edge) 1px 2px); z-index: -1; }
+.obj.books .vol.a { background: linear-gradient(135deg, var(--cover-light), transparent 60%), linear-gradient(to right, transparent 14px, var(--cover-hinge) 14px 15px, transparent 15px), var(--cloth-a); transform: translate(26px, 22px) rotate(7deg); }
+.obj.books .vol.b { background: linear-gradient(135deg, var(--cover-light), transparent 60%), linear-gradient(to right, transparent 14px, var(--cover-hinge) 14px 15px, transparent 15px), var(--cloth-b); }
+.obj.books .vol.c { background: linear-gradient(135deg, var(--cover-light), transparent 60%), linear-gradient(to right, transparent 14px, var(--cover-hinge) 14px 15px, transparent 15px), var(--cloth-c); }
+.obj.books .t { position: absolute; left: 34px; right: 22px; top: 52px; text-align: center; color: var(--cover-ink-dim); font: 600 17px/1.2 Literata, Georgia, serif; letter-spacing: 0.06em; font-variant: small-caps; }
+.obj.books .t small { display: block; margin-top: 8px; font: italic 400 12px/1 Literata, Georgia, serif; letter-spacing: 0; font-variant: normal; }
+
+.obj.score { width: 220px; height: 300px; background: var(--score); color: var(--score-ink); border-radius: 2px; padding: 12px 14px; box-shadow: 0 1px 1px var(--shadow-soft), 0 14px 24px -14px var(--shadow); display: grid; grid-template-rows: auto auto 1fr; gap: 6px; }
+.obj.score .h { display: flex; justify-content: space-between; font: 500 9px/1.3 "IBM Plex Mono", monospace; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
+.obj.score .cols { display: grid; grid-template-columns: 22px 1fr 1fr; font: 500 9px/1 "IBM Plex Mono", monospace; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; border-bottom: 1px solid var(--score-rule); padding-bottom: 4px; }
+.obj.score ol { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; }
+.obj.score li { display: grid; grid-template-columns: 22px 1fr 1fr; font: 13px/21px "IBM Plex Mono", monospace; border-bottom: 1px solid var(--score-rule); }
+.obj.score li span:first-child { opacity: 0.55; font-size: 11px; }
+
+.obj.pencil { width: 210px; height: 9px; display: flex; filter: drop-shadow(0 5px 4px var(--shadow-soft)); }
+.obj.pencil .tip { width: 26px; background: linear-gradient(to right, var(--graphite) 0 7px, var(--cedar) 7px); clip-path: polygon(0 50%, 100% 0, 100% 100%); }
+.obj.pencil .body { flex: 1; background: linear-gradient(var(--graphite-hi) 0 35%, var(--graphite) 35% 70%, var(--wood-low) 70%); }
+.obj.pencil .end { width: 12px; background: repeating-linear-gradient(to right, var(--ferrule) 0 3px, var(--wood-low) 3px 4px); border-radius: 0 2px 2px 0; }
+
+.obj.pawn { width: 84px; height: 40px; }
+.obj.pawn svg { display: block; filter: drop-shadow(3px 7px 5px var(--shadow)); }
+.obj.pawn.white { --hi: var(--page); --body: var(--boxwood); --low: var(--boxwood-low); }
+.obj.pawn.black { --hi: var(--ebony-hi); --body: var(--ebony); --low: var(--wood-low); }
+
+.obj.ring { width: 96px; height: 96px; border-radius: 50%; background: radial-gradient(circle, transparent 0 62%, var(--ring) 66%, transparent 71%); opacity: 0.75; filter: blur(0.6px); -webkit-mask: conic-gradient(#000 0 230deg, transparent 230deg 262deg, #000 262deg); mask: conic-gradient(#000 0 230deg, transparent 230deg 262deg, #000 262deg); }
+.obj.clip { width: 16px; height: 46px; }
+.obj.clip svg { display: block; filter: drop-shadow(1px 2px 1px var(--shadow-soft)); }
+
+/* ---------- The book ---------- */
+.book {
+  --bw: min(380px, calc(100cqw - 56px));
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+  width: var(--bw); aspect-ratio: 2 / 3; perspective: 1900px; z-index: 2;
+  transition: transform 1.1s cubic-bezier(0.3, 0.1, 0.2, 1);
+}
+.alive-stage .book { --bw: min(340px, calc(100cqw - 56px)); }
+/* The thickness of the closed book: its page block, seen along the fore-edge and the foot. */
+.edges { position: absolute; inset: 0; z-index: 0; }
+.edges::before { content: ""; position: absolute; top: 6px; bottom: 4px; right: -10px; width: 13px; border-radius: 0 3px 3px 0; background: repeating-linear-gradient(to right, var(--page) 0 1px, var(--page-edge) 1px 2px); }
+.edges::after { content: ""; position: absolute; left: 10px; right: -8px; bottom: -10px; height: 13px; border-radius: 0 0 3px 3px; background: repeating-linear-gradient(to bottom, var(--page) 0 1px, var(--page-edge) 1px 2px); box-shadow: 0 2px 3px var(--shadow-soft), 0 34px 48px -18px var(--shadow); }
+.inside { position: absolute; inset: 0; z-index: 1; background: var(--page); border: 1px solid var(--border); border-radius: 2px var(--radius-lg) var(--radius-lg) 2px; box-shadow: inset 22px 0 26px -20px var(--gutter); padding: 40px 34px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.inside h3 { font-size: 36px; line-height: 1.1; }
+.inside .link { align-self: flex-start; }
+.cover { position: absolute; inset: -4px -4px -4px 0; z-index: 3; transform-origin: left center; transform-style: preserve-3d; transition: transform 1.2s cubic-bezier(0.3, 0.1, 0.2, 1), opacity 0.5s; }
+.front {
+  position: absolute; inset: 0; backface-visibility: hidden;
+  border-radius: 4px var(--radius-lg) var(--radius-lg) 4px;
+  background:
+    linear-gradient(140deg, var(--cover-light), transparent 46%),
+    linear-gradient(to right, transparent 16px, var(--cover-hinge) 16px 17px, var(--cover-light) 17px 18px, transparent 18px),
+    var(--cover);
+  box-shadow: 0 1px 2px var(--shadow-soft), 0 2px 0 rgb(0 0 0 / 0.12);
+  color: var(--cover-ink);
+  padding: 34px 26px 20px 40px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 14px;
+}
+.back { position: absolute; inset: 0; transform: rotateY(180deg); backface-visibility: hidden; border-radius: var(--radius-lg) 4px 4px var(--radius-lg); background: linear-gradient(to left, rgb(0 0 0 / 0.18), transparent 30%), var(--cover); }
+.masthead { display: grid; justify-items: center; gap: 5px; }
+.title { font: 600 30px/1 Literata, Georgia, serif; letter-spacing: 0.07em; font-variant: small-caps; }
+.rule { width: 46%; height: 1px; background: var(--cover-ink); opacity: 0.4; }
+.subtitle { font: italic 14px/1.2 Literata, Georgia, serif; color: var(--cover-ink-dim); }
+.foot { font: 500 10px/1 "IBM Plex Mono", monospace; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cover-ink-dim); }
+
+/* The sign-in panel on the cover: the app's Panel, Input and Button. */
+.panel { width: 100%; background: var(--page); color: var(--fg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 18px 14px; display: grid; gap: 12px; box-shadow: 0 1px 2px var(--shadow-soft); position: relative; }
+.panel-head { display: grid; gap: 2px; position: relative; }
+.panel-head h2 { font-size: 21px; line-height: 1.2; }
+.panel-head p { font-size: 13px; color: var(--muted-fg); }
+.field { display: grid; gap: 5px; }
+.field > span { font-size: 13px; font-weight: 700; }
+.input { height: 36px; width: 100%; border: 1px solid var(--border); border-radius: var(--radius); background: transparent; padding: 0 11px; font-size: 14px; color: var(--fg); outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+.input:focus { border-color: var(--muted-fg); box-shadow: 0 0 0 3px color-mix(in srgb, var(--muted-fg) 28%, transparent); }
+.input.code { font: 500 13px/1 "IBM Plex Mono", monospace; letter-spacing: 0.04em; text-transform: uppercase; }
+.input::placeholder { color: var(--muted-fg); opacity: 0.7; }
+.btn { height: 36px; border: 0; border-radius: var(--radius); background: var(--primary); color: var(--primary-fg); padding: 0 16px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.btn.wide { width: 100%; }
+.link { border: 0; background: none; padding: 0; color: var(--primary); font-size: 13px; cursor: pointer; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); text-underline-offset: 3px; }
+.link:hover { text-decoration-color: currentColor; }
+.links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
+.notice { font-size: 13px; color: var(--success); }
+:is(.seg button, .ghost, .btn, .link, .ribbon, .sheet):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* Read as a guest: a bookmark ribbon (book-ui D4) hanging from the foot of the cover. */
+.ribbon { position: absolute; top: calc(100% - 2px); left: 58px; z-index: 4; display: flex; align-items: flex-start; gap: 10px; border: 0; background: none; padding: 0; cursor: pointer; color: var(--desk-ink); font-size: 13px; }
+.ribbon i { display: block; width: 24px; height: 70px; background: linear-gradient(var(--mark-fold) 0 7px, transparent 7px), var(--bookmark); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%); transition: height 0.25s; filter: drop-shadow(0 4px 3px var(--shadow-soft)); }
+.ribbon:hover i { height: 80px; }
+.ribbon span { margin-top: 32px; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); text-underline-offset: 3px; }
+
+.v[data-open] .cover { transform: rotateY(-170deg); }
+.v[data-open] .book { transform: translateX(48%); }
+.v[data-open] :is(.ribbon, .sheet) { visibility: hidden; }
+@container (max-width: 640px) {
+  .v[data-open] .book { transform: none; }
+  .v[data-open] .cover { transform: none; opacity: 0; pointer-events: none; }
+}
+
+/* ---------- The two sheets, tucked under the book's right side ---------- */
+.sheet {
+  position: absolute; width: calc(var(--bw) * 0.9); z-index: 1;
+  left: var(--x); top: var(--y); transform: rotate(var(--r));
+  transition: left 0.42s cubic-bezier(0.3, 0.1, 0.2, 1), top 0.42s cubic-bezier(0.3, 0.1, 0.2, 1), transform 0.42s cubic-bezier(0.3, 0.1, 0.2, 1);
+  box-shadow: 0 1px 2px var(--shadow-soft), 0 22px 32px -18px var(--shadow);
+  cursor: pointer;
+}
+.sheet.invite { --x: 71%; --y: 8%; --r: 3deg; }
+.sheet.lost { --x: 77%; --y: 20%; --r: 8deg; z-index: 0; }
+.sheet:not(.on):hover { --x: 75%; }
+.sheet.lost:not(.on):hover { --x: 82%; }
+/* Pulled out from under the book, clear of it, before it goes over (or back under). */
+.sheet.out { --x: calc(100% + 26px); --r: 2deg; }
+.sheet.on { --x: 5%; --y: 13%; --r: -1deg; z-index: 6; cursor: default; }
+.sheet.lost.on { --y: 14%; }
+.sheet.lifted { z-index: 6; }
+@container (max-width: 640px) {
+  .sheet.invite { --x: 18%; --y: 121%; --r: -3deg; }
+  .sheet.lost { --x: 28%; --y: 126%; --r: 4deg; }
+  .sheet:not(.on):hover { --x: 18%; --y: 118%; }
+  .sheet.lost:not(.on):hover { --x: 28%; --y: 123%; }
+  .sheet.out { --x: 18%; --y: 108%; --r: 0deg; }
+  .sheet.on { --x: 4%; --y: 4%; --r: -0.6deg; }
+  .sheet.lost.on { --y: 14%; }
+}
+
+.invite { background: var(--invite); color: var(--invite-ink); border-radius: 2px; padding: 22px 24px 18px; display: grid; gap: 10px; }
+.invite::before { content: ""; position: absolute; inset: 7px; border: 1px solid var(--invite-rule); pointer-events: none; }
+.invite::after { content: ""; position: absolute; inset: 10px; border: 1px solid var(--invite-rule); opacity: 0.5; pointer-events: none; }
+.invite .kicker { text-align: center; font: 500 10px/1.4 "IBM Plex Mono", monospace; letter-spacing: 0.18em; text-transform: uppercase; color: var(--invite-muted); }
+.invite h3 { text-align: center; font: italic 500 28px/1.1 Literata, Georgia, serif; }
+.invite .lede { text-align: center; font-size: 13px; color: var(--invite-muted); margin-bottom: 2px; }
+.invite .input { border-color: var(--invite-rule); color: var(--invite-ink); }
+.invite .field > span { color: var(--invite-ink); }
+.sheet-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 4px; }
+.lost { background: var(--index); color: var(--fg); border-radius: 2px; padding: 14px 22px 18px; display: grid; gap: 10px; background-image: linear-gradient(to bottom, transparent 0 46px, var(--index-red) 46px 47px, transparent 47px); }
+.lost h3 { font-size: 20px; line-height: 30px; }
+.lost .lede { font-size: 13px; color: var(--muted-fg); }
+
+.result { display: none; position: absolute; left: 50%; bottom: 16px; translate: -50% 0; z-index: 9; width: max-content; max-width: calc(100% - 32px); background: var(--page); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 8px 14px; font-size: 13px; color: var(--muted-fg); text-align: center; box-shadow: 0 12px 24px -14px var(--shadow); }
+.v[data-open] .result { display: block; }
+
+@container (max-width: 640px) {
+  .book { top: 34px; translate: -50% 0; }
+  .front { padding: 24px 20px 16px 32px; gap: 12px; }
+  .panel { padding: 16px 14px 12px; gap: 10px; }
+  .ribbon { left: 34px; }
+}
+
+/* ---------- The living book (a future vibe) ---------- */
+.fx-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.glow { position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; }
+.glow::before { /* light spilling out of the fore-edge and the foot */ content: ""; position: absolute; top: 2%; bottom: -3%; right: -14px; width: 26px; border-radius: 50%; background: var(--glow); filter: blur(10px); }
+.glow::after { content: ""; position: absolute; inset: -6% -40% -12% 40%; background: radial-gradient(ellipse 40% 55% at 30% 50%, var(--glow-soft), transparent 70%); mix-blend-mode: screen; filter: blur(4px); }
+.rays { position: absolute; top: -20%; bottom: -20%; left: 92%; width: 90%; z-index: 0; pointer-events: none; opacity: 0;
+  background: repeating-conic-gradient(from 76deg at 0 50%, var(--glow-soft) 0 2deg, transparent 2deg 7deg); -webkit-mask: radial-gradient(ellipse 100% 60% at 0 50%, #000, transparent 75%); mask: radial-gradient(ellipse 100% 60% at 0 50%, #000, transparent 75%); mix-blend-mode: screen; filter: blur(7px); }
+.title.glint { background: linear-gradient(100deg, var(--cover-ink) 42%, var(--glow) 50%, var(--cover-ink) 58%) 120% 0 / 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: glint 1.6s ease-in-out; }
+@keyframes glint { to { background-position: -40% 0; } }
+
+.book.breathe .cover { animation: lift 4.2s ease-in-out; }
+.book.breathe .glow { animation: glow 4.2s ease-in-out; }
+.book.breathe .rays { animation: rays 4.2s ease-in-out; }
+@keyframes lift { 0%, 100% { transform: none; } 30%, 62% { transform: rotateY(-9deg); } 46% { transform: rotateY(-12deg); } }
+@keyframes glow { 0%, 100% { opacity: 0; } 30%, 62% { opacity: 0.9; } 46% { opacity: 1; } }
+@keyframes rays { 0%, 18%, 100% { opacity: 0; } 46% { opacity: 0.4; } }
+
+.book.rattle { animation: rattle 1.5s linear; }
+.book.rattle .cover { animation: snap 1.5s linear; }
+@keyframes rattle {
+  0%, 100% { transform: none; }
+  4% { transform: translate(-3px, 1px) rotate(-1.4deg); } 8% { transform: translate(3px, -2px) rotate(1.2deg); }
+  12% { transform: translate(-2px, 2px) rotate(-1deg); } 16% { transform: translate(2px, 0) rotate(0.8deg); } 20% { transform: none; }
+  52% { transform: none; }
+  56% { transform: translate(-4px, 0) rotate(-1.8deg); } 60% { transform: translate(4px, -2px) rotate(1.6deg); }
+  64% { transform: translate(-3px, 2px) rotate(-1.2deg); } 68% { transform: translate(2px, -1px) rotate(0.9deg); } 72% { transform: translate(-1px, 0) rotate(-0.4deg); } 76% { transform: none; }
+}
+@keyframes snap { 0%, 52%, 100% { transform: none; } 58% { transform: rotateY(-16deg); } 62% { transform: none; } 66% { transform: rotateY(-10deg); } 70% { transform: none; } }
+
+.panel-head .ink { position: absolute; inset: 0; display: grid; align-content: start; pointer-events: none; font: italic 500 21px/1.2 Literata, Georgia, serif; color: var(--ink); }
+.ink span { opacity: 0; filter: blur(2px); }
+.ink.write span { animation: ink-in 0.32s ease-out forwards, ink-out 0.9s ease-in forwards; animation-delay: calc(var(--i) * 70ms), calc(2400ms + var(--i) * 20ms); }
+@keyframes ink-in { to { opacity: 1; filter: none; } }
+@keyframes ink-out { from { opacity: 1; filter: none; } to { opacity: 0; filter: blur(3px); transform: translateY(2px); } }
+.panel-head.inked h2 { animation: heading-away 4.1s ease-in-out; }
+@keyframes heading-away { 0% { opacity: 1; } 6%, 82% { opacity: 0; } 100% { opacity: 1; } }
+
+.questions { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--page); padding: 18px 20px; display: grid; gap: 10px; max-width: 80ch; }
+.questions h2 { font-size: 20px; }
+.questions ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; transition-delay: 0s !important; animation-delay: 0s !important; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="sc">ByTheBook · plans/book-ui.md · Phase 3 · Sign-in, round three</p>
+    <h1>The cover, on dark walnut</h1>
+    <p>Round two's B1 made concrete. The closed book signs you in, using the app's own cover, paper, fields and buttons. The invitation and the index card lie tucked under the book's right side, so you can see they're there, and the invitation lies mostly over the index card. Asking for one pulls it out from under the book and lays it over the cover. The desk is dark walnut in both themes, and its objects change a little from visit to visit.</p>
+    <div class="controls">
+      <div class="control"><span class="sc">Theme</span>
+        <div class="seg" role="group" aria-label="Theme"><button type="button" data-theme-set="system">System</button><button type="button" data-theme-set="light">Light</button><button type="button" data-theme-set="dark">Dark</button></div></div>
+      <div class="control"><span class="sc">Window</span>
+        <div class="seg" role="group" aria-label="Window"><button type="button" data-frame-set="wide">Wide</button><button type="button" data-frame-set="phone">Phone</button></div></div>
+      <div class="control"><span class="sc">Desk</span>
+        <button type="button" class="ghost" data-shuffle>Another visit</button><span class="visit" data-visit-label></span></div>
+    </div>
+  </header>
+
+  <section class="v" id="signin" aria-labelledby="signin-title">
+    <div class="v-head">
+      <p class="sc">The page</p>
+      <h2 id="signin-title">Signing in</h2>
+      <p>Try the links under the fields, or click a sheet itself. “Back to signing in” tucks the sheet away again. Submitting the invitation makes the account and opens the book. Submitting the index card returns you to the cover with a note.</p>
+      <div class="row"><button type="button" class="link" data-restore>Reset this desk</button></div>
+    </div>
+    <div class="stage"><div class="canvas" data-desk="signin"></div><p class="result" data-result-line></p></div>
+    <ul class="notes">
+      <li><strong>Closer to the app:</strong> the cover is the book's own <code>--cover</code> with its radius and shadow, and the page edges are the app's stripe. The panel, the fields and the buttons are the app's Panel, Input and Button, with the same three fonts. The look shouldn't change between signing in and the first page.</li>
+      <li><strong>Less cartoon:</strong> no outlined mugs or sticky notes. The desk holds things a chess player has: closed books, a scoresheet, a pencil, a pawn, a cup ring, a paper clip. Each one sits partly out of the frame, as in a photograph, and lies under the book and sheets, so it never covers text.</li>
+      <li><strong>A little different each visit:</strong> each corner of the desk draws from a fixed set of objects and spots, and the scoresheet picks one of four real lines. A seed chooses them, so a test can pin it and the page never shifts while you're on it. “Another visit” rolls it again.</li>
+      <li><strong>On a phone</strong> the book sits near the top, and the two sheets peek up from the bottom of the screen.</li>
+    </ul>
+  </section>
+
+  <section class="v" id="alive" aria-labelledby="alive-title">
+    <div class="v-head">
+      <p class="sc">Later, as a vibe</p>
+      <h2 id="alive-title">The book comes alive</h2>
+      <p>Yes, this is possible, and it's not much work. Each effect is a short CSS animation on parts the book already has, and a small timer picks when to play one. These four are drawn from Riddle's diary and the Monster Book. Under reduced motion none of them run.</p>
+      <div class="row fx-row">
+        <button type="button" class="ghost" data-fx="glint">Foil catches the light</button>
+        <button type="button" class="ghost" data-fx="breathe">Light from the pages</button>
+        <button type="button" class="ghost" data-fx="rattle">Rattle</button>
+        <button type="button" class="ghost" data-fx="ink">Ink writes back</button>
+        <button type="button" class="ghost" data-idle aria-pressed="false">Every so often (every 7 s here)</button>
+      </div>
+    </div>
+    <div class="stage alive-stage"><div class="canvas" data-desk="alive"></div></div>
+    <ul class="notes">
+      <li><strong>Only while idle:</strong> never while a field has focus or the pointer is moving, never during a page turn, and at most once a visit. In the app it would wait for about half a minute of stillness, not 7 seconds.</li>
+      <li><strong>Where it belongs:</strong> a vibe (plans/vibes.md). Vibes D13 already says ornaments are decoration only and stop under reduced motion. One rule is new: a rattle moves the whole book, where vibes so far only paint it, so a vibe would need permission to move the book while it's idle.</li>
+      <li><strong>Inside the app</strong> the same effects could play on the open book. For example, light could leak from the page edges when you finish drilling a line, or the bookmarks could flutter. A tie to something you did will probably feel better than a random one.</li>
+    </ul>
+  </section>
+
+  <aside class="questions">
+    <h2>Open questions</h2>
+    <ol>
+      <li><strong>Walnut behind the app too?</strong> You said the desk stays a desk under every vibe. Should the dashboard's desk also be this walnut, replacing today's plain <code>--desk</code> (#e2e4df light, #0e1013 dark)? If yes, I'll write it into book-ui as a change to D2/D3. The strip's text would then sit on wood in light mode too.</li>
+      <li><strong>Which objects?</strong> Any to drop or add? I left out the mug and sticky note as the most cartoonish. A chess clock or reading glasses could work if they're drawn as images instead of CSS shapes.</li>
+      <li><strong>How much of the sheets should show?</strong> Right now about half of the invitation is visible on a wide window, with a sliver of the index card beyond it.</li>
+      <li><strong>Should the living book go in the plans?</strong> For example, a line in plans/vibes.md naming it as a possible vibe, so it's on record but not scheduled.</li>
+    </ol>
+  </aside>
+</div>
+
+<template id="book-tpl">
+  <div class="book">
+    <div class="rays" aria-hidden="true"></div>
+    <div class="edges" aria-hidden="true"></div>
+    <div class="inside" aria-live="polite">
+      <p class="sc">Chapter I of VIII</p>
+      <h3>Overview</h3>
+      <p data-result="in" hidden>Welcome back. The book opens where you left it.</p>
+      <p data-result="up" hidden>Your account is made and you're signed in. The book offers to copy in the books this browser holds.</p>
+      <p data-result="guest" hidden>You're reading as a guest. Your books stay in this browser until you sign in.</p>
+      <button type="button" class="link" data-close>Close the book again</button>
+    </div>
+    <div class="glow" aria-hidden="true"></div>
+    <div class="cover">
+      <form class="front" data-form="in" autocomplete="on">
+        <div class="masthead">
+          <p class="title">ByTheBook</p>
+          <div class="rule"></div>
+          <p class="subtitle">An opening trainer</p>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Sign in</h2>
+            <p>Your books, on every device.</p>
+            <p class="ink" aria-hidden="true"></p>
+          </div>
+          <p class="notice" data-notice hidden>Your password is changed. Sign in with the new one.</p>
+          <label class="field"><span>Email</span><input class="input" name="email" type="email" autocomplete="email"></label>
+          <label class="field"><span>Password</span><input class="input" name="password" type="password" autocomplete="current-password"></label>
+          <button class="btn wide" type="submit">Open my book</button>
+          <p class="links">
+            <button type="button" class="link" data-go="up">Create an account</button>
+            <button type="button" class="link" data-go="reset">Forgot your password?</button>
+          </p>
+        </div>
+        <p class="foot">Beta edition</p>
+      </form>
+      <div class="back" aria-hidden="true"></div>
+    </div>
+    <button type="button" class="ribbon" data-guest><i aria-hidden="true"></i><span>Read as a guest</span></button>
+  </div>
+</template>
+
+<template id="sheets-tpl">
+  <form class="sheet invite" data-form="up" data-sheet-for="up" autocomplete="on" aria-label="Create an account">
+    <p class="kicker">ByTheBook · Beta</p>
+    <h3>You're invited</h3>
+    <p class="lede">An account keeps your books on every device. Each invite code works once.</p>
+    <label class="field"><span>Invite code</span><input class="input code" name="code" autocomplete="off" placeholder="XXXXX-XXXXX-XXXXX-XXXXX"></label>
+    <label class="field"><span>Username</span><input class="input" name="username" autocomplete="username"></label>
+    <label class="field"><span>Email</span><input class="input" name="email" type="email" autocomplete="email"></label>
+    <label class="field"><span>Password</span><input class="input" name="password" type="password" autocomplete="new-password"></label>
+    <label class="field"><span>Password again</span><input class="input" name="confirm" type="password" autocomplete="new-password"></label>
+    <div class="sheet-foot"><button type="button" class="link" data-go="in">Back to signing in</button><button class="btn" type="submit">Create account</button></div>
+  </form>
+  <form class="sheet lost" data-form="reset" data-sheet-for="reset" autocomplete="on" aria-label="Reset your password">
+    <h3>Lost your password?</h3>
+    <p class="lede">Enter the reset code the developer sent you, then a new password.</p>
+    <label class="field"><span>Reset code</span><input class="input code" name="reset" autocomplete="off"></label>
+    <label class="field"><span>New password</span><input class="input" name="password" type="password" autocomplete="new-password"></label>
+    <label class="field"><span>Password again</span><input class="input" name="confirm" type="password" autocomplete="new-password"></label>
+    <div class="sheet-foot"><button type="button" class="link" data-go="in">Back to signing in</button><button class="btn" type="submit">Change password</button></div>
+  </form>
+</template>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const wait = (ms) => new Promise((r) => setTimeout(r, reduced() ? 0 : ms));
+
+  // ---------- Page controls ----------
+  root.dataset.frame = "wide";
+  const groups = [
+    ["data-theme-set", () => root.getAttribute("data-theme") || "system", (v) => (v === "system" ? root.removeAttribute("data-theme") : root.setAttribute("data-theme", v))],
+    ["data-frame-set", () => root.dataset.frame, (v) => { root.dataset.frame = v; document.querySelectorAll(".v").forEach(restore); dress(); }],
+  ];
+  const sync = () => groups.forEach(([attr, get]) => document.querySelectorAll(`[${attr}]`).forEach((b) => b.setAttribute("aria-pressed", String(b.getAttribute(attr) === get()))));
+  groups.forEach(([attr, , set]) => document.querySelectorAll(`[${attr}]`).forEach((b) => b.addEventListener("click", () => { set(b.getAttribute(attr)); sync(); })));
+  sync();
+
+  // ---------- The desks ----------
+  document.querySelectorAll(".canvas[data-desk]").forEach((canvas) => {
+    canvas.append(document.getElementById("book-tpl").content.cloneNode(true));
+    if (canvas.dataset.desk === "signin") canvas.querySelector(".book").append(document.getElementById("sheets-tpl").content.cloneNode(true));
+  });
+
+  // ---------- The desk's objects, chosen per visit from a seed ----------
+  const LINES = [
+    { name: "Sicilian, Najdorf", moves: [["e4", "c5"], ["Nf3", "d6"], ["d4", "cxd4"], ["Nxd4", "Nf6"], ["Nc3", "a6"], ["Bg5", "e6"], ["f4", "Qb6"], ["Qd2", "Qxb2"]] },
+    { name: "Caro-Kann, Advance", moves: [["e4", "c6"], ["d4", "d5"], ["e5", "Bf5"], ["Nf3", "e6"], ["Be2", "c5"], ["Be3", "Nd7"], ["O-O", "Ne7"], ["c4", "dxc4"]] },
+    { name: "Ruy Lopez, Marshall", moves: [["e4", "e5"], ["Nf3", "Nc6"], ["Bb5", "a6"], ["Ba4", "Nf6"], ["O-O", "Be7"], ["Re1", "b5"], ["Bb3", "O-O"], ["c3", "d5"]] },
+    { name: "QGD, Tartakower", moves: [["d4", "d5"], ["c4", "e6"], ["Nc3", "Nf6"], ["Bg5", "Be7"], ["e3", "O-O"], ["Nf3", "h6"], ["Bh4", "b6"], ["cxd5", "Nxd5"]] },
+  ];
+  const SHELF = [["Najdorf", "notes"], ["Rook endings", "a primer"], ["The Caro-Kann", "repertoire"], ["Tactics", "500 positions"], ["Pawn structures", "Vol. II"]];
+
+  // Corners of the desk, as spots an object may take. Everything sits partly out of the frame.
+  const SPOTS = {
+    wide: {
+      tl: [{ left: -70, top: -60 }, { left: -40, top: -110 }],
+      bl: [{ left: -50, bottom: -120 }, { left: 30, bottom: -170 }],
+      tr: [{ right: -60, top: -90 }, { right: 20, top: -140 }],
+      br: [{ right: -50, bottom: -150 }, { right: 40, bottom: -190 }],
+    },
+    phone: { tl: [{ left: -150, top: -110 }], tr: [{ right: -160, top: -130 }] },
+  };
+  const SMALL = { // where the small things go, relative to the corner
+    tl: [{ left: 210, top: 120 }, { left: 120, top: 300 }], bl: [{ left: 230, bottom: 70 }, { left: 60, bottom: 230 }],
+    tr: [{ right: 220, top: 70 }, { right: 70, top: 200 }], br: [{ right: 230, bottom: 60 }, { right: 90, bottom: 210 }],
+  };
+  const BIG = ["books", "score"];
+  const LITTLE = ["pencil", "pawn", "ring", "clip"];
+
+  function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const pick = (r, list) => list[Math.floor(r() * list.length)];
+  const between = (r, a, b) => a + r() * (b - a);
+
+  function make(kind, r) {
+    const el = document.createElement("div");
+    el.className = `obj ${kind}`;
+    el.setAttribute("aria-hidden", "true");
+    if (kind === "books") {
+      const [a, b] = [pick(r, SHELF), pick(r, SHELF)];
+      const cloth = ["a", "b", "c"].sort(() => r() - 0.5);
+      el.innerHTML = `<div class="vol ${cloth[0]}"><p class="t">${a[0]}<small>${a[1]}</small></p></div><div class="vol ${cloth[1]}" style="transform: rotate(-4deg)"><p class="t">${b[0]}<small>${b[1]}</small></p></div>`;
+    } else if (kind === "score") {
+      const line = pick(r, LINES);
+      el.innerHTML = `<div class="h"><span>Round ${1 + Math.floor(r() * 7)} · Board ${3 + Math.floor(r() * 30)}</span><span>${line.name}</span></div><div class="cols"><span></span><span>White</span><span>Black</span></div><ol>${line.moves.map((m, i) => `<li><span>${i + 1}</span><span>${m[0]}</span><span>${m[1]}</span></li>`).join("")}<li><span>${line.moves.length + 1}</span><span></span><span></span></li><li><span>${line.moves.length + 2}</span><span></span><span></span></li></ol>`;
+    } else if (kind === "pencil") {
+      el.innerHTML = `<span class="tip"></span><span class="body"></span><span class="end"></span>`;
+    } else if (kind === "pawn") {
+      el.classList.add(r() < 0.5 ? "white" : "black");
+      const id = `pawn${Math.floor(r() * 1e9)}`;
+      // Lying on its side: base, body, collar and head, shaded as a turned piece.
+      el.innerHTML = `<svg width="84" height="40" viewBox="0 0 84 40"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="40" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color: var(--low)"/><stop offset="0.3" style="stop-color: var(--hi)"/><stop offset="0.55" style="stop-color: var(--body)"/><stop offset="1" style="stop-color: var(--low)"/></linearGradient></defs><g fill="url(#${id})"><rect x="2" y="1" width="10" height="38" rx="3"/><rect x="11" y="4" width="5" height="32" rx="2"/><path d="M15 8 Q30 14 46 15 V25 Q30 26 15 32 Z"/><rect x="45" y="11" width="5" height="18" rx="2"/><rect x="49" y="15" width="4" height="10"/><circle cx="64" cy="20" r="13"/></g></svg>`;
+    } else if (kind === "clip") {
+      el.innerHTML = `<svg width="16" height="46" viewBox="0 0 16 46" fill="none" stroke="var(--steel)" stroke-width="1.6" stroke-linecap="round"><path d="M11 12v22a3 3 0 0 1-6 0V8a5 5 0 0 1 10 0v28a7 7 0 0 1-14 0V12"/></svg>`;
+    }
+    return el;
+  }
+
+  let visit = 1;
+  function dress() {
+    const phone = root.dataset.frame === "phone";
+    document.querySelectorAll(".canvas[data-desk]").forEach((canvas, n) => {
+      canvas.querySelectorAll(".obj").forEach((o) => o.remove());
+      const r = rng(visit * 97 + n * 13);
+      const spots = phone ? SPOTS.phone : SPOTS.wide;
+      const corners = Object.keys(spots).sort(() => r() - 0.5);
+      const bigs = BIG.slice().sort(() => r() - 0.5);
+      const littles = LITTLE.slice().sort(() => r() - 0.5);
+      corners.forEach((corner, i) => {
+        // Two corners get a big thing; every corner may get a little one.
+        if (i < 2) {
+          const el = make(bigs[i], r);
+          Object.entries(pick(r, spots[corner])).forEach(([k, v]) => (el.style[k] = `${v}px`));
+          el.style.transform = `rotate(${between(r, -14, 14).toFixed(1)}deg)`;
+          canvas.prepend(el);
+        }
+        if (!phone && littles.length && r() < 0.8) {
+          const el = make(littles.shift(), r);
+          Object.entries(pick(r, SMALL[corner])).forEach(([k, v]) => (el.style[k] = `${v}px`));
+          el.style.transform = `rotate(${between(r, -40, 40).toFixed(1)}deg)`;
+          canvas.prepend(el);
+        }
+      });
+    });
+    document.querySelector("[data-visit-label]").textContent = `Visit ${visit}`;
+  }
+  document.querySelector("[data-shuffle]").addEventListener("click", () => { visit += 1; dress(); });
+  dress();
+
+  // ---------- Signing in ----------
+  const RESULT_LINE = {
+    in: "Signed in: the cover opens onto the Overview.",
+    up: "Account made: you're signed in and the cover opens.",
+    guest: "Guest: the cover opens, and your books stay in this browser.",
+  };
+  const sheetOf = (v, mode) => v.querySelector(`.sheet[data-sheet-for="${mode}"]`);
+  const narrow = (v) => v.querySelector(".stage").clientWidth <= 640;
+
+  function setInert(v) {
+    v.querySelectorAll(".sheet").forEach((s) => { s.inert = !s.classList.contains("on"); s.toggleAttribute("inert", !s.classList.contains("on")); });
+  }
+
+  // Out from under the book, up over it, and down onto the cover; back the same way.
+  async function bring(v, mode) {
+    const s = sheetOf(v, mode);
+    if (!s || s.classList.contains("on")) return;
+    await away(v);
+    v.querySelector("[data-notice]").hidden = true;
+    s.classList.add("out");
+    await wait(narrow(v) ? 260 : 420);
+    s.classList.add("lifted");
+    s.classList.remove("out");
+    s.classList.add("on");
+    setInert(v);
+    v.dataset.sheet = mode;
+    await wait(450);
+    s.querySelector("input")?.focus({ preventScroll: true });
+  }
+  async function away(v) {
+    const s = v.querySelector(".sheet.on");
+    if (!s) return;
+    s.classList.remove("on");
+    s.classList.add("out");
+    setInert(v);
+    delete v.dataset.sheet;
+    await wait(narrow(v) ? 260 : 420);
+    s.classList.remove("lifted", "out");
+  }
+
+  function open(v, result) {
+    v.dataset.open = result;
+    v.querySelectorAll(".inside [data-result]").forEach((el) => { el.hidden = el.dataset.result !== result; });
+    v.querySelector("[data-result-line]").textContent = RESULT_LINE[result];
+  }
+
+  function restore(v) {
+    delete v.dataset.open; delete v.dataset.sheet;
+    v.querySelectorAll(".sheet").forEach((s) => s.classList.remove("on", "out", "lifted"));
+    v.querySelectorAll("[data-notice]").forEach((n) => (n.hidden = true));
+    setInert(v);
+  }
+
+  const signin = document.getElementById("signin");
+  setInert(signin);
+  signin.addEventListener("click", (e) => {
+    const t = e.target;
+    const goButton = t.closest("[data-go]");
+    if (goButton) { e.preventDefault(); goButton.dataset.go === "in" ? away(signin) : bring(signin, goButton.dataset.go); return; }
+    const sheet = t.closest(".sheet:not(.on)");
+    if (sheet) { bring(signin, sheet.dataset.sheetFor); return; }
+    if (t.closest("[data-guest]")) { open(signin, "guest"); return; }
+    if (t.closest("[data-close]")) { delete signin.dataset.open; return; }
+    if (t.closest("[data-restore]")) restore(signin);
+  });
+  signin.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const form = e.target.dataset.form;
+    if (form === "in") { open(signin, "in"); return; }
+    await away(signin);
+    await wait(250);
+    if (form === "up") open(signin, "up");
+    else signin.querySelector("[data-notice]").hidden = false;
+  });
+
+  // ---------- The living book ----------
+  const alive = document.getElementById("alive");
+  const aliveBook = alive.querySelector(".book");
+  alive.addEventListener("submit", (e) => e.preventDefault());
+  alive.querySelectorAll(".book [data-go], .book [data-guest]").forEach((b) => b.addEventListener("click", (e) => e.preventDefault()));
+  let busy = false;
+  const FX = {
+    glint: async () => { const t = aliveBook.querySelector(".title"); t.classList.add("glint"); await wait(1700); t.classList.remove("glint"); },
+    breathe: async () => { aliveBook.classList.add("breathe"); await wait(4300); aliveBook.classList.remove("breathe"); },
+    rattle: async () => { aliveBook.classList.add("rattle"); await wait(1600); aliveBook.classList.remove("rattle"); },
+    ink: async () => {
+      const head = aliveBook.querySelector(".panel-head");
+      const ink = head.querySelector(".ink");
+      ink.innerHTML = [..."Who goes there?"].map((c, i) => `<span style="--i:${i}">${c === " " ? "&nbsp;" : c}</span>`).join("");
+      ink.style.display = "block";
+      head.classList.add("inked");
+      ink.classList.add("write");
+      await wait(4200);
+      ink.classList.remove("write");
+      head.classList.remove("inked");
+      ink.innerHTML = "";
+    },
+  };
+  async function play(name) {
+    if (busy || reduced()) return;
+    busy = true;
+    try { await FX[name](); } finally { busy = false; }
+  }
+  alive.querySelectorAll("[data-fx]").forEach((b) => b.addEventListener("click", () => play(b.dataset.fx)));
+  let idle = null;
+  const idleButton = alive.querySelector("[data-idle]");
+  idleButton.addEventListener("click", () => {
+    if (idle) { clearInterval(idle); idle = null; idleButton.setAttribute("aria-pressed", "false"); return; }
+    idleButton.setAttribute("aria-pressed", "true");
+    const names = Object.keys(FX);
+    idle = setInterval(() => { if (!alive.contains(document.activeElement) || document.activeElement === idleButton) play(names[Math.floor(Math.random() * names.length)]); }, 7000);
+  });
+})();
+</script>
