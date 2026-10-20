@@ -11,7 +11,7 @@ tree in `src/lib/books/explorerTree.ts`
 ## Rules
 
 - **Result cards expose only Highlight Path.** Don't add Load or auto-play actions to
-  `OpeningCatalogResults`. All playback belongs to the top-bar navigator.
+  `OpeningCatalogResults`. All playback belongs to the navigator under the scoresheet.
 - **Forward navigation must be gated on alignment.** Never add forward navigation that
   bypasses the `isBoardOnHighlightedLine` check.
 - **The page fits its pages of the book at every width,** by the board-page rule under "UI"
@@ -80,8 +80,8 @@ The current position is identified in two stages:
    openings that reach the same position by another move order. This sets
    `matchMode = "position"`.
 
-`ExplorerMatchMode` (`"prefix" | "position" | "none"`) is shown in the status panel, so the
-user knows whether a match is an exact line or a transposition.
+`ExplorerMatchMode` (`"prefix" | "position" | "none"`) is shown in the right page's folio, so
+the user knows whether a match is an exact line or a transposition.
 
 ## Navigator
 

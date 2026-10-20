@@ -445,7 +445,32 @@ body {
   flex-direction: column;
   width: var(--column);
   padding-bottom: var(--book-margin);
+  overflow: hidden;
   white-space: nowrap;
+  /* How long a phone's column takes to slide off the desk as it hides (D15, frameCss.ts). */
+  --column-slide: 180ms;
+}
+:root[data-motion="none"] .book-chapters {
+  --column-slide: 0ms;
+}
+/* Over the open chapter's page tab at the window's left edge, which shows when a phone's column
+   is hidden (frameCss.ts): wider and taller than the tab, for a finger. */
+.book-frame[data-form="single"] {
+  position: relative;
+}
+.book-chapters-show {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: calc(var(--slot-top) + var(--at) * (var(--slot-height) + var(--slot-gap)) - 2px);
+  z-index: 20;
+  width: calc(var(--tab-out) + var(--tab-in) + 8px);
+  height: calc(var(--slot-height) + 4px);
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+}
+.book-chapters-show:focus-visible {
+  outline: 2px solid var(--ring);
 }
 /* The brand, above the chapters: its height puts the first chapter at --slot-top. */
 .book-chapters-head {

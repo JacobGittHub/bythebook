@@ -7,6 +7,26 @@ import { useBugReportSections } from "@/context/BugReport";
 import { formatBugReport } from "@/lib/debug/bugReport";
 
 /**
+ * Copies text to the clipboard. A page served over plain http, such as a build opened from a
+ * phone on the local network, has no clipboard API, so there it selects the text in a hidden
+ * box and copies it with the older copy command, which Safari still allows from a press.
+ */
+async function copyText(text: string) {
+  if (window.isSecureContext && navigator.clipboard) return navigator.clipboard.writeText(text);
+  const box = document.createElement("textarea");
+  box.value = text;
+  box.readOnly = true;
+  // 16px keeps Safari from zooming in on the box.
+  box.style.cssText = "position: fixed; top: 0; left: 0; opacity: 0; font-size: 16px;";
+  document.body.append(box);
+  box.select();
+  box.setSelectionRange(0, text.length);
+  const copied = document.execCommand("copy");
+  box.remove();
+  if (!copied) throw new Error("The browser refused to copy.");
+}
+
+/**
  * Copies one block of text describing what is on screen, for a bug report. Shown only in
  * debug mode (`canDebug`, plans/testing.md D9).
  */
@@ -41,7 +61,7 @@ export function BugReportButton({
       sections: readSections(),
     });
     try {
-      await navigator.clipboard.writeText(report);
+      await copyText(report);
       setStatus("copied");
     } catch {
       // The clipboard can be blocked; the console still has the text to copy by hand.

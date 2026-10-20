@@ -19,8 +19,8 @@ covers how they work. The decisions behind them are `plans/deployment.md` D16–
 
 ## The frame
 
-The dashboard is an open book on a desk (`plans/book-ui.md`, which is being built; its
-Phase 4 rewrites this section).
+The dashboard is an open book on a desk (`plans/book-ui.md`), drawn first in
+`docs/design/mockups/dashboard-spread.html`.
 
 - **`BookFrame` frames every dashboard page:** the walnut desk (`plans/book-ui.md` D20), with
   the strip over its top (the
@@ -29,7 +29,9 @@ Phase 4 rewrites this section).
   `SPREAD_MIN_WIDTH` get the one-page form (`formFor`). Its column shows chapter names, or
   icons below `CHAPTER_NAMES_MIN_WIDTH` (`chaptersFor`); a button in its head narrows or widens
   it, and the frame keeps the pick in the `CHAPTERS_COOKIE` cookie. A phone's column shows
-  icons only, with no button. The page's tab reaches onto the page short of its text. Beside
+  icons only, and its button hides it (D15): the column slides off the desk, the page takes its
+  width, and the open chapter's page tab, at the window's left edge, brings it back
+  (`.book-chapters-show`). The page's tab reaches onto the page short of its text. Beside
   a name goes "soon" for a page coming soon, or the chapter's figure (`ChapterFigure`): the
   Library's book count.
 - **The book is the frame's, and each page renders its pages into it** with `Spread`
@@ -37,8 +39,8 @@ Phase 4 rewrites this section).
   they are the page's two halves, side by side where both fit and stacked where not; stacked,
   `stack` may show the left half alone, as the Library's list does. A page that lays out its
   one-page form itself passes it as `single`, as the Explorer does with its board on top
-  (`explorer.md`). A page that isn't a spread yet is wrapped in `InterimSpread`, which lays it
-  across both pages.
+  (`explorer.md`). The one page that isn't a spread, the trainer's scaffold
+  (`/dashboard/train/<id>`), is wrapped in `InterimSpread`, which lays it across both pages.
 - **A page below a chapter's own page is its second level** (`levelAt`,
   `src/lib/book/chapters.ts`), such as a Library book's page. In the spread a camera zooms in
   on it (`zoomCamera`, `src/lib/book/camera.ts`): the right page fills the window but for
@@ -61,8 +63,8 @@ Phase 4 rewrites this section).
   on the strip, while the keyboard is in it, and on a touch screen once the view scrolls up,
   and slides back up after (`useStrip` in `BookFrame`). Each page's view starts at the top,
   another book's too.
-- **An interim second level** puts its content on the right page and a way back on the left.
-  The one-page form has no camera: a second level shows only its right page, with the way back
+- **An interim second level,** the trainer's scaffold, puts its content on the right page and a
+  way back on the left. The one-page form has no camera: a second level shows only its right page, with the way back
   in its running head and what it holds below after its body.
 - **Where everything sits comes from `layoutBook`** (`src/lib/book/layout.ts`), whose property
   tests hold its invariants. The frame draws it with CSS: `bookFrameCss`
@@ -80,9 +82,15 @@ Phase 4 rewrites this section).
   `formatBugReport`'s text: the address, time, window size, theme and vibes setting, guest or
   signed in, the browser, and a section from each page that adds one through `useBugReportSection`
   (`src/context/BugReport.tsx`). `BugReportProvider` wraps the whole frame, so the strip's
-  button can read the page beside it.
+  button can read the page beside it. The frame adds a "Page turns" section (`useTurnLog`,
+  `turnLogSection` in `src/lib/debug/turnLog.ts`): whether the browser has view transitions,
+  and for the last `TURN_LOG_LENGTH` moves which way each went, which animations ran, whether
+  the browser finished or skipped it, and its frames, for a phone's Safari, whose console
+  can't be read. Over plain http, as from a phone on the local network, the browser has no
+  clipboard API, so the button copies with the older copy command.
 - **The sign-in pages** (`src/app/auth/layout.tsx`) are outside the book, one panel on the
-  backdrop, which is painted as the walnut desk, until Phase 3 lays a book on it.
+  backdrop, which is painted as the walnut desk. Laying a book there was put off
+  (`plans/book-ui.md` Phase 3).
 
 ## Moving between pages
 
@@ -116,7 +124,7 @@ A move to another chapter, or down to a second level and back, turns the page
   starts on the other side of the spine). They lie under the pages, where only the turn's
   pictures show them, and the frame takes them away once no turn is running.
 - **An interim page's content spans the spine,** so in a turn it stays on the pages that lie
-  still and the turning leaves are blank, until Phase 3 makes each page a spread.
+  still and the turning leaves are blank.
 - **The motion setting** (`MOTIONS`: page turn or none) is on the Settings page
   (`AppearancePanel`), saved in the browser like the theme, and written on `<html>` as
   `data-motion`. None, and page turn while the system asks for reduced motion
@@ -336,8 +344,10 @@ block that sets the tokens below and decorates the marked areas.
   background pair passes WCAG AA in both themes.
 - **Controls are shadcn/ui's,** from `src/components/shadcn/` (`components.json`), on those
   tokens. A bare `border` takes the theme's border color.
-- **A box that holds a page's content is a `Panel`,** with a `PanelLabel` for its small
-  heading, until the pages are spreads (`plans/book-ui.md` Phase 3). It carries
+- **A spread's parts lie on the page with no boxes around them.** A page that keeps a frame
+  of its own on the right page (the Labyrinth, the Treemap, the trainer's scaffold) or lies
+  outside the book (the sign-in pages) holds its content in a `Panel`, with a `PanelLabel` for
+  its small heading. It carries
   `data-slot="panel"`, as the sign-in pages' backdrop carries `backdrop` and the move bars
   `move-bar`, beside shadcn/ui's own slots, and their `::before` and `::after` are left for a
   vibe's ornaments.

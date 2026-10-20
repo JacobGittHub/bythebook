@@ -67,7 +67,7 @@ function randomInput(rng: Rng, form?: BookForm): BookInput {
     at: Math.floor(rng() * pages),
     pages,
     tabs: randomTabs(rng, window),
-    chapters: rng() < 0.5 ? "names" : "icons",
+    chapters: (["names", "icons", "hidden"] as const)[Math.floor(rng() * 3)],
   };
 }
 
@@ -76,11 +76,12 @@ function listedInput(size: Size, at = 0, pages = 8): BookInput {
   return { window: size, form: formFor(size), at, pages, tabs: [], chapters: chaptersFor(size) };
 }
 
-/** Every rectangle in a layout, named. */
+/** Every rectangle in a layout, named; a hidden chapter column and its slots have no width, by design. */
 function rects(layout: BookLayout): [string, Rect][] {
+  const hidden = layout.form === "single" && layout.chapters === "hidden";
   const out: [string, Rect][] = [
     ["desk", layout.desk],
-    ["nav", layout.nav],
+    ...(hidden ? [] : [["nav", layout.nav] as [string, Rect]]),
     ["cover", layout.cover],
     ["left edges", layout.edges.left],
     ["right edges", layout.edges.right],
@@ -89,7 +90,7 @@ function rects(layout: BookLayout): [string, Rect][] {
   if (layout.form === "single") {
     out.push(["facing", layout.facing]);
     layout.columns.forEach((c, i) => out.push([`column ${i}`, c]));
-    layout.slots.forEach((s, i) => out.push([`slot ${i}`, s]));
+    if (!hidden) layout.slots.forEach((s, i) => out.push([`slot ${i}`, s]));
     layout.pageTabs.forEach((t, i) => out.push([`page tab ${i}`, t]));
   }
   return out;
@@ -271,6 +272,23 @@ describe("layoutBook", () => {
       });
       if (layout.slots.length !== input.pages) wrong.push(`run ${run}: ${layout.slots.length} slots for ${input.pages} pages`);
     });
+    expectNoViolations(wrong);
+  });
+
+  it("gives a phone's hidden chapter column's width to the page, and shows icons for it elsewhere (D15)", () => {
+    const wrong: string[] = [];
+    for (const size of BOOK_WINDOW_SIZES) {
+      const single = { ...listedInput(size), form: "single" as const };
+      const icons = layoutBook({ ...single, chapters: "icons" });
+      const hidden = layoutBook({ ...single, chapters: "hidden" });
+      if (icons.form !== "single" || hidden.form !== "single") continue;
+      const [shown, page] = [icons.pages[0].rect, hidden.pages[0].rect];
+      if (size.width < PHONE_MAX_WIDTH) {
+        if (hidden.chapters !== "hidden" || hidden.nav.width !== 0) wrong.push(`${size.name}: the column still shows`);
+        if (Math.abs(right(page) - right(shown)) > EPS || Math.abs(page.width - shown.width - icons.nav.width) > EPS)
+          wrong.push(`${size.name}: the page doesn't take the column's width`);
+      } else if (JSON.stringify(hidden) !== JSON.stringify(icons)) wrong.push(`${size.name}: a hidden column isn't icons`);
+    }
     expectNoViolations(wrong);
   });
 

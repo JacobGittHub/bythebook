@@ -12,8 +12,8 @@
 
 export type BookForm = "spread" | "single";
 export type PageSide = "left" | "right" | "single";
-/** The one-page form's chapter column: chapter names with figures, or icons only. */
-export type ChapterColumn = "names" | "icons";
+/** The one-page form's chapter column: chapter names with figures, icons only, or, on a phone, hidden. */
+export type ChapterColumn = "names" | "icons" | "hidden";
 
 export type Rect = { x: number; y: number; width: number; height: number };
 export type Size = { width: number; height: number };
@@ -71,7 +71,7 @@ export const SINGLE = {
   halfGap: 25,
 } as const;
 
-/** The one-page form on a phone: icons only, and everything around the page as thin as it goes. */
+/** The one-page form on a phone: icons only, or hidden, and everything around the page as thin as it goes. */
 export const PHONE = {
   column: { names: 48, icons: 48 },
   margin: 10,
@@ -127,7 +127,7 @@ export type BookInput = {
   pages: number;
   /** The spread's tabs in the strip, measured, in book order. */
   tabs: readonly Span[];
-  /** The one-page form's chapter column. A phone shows icons whatever this says. */
+  /** The one-page form's chapter column. A phone shows icons where this says names, and only a phone hides it. */
   chapters: ChapterColumn;
 };
 
@@ -219,8 +219,9 @@ function layoutSpread({ window, at, pages, tabs }: BookInput): SpreadLayout {
 function layoutSingle({ window, at, pages, chapters }: BookInput): SingleLayout {
   const phone = window.width < PHONE_MAX_WIDTH;
   const m = phone ? PHONE : SINGLE;
-  const column: ChapterColumn = phone ? "icons" : chapters;
-  const columnWidth = m.column[column];
+  const column: ChapterColumn = phone ? (chapters === "hidden" ? "hidden" : "icons") : chapters === "hidden" ? "icons" : chapters;
+  // Hidden, the column is off the desk, and the page tabs reach from the window's left edge.
+  const columnWidth = column === "hidden" ? 0 : m.column[column];
   const tabOut = m.edges.max + m.tabReach;
 
   const x = columnWidth + tabOut;

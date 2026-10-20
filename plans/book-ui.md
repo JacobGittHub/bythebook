@@ -13,7 +13,8 @@ it.
 ## Decisions
 
 From the user's messages of 2026-10-13 and 2026-10-14, about the mockup
-`plans/mockups/dashboard-spread.html` (rounds three to seven, the "Spread Pages" artifact).
+`docs/design/mockups/dashboard-spread.html` (rounds three to seven, the "Spread Pages"
+artifact; in `plans/mockups/` until Phase 4).
 Q1–Q9 were answered on 2026-10-14; D4, D8 and D13–D19 hold the answers. D4 and D15 were
 amended the same day from the user's notes on round five. Q10 was answered on 2026-10-15,
 from `plans/mockups/library-zoom.html` (the "Library Zoom" artifact); D4, D5, D8 and D9 hold
@@ -153,6 +154,10 @@ it, replacing the book slide. On 2026-10-16 the user changed D8's order to that 
   inside the page where they fit and stack on a phone; a second level shows only its own page
   with a back link. The Explorer stacks the board above the analysis, as it does today
   (`docs/design/explorer.md`).
+  From the user's answers of 2026-10-19, after trying it on an iPhone, where the page felt
+  narrow ("a little thin"): on a phone the column can be hidden. A button at its head slides it
+  off the desk and the page takes its width; the open chapter's page tab, at the window's left
+  edge, brings it back. The pick is kept with the column's others (names, icons, hidden).
 - D16. **The Labyrinth's Explorer tab says "coming soon"** (Q5). The user will revisit it, so
   this plan doesn't build it there. What was found stays in the Notes for that work.
 - D17. **With a book chosen, the Explorer's book view draws the book** (Q6), in whichever of
@@ -198,7 +203,7 @@ and get to the test of turns").
 
 ### Phase 0. Mockups
 
-- [x] (agent) Rounds three to seven of `plans/mockups/dashboard-spread.html`.
+- [x] (agent) Rounds three to seven of the mockup, now `docs/design/mockups/dashboard-spread.html`.
 - [x] (user) Answer Q1–Q9 (D13–D19).
 
 ### Phase 1. Tokens, fonts and book areas (D2, D3)
@@ -397,18 +402,43 @@ and get to the test of turns").
       never scrolls; each bookmark and page tab meets its tab; turns go the right way; None
       and reduced motion change pages instantly. New screenshot baselines
       (this takes over `vibes.md` Phase 1's open step).
+      The user's answer of 2026-10-19: a baseline per chapter at the laptop (1440×900) and
+      the phone (390×844), in light only; dark is the contrast test's and the user's check.
+      Written 2026-10-19: `e2e/bookFit.spec.ts` holds every chapter at every listed size to
+      `layoutBook` (its pages, the window and a board page never scrolling, nothing past a
+      page's edge, the bookmark or page tab at its chapter), a desktop browser taking the
+      desktops and tablets and a phone's the phones; the turns, None and reduced motion were
+      `turns.spec.ts`'s already. `e2e/screens/book.spec.ts` replaced the Overview's and the
+      Explorer's old baselines with the 16. They pass in Chromium and the phone Chromium;
+      Firefox and WebKit wait for a review once the user commits.
 - [ ] (user, agent) Safari: the turns and the zoom on a real iPhone or Mac, from a
       production build on the local network. The spike's turns didn't look right there
       (2026-10-14); find out what Safari draws wrong and fix it, or give Safari None until
       it can. The Done-when needs Safari.
       > ME (2026-10-19, on an iPhone): the app seems a little thin, I wish the sidebar were
       > collapsible, and the pages don't flip as well on the iPhone.
+      The user tests on an iPhone only (2026-10-19), so with no Mac to read Safari's console,
+      debug mode's bug report gained a "Page turns" section (`useTurnLog`): which way each of
+      the last moves went, what ran, and whether Safari finished or skipped it. Over the
+      local network's plain http the report copies without the clipboard API. The thin feel
+      was the narrow page, and the collapsible column is D15's phone column that hides (done
+      the same day).
 - [ ] (agent) A slow-device check: turns and the zoom with Chromium's CPU throttled four
       times. If they stutter, the user decides whether None becomes the default anywhere,
       phones first.
-- [ ] (agent) Docs: `docs/design/dashboard.md` and `docs/design/explorer.md` rewritten for
+      Run 2026-10-19 on the production build, with the GPU: at full speed every move keeps
+      about 60 frames a second but the first turn into the Library (one frame of about
+      130 ms). At four times slower, a turn into the Library or the Bookstore, a first turn
+      into the Explorer and a zoom in on a Bookstore book stall once as they start (one frame
+      of 180–600 ms), while the browser lays out the arriving page; zooming out, riffles and
+      the other chapters stay near 60. Waiting for the user's decision.
+- [x] (agent) Docs: `docs/design/dashboard.md` and `docs/design/explorer.md` rewritten for
       the book, the UI rules in `AGENTS.md` (`Panel`, `--dash-offset`, the vibe areas, what
       reads `NAV_ITEMS`), and the mockup moved to `docs/design/mockups/`.
+      Done 2026-10-19: most of both docs had followed the book step by step, so this step
+      took out what Phase 3 left (the interim pages, which are now only the trainer's
+      scaffold, and `Panel`, which now holds only the content of pages with frames of their
+      own), and `--dash-offset` had already gone from `AGENTS.md`.
 - [ ] (user) Check every page in light and dark, wide and at phone width.
 - [ ] (user, agent) Record the Overview's demos on the book (`deployment.md` Phase 7).
 

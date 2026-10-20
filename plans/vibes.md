@@ -1,6 +1,6 @@
 # Vibes
 
-Status: deciding · Updated: 2026-10-14 · Depends on: deployment.md, book-ui.md
+Status: deciding · Updated: 2026-10-19 · Depends on: deployment.md, book-ui.md
 
 **Goal:** the book the app is drawn as (`book-ui.md`) takes on a vibe chosen for the opening
 being shown, growing richer the deeper the line goes, with music to match, and the community
@@ -90,7 +90,7 @@ From the user's message of 2026-10-14, when the app became a book (`book-ui.md`)
   vibe areas are the cover, the pages, the page edges, the gutter, the running heads and
   folios, and the margins (`book-ui.md` Phase 1). The board's squares and pieces, the move
   bars' meaning and the visualization windows' colors stay as D11 and D13 say. The mockup's
-  sample vibe shows the kind of change (`plans/mockups/dashboard-spread.html`).
+  sample vibe shows the kind of change (`docs/design/mockups/dashboard-spread.html`).
 - D15. **The first vibes are static.** They change how the book looks and nothing on it
   moves. D12's moving ornaments wait until the static vibes work. Q10 asks whether static
   also means no depth layers at first.
@@ -261,6 +261,8 @@ once those are answered; the likely ones are in Notes.
 - [x] (agent) Docs brought up to date: `docs/design/dashboard.md` § "Theme and vibe areas"
       and the UI rules in `AGENTS.md`.
 - [ ] (agent) The screenshot baselines renewed, and the browser tests run, in a review.
+      The baselines were renewed for the book on 2026-10-19 (`book-ui.md` Phase 4,
+      `e2e/screens/book.spec.ts`); the review is still to run.
 - [ ] (user) Check every page in light and dark, wide and at phone width.
 - [ ] (user, agent) Record the Overview's demos again (`deployment.md` Phase 7).
 

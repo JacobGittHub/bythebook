@@ -28,7 +28,7 @@ export default async function DashboardLayout({
   const cookieStore = await cookies();
   const initialForm = cookieStore.get(FORM_COOKIE)?.value === "single" ? "single" : "spread";
   const column = cookieStore.get(CHAPTERS_COOKIE)?.value;
-  const initialColumn = column === "names" || column === "icons" ? column : null;
+  const initialColumn = column === "names" || column === "icons" || column === "hidden" ? column : null;
 
   return (
     // The bug report provider wraps the frame too, so its button can read the page.

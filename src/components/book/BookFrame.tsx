@@ -36,6 +36,7 @@ import {
 import { Book, type BookCamera } from "@/components/book/Book";
 import { ChapterFigure } from "@/components/book/ChapterFigure";
 import { moveWithCamera, type CameraMove } from "@/components/book/camera";
+import { useTurnLog } from "@/components/book/useTurnLog";
 import { BugReportButton } from "@/components/layout/BugReportButton";
 import { Button } from "@/components/shadcn/button";
 import { Switch } from "@/components/shadcn/switch";
@@ -45,6 +46,7 @@ import { NO_CAMERA, cameraTransform, scrolledBy, shownHeight, zoomCamera, zoomRe
 import { bookOrder, chapterAt, levelAt, type Level } from "@/lib/book/chapters";
 import { CHAPTERS_COOKIE, FORM_COOKIE, SPREAD_QUERY, bookFrameCss } from "@/lib/book/frameCss";
 import {
+  PHONE_MAX_WIDTH,
   SPREAD,
   chaptersFor,
   layoutBook,
@@ -121,7 +123,7 @@ type BookFrameContext = {
   /** The current page's chapter, or -1 outside every chapter, and its level there (D8). */
   at: number;
   level: Level;
-  /** The one-page form's chapter column: the reader's pick, or the window's default (a phone shows icons whatever it says). */
+  /** The one-page form's chapter column: the reader's pick, or the window's default (a phone shows icons where it says names). */
   column: ChapterColumn;
   /** The window, and the strip's tabs as measured; null until the browser has them. */
   window: Size | null;
@@ -197,9 +199,11 @@ export function BookFrame({
   const level = at < 0 ? 1 : levelAt(pathname, chapters[at].href);
   const [columnPick, setColumnPick] = useState(initialColumn);
   const column = columnPick ?? (size ? chaptersFor(size) : "names");
+  const phone = size !== null && size.width < PHONE_MAX_WIDTH;
   const [tabs, setTabs] = useState<Span[] | null>(null);
   const tabRefs = useRef<(HTMLElement | null)[]>([]);
   const { motion } = useAppearance();
+  useTurnLog(debug, motion);
 
   // The camera for a place in the book: a second level's zoom in the spread (D8), or none.
   const spreadAt = (chapter: number): SpreadLayout | null => {
@@ -315,7 +319,7 @@ export function BookFrame({
                   <Brand />
                 </span>
                 <span className="grow" />
-                <ColumnToggle column={column} onPick={setColumnPick} />
+                <ColumnToggle column={column} phone={phone} onPick={setColumnPick} />
               </div>
               <div className="book-chapter-list">
                 {chapters.map((chapter, i) => {
@@ -346,6 +350,17 @@ export function BookFrame({
               <div className="book-chapters-foot text-[13px] text-muted-foreground">{account}</div>
             </nav>
           </ViewTransition>
+        )}
+        {/* A phone's hidden column comes back from the open chapter's page tab, which this lies over (D15). */}
+        {form === "single" && columnPick === "hidden" && (
+          <button
+            type="button"
+            className="book-chapters-show"
+            style={{ "--at": Math.max(at, 0) } as CSSProperties}
+            aria-label="Show the chapters"
+            title="Show the chapters"
+            onClick={() => setColumnPick("icons")}
+          />
         )}
         <div ref={deskRef} className="book-desk" data-scrolls={reach !== null || undefined}>
           {form === "spread" && (
@@ -594,11 +609,14 @@ function useTurn(
   return { turn, onPicture };
 }
 
-/** Narrows the chapter column to icons, or widens it to names (D15). A phone has no such button. */
-function ColumnToggle({ column, onPick }: { column: ChapterColumn; onPick: (column: ChapterColumn) => void }) {
+/**
+ * Narrows the chapter column to icons, or widens it to names (D15). On a phone, whose column is
+ * icons only, it hides the column instead, and the page tab brings it back.
+ */
+function ColumnToggle({ column, phone, onPick }: { column: ChapterColumn; phone: boolean; onPick: (column: ChapterColumn) => void }) {
   const names = column === "names";
-  const label = names ? "Narrow the chapters to icons" : "Widen the chapters to names";
-  const Icon = names ? PanelLeftClose : PanelLeftOpen;
+  const label = phone ? "Hide the chapters" : names ? "Narrow the chapters to icons" : "Widen the chapters to names";
+  const Icon = phone || names ? PanelLeftClose : PanelLeftOpen;
   return (
     <Button
       variant="ghost"
@@ -606,15 +624,15 @@ function ColumnToggle({ column, onPick }: { column: ChapterColumn; onPick: (colu
       className="book-chapters-toggle size-7 text-muted-foreground"
       aria-label={label}
       title={label}
-      aria-pressed={!names}
-      onClick={() => onPick(names ? "icons" : "names")}
+      aria-pressed={phone ? undefined : !names}
+      onClick={() => onPick(phone ? "hidden" : names ? "icons" : "names")}
     >
       <Icon aria-hidden className="size-4" />
     </Button>
   );
 }
 
-/** The brand; on a phone's chapter column, its first letter. */
+/** The brand; a narrowed chapter column shows its button in its place. */
 function Brand() {
   return (
     <span className="font-heading text-[19px] leading-[30px] font-semibold tracking-[-0.01em]">

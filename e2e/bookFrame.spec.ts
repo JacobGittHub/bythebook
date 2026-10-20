@@ -37,8 +37,8 @@ test("on a phone the page tab meets its chapter, short of the page's text", asyn
   await page.setViewportSize(PHONE);
   await page.goto("/dashboard/bookstore");
   await expect(page.locator(".book-frame")).toHaveAttribute("data-form", "single");
-  // A phone has no button to widen its icons.
-  await expect(page.locator(".book-chapters-toggle")).toBeHidden();
+  // A phone has no button to widen its icons, only one that hides them.
+  await expect(page.getByRole("button", { name: "Widen the chapters to names" })).toHaveCount(0);
 
   const tab = await box(page, ".book-page-tab");
   const row = (await chapters(page).getByRole("link", { name: "Bookstore", exact: true }).boundingBox())!;
@@ -46,6 +46,30 @@ test("on a phone the page tab meets its chapter, short of the page's text", asyn
   expect(Math.abs(tab.x - (row.x + row.width))).toBeLessThanOrEqual(1);
   expect(Math.abs(tab.y + tab.height / 2 - (row.y + row.height / 2))).toBeLessThanOrEqual(1);
   expect(tab.x + tab.width).toBeLessThan(body.x);
+});
+
+test("on a phone the chapter column hides, giving the page its width, and the page tab brings it back (D15)", async ({ page }) => {
+  await page.setViewportSize(PHONE);
+  await page.goto("/dashboard/library");
+  const library = chapters(page).getByRole("link", { name: "Library", exact: true });
+  await expect(library).toBeVisible();
+  const before = await box(page, ".book-page-body");
+
+  await page.getByRole("button", { name: "Hide the chapters" }).click();
+  await expect(library).toBeHidden();
+  // The page takes the column's width, and its tab lies at the window's left edge, level with where its chapter was.
+  await expect.poll(async () => (await box(page, ".book-page-body")).width).toBeGreaterThan(before.width + 40);
+  const tab = await box(page, ".book-page-tab");
+  expect(tab.x).toBeLessThanOrEqual(1);
+
+  await page.reload();
+  await expect(library).toBeHidden();
+  const show = page.getByRole("button", { name: "Show the chapters" });
+  const button = (await show.boundingBox())!;
+  expect(tab.y + tab.height / 2).toBeGreaterThan(button.y);
+  expect(tab.y + tab.height / 2).toBeLessThan(button.y + button.height);
+  await show.click();
+  await expect(library).toBeVisible();
 });
 
 test("a second level in the one-page form shows its own page, with the way back in its running head", async ({ page }) => {

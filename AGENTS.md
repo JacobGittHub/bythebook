@@ -254,8 +254,10 @@ edit these files.
 - Every color, corner and font comes from the theme tokens in `src/app/globals.css`, so
   light, dark and later every vibe (`plans/vibes.md`) restyle the page without touching it.
   Don't use fixed palette classes (`slate-*`, `white`, `amber-*` and the like) or corners
-  larger than `rounded-lg`, and change paint, never size, per theme. A box that holds a
-  page's content is a `Panel` (`src/components/ui/Panel.tsx`). Elements marked with
+  larger than `rounded-lg`, and change paint, never size, per theme. A page of the book
+  renders its pages with `Spread` (`src/components/book/Spread.tsx`) and lays its parts on
+  them with no boxes around them; a page that keeps a frame of its own holds its content in
+  a `Panel` (`src/components/ui/Panel.tsx`). Elements marked with
   `data-slot` leave their `::before` and `::after` to vibes (`docs/design/dashboard.md`
   § "Theme and vibe areas"). The board's squares and pieces and the visualizations keep
   their own colors.
