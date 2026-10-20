@@ -423,6 +423,19 @@ and get to the test of turns").
       local network's plain http the report copies without the clipboard API. The thin feel
       was the narrow page, and the collapsible column is D15's phone column that hides (done
       the same day).
+      > ME (2026-10-19, second look): the wood transferred well, the collapsing column and
+      > the bookmark extension work, the pages run clean. But turns are instant with Page turn
+      > on, the heavy engine doesn't work in the Explorer, and a move on the Explorer's board
+      > scrolls the phone's column back up.
+      The column jumped because a move took the master moves' rows out (for "Loading…", then
+      for the new ones), and Safari pulls a scrolled column up when rows go, even when as
+      many come back; now nothing in it shrinks while a move loads (`explorer.md`). Heavy needs
+      cross-origin isolation, which plain http to the local network can't give, so there it
+      falls back to the single-threaded engine (`architecture.md` § "Engine"); the https site
+      is isolated and runs it threaded (not yet tried on the iPhone). The instant turns aren't reproduced: they run in Playwright's
+      iPhone WebKit (`turns.spec.ts`). Waiting on whether the iPhone has Reduce Motion on
+      (the frame then gives None, and Settings says so under Motion), or on the bug report's
+      "Page turns" section.
 - [ ] (agent) A slow-device check: turns and the zoom with Chromium's CPU throttled four
       times. If they stutter, the user decides whether None becomes the default anywhere,
       phones first.

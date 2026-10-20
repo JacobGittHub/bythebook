@@ -224,7 +224,10 @@ walks trees or aggregates runs client-side.
   multithreaded mode).
 - **Multithreading needs `SharedArrayBuffer`.** That in turn needs the
   `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`
-  headers, which are set in `next.config.ts`.
+  headers, which are set in `next.config.ts`. They only take hold in a secure context (https or
+  localhost). Where the page isn't cross-origin isolated, as on a phone reaching a local build
+  over http, heavy mode runs the single-threaded file at its own depth and lines
+  (`ENGINE_LINES`).
 - **Two engine files are empty stubs:** `src/workers/stockfish.worker.ts` and
   `src/components/board/EngineWorker.ts`. The engine logic is in `useEngine.ts`.
 - **The full-size `stockfish-18-single` build is gitignored and unused** (107 MB).

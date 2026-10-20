@@ -31,7 +31,7 @@ import { createNavigator, lineIndex, navigatorReducer, remainingLineMoves } from
 import { useOpeningExplorer } from "@/hooks/useOpeningExplorer";
 import { useOpeningExplorerMulti } from "@/hooks/useOpeningExplorerMulti";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useEngine, type EngineMode } from "@/hooks/useEngine";
+import { ENGINE_LINES, useEngine, type EngineMode } from "@/hooks/useEngine";
 import { useLibraryBook, useLibraryBooks } from "@/context/Library";
 import { mergeMoveLineIntoTree } from "@/lib/chess/moveTree";
 import type { MoveResult } from "@/hooks/useChessGame";
@@ -457,9 +457,13 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
     : masters.reduce((total, move) => total + gameCount(move), 0);
   const markedSan =
     selectedMatch && currentBoardIndexWithinHighlightedLine === 0 ? (selectedMatch.moves[0]?.san ?? null) : null;
+  // While the next position's moves load, the last position's stay up, faded and out of reach:
+  // taking them down would shorten the one-page column for a moment, and a browser then pulls
+  // a column scrolled down past them back up.
+  const stale = explorerData.loading ? (explorerData.previous?.moves ?? NO_MOVES) : NO_MOVES;
   const masterMoves = (
-    <>
-      {explorerData.loading && <p className="text-xs text-muted-foreground">Loading master games…</p>}
+    <div className="flex flex-col gap-2" aria-busy={explorerData.loading}>
+      {explorerData.loading && stale.length === 0 && <p className="text-xs text-muted-foreground">Loading master games…</p>}
       {!explorerData.loading && explorerData.error && (
         <p className="text-xs text-muted-foreground">
           {/* A 404 is the route's answer to a guest for a position it hasn't saved. */}
@@ -468,19 +472,21 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
             : "Could not load master game data."}
         </p>
       )}
-      {masters.length > 0 && (
-        <MasterMoves
-          moves={masters}
-          hoveredUci={hoveredMoveUci}
-          markedSan={markedSan}
-          onPlay={handleExplorerMoveClick}
-          onHover={setHoveredMoveUci}
-        />
+      {(masters.length > 0 || stale.length > 0) && (
+        <div inert={stale.length > 0} className={stale.length > 0 ? "opacity-50" : undefined}>
+          <MasterMoves
+            moves={stale.length > 0 ? stale : masters}
+            hoveredUci={hoveredMoveUci}
+            markedSan={markedSan}
+            onPlay={handleExplorerMoveClick}
+            onHover={setHoveredMoveUci}
+          />
+        </div>
       )}
       {explorerData.data && masters.length === 0 && !explorerData.loading && (
         <p className="text-xs text-muted-foreground">No master games found for this position.</p>
       )}
-    </>
+    </div>
   );
   // The one-page form has no right folio, so its head says how the position matched the catalog.
   const mastersHead = (match: boolean) => (
@@ -488,6 +494,7 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
       <SlotTab>Master moves</SlotTab>
       <span className="grow" />
       <SlotNote>
+        {stale.length > 0 && "Loading… "}
         {match && matchModeLabel}
         {match && totalGames > 0 && " · "}
         {totalGames > 0 && `${formatGames(totalGames)} games`}
@@ -503,7 +510,7 @@ export function OpeningExplorer({ initialFen, initialLine, initialBookId }: Prop
       <EngineControls mode={engineMode} onMode={setEngineMode} arrow={showEngineArrow} onArrow={setShowEngineArrow} />
     </>
   );
-  const engineLines = engineMode !== "none" && engine.lines.length > 0 && <EngineLines lines={engine.lines} />;
+  const engineLines = engineMode !== "none" && <EngineLines lines={engine.lines} rows={ENGINE_LINES[engineMode]} />;
 
   // With a book chosen, the running head says whether the line is still in it (D17).
   const leftHead = (

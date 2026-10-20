@@ -22,6 +22,9 @@ export type UseEngineResult = {
 
 // Heavy uses the multi-threaded lite build — same ~7 MB as single but uses all CPU cores.
 // Requires Cross-Origin-Opener-Policy + Cross-Origin-Embedder-Policy headers (set in next.config.ts).
+// They only take effect in a secure context (https or localhost); elsewhere, as on a phone
+// reaching a local build over http, the page isn't cross-origin isolated, threads can't share
+// memory, and Heavy falls back to the single-threaded build at its own depth and lines.
 const ENGINE_PATH: Record<Exclude<EngineMode, "none">, string> = {
   light: "/engine/stockfish-18-lite-single.js",
   heavy: "/engine/stockfish-18-lite.js",
@@ -32,7 +35,8 @@ const DEPTH: Record<Exclude<EngineMode, "none">, number> = {
   heavy: 22,
 };
 
-const MULTIPV: Record<Exclude<EngineMode, "none">, number> = {
+/** How many lines each mode shows (Stockfish's MultiPV). */
+export const ENGINE_LINES: Record<Exclude<EngineMode, "none">, number> = {
   light: 1,
   heavy: 3,
 };
@@ -62,10 +66,10 @@ export function useEngine(fen: string, mode: EngineMode): UseEngineResult {
     if (mode === "none") return;
 
     const depth = DEPTH[mode];
-    const multiPv = MULTIPV[mode];
+    const multiPv = ENGINE_LINES[mode];
     depthRef.current = depth;
 
-    const worker = new Worker(ENGINE_PATH[mode]);
+    const worker = new Worker(ENGINE_PATH[self.crossOriginIsolated ? mode : "light"]);
     workerRef.current = worker;
     accumulatedRef.current = {};
 

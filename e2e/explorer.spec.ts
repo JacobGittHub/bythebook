@@ -147,3 +147,28 @@ test("Explorer opened at a position replays the line that reaches it", async ({ 
   await expect(page.locator('[data-square="c5"] [data-piece="bP"]')).toBeVisible();
   await expect(page.getByText("Exact line match")).toBeVisible();
 });
+
+test("Explorer's one-page column keeps its scroll when a move is played", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "Only the one-page form stacks the analysis in one column.");
+  await page.goto("/dashboard/explorer");
+  await expect(page.getByRole("button", { name: /^e4 White/ })).toBeVisible();
+  // Every answer takes a while, as over a phone's network, so the column waits on it.
+  await page.route("**/api/openings/explorer", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    await route.fallback();
+  });
+
+  const column = page.locator("div.overflow-y-auto", { has: page.getByText("Master moves", { exact: true }) });
+  const scrolled = () => column.evaluate((el) => ({ top: el.scrollTop, room: el.scrollHeight - el.clientHeight }));
+  await column.evaluate((el) => (el.scrollTop = el.scrollHeight));
+  expect((await scrolled()).top).toBeGreaterThan(40);
+
+  await page.locator('[data-square="e2"]').click();
+  await page.locator('[data-square="e4"]').click();
+  // The start's moves stay up, faded, until the answer comes.
+  await expect(column.locator("[aria-busy=true]")).toBeAttached();
+  await expect(column.locator("[aria-busy=false]")).toBeAttached();
+  // Still at the foot, where the tree window is.
+  const after = await scrolled();
+  expect(after.room - after.top).toBeLessThanOrEqual(1);
+});

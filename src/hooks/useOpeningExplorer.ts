@@ -8,6 +8,8 @@ export type OpeningExplorerResult = {
   data: ExplorerResponse | null;
   loading: boolean;
   error: string | null;
+  /** While loading, the answer for the position before, so a page can keep it up meanwhile. */
+  previous: ExplorerResponse | null;
 };
 
 /** The answer for one position. Until the answer for the current one arrives, it's loading. */
@@ -45,8 +47,8 @@ export function useOpeningExplorer(fen: string): OpeningExplorerResult {
   }, [fen]);
 
   return useMemo(() => {
-    if (!fen) return { data: null, loading: false, error: null };
-    if (answer?.fen !== fen) return { data: null, loading: true, error: null };
-    return { data: answer.data, loading: false, error: answer.error };
+    if (!fen) return { data: null, loading: false, error: null, previous: null };
+    if (answer?.fen !== fen) return { data: null, loading: true, error: null, previous: answer?.data ?? null };
+    return { data: answer.data, loading: false, error: answer.error, previous: null };
   }, [fen, answer]);
 }

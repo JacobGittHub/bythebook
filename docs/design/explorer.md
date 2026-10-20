@@ -58,6 +58,11 @@ parts.
   big as about half the page lets it be, and under it one column that scrolls on its own: the
   scoresheet as a row (pinned), the master moves (whose head also says how the position
   matched), the engine and the tree window. It has no swap.
+- **Nothing in the analysis shrinks while a move loads,** so a column scrolled down to the tree
+  window stays there. Until the next position's master moves arrive, the last position's stay
+  up, faded and out of reach. Their rows are kept by place, not by move, and the engine keeps a
+  row for each of its lines (`ENGINE_LINES`), blank until the line comes. Safari pulls a column
+  back up when rows are taken out, even when as many go back in at once.
 
 **Master stats for a guest.** The route answers 404 for a position the server hasn't saved
 (see `processes/lichess-api-and-caching.md`). The move list then says that a live lookup

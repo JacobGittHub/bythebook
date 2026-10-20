@@ -281,16 +281,25 @@ export function engineNote(ready: boolean, analyzing: boolean, lines: readonly E
   return `${score} · depth ${top?.depth ?? (analyzing ? "…" : "—")}`;
 }
 
-/** The engine's lines, each its score and first moves. */
-export function EngineLines({ lines }: { lines: readonly EngineLine[] }) {
+/**
+ * The engine's lines, each its score and first moves. It keeps a row for each of its `rows`
+ * lines, blank until the line comes, and changes only their text, so it never shrinks while a
+ * new position is analyzed (see `MasterMoves` on why).
+ */
+export function EngineLines({ lines, rows }: { lines: readonly EngineLine[]; rows: number }) {
   return (
     <div className="-mt-1 flex flex-col">
-      {lines.map((line) => (
-        <div key={line.multipv} className="flex items-baseline gap-2.5 border-b border-rule py-1 text-[12.5px]">
-          <span className="w-10 shrink-0 font-mono font-semibold tabular-nums">{formatScore(line.score, line.mate)}</span>
-          <span className="truncate font-mono text-muted-foreground">{line.pvSan.slice(0, 6).join(" ")}</span>
-        </div>
-      ))}
+      {Array.from({ length: Math.max(rows, lines.length) }, (_, i) => {
+        const line = lines[i];
+        return (
+          <div key={i} className="flex items-baseline gap-2.5 border-b border-rule py-1 text-[12.5px]">
+            <span className="w-10 shrink-0 font-mono font-semibold tabular-nums">
+              {line ? formatScore(line.score, line.mate) : "\u00a0"}
+            </span>
+            <span className="truncate font-mono text-muted-foreground">{line ? line.pvSan.slice(0, 6).join(" ") : ""}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -318,15 +327,18 @@ export function MasterMoves({
         <span className="truncate">White · Draw · Black</span>
         <span className="text-right">Games</span>
       </div>
+      {/* Rows are kept by place, not by move, so another position's moves change the rows in
+          place: Safari pulls a column scrolled down past rows taken out back up, even when as
+          many go back in. */}
       <div onMouseLeave={() => onHover(null)}>
-        {moves.map((move) => {
+        {moves.map((move, index) => {
           const total = move.white + move.draws + move.black;
           if (total === 0) return null;
           const pct = (n: number) => (n / total) * 100;
           const marked = markedSan === move.san;
           return (
             <div
-              key={move.uci}
+              key={index}
               role="button"
               tabIndex={0}
               onClick={() => onPlay(move)}
