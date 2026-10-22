@@ -5,19 +5,23 @@ import { BookView } from "@/components/books/BookView";
 import { BookViewIcon } from "@/components/books/BookViewRail";
 import { SelectedPosition } from "@/components/books/SelectedPosition";
 import { useBookSelection } from "@/components/books/useBookSelection";
+import { useViewZoom } from "@/components/books/useViewZoom";
 import { ZoomControls } from "@/components/books/ZoomControls";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/shadcn/toggle-group";
 import type { BookSide } from "@/lib/books/measures";
 import { BOOK_VIEWS, isBookViewId, type BookViewId } from "@/lib/books/views";
-import { FIT_ZOOM } from "@/lib/books/views/zoom";
 import { buildViewTree, type ViewNode } from "@/lib/books/viewTree";
 import { startTree } from "@/lib/library/trees";
 import { cn } from "@/lib/utils";
 import type { MoveNode } from "@/types/chess";
 
-/** The view a book opens in, in the Library and the Bookstore (plans/deployment.md D21). */
-export const DEFAULT_READER_VIEW: BookViewId = "icicle";
+/**
+ * The view a book opens in, in the Library and the Bookstore (plans/deployment.md D21, amended by
+ * plans/game-history.md D31): the icicle where a book is previewed small, ply columns on a book's
+ * own page.
+ */
+export const DEFAULT_READER_VIEW: Record<Props["size"], BookViewId> = { compact: "icicle", large: "ply-columns" };
 
 type Props = {
   book: { id: string; name: string; color: BookSide; trees: readonly MoveNode[] };
@@ -43,9 +47,9 @@ type Props = {
  * not width. Until the views draw several trees, it shows the tree from the starting position.
  */
 export function BookReader({ book, size, view: fixedView, positionActions, fill = false, board = true, className }: Props) {
-  const [pickedView, setView] = useState<BookViewId>(DEFAULT_READER_VIEW);
+  const [pickedView, setView] = useState<BookViewId>(DEFAULT_READER_VIEW[size]);
   const view = fixedView ?? pickedView;
-  const [zoom, setZoom] = useState<number>(FIT_ZOOM);
+  const zoom = useViewZoom();
   const tree = useMemo(() => buildViewTree(startTree(book.trees)), [book.trees]);
   const { selectedId, spineEndId, selected, hovered, shown, select, setHovered } = useBookSelection(tree, book.id);
   const viewInfo = BOOK_VIEWS.find((option) => option.id === view)!;
@@ -96,7 +100,7 @@ export function BookReader({ book, size, view: fixedView, positionActions, fill 
         <div className="flex flex-wrap items-center gap-2">
           {!fixedView && picker}
           <span className="flex-1" />
-          <ZoomControls zoom={zoom} onChange={setZoom} />
+          <ZoomControls zoom={zoom} />
         </div>
         <div
           data-slot="panel"
@@ -116,7 +120,6 @@ export function BookReader({ book, size, view: fixedView, positionActions, fill 
               onHover={(node) => setHovered(node)}
               label={`${viewInfo.label} of ${book.name}`}
               zoom={zoom}
-              onZoomChange={setZoom}
               className="flex-1"
             />
           )}

@@ -162,7 +162,9 @@ direction"; the user expects one more round of adjustments before building.
     round). With both, the tree holds every game from the starting position, and the score at a
     position is the user's, whichever side they played.
   
-  How the filters are laid out is D38. Choosing imports means each game records which import it came from, and the history keeps a
+  How the filters are laid out is D38. *Framing (the user's pick, 2026-10-21):* the page is a
+  second level shown as a whole spread, without `book-ui.md` D8's zoom, since a zoomed second
+  level shows only a strip of its left page, too narrow for the games list. Choosing imports means each game records which import it came from, and the history keeps a
   list of its imports (when, which file, how many games); the step 8 store gains both before
   Phase 3's migration is written.
 - D31. **Ply columns is the default view on second-level pages:** a book's own page in the
@@ -247,7 +249,8 @@ From the user's answers to Q21 and Q22, 2026-10-21.
   dialog says "Asked for more room on 21 Oct"; after a decline, the account may ask again. A row
   rather than an email ties the request to the account and keeps them all in one place.
 - D38. **Choosing games (Q22), as `game-history.html` draws it** ("Looks good right now, but I
-  want the option to view all games"):
+  want the option to view all games", which the user later explained as "both black and white
+  games at the same time": Both, D30, the default):
   - The side is a toggle beside the title: White, Black or Both (D30), Both first, since the
     page opens on all of the user's games. Every other choice is a set of checkboxes that all
     start ticked, each with its number of games.
@@ -343,7 +346,7 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
 
 **Phase 3. An account's storage**
 
-- [ ] 11. The migration (agent writes, user runs, agent runs `npm run db:types`),
+- [x] 11. The migration (agent writes, user runs, agent runs `npm run db:types`),
   `supabase/migrations/<ts>_game_history.sql`:
   - `game_history`, one row per user: the game count, the chunks (each one's number, games and
     the version that last wrote it), the imports, the username, the last import's time, and a
@@ -362,7 +365,7 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
   the total against the limit, and that every chunk it names was staged from that version. So the
   server's caps can't be skipped by writing to the tables directly (D13, D18), as the books'
   "own books" rule would allow. Rows go when the account does.
-- [ ] 12. Database access and routes (agent), `src/lib/db/gameHistory.ts`, under `/api/history`:
+- [x] 12. Database access and routes (agent), `src/lib/db/gameHistory.ts`, under `/api/history`:
   - `GET /api/history`: the summary, the limit (the `account_limits` row or the default) and the
     latest request for room;
   - `GET /api/history/chunks/[n]`: one chunk, with its clocks;
@@ -380,7 +383,7 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
   grow with each import (D28), so the server caps the games and the number of chunks, not the
   chunk number. Each route validates with Zod, answers a guest with 401, takes the user from the
   session and counts its call with `recordUsage` (new kinds `history_read` and `history_write`).
-- [ ] 13. The account store (agent), `src/lib/history/accountHistory.ts`, with an IndexedDB copy of
+- [x] 13. The account store (agent), `src/lib/history/accountHistory.ts`, with an IndexedDB copy of
   the chunks: the summary lists the version that wrote each chunk, so opening a page reads the
   summary and fetches only the chunks that changed, and a monthly import refetches one. The copy
   belongs to one account and is deleted when a guest or another account opens the dashboard,
@@ -389,30 +392,41 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
   all games" behind an AlertDialog, for both stores. The `ACCESS_ROWS` row says the account
   keeps them.
 
-Written 2026-10-21: the migration `20261021120000_game_history.sql`, `src/lib/db/gameHistory.ts`, the
-routes under `src/app/api/history/`, `accountHistory.ts` and the UI. Waiting on the user to run the
-migration; then `npm run db:types`, the typecheck of `gameHistory.ts`, and an account's browser test.
+Done 2026-10-21: the migration `20261021120000_game_history.sql` (run by the user),
+`src/lib/db/gameHistory.ts`, the routes under `src/app/api/history/`, `accountHistory.ts` and the UI.
+`e2e/gameImport.spec.ts` imports into the test account, keeps the games through a reload and
+deletes them.
 
 **Phase 4. The history page**
 
-- [ ] 14. The games' tree, `historyTree.ts` (agent): from the filtered records, with games,
+- [x] 14. The games' tree, `historyTree.ts` (agent): from the filtered records, with games,
   wins, draws and losses at each position, siblings sorted by count then UCI, and single-game
   tails pruned past a named constant so the views can draw it. It feeds `buildViewTree`
   (`src/lib/books/viewTree.ts`), whose `games` count already weights the views. FENs come
-  from the move player (step 6).
-- [ ] 15. Walking the views (agent, D31, D32), in `BookView` for all five views: the arrow keys
+  from the move player (step 6). Done 2026-10-21. chess.js names a move in about 0.11 ms, 1.3 s for
+  the 12,000 positions of the user's 3,264 games, so the move player gained `uciToSan`, which
+  matches chess.js on every fixture and random game at about 7 µs a position. A line only one
+  game took is drawn for `HISTORY_TAIL_PLIES` (1) ply: the user's games draw 5,436 positions, 8,678
+  at 2 plies. `PositionNames` keeps positions and names between builds.
+- [x] 15. Walking the views (agent, D31, D32), in `BookView` for all five views: the arrow keys
   with the highlighted move, the camera that pans and zooms to keep the current position and its
   moves in frame, dragging to pan, the zoom scale from 0.5 to 4 with its finer steps, and the
   marks that keep their size below 1 (D32 as amended). The rules (which move is highlighted, where the camera goes) are
   pure functions in `src/lib/books/views/`, tested in Node. `DEFAULT_READER_VIEW` splits into
   a first-level default (the icicle) and a second-level one (ply columns). `docs/design/explorer.md`
-  gains both.
-- [ ] 16. The page, `/dashboard/library/history` (agent), open to guests like the rest of the
+  gains both. Done 2026-10-21: `camera.ts` (`walkKey`, `frameCamera`, `easeCamera`), `zoom.ts` on
+  the continuous scale, and `useViewZoom`, which the views' `ZoomControls` share. The camera
+  zooms on its own only when the position changes, so a book opens at the zoom it was left at,
+  not at 200%.
+- [x] 16. The page, `/dashboard/library/history` (agent), open to guests like the rest of the
   Library, as a spread laid out by D30: on the left, the filters as D38 lays out, the
   totals bar, and the games through the current position, each with its link; on the right,
   the board with "Open in Explorer" and the moves played next in a box of fixed height, and
   the tree in ply columns weighted by games, under the "Your score" switch. The Library's
-  first level shows the number of games and the way to the page (`deployment.md` D21).
+  first level shows the number of games and the way to the page (`deployment.md` D21). Done
+  2026-10-21: `GameHistoryPage`, `HistoryFilters` and `HistoryPosition` (`src/components/library/`),
+  on `historyFilter.ts` and `useHistoryGames`, as a whole spread (D30's framing). Ply columns paint
+  the score (D35) through `BookView`'s `success`.
 
 **Phase 5. Comparing games with a book**
 

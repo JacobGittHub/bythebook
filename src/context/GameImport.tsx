@@ -15,7 +15,7 @@ import { useGameHistory } from "@/hooks/useGameHistory";
 import { freshFor, type FileScan, type ImportResult } from "@/lib/history/importFile";
 import { startImportSession, ImportStopped, type ImportSession } from "@/lib/history/importSession";
 import { makeRoom, type MergeReport } from "@/lib/history/merge";
-import { HistoryError, type GameHistoryStore, type LimitChoice } from "@/lib/history/types";
+import { HistoryError, type GameHistoryStore, type LimitChoice, type Tally } from "@/lib/history/types";
 import { saveImport } from "@/lib/history/writes";
 import { libraryHref } from "@/lib/library/links";
 
@@ -24,8 +24,6 @@ export type ImportSource = { file: File; name: string; pasted: boolean };
 
 /** The history as the first pass found it, which the second pass's choices and write are planned from. */
 export type ImportBase = { version: number; games: number; limit: number };
-
-export type Tally = { win: number; draw: number; loss: number };
 
 export type ImportPhase =
   | { kind: "idle" }

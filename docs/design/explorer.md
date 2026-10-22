@@ -203,14 +203,30 @@ pages (`dashboard.md`) show them. They came from concept mockups the user ranked
   sibling has a count, else by positions behind them, then by UCI.
 - **Families** are the moves the tree splits into where it first branches (`families`); the
   first `FAMILY_COLORS` get their own color.
-- **A drawing bigger than its box scrolls,** and the selected position is scrolled into view
-  when the selection changes.
-- **Every view zooms** (`plans/deployment.md` D21) in the steps of `ZOOM_STEPS`
-  (`src/lib/books/views/zoom.ts`), from −, Fit and + (`ZoomControls`), ctrl+wheel, or a
-  two-finger pinch on a touch screen. Zoomed, the icicle is laid out again in a box that many
-  times larger, so thin blocks grow until their moves fit; the other views keep their layout
-  and are drawn bigger. Either way the drawing scrolls inside the same box, so nothing around
-  it moves.
+- **A drawing bigger than its box scrolls,** and a mouse drags it to look around.
+- **Every view is walked with the arrow keys** (`plans/game-history.md` D32) once it has
+  focus: the selected position is the current one, Up and Down move a highlight among its
+  moves, stopping at the first and last, Right goes to the highlighted move and Left back to
+  the parent, highlighting the move it came from (`walkKey`, `src/lib/books/views/camera.ts`).
+  The highlight starts on the most played move, carries a dashed ring, and its name shows.
+- **A camera follows the current position** (`frameCamera`): it puts the position
+  a third of the way across and re-centres its moves as soon as they near the top or bottom.
+  When the position changes it also zooms, out when the moves don't fit and in, up to
+  `AUTO_MAX_ZOOM`, when they would sit small; a drawing opens at the zoom it was left at. Its
+  own moves ease over `CAMERA_EASE_MS` (`easeCamera`), set straight on the drawing frame by
+  frame, while the wheel and dragging follow the hand at once, and reduced motion jumps.
+- **Every view zooms** (`plans/deployment.md` D21) on a continuous scale from `MIN_ZOOM` to
+  `MAX_ZOOM` (`src/lib/books/views/zoom.ts`): − and + step through `ZOOM_STEPS`, ctrl+wheel and
+  a two-finger pinch zoom about the pointer, and Fit (`fitZoom`) fits the whole drawing.
+  `useViewZoom` shares the zoom between the view and its `ZoomControls`, which ask for a zoom
+  the camera eases to. Below 100% the highlight's ring and the current position's moves' names
+  keep their size on screen. Zoomed in, the icicle is laid out again in a box that many times
+  larger, so thin blocks grow until their moves fit; the other views keep their layout and are
+  drawn bigger or smaller. Either way the drawing scrolls inside the same box, so nothing
+  around it moves.
+- **Ply columns can paint the user's score** (`success`, D35): each edge takes the color of the
+  score from the position it leads to (`successColor`, mixed from the theme's colors), and is
+  as thick as its games.
 
 ## Planned
 

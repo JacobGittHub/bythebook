@@ -43,7 +43,7 @@ import { Switch } from "@/components/shadcn/switch";
 import { useAppearance } from "@/context/Appearance";
 import type { ChapterIcon } from "@/lib/auth/access";
 import { NO_CAMERA, cameraTransform, scrolledBy, shownHeight, zoomCamera, zoomReach, type Camera } from "@/lib/book/camera";
-import { bookOrder, chapterAt, levelAt, type Level } from "@/lib/book/chapters";
+import { bookOrder, chapterAt, levelAt, zoomsAt, type Level } from "@/lib/book/chapters";
 import { CHAPTERS_COOKIE, FORM_COOKIE, SPREAD_QUERY, bookFrameCss } from "@/lib/book/frameCss";
 import {
   PHONE_MAX_WIDTH,
@@ -56,7 +56,7 @@ import {
   type Span,
   type SpreadLayout,
 } from "@/lib/book/layout";
-import { moveBetween, moveTiming, type Place, type TurnWay, type Zoom } from "@/lib/book/turns";
+import { moveBetween, moveTiming, zoomedAt, type Place, type TurnWay, type Zoom } from "@/lib/book/turns";
 import type { Motion } from "@/lib/appearance";
 import { cn } from "@/lib/utils";
 import "./turns.css";
@@ -123,6 +123,8 @@ type BookFrameContext = {
   /** The current page's chapter, or -1 outside every chapter, and its level there (D8). */
   at: number;
   level: Level;
+  /** Whether the camera zooms in on the right page (D8): a second level, unless it is a whole spread. */
+  zoomed: boolean;
   /** The one-page form's chapter column: the reader's pick, or the window's default (a phone shows icons where it says names). */
   column: ChapterColumn;
   /** The window, and the strip's tabs as measured; null until the browser has them. */
@@ -142,6 +144,7 @@ const FrameContext = createContext<BookFrameContext>({
   chapterCount: 0,
   at: -1,
   level: 1,
+  zoomed: false,
   column: "names",
   window: null,
   tabs: null,
@@ -197,6 +200,7 @@ export function BookFrame({
   const size = useSyncExternalStore(subscribeWindow, readWindow, () => null);
   const at = chapterAt(pathname, chapters.map((c) => c.href));
   const level = at < 0 ? 1 : levelAt(pathname, chapters[at].href);
+  const zoomed = zoomsAt(pathname, level);
   const [columnPick, setColumnPick] = useState(initialColumn);
   const column = columnPick ?? (size ? chaptersFor(size) : "names");
   const phone = size !== null && size.width < PHONE_MAX_WIDTH;
@@ -212,17 +216,17 @@ export function BookFrame({
     return layout.form === "spread" ? layout : null;
   };
   const cameraAt = (place: Place): Camera => {
-    const layout = place.level === 2 ? spreadAt(place.at) : null;
+    const layout = zoomedAt(place) ? spreadAt(place.at) : null;
     return layout ? zoomCamera(layout) : NO_CAMERA;
   };
-  const { turn, onPicture } = useTurn(pathname, { at, level }, motion, form, cameraAt);
+  const { turn, onPicture } = useTurn(pathname, { at, level, zoomed }, motion, form, cameraAt);
 
   let camera: BookCamera | undefined;
   // The camera on the desk's grain, which it moves with the book (D20).
   let deskCamera = NO_CAMERA;
   // How far down the window a second level's view scrolls to, from the window's top.
   let reach: number | null = null;
-  if (form === "spread" && level === 2) {
+  if (form === "spread" && zoomed) {
     const layout = spreadAt(at);
     if (!layout) camera = "pending";
     else {
@@ -272,7 +276,7 @@ export function BookFrame({
   const account = <AccountLinks viewer={viewer} debug={debug} signOut={signOut} form={form} />;
 
   return (
-    <FrameContext.Provider value={{ form, motion, turn, chapters, chapterCount, at, level, column, window: size, tabs, onPicture }}>
+    <FrameContext.Provider value={{ form, motion, turn, chapters, chapterCount, at, level, zoomed, column, window: size, tabs, onPicture }}>
       <style href="book-frame" precedence="default">
         {bookFrameCss()}
       </style>

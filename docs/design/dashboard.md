@@ -42,7 +42,8 @@ The dashboard is an open book on a desk (`plans/book-ui.md`), drawn first in
   (`explorer.md`). The one page that isn't a spread, the trainer's scaffold
   (`/dashboard/train/<id>`), is wrapped in `InterimSpread`, which lays it across both pages.
 - **A page below a chapter's own page is its second level** (`levelAt`,
-  `src/lib/book/chapters.ts`), such as a Library book's page. In the spread a camera zooms in
+  `src/lib/book/chapters.ts`), such as a Library book's page. Unless it is listed in
+  `WHOLE_SPREAD_PAGES` (`zoomsAt`), in the spread a camera zooms in
   on it (`zoomCamera`, `src/lib/book/camera.ts`): the right page fills the window but for
   `ZOOM_SHOWN` of the left page at its left edge, and the book runs on past its bottom. The
   frame sets the camera as the book's transform; the book itself keeps its layout. The camera
@@ -66,6 +67,10 @@ The dashboard is an open book on a desk (`plans/book-ui.md`), drawn first in
 - **An interim second level,** the trainer's scaffold, puts its content on the right page and a
   way back on the left. The one-page form has no camera: a second level shows only its right page, with the way back
   in its running head and what it holds below after its body.
+- **A whole spread's second level** (`WHOLE_SPREAD_PAGES`), the game history, turns down from
+  its chapter as any second level does but isn't zoomed in on: its pages are laid out as a
+  first level's, with its own way back in the left page's running head, and the one-page form
+  stacks both halves (an exception to `plans/book-ui.md` D8, from `plans/game-history.md` D30).
 - **Where everything sits comes from `layoutBook`** (`src/lib/book/layout.ts`), whose property
   tests hold its invariants. The frame draws it with CSS: `bookFrameCss`
   (`src/lib/book/frameCss.ts`) turns the layout's constants into custom properties, so the
@@ -227,11 +232,24 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   Its folio gives the credit in short (`originFolio`) and the positions against the limit.
   Success rates, difficulty and leaderboards join "About this book" with the trainer and game
   history.
+- **The game history page** (`GameHistoryPage.tsx`, `/dashboard/library/history`,
+  `plans/game-history.md` D30, D38) is a whole spread, reached by Open game history. The left
+  page is "Your games": the side (Both, White or Black), the time controls and the sources with
+  their imports as buttons that open check boxes (`HistoryFilters`, `src/lib/history/historyFilter.ts`),
+  a strip of games per month to drag a span across, "All games" to choose everything again, the
+  totals, and the games through the current position, newest first, each with its next moves
+  and a link to its site. The right page is the current position (`HistoryPosition`): the
+  board, "Open in Explorer", the user's results and the moves played next in a box of fixed
+  height; under it the games' tree (`buildHistoryTree`, `src/lib/history/historyTree.ts`) in
+  ply columns, weighted by games and painted by the user's score under the "Your score"
+  switch. The games are read in the browser (`useHistoryGames`), and each filter builds the
+  tree again from them.
 - **`BookReader`** draws one book view with zoom (`ZoomControls`, `explorer.md`) beside a
   board for the selected or hovered position (`SelectedPosition`, `useBookSelection`), or
   without it. On a page of the book it takes the height it is given (`fill`), and the board's
-  column scrolls on its own. It opens in the icicle, down the main line, and on a phone puts
-  the board first. Until the views draw several trees, it shows the tree from the starting
+  column scrolls on its own. It opens down the main line in `DEFAULT_READER_VIEW`, the icicle
+  where a book is previewed small and ply columns on a book's own page
+  (`plans/game-history.md` D31), and on a phone puts the board first. Until the views draw several trees, it shows the tree from the starting
   position (`startTree`).
 - **Editing** (D25): the "⋯" menu (`BookMenu.tsx`) renames, changes side, duplicates
   (`duplicateBook`) and deletes, and Remove move (`RemoveMoveButton.tsx`) removes the
@@ -271,7 +289,7 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   still in the browser.
 - **Game history** (`GameHistorySection.tsx`, `plans/game-history.md` D29) is fixed at the
   foot of the left page, under the book list, which scrolls alone. It shows how many games are
-  kept and Import games, which opens `GameImportDialog`: a PGN file or pasted text, the file's
+  kept, Open game history and Import games, which opens `GameImportDialog`: a PGN file or pasted text, the file's
   check with the player's name, and the choice when the games don't fit the limit. Once the
   import starts, the dialog closes, and the progress, then the report, take the section's place.
   The import runs in `GameImportProvider` (`src/context/GameImport.tsx`), in the dashboard

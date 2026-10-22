@@ -30,6 +30,20 @@ test.describe("Small visualizations, as a guest", () => {
     await expect(page.getByText("Selected", { exact: true })).toBeVisible();
     await expect(page.locator('[data-square="d5"] [data-piece="bP"]')).toBeVisible();
   });
+
+  test("walk with the arrow keys, back onto the move they came from", async ({ page }) => {
+    await page.goto("/dashboard/visualizations/books/ply-columns");
+    await page.locator('[data-move="1...d5"]').click();
+    await page.mouse.move(0, 0);
+    const blackPawn = page.locator('[data-square="d5"] [data-piece="bP"]');
+    await expect(blackPawn).toBeVisible();
+
+    await page.keyboard.press("ArrowLeft");
+    await expect(blackPawn).toHaveCount(0);
+    await expect(page.locator('[data-square="d4"] [data-piece="wP"]')).toBeVisible();
+    await page.keyboard.press("ArrowRight");
+    await expect(blackPawn).toBeVisible();
+  });
 });
 
 test.describe("Explorer's tree window, as a guest", () => {

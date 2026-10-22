@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { BookView } from "@/components/books/BookView";
 import { BookViewRail } from "@/components/books/BookViewRail";
 import { PositionTooltip } from "@/components/books/PositionTooltip";
+import { useViewZoom } from "@/components/books/useViewZoom";
 import { ZoomControls } from "@/components/books/ZoomControls";
 import { useStoredString } from "@/hooks/useStoredString";
 import { explorerTree, type BookLineTree } from "@/lib/books/explorerTree";
@@ -11,7 +12,6 @@ import type { BookSide } from "@/lib/books/measures";
 import { buildViewTree, heavyLeaf, pathTo, type ViewNode } from "@/lib/books/viewTree";
 import { BOOK_VIEWS, DEFAULT_EXPLORER_VIEW, isBookViewId } from "@/lib/books/views";
 import type { Point } from "@/lib/books/views/common";
-import { FIT_ZOOM } from "@/lib/books/views/zoom";
 import type { ExplorerMove, Move } from "@/types/chess";
 
 const NO_STATS = new Map<string, ExplorerMove>();
@@ -47,7 +47,7 @@ export function ExplorerTreeWindow({ history, before, next, orientation, onGoToL
   const [stored, setStored] = useStoredString(VIEW_KEY);
   const view = isBookViewId(stored) ? stored : DEFAULT_EXPLORER_VIEW;
   const [hover, setHover] = useState<{ node: ViewNode; pointer: Point } | null>(null);
-  const [zoom, setZoom] = useState<number>(FIT_ZOOM);
+  const zoom = useViewZoom();
 
   const bookLine = book?.line ?? null;
   const { tree, currentId, stats } = useMemo(() => {
@@ -85,12 +85,10 @@ export function ExplorerTreeWindow({ history, before, next, orientation, onGoToL
           }}
           label={`${label} of ${book ? book.name : "the explored line"}`}
           zoom={zoom}
-          onZoomChange={setZoom}
           className="flex-1 rounded-sm bg-muted [--bv-label-halo:var(--muted)]"
         />
         <ZoomControls
           zoom={zoom}
-          onChange={setZoom}
           className="absolute right-3.5 bottom-3.5 rounded-md border bg-card/90"
         />
       </div>

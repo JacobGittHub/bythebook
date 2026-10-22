@@ -840,6 +840,10 @@ body {
 .bv-edge { fill: none; stroke: var(--view-edge); stroke-linecap: round; }
 .bv-edge.on-path { stroke: var(--view-path); }
 .bv-edge.on-hover { stroke: var(--view-hover); }
+/* Painted by the user's score, the line to the selected position stands out by its opacity. */
+.bv-edge.scored { opacity: 0.8; }
+.bv-edge.scored.on-path { opacity: 1; }
+.bv-edge.unscored { opacity: 0.35; }
 .bv-node { stroke-width: 1; }
 .bv-node.wm { fill: var(--view-white); stroke: var(--view-white-edge); }
 .bv-node.bm { fill: var(--view-black); stroke: var(--view-black-edge); }
@@ -862,6 +866,13 @@ body {
 .bv-label.on-path,
 .bv-label.on-hover { opacity: 1; fill: var(--foreground); }
 .bv-label.on-hover { fill: var(--view-hover); }
+/* The selected position's moves are named, and the one the arrow keys would play stands out. */
+.bv-label.is-next { opacity: 1; fill: var(--foreground); }
+.bv-label.is-highlighted { fill: var(--primary); font-weight: 700; }
+/* Below 100% the moves are named at a fixed size beside their dots instead (`.bv-fixed`). */
+.bv-svg.is-small .bv-label.is-next { opacity: 0; }
+.bv-ring { fill: none; stroke: var(--primary); stroke-width: 1.6; stroke-dasharray: 3 2.5; }
+.bv-label.bv-fixed { opacity: 1; }
 .bv-label.name { font-family: var(--font-body); font-size: 10.5px; font-weight: 600; }
 .bv-stub { font-size: 9px; font-weight: 600; fill: var(--muted-foreground); pointer-events: none; }
 .bv-seg { fill: none; stroke: var(--view-edge); stroke-width: 1.6; }

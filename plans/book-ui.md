@@ -1,6 +1,6 @@
 # Book UI
 
-Status: active · Updated: 2026-10-19 · Depends on: —
+Status: active · Updated: 2026-10-21 · Depends on: —
 
 **Goal:** rebuild the dashboard as an open book: every page a spread of two pages on a desk,
 with page turns, bookmarks that turn with their pages, a one-page form for narrow windows and
@@ -96,6 +96,10 @@ it, replacing the book slide. On 2026-10-16 the user changed D8's order to that 
   From the user's answers of 2026-10-16: the book's page keeps its title, its buttons, the
   view and the board on its first screen; its measures and where it came from go below, with
   room for the statistics to come. The list scrolls with the page, as paper does.
+  *Exception, 2026-10-21:* the game history page (`game-history.md` D30) is a second level
+  shown as a whole spread, with no zoom, since its left page holds the games list, which
+  needs more than the strip in view (the user's pick: "No zoom: full spread"). It still turns
+  down from the Library and back, and the one-page form stacks both its halves.
 - D9. **The Bookstore keeps search and filters on its left page.** A store book's page turns,
   zooms and scrolls the same way (D8), and the part of the second level's left page in view lists
   the shelf's books, as the search and filters left them, right-aligned toward the spine

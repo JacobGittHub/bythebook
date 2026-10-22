@@ -145,14 +145,17 @@ export function Spread({
   stack?: "both" | "left";
   single?: ReactNode;
 }) {
-  const { form, chapters, at, level, tabs } = useBookFrame();
+  const { form, chapters, at, level, zoomed: cameraIn, tabs } = useBookFrame();
   const layout = useLayout();
   const { bookmark, pageTab } = marksOf(layout, at, tabs !== null);
   const tab = pageTab && <PageTab top={pageTab.y} height={pageTab.height} />;
   const second = level === 2 && at >= 0;
+  // A whole spread's second level lays its pages out as a first level's: no camera in the spread,
+  // and both halves on the one page (D8).
+  const zoomed = second && cameraIn;
 
   if (form === "single") {
-    const head = second ? (
+    const head = zoomed ? (
       <>
         <BackLink chapter={chapters[at]} />
         <span className="grow" />
@@ -165,10 +168,10 @@ export function Spread({
       <>
         <RiffledLeaves layout={layout} />
         <PagePicture part="s">
-          <BookPage side="single" head={head} folio={second ? (right.folio ?? left.folio) : (left.folio ?? right.folio)} marks={tab}>
-            {!second && single ? (
+          <BookPage side="single" head={head} folio={zoomed ? (right.folio ?? left.folio) : (left.folio ?? right.folio)} marks={tab}>
+            {!zoomed && single ? (
               single
-            ) : !second ? (
+            ) : !zoomed ? (
               <div className="book-halves" data-stack={stack === "left" ? "left" : undefined}>
                 <div className="book-half">{left.body}</div>
                 <span className="book-half-rule" aria-hidden />
@@ -192,23 +195,23 @@ export function Spread({
       <PagePicture part="l">
         <BookPage
           side="left"
-          zoomed={second}
+          zoomed={zoomed}
           head={left.head}
           folio={left.folio}
           marks={bookmark?.side === "left" && <Bookmark x={bookmark.x} />}
         >
-          {second ? <div className="book-shown">{left.body}</div> : left.body}
+          {zoomed ? <div className="book-shown">{left.body}</div> : left.body}
         </BookPage>
       </PagePicture>
       <PagePicture part="r">
         <BookPage
           side="right"
-          zoomed={second}
+          zoomed={zoomed}
           head={right.head}
           folio={right.folio}
           marks={bookmark?.side === "right" && <Bookmark x={bookmark.x} />}
         >
-          {second ? (
+          {zoomed ? (
             <>
               <div className="book-fold">{right.body}</div>
               {right.below && <div className="book-below">{right.below}</div>}

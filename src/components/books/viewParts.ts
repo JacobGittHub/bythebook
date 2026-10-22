@@ -12,6 +12,10 @@ export type ViewMarks = {
   /** Ids on the path to the hovered position. */
   onHover: ReadonlySet<string>;
   selectedId: string;
+  /** The selected position's moves, which walking with the arrow keys chooses among. */
+  next: ReadonlySet<string>;
+  /** The move the arrow keys would play (plans/game-history.md D32). */
+  highlightId: string | null;
 };
 
 export type TargetHandlers = {
@@ -37,13 +41,15 @@ export type RenderProps = {
   family: ReadonlyMap<string, number>;
   /** How heavy a move's edge is drawn, from 0 to 1. */
   weight: (node: ViewNode) => number;
+  /** The user's score from each position, from 0 to 1, where the view paints success; null where no game went. */
+  success?: ReadonlyMap<string, number | null>;
 };
 
-/** " on-path on-hover is-selected", as far as each applies. */
+/** " on-path on-hover is-selected is-next is-highlighted", as far as each applies. */
 export function markClasses(marks: ViewMarks, id: string): string {
   return `${marks.onPath.has(id) ? " on-path" : ""}${marks.onHover.has(id) ? " on-hover" : ""}${
     marks.selectedId === id ? " is-selected" : ""
-  }`;
+  }${marks.next.has(id) ? " is-next" : ""}${marks.highlightId === id ? " is-highlighted" : ""}`;
 }
 
 /** " out" for a move played past the end of the Explorer's chosen book, whose edge is dashed. */
@@ -58,6 +64,17 @@ export function moveClass(node: ViewNode): "root" | "wm" | "bm" {
 
 export function clashClass(node: ViewNode, side: BookSide | null): string {
   return side && isClash(node, side) ? " clash" : "";
+}
+
+/**
+ * The color of a score (plans/game-history.md D35): red at 30% and below, through the draw's
+ * grey at 50%, to green at 70% and above, mixed from the theme's colors so every vibe repaints it.
+ */
+export function successColor(score: number): string {
+  const t = Math.min(1, Math.max(0, (score - 0.3) / 0.4));
+  return t < 0.5
+    ? `color-mix(in oklab, var(--bar-draw) ${Math.round(t * 200)}%, var(--destructive))`
+    : `color-mix(in oklab, var(--success) ${Math.round((t - 0.5) * 200)}%, var(--bar-draw))`;
 }
 
 export function familyColor(family: number | undefined): string {

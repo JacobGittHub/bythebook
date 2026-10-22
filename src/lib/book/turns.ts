@@ -57,8 +57,16 @@ export function riffleBookmarkX(mark: BookmarkPlace, leaf: "left" | "right", lef
   return mark.side === leaf ? mark.x : leftWidth - PAGE_BORDER - mark.x;
 }
 
-/** A place in the book: a chapter, from 0 in book order, and the level within it. */
-export type Place = { at: number; level: Level };
+/**
+ * A place in the book: a chapter, from 0 in book order, and the level within it. `zoomed` says
+ * whether the camera zooms in there; a second level does unless it is a whole spread (`zoomsAt`).
+ */
+export type Place = { at: number; level: Level; zoomed?: boolean };
+
+/** Whether the camera zooms in at `place`. */
+export function zoomedAt(place: Place): boolean {
+  return place.zoomed ?? place.level === 2;
+}
 
 /** How the camera moves with a turn (D8): in to a second level, out of one, or across between two in different chapters. */
 export type Zoom = "in" | "out" | "across";
@@ -81,9 +89,10 @@ export function moveBetween(from: Place, to: Place, form: BookForm): Move | null
   if (!turn) return null;
   let zoom: Zoom | null = null;
   if (form === "spread") {
-    if (from.level < to.level) zoom = "in";
-    else if (from.level > to.level) zoom = "out";
-    else if (from.level === 2) zoom = "across";
+    const [zoomedFrom, zoomedTo] = [zoomedAt(from), zoomedAt(to)];
+    if (!zoomedFrom && zoomedTo) zoom = "in";
+    else if (zoomedFrom && !zoomedTo) zoom = "out";
+    else if (zoomedFrom && zoomedTo) zoom = "across";
   }
   return { ...turn, zoom };
 }

@@ -1,11 +1,14 @@
 import { PLY_COLUMNS_PAD, type PlyColumnsLayout } from "@/lib/books/views/plyColumns";
-import { clashClass, markClasses, moveClass, outClass, rulerColumns, type RenderProps } from "./viewParts";
+import { clashClass, markClasses, moveClass, outClass, rulerColumns, successColor, type RenderProps } from "./viewParts";
 
 /** Labels show on branches at least this big, near the root, and on the selected or hovered line. */
 const LABELLED_SIZE = 10;
 
-/** A. Ply columns: every position as a dot in its ply's column. */
-export function PlyColumnsView({ tree, layout, marks, bind, side, weight }: RenderProps & { layout: PlyColumnsLayout }) {
+/**
+ * A. Ply columns: every position as a dot in its ply's column. Painting success, each edge takes
+ * the color of the user's score from the position it leads to, and edges no game took are faint.
+ */
+export function PlyColumnsView({ tree, layout, marks, bind, side, weight, success }: RenderProps & { layout: PlyColumnsLayout }) {
   const { points, colW } = layout;
   const pad = PLY_COLUMNS_PAD;
   const at = (id: string) => points.get(id)!;
@@ -31,12 +34,15 @@ export function PlyColumnsView({ tree, layout, marks, bind, side, weight }: Rend
           const p = at(node.parent.id);
           const c = at(node.id);
           const k = colW * 0.55;
+          const score = success?.get(node.id);
+          const paint = success ? (score === null || score === undefined ? " unscored" : " scored") : "";
           return (
             <path
               key={node.id}
               d={`M${p.x},${p.y} C${p.x + k},${p.y} ${c.x - k},${c.y} ${c.x},${c.y}`}
-              className={`bv-edge${outClass(node)}${markClasses(marks, node.id)}`}
+              className={`bv-edge${outClass(node)}${paint}${markClasses(marks, node.id)}`}
               strokeWidth={0.7 + 3.3 * weight(node)}
+              style={score !== null && score !== undefined ? { stroke: successColor(score) } : undefined}
             />
           );
         })}

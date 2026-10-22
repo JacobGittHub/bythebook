@@ -50,7 +50,7 @@ test.describe("Library, as a guest", () => {
     await page.getByRole("radio", { name: "Metro map" }).click();
     await expect(page.getByRole("img", { name: "Metro map of Queen's pawn" })).toBeVisible();
     await page.getByRole("button", { name: "Zoom in" }).click();
-    await expect(page.getByRole("button", { name: "Fit" })).toHaveText("1.5×");
+    await expect(page.getByLabel("Zoom level")).toHaveText("125%");
     await expect(page.getByText("Your book", { exact: true })).toBeVisible();
   });
 

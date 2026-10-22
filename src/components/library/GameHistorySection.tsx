@@ -1,6 +1,7 @@
 "use client";
 
 import { Ellipsis, Trash2, Upload, X } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -15,10 +16,12 @@ import {
 } from "@/components/shadcn/alert-dialog";
 import { Button } from "@/components/shadcn/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
-import { useGameImport, type ImportPhase, type Tally } from "@/context/GameImport";
+import { useGameImport, type ImportPhase } from "@/context/GameImport";
 import { useGameHistory } from "@/hooks/useGameHistory";
 import { nameMismatch } from "@/lib/history/importFile";
-import { HistoryError, type GameHistoryStore } from "@/lib/history/types";
+import { HistoryError, type GameHistoryStore, type Tally } from "@/lib/history/types";
+import { GAME_HISTORY_HREF } from "@/lib/library/links";
+import { cn } from "@/lib/utils";
 import { ProgressBar } from "./GameImportDialog";
 
 const n = (count: number) => count.toLocaleString("en-US");
@@ -52,6 +55,9 @@ export function GameHistorySection() {
           {history.store === "browser" ? "kept in this browser" : "kept in your account"}
         </p>
         <div className="flex items-center gap-2">
+          <Button asChild size="sm">
+            <Link href={GAME_HISTORY_HREF}>Open game history</Link>
+          </Button>
           <Button size="sm" variant="outline" onClick={openDialog}>
             <Upload /> Import games
           </Button>
@@ -84,7 +90,8 @@ export function GameHistorySection() {
 }
 
 /** More for the history: deleting every game, after asking (AGENTS.md § UI). */
-function HistoryMenu({ history, games: count, onCleared }: { history: GameHistoryStore; games: number; onCleared: () => void }) {
+/** The history's ⋯ menu: Delete all games, asked first. */
+export function HistoryMenu({ history, games: count, onCleared }: { history: GameHistoryStore; games: number; onCleared: () => void }) {
   const [deleting, setDeleting] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -187,11 +194,12 @@ function Importing({ phase }: { phase: Extract<ImportPhase, { kind: "importing" 
   );
 }
 
-function ResultsBar({ results }: { results: Tally }) {
+/** Wins, draws and losses as one bar. */
+export function ResultsBar({ results, className }: { results: Tally; className?: string }) {
   const total = results.win + results.draw + results.loss;
   if (!total) return null;
   return (
-    <div className="flex h-2 overflow-hidden rounded-sm" role="img" aria-label={`${results.win} wins, ${results.draw} draws, ${results.loss} losses`}>
+    <div className={cn("flex h-2 overflow-hidden rounded-sm", className)} role="img" aria-label={`${results.win} wins, ${results.draw} draws, ${results.loss} losses`}>
       <span className="bg-success" style={{ flex: results.win }} />
       <span className="bg-bar-draw" style={{ flex: results.draw }} />
       <span className="bg-destructive" style={{ flex: results.loss }} />

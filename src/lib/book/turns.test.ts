@@ -92,6 +92,13 @@ describe("moveBetween", () => {
     expect(moveBetween(libraryBook, { at: 4, level: 2 }, "spread")?.zoom).toBe("across");
   });
 
+  it("turns down to a whole spread's second level without zooming", () => {
+    const history: Place = { at: 3, level: 2, zoomed: false };
+    expect(moveBetween(library, history, "spread")).toEqual({ way: "forward", riffled: [], zoom: null });
+    expect(moveBetween(history, { at: 1, level: 1 }, "spread")?.zoom).toBeNull();
+    expect(moveBetween(history, { at: 4, level: 2 }, "spread")?.zoom).toBe("in");
+  });
+
   it("doesn't turn for another page of the same level, or outside the book (D13)", () => {
     expect(moveBetween(libraryBook, libraryBook, "spread")).toBeNull();
     expect(moveBetween(library, library, "spread")).toBeNull();

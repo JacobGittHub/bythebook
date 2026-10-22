@@ -63,6 +63,9 @@ export function libraryHref(bookId?: string | null): string {
   return bookId ? `/dashboard/library?book=${encodeURIComponent(bookId)}` : "/dashboard/library";
 }
 
+/** The game history page, a second level of the Library (plans/game-history.md D30). */
+export const GAME_HISTORY_HREF = "/dashboard/library/history";
+
 /** A book's own page, the Library's second level (plans/deployment.md D21). */
 export function libraryBookHref(bookId: string): string {
   return `/dashboard/library/${encodeURIComponent(bookId)}`;

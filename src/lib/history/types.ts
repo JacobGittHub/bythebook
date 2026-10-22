@@ -81,6 +81,9 @@ export const gameRecordSchema = z
   );
 export type GameRecord = z.infer<typeof gameRecordSchema>;
 
+/** Games won, drawn and lost, by the user. */
+export type Tally = { win: number; draw: number; loss: number };
+
 /** The time spent on each kept ply, in tenths of a second; empty when the file had no clocks. */
 export const gameClocksSchema = z.array(z.number().int().min(0).max(MAX_MOVE_TENTHS)).max(GAME_HISTORY_PLIES);
 export type GameClocks = z.infer<typeof gameClocksSchema>;

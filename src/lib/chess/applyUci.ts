@@ -3,6 +3,7 @@
 // known to be legal, such as a stored game's or a book's, when many positions are needed at
 // once: rejoining a book by transposition, and drawing the game history's tree. It checks the
 // move's shape and that the side to move owns the piece, but not whether the move is legal.
+// `uciToSan` names the move as chess.js would, for the same trees.
 
 const UCI = /^([a-h])([1-8])([a-h])([1-8])([qrbn])?$/;
 const CASTLING = /^(-|K?Q?k?q?)$/;
@@ -119,15 +120,21 @@ function enPassantAfter(board: readonly string[], to: number, passed: number, mo
   return "-";
 }
 
-/**
- * The FEN after playing `uci` from `fen`, or null when the FEN is malformed or the move can't be
- * a move there: no piece of the side to move on its square, a capture of its own piece, or a
- * promotion that doesn't fit. Legality (checks and pins) isn't tested; that is chess.js's job.
- */
-export function applyUci(fen: string, uci: string): string | null {
+type Played = {
+  next: Position;
+  /** The en passant field to write: "-", or a square only when a capture there is legal. */
+  enPassant: string;
+  kind: string;
+  from: number;
+  to: number;
+  captured: boolean;
+  promotion: string | undefined;
+};
+
+/** Plays `uci` on `position`, changing its board, or returns null when it can't be a move there. */
+function play(position: Position, uci: string): Played | null {
   const move = UCI.exec(uci);
-  const position = move && parseFen(fen);
-  if (!move || !position) return null;
+  if (!move) return null;
   const { board, white } = position;
   const from = squareAt(move[1] + move[2]);
   const to = squareAt(move[3] + move[4]);
@@ -171,9 +178,119 @@ export function applyUci(fen: string, uci: string): string | null {
     board,
     white: !white,
     castling,
-    enPassant: null,
+    enPassant: enPassant === "-" ? null : squareAt(enPassant),
     halfmoves: kind === "p" || captured ? 0 : position.halfmoves + 1,
     fullmoves: white ? position.fullmoves : position.fullmoves + 1,
   };
-  return writeFen(next, enPassant);
+  return { next, enPassant, kind, from, to, captured, promotion };
+}
+
+/**
+ * The FEN after playing `uci` from `fen`, or null when the FEN is malformed or the move can't be
+ * a move there: no piece of the side to move on its square, a capture of its own piece, or a
+ * promotion that doesn't fit. Legality (checks and pins) isn't tested; that is chess.js's job.
+ */
+export function applyUci(fen: string, uci: string): string | null {
+  const position = parseFen(fen);
+  const played = position && play(position, uci);
+  return played ? writeFen(played.next, played.enPassant) : null;
+}
+
+/** The squares a piece of `kind` on `from` attacks, ignoring pins: for a pawn, its captures only. */
+function reach(board: readonly string[], from: number, kind: string, white: boolean): number[] {
+  const [file, rank] = [fileOf(from), rankOf(from)];
+  const squares: number[] = [];
+  /** Adds the square if it is on the board, and says whether a slide may carry on past it. */
+  const add = (f: number, r: number) => {
+    if (f < 0 || f > 7 || r < 0 || r > 7) return false;
+    squares.push(r * 8 + f);
+    return !board[r * 8 + f];
+  };
+  if (kind === "p") {
+    add(file - 1, rank + (white ? 1 : -1));
+    add(file + 1, rank + (white ? 1 : -1));
+  } else if (kind === "n" || kind === "k") {
+    for (const [df, dr] of kind === "n" ? KNIGHT_STEPS : KING_STEPS) add(file + df, rank + dr);
+  } else {
+    const lines = kind === "r" ? ROOK_LINES : kind === "b" ? BISHOP_LINES : [...ROOK_LINES, ...BISHOP_LINES];
+    for (const [df, dr] of lines) {
+      for (let f = file + df, r = rank + dr; add(f, r); f += df, r += dr);
+    }
+  }
+  return squares;
+}
+
+/** Whether moving `from` to `to`, taking whatever stands on `taken`, leaves the mover's king safe. */
+function safe(board: readonly string[], from: number, to: number, white: boolean, taken = to): boolean {
+  const after = [...board];
+  after[taken] = "";
+  after[to] = after[from];
+  after[from] = "";
+  const king = after.indexOf(white ? "K" : "k");
+  return king >= 0 && !attacked(after, king, !white);
+}
+
+/** Whether the side to move has a legal move. Castling is left out, since it is only asked in check. */
+function hasMove(position: Position): boolean {
+  const { board, white } = position;
+  const own = (square: number) => board[square] !== "" && isWhite(board[square]) === white;
+  for (let from = 0; from < 64; from++) {
+    if (!own(from)) continue;
+    const kind = board[from].toLowerCase();
+    const targets = reach(board, from, kind, white).filter((square) => !own(square));
+    if (kind !== "p") {
+      if (targets.some((to) => safe(board, from, to, white))) return true;
+      continue;
+    }
+    for (const to of targets) {
+      if (board[to] && safe(board, from, to, white)) return true;
+      if (to === position.enPassant && safe(board, from, to, white, to - (white ? 8 : -8))) return true;
+    }
+    const step = white ? 8 : -8;
+    if (!board[from + step]) {
+      if (safe(board, from, from + step, white)) return true;
+      const home = rankOf(from) === (white ? 1 : 6);
+      if (home && !board[from + 2 * step] && safe(board, from, from + 2 * step, white)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * The move `uci` from `fen` in SAN, exactly as chess.js writes it ("Nbd7", "exd8=Q+", "O-O#"), or
+ * null where `applyUci` would refuse it. Like `applyUci` it is for moves known to be legal; it
+ * runs many times faster than chess.js, so the game history's tree can name thousands of moves.
+ */
+export function uciToSan(fen: string, uci: string): string | null {
+  const position = parseFen(fen);
+  if (!position) return null;
+  const before = [...position.board];
+  const white = position.white;
+  const played = play(position, uci);
+  if (!played) return null;
+  const { next, kind, from, to, captured, promotion } = played;
+
+  let san: string;
+  if (kind === "k" && Math.abs(fileOf(to) - fileOf(from)) === 2) {
+    san = fileOf(to) > fileOf(from) ? "O-O" : "O-O-O";
+  } else if (kind === "p") {
+    const taking = captured ? `${"abcdefgh"[fileOf(from)]}x` : "";
+    san = `${taking}${squareName(to)}${promotion ? `=${promotion.toUpperCase()}` : ""}`;
+  } else {
+    // Another piece of the same kind that could also go there is told apart by file, then rank.
+    const rivals: number[] = [];
+    for (let square = 0; square < 64; square++) {
+      if (square === from || before[square] !== before[from]) continue;
+      if (reach(before, square, kind, white).includes(to) && safe(before, square, to, white)) rivals.push(square);
+    }
+    let which = "";
+    if (rivals.length && rivals.every((square) => fileOf(square) !== fileOf(from))) which = "abcdefgh"[fileOf(from)];
+    else if (rivals.length && rivals.every((square) => rankOf(square) !== rankOf(from))) which = String(rankOf(from) + 1);
+    else if (rivals.length) which = squareName(from);
+    san = `${kind.toUpperCase()}${which}${captured ? "x" : ""}${squareName(to)}`;
+  }
+
+  const king = next.board.indexOf(next.white ? "K" : "k");
+  if (king >= 0 && attacked(next.board, king, white)) san += hasMove(next) ? "+" : "#";
+  return san;
 }

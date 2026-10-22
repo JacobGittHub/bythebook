@@ -319,6 +319,7 @@ walks trees or aggregates runs client-side.
 | A guest's books | The browser's IndexedDB | On every write, validated and summarized as an account's are |
 | An account's games | `game_history_chunks`, with a copy in the browser's IndexedDB | Read from PGN in the browser at import; checked by shape and bounds on every write |
 | A guest's games | The browser's IndexedDB | Read from PGN in the browser at import |
+| The games' tree on the history page | Client | From the chosen games on every filter change; positions and move names kept between builds (`buildHistoryTree`) |
 | Per-position training stats | `user_position_stats` | Per drill (not built yet) |
 | Engine evaluations | `position_evals` | Lazily, by client Stockfish (not built yet) |
 | Visualization layouts | Client | On config change, memoized |

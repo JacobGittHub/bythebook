@@ -38,6 +38,21 @@ export type Database = {
         }
         Relationships: []
       }
+      account_limits: {
+        Row: {
+          games: number
+          user_id: string
+        }
+        Insert: {
+          games: number
+          user_id: string
+        }
+        Update: {
+          games?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       drill_attempts: {
         Row: {
           attempted_at: string
@@ -136,6 +151,126 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      game_history: {
+        Row: {
+          chunks: Json
+          games: number
+          imports: Json
+          last_import_at: string | null
+          user_id: string
+          username: string | null
+          version: number
+        }
+        Insert: {
+          chunks?: Json
+          games?: number
+          imports?: Json
+          last_import_at?: string | null
+          user_id: string
+          username?: string | null
+          version?: number
+        }
+        Update: {
+          chunks?: Json
+          games?: number
+          imports?: Json
+          last_import_at?: string | null
+          user_id?: string
+          username?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
+      game_history_chunks: {
+        Row: {
+          clocks: Json
+          game_count: number
+          games: Json
+          n: number
+          user_id: string
+          version: number
+        }
+        Insert: {
+          clocks: Json
+          game_count: number
+          games: Json
+          n: number
+          user_id: string
+          version: number
+        }
+        Update: {
+          clocks?: Json
+          game_count?: number
+          games?: Json
+          n?: number
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      game_history_staged: {
+        Row: {
+          base_version: number
+          clocks: Json
+          game_count: number
+          games: Json
+          import_ids: number[]
+          n: number
+          staged_at: string
+          user_id: string
+        }
+        Insert: {
+          base_version: number
+          clocks: Json
+          game_count: number
+          games: Json
+          import_ids: number[]
+          n: number
+          staged_at?: string
+          user_id: string
+        }
+        Update: {
+          base_version?: number
+          clocks?: Json
+          game_count?: number
+          games?: Json
+          import_ids?: number[]
+          n?: number
+          staged_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      game_limit_requests: {
+        Row: {
+          answered_at: string | null
+          created_at: string
+          games: number
+          id: number
+          reason: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          answered_at?: string | null
+          created_at?: string
+          games: number
+          id?: never
+          reason?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          answered_at?: string | null
+          created_at?: string
+          games?: number
+          id?: never
+          reason?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       opening_books: {
         Row: {
@@ -444,9 +579,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clear_game_history: { Args: { p_user_id: string }; Returns: number }
+      commit_game_history: {
+        Args: {
+          p_cap: number
+          p_chunks: Json
+          p_deleted: number[]
+          p_expected_version: number
+          p_games: number
+          p_imports: Json
+          p_last_import_at: string
+          p_limit: number
+          p_user_id: string
+          p_username: string
+          p_written: number[]
+        }
+        Returns: number
+      }
       increment_usage: {
         Args: { p_kind: string; p_user_id?: string }
         Returns: number
+      }
+      stage_game_history_chunk: {
+        Args: {
+          p_base_version: number
+          p_cap: number
+          p_clocks: Json
+          p_game_count: number
+          p_games: Json
+          p_import_ids: number[]
+          p_n: number
+          p_user_id: string
+        }
+        Returns: string
       }
     }
     Enums: {
