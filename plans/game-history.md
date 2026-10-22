@@ -178,14 +178,14 @@ direction"; the user expects one more round of adjustments before building.
     file" would mean different games from different sites. This is what the code does now.
   - The alternative is to import nothing new when the file doesn't fit whole.
 
-> ME:
+> ME: make the newest played games fill if that option is chosen. Also add a third option for stopping import. I that beta account holders should be allowed to submit a petition for increased game storage with the third option.
 
 - Q16. Should the import also take PGN pasted into a text box, as well as a file?
   - **Rec:** yes, for a few over-the-board games copied from a tournament site. The text goes
     through the same worker as a file (as a `Blob`), with the same caps, so it costs one text
     box in the dialog.
 
-> ME:
+> ME: Yes
 
 Q17 (which mockups) is settled by D29–D32.
 
@@ -195,7 +195,7 @@ Q17 (which mockups) is settled by D29–D32.
   - **Rec:** B. The point of putting the progress there is that it stays in view, and with a
     long book list A would push it off the page.
 
-> ME:
+> ME: B
 
 - Q19. How do ply columns show success from games (D31)? `book-success.html` draws three.
   - A: the line into each position is colored by the user's score from it, red through grey to
@@ -206,7 +206,7 @@ Q17 (which mockups) is settled by D29–D32.
   - **Rec:** C. Color alone says how a move went, not whether it matters; thickness shows at a
     glance where the games really go, and thin red lines are where losses don't matter much.
 
-> ME:
+> ME: C for now
 
 - Q20. How is a book's own page laid out (`book-success.html`)?
   - A: the choices (view, Plain / Your games / Drills, and which games) sit in line with the
@@ -217,7 +217,7 @@ Q17 (which mockups) is settled by D29–D32.
   - **Rec:** B, with the choices in one row just above the drawing, where they act. The page
     reads like a book's front matter, then its body.
 
-> ME:
+> ME: B
 
 ## Steps
 
