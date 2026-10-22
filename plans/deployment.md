@@ -1,6 +1,6 @@
 # Public deployment
 
-Status: active · Updated: 2026-10-12 · Depends on: —
+Status: active · Updated: 2026-10-21 · Depends on: —
 
 **Goal:** put ByTheBook on Vercel so guests can use it without an
 account, while up to about 100 beta testers sign in and keep their data.
@@ -132,6 +132,10 @@ From the user's answers of 2026-10-07 to the Library questions, drawn in
     then a page of success statistics led by difficulty, with session options and a
     leaderboard where the book has one.
   - How a publisher is labeled is `bookstore.md` D8.
+
+  *Amended 2026-10-21 (`game-history.md` D31):* a second-level page (a book's own page in the
+  Library or the Bookstore) opens in ply columns; the icicle stays the default where a book is
+  previewed small. Success shows on ply columns first.
 
   > ME: version A looks the best in browser and mobile. I very much like the decision to use the icicle by default for this use case. The only issue is that we may want to allow the user to zoom in and out, on any visual, so that they can see the smaller parts. The combine button is a little strange in the top right, maybe make it a book option instead, like in the 3 dot settings button. It Looks like you think that difficulty rating, other users' ratings, user success rates, leaderboards, and more should come later. Because they are not on the current library you showed. Given the fact that all of this data will be hard to display on one screen, lets make the library a 2 level route. 1st level is the book library and book search: it will allow the user to go to the 2nd level or the visualizer (difficult, could come later), explorer, or trainer. The 2nd level will have a bigger map for visualization (with the options), and more fields like what i was mentioning. We are going to want to think about how the visualization is going to change with user success rate, either with user game history success rate, with user trainer success rate, or no success rate displayed (different options). This will probably best be shown with color: in the case of the graph like displays A,B,E I think the color of the edge to a node would work well for a success rate visualizer; For the C metro, its tough to think of one but I think that some part of the edge leading up to a node could have a red or green success indicator; for the icicle, some sort of area texture could work well to show success rate. I have more to verify so we may want to modufy the mockups with what I've said here.
 

@@ -1,6 +1,6 @@
 # Bookstore, repertoires and library files
 
-Status: deciding · Updated: 2026-10-07 · Depends on: deployment.md
+Status: deciding · Updated: 2026-10-21 · Depends on: deployment.md
 
 **Goal:** give users default books to pick from, repertoires that combine books, and files
 that move a library in and out of the app.
@@ -218,6 +218,65 @@ other people can publish (D3).
 **Recommendation:** no. Saving is one press and costs nothing, since a guest's copy stays in
 the browser (D14). The Explorer and the trainer then always open books from one place, the
 library. A store book's page offers "Open position in Explorer" for a single position.
+
+### Book statistics (raised 2026-10-21)
+
+The user wants every book statistic settled before the book pages change for game history
+(`game-history.md` Q20). Already computed and kept in each book's summary
+(`src/lib/library/types.ts`): positions (against the limit, D15), lines, the average line, the
+longest line, clashes (D6) and the unconnected flag (D16). Coverage, the book–repertoire scale
+(D11), is computed in `src/lib/books/measures.ts` but shown nowhere yet. Not built: difficulty
+(D9), the publisher's difficulty, ratings (D8), reviews, descriptions, and how a library copy
+shows any of the store's numbers.
+
+### Q5. How is difficulty worked out and shown (D9)?
+
+**Recommendation:** a level from 1 to 5, named Starter, Easy, Medium, Hard and Expert, from
+the moves the user must remember (the book's own moves, one per answer) times the average line
+in plies over 10, since a long line is harder to recall in order. Levels change at 40, 100,
+200 and 400. On the example books: the English (51 moves, lines of 4.6 plies) and the King's
+Gambit are 1, the French and the Queen's Gambit 2, the Caro-Kann, Sicilian and Ruy Lopez 3, the
+Italian (171 moves, 14.1 plies) 4, and the 1,000-position catalog book 5. The publisher's
+difficulty uses the same five levels and shows beside it as "Publisher: Hard". The trainer can
+recalibrate the levels later from how users actually do.
+
+> ME:
+
+### Q6. What does a saved copy show of its store book?
+
+**Recommendation:** the copy keeps its store book's id (it stays a copy, D5). Its own page
+shows the store book's current rating and save count, a link to its reviews in the Bookstore,
+and the publisher with their mark, read from the store's cached routes (D14), so guests see
+them too. The description and the publisher's difficulty are copied with the book; if the
+user edits the moves, the page says "Edited from" the store book, and the publisher's
+difficulty is dropped, since it no longer describes the book. A signed-in user can rate the
+store book from their copy's page.
+
+> ME:
+
+### Q7. Do books get written reviews, as well as stars?
+
+**Recommendation:** yes, as an optional text with a rating: one per account and book, at most
+500 characters, editable and deletable by its writer, checked with the word list (Notes), and
+hidden by the user from the SQL editor if needed. The store book's page lists them newest
+first, a capped page at a time. Guests read them and can't write them. Reviews belong to the
+store book, not to copies, so editing a copy doesn't carry them.
+
+> ME:
+
+### Q8. Does every book get a description, and which screen shows which statistics?
+
+**Recommendation:** every book may have a description (at most 200 characters, D8), the
+user's own books too, so the field is the same everywhere. Then:
+
+| Where | Shows |
+|---|---|
+| Library, first level (the picked book) | positions / limit, difficulty, lines, the longest line, clashes; the rating for a store copy |
+| A book's own page (Library) | everything: the description, difficulty and the publisher's, positions / limit, lines, the average and longest line, clashes, coverage, unconnected; for a store copy also the rating, saves, publisher and the link to reviews |
+| Bookstore card (D8) | as D8: title, publisher, rating, saves, positions / limit, difficulty, coverage beside the depth, unconnected |
+| A store book's page | as a book's own page, with the reviews below |
+
+> ME:
 
 ## Steps
 

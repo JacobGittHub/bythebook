@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Mockup for plans/game-history.md step 9, second round (the history page, step 16; D8, D30, D31, D32). Published as the "Game History Page" artifact. -->
+<title>Game History Page</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<style>
+/* Layout: a studio on top (color mode and width) over one mock of the history page's spread,
+   then notes. The left page holds the filters, the imports, the totals and the games through
+   the current position; the right page the board and the games' tree in ply columns, which the
+   arrow keys walk (D32). The mock carries the app's tokens from src/app/globals.css. */
+:root {
+  --c-page: #f2f1ec; --c-ink: #22252b; --c-soft: #5c636b; --c-line: #d6d8d0;
+  --c-accent: #2c4a74; --c-accent-ink: #ffffff; --c-chip: #e6e7e0;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --display: "Literata", Georgia, "Times New Roman", serif;
+  --figures: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --c-page: #15171b; --c-ink: #e9e5dc; --c-soft: #a3a19b; --c-line: #33373e; --c-accent: #a9c0e6; --c-accent-ink: #12161d; --c-chip: #262a30; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --c-page: #15171b; --c-ink: #e9e5dc; --c-soft: #a3a19b; --c-line: #33373e; --c-accent: #a9c0e6; --c-accent-ink: #12161d; --c-chip: #262a30; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--c-page); color: var(--c-ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1320px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.intro h1 { font: 600 32px/1.15 var(--display); letter-spacing: -0.01em; }
+.intro p { max-width: 76ch; color: var(--c-soft); margin-top: 8px; }
+.eyebrow { font: 500 11px/1 var(--figures); letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-soft); margin-bottom: 10px; }
+.studio { display: flex; flex-wrap: wrap; gap: 14px 28px; }
+.studio fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; min-width: 0; }
+.studio legend { padding: 0; margin-bottom: 6px; font: 500 11px/1 var(--figures); letter-spacing: 0.1em; text-transform: uppercase; color: var(--c-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px/1 var(--body); color: var(--c-ink); background: var(--c-chip); border: 1px solid var(--c-line); border-radius: 6px; padding: 8px 11px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--c-accent); color: var(--c-accent-ink); border-color: var(--c-accent); }
+.chip:focus-visible, .mock :focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+.stage { container-type: inline-size; min-width: 0; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px 32px; }
+.notes h2 { font: 600 19px/1.3 var(--display); margin-bottom: 6px; }
+.notes p, .notes li { color: var(--c-soft); max-width: 62ch; }
+.notes ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.notes strong { color: var(--c-ink); }
+kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--c-chip); }
+
+/* ── The mock ─────────────────────────────────────────────────────────────────────────── */
+.mock {
+  --desk: #553826; --desk-low: #3a2518; --desk-foreground: #f1e8da; --desk-muted: #cdb9a1; --desk-line: rgb(241 232 218 / 0.24); --desk-mark: #e07a84;
+  --page: #fbfbf8; --page-alt: #f1f2ed; --rule: #d9dcd5; --cover: #26364f; --page-edge: #cfd2ca; --gutter: rgb(70 60 40 / 0.32); --bookmark: #8c2f39;
+  --foreground: #22252b; --muted: #eef0ea; --muted-foreground: #5c636b; --border: #d0d4cd; --primary: #2c4a74; --primary-foreground: #ffffff;
+  --accent: #e3e9f3; --destructive: #b42318; --success: #15803d;
+  --bar-win: #15803d; --bar-draw: #8f8a7a; --bar-loss: #b42318;
+  --view-edge: rgba(120, 108, 95, 0.42); --view-path: var(--foreground); --view-hover: #b45309;
+  --view-white: #ece5d8; --view-white-edge: #9c9282; --view-black: #2a2420; --view-black-edge: #2a2420;
+  --sq-light: #f0d9b5; --sq-dark: #b58863;
+  --radius: 6px;
+  container-type: inline-size; margin-inline: auto; max-width: 100%;
+  color: var(--foreground); font: 14px/1.5 var(--body);
+  background: repeating-linear-gradient(97deg, rgb(255 255 255 / 0.025) 0 2px, transparent 2px 9px), repeating-linear-gradient(93deg, rgb(0 0 0 / 0.06) 0 1px, transparent 1px 23px), linear-gradient(var(--desk), var(--desk-low));
+  border-radius: 8px; overflow: hidden; position: relative;
+}
+.mock[data-mode="dark"] {
+  --desk: #33221a; --desk-low: #1f140e; --desk-foreground: #e9e1d3; --desk-muted: #bba892;
+  --page: #1c1f24; --page-alt: #23272d; --rule: #30343b; --cover: #1b2433; --page-edge: #2d3138; --gutter: rgb(0 0 0 / 0.5); --bookmark: #c9505c;
+  --foreground: #e9e5dc; --muted: #24282e; --muted-foreground: #a3a19b; --border: #383c44; --primary: #a9c0e6; --primary-foreground: #12161d;
+  --accent: rgb(169 192 230 / 0.13); --destructive: #ea5f57; --success: #4ade80;
+  --bar-win: #3fbf6f; --bar-draw: #8b8676; --bar-loss: #e0625a;
+  --view-edge: rgba(170, 165, 200, 0.34); --view-hover: #f0a64a;
+  --view-white: #d9d4e6; --view-white-edge: #8e8aa3; --view-black: #0b0b10; --view-black-edge: #8e8aa3;
+  color-scheme: dark;
+}
+.mock[data-width="phone"] { width: 390px; }
+.topbar { display: flex; align-items: center; gap: 18px; padding: 10px 20px; color: var(--desk-foreground); }
+.brand { font: 700 19px/1 var(--display); }
+.tabs { display: flex; gap: 14px; font-size: 13px; color: var(--desk-muted); flex-wrap: wrap; }
+.tabs span[aria-current] { color: var(--desk-foreground); font-weight: 700; box-shadow: inset 0 -2px 0 var(--desk-mark); padding-bottom: 6px; margin-bottom: -8px; }
+.grow { flex: 1; }
+.guest { font-size: 12px; color: var(--desk-muted); }
+.desk-btn { font: 500 13px/1 var(--body); color: var(--desk-foreground); border: 1px solid var(--desk-line); border-radius: var(--radius); padding: 8px 12px; background: transparent; }
+.book { margin: 2px 14px 14px; background: var(--cover); border-radius: 8px; padding: 5px 7px; position: relative; }
+.spread { display: grid; grid-template-columns: 1fr 1fr; height: 820px; border-radius: 4px; overflow: hidden; box-shadow: 3px 0 0 var(--page-edge), -3px 0 0 var(--page-edge); }
+.pg { padding: 24px 30px 20px; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.pg.left { background: linear-gradient(to left, var(--gutter), transparent 70px), var(--page); }
+.pg.right { background: linear-gradient(to right, var(--gutter), transparent 70px), var(--page); }
+.ribbon { position: absolute; top: 0; left: calc(50% - 60px); width: 14px; height: 30px; background: var(--bookmark); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); z-index: 1; }
+.running { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex: none; }
+.running i { font: italic 13px/1 var(--display); color: var(--muted-foreground); }
+.sc { font: 600 10.5px/1.2 var(--display); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-foreground); }
+.head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; flex: none; }
+.head h2 { font: 600 30px/1.15 var(--display); letter-spacing: -0.01em; flex: 1 1 auto; }
+.soft { color: var(--muted-foreground); }
+.small { font-size: 12.5px; }
+.fig { font-family: var(--figures); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: var(--radius); font: 500 13px/1 var(--body); border: 1px solid transparent; background: transparent; color: var(--foreground); cursor: pointer; white-space: nowrap; }
+.btn.outline { border-color: var(--border); background: var(--page); }
+.btn.ghost:hover, .btn.outline:hover { background: var(--accent); }
+.btn.danger { color: var(--destructive); }
+.ico { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* Filters and imports */
+.pick { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 12px 18px; flex: none; }
+.filters { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; font-size: 12.5px; }
+.filters > span { color: var(--muted-foreground); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; width: fit-content; }
+.seg button { font: 12px var(--body); color: var(--foreground); background: var(--page); border: 0; border-right: 1px solid var(--border); padding: 3px 7px; cursor: pointer; white-space: nowrap; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); font-weight: 700; }
+.selectish { height: 26px; display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--page); font-size: 12.5px; width: 168px; }
+.imports { display: grid; gap: 4px; align-content: start; }
+.imports .sc { margin-bottom: 2px; }
+.imp { display: grid; grid-template-columns: 16px 1fr auto; gap: 0 8px; align-items: start; font-size: 12.5px; cursor: pointer; padding: 3px 4px; border-radius: 4px; }
+.imp:hover { background: var(--accent); }
+.imp input { margin: 3px 0 0; accent-color: var(--primary); }
+.imp b { font-weight: 700; display: block; }
+.imp .soft { grid-column: 2; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.imp .fig { grid-row: 1; grid-column: 3; }
+
+/* Totals */
+.totals { flex: none; display: grid; gap: 5px; border-block: 1px solid var(--rule); padding-block: 10px; }
+.totals .line { display: flex; align-items: baseline; gap: 10px; }
+.totals .big { font: 600 26px/1 var(--display); }
+.wdl { display: flex; height: 8px; border-radius: 2px; overflow: hidden; background: var(--muted); }
+.wdl i:nth-child(1) { background: var(--bar-win); } .wdl i:nth-child(2) { background: var(--bar-draw); } .wdl i:nth-child(3) { background: var(--bar-loss); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted-foreground); }
+.legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+/* Games through the current position */
+.through { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+.through h3 { font: 600 19px/1.2 var(--display); }
+.crumbs { display: flex; flex-wrap: wrap; gap: 2px 4px; font: 12.5px var(--figures); }
+.crumbs button { font: inherit; color: var(--primary); background: none; border: 0; padding: 0 2px; cursor: pointer; border-radius: 3px; }
+.crumbs button[aria-current] { color: var(--foreground); font-weight: 500; }
+.crumbs span { color: var(--muted-foreground); }
+.games { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; border-top: 1px solid var(--rule); }
+.games table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.games th { position: sticky; top: 0; background: var(--page); text-align: left; font: 600 10px/1 var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted-foreground); padding: 7px 6px; border-bottom: 1px solid var(--rule); }
+.games td { padding: 5px 6px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.games td.mv { font: 12px var(--figures); color: var(--muted-foreground); }
+.games td.mv b { color: var(--foreground); font-weight: 500; }
+.res-w { color: var(--success); font-weight: 700; } .res-l { color: var(--destructive); font-weight: 700; } .res-d { color: var(--muted-foreground); font-weight: 700; }
+.side { display: inline-block; width: 9px; height: 9px; border: 1px solid var(--muted-foreground); vertical-align: -1px; }
+.side.b { background: var(--foreground); border-color: var(--foreground); } .side.w { background: var(--page); }
+.more { padding: 8px 6px; font-size: 12px; color: var(--muted-foreground); }
+
+/* The right page: the board box, then the tree */
+.posbox { flex: none; position: relative; display: grid; grid-template-columns: 228px 1fr; gap: 16px; }
+.posbox .open { position: absolute; top: 0; right: 0; }
+.board { display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; width: 100%; border: 2px solid var(--foreground); border-radius: 2px; }
+.board i { display: grid; place-items: center; font: 400 22px/1 "Segoe UI Symbol", "DejaVu Sans", serif; font-style: normal; }
+.board i.l { background: var(--sq-light); } .board i.d { background: var(--sq-dark); }
+.board i.wp { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 0 1px #000; } .board i.bp { color: #111; }
+.board i.from, .board i.to { box-shadow: inset 0 0 0 100px rgb(255 214 0 / 0.32); }
+.details { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.details .mv { font: 600 22px/1.2 var(--display); padding-right: 120px; }
+.details .line { font: 12px/1.45 var(--figures); color: var(--muted-foreground); }
+.next { display: grid; gap: 2px; }
+.nrow { display: grid; grid-template-columns: 58px 40px 1fr 38px; gap: 8px; align-items: center; font-size: 12.5px; padding: 2px 4px; border-radius: 4px; cursor: pointer; border: 1px solid transparent; }
+.nrow:hover { background: var(--accent); }
+.nrow[aria-selected="true"] { border-color: var(--primary); }
+.nrow b { font: 500 12.5px var(--figures); }
+.nrow .wdl { height: 6px; }
+.toolbar { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.zoom { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.zoom button { font: 12.5px var(--body); color: var(--foreground); background: var(--page); border: 0; padding: 3px 9px; cursor: pointer; }
+.zoom span { padding: 0 8px; font: 11.5px var(--figures); color: var(--muted-foreground); border-left: 1px solid var(--border); border-right: 1px solid var(--border); line-height: 24px; }
+.viewbox { flex: 1 1 auto; min-height: 0; position: relative; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted); }
+.vscroll { position: absolute; inset: 0; overflow: auto; scrollbar-width: thin; cursor: grab; touch-action: none; }
+.vscroll.dragging { cursor: grabbing; }
+.vscroll:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.vscroll svg { display: block; }
+.hint { flex: none; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted-foreground); }
+.hint kbd { font-size: 11px; padding: 0 4px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 3px; background: var(--page); color: var(--foreground); }
+.ramp { display: inline-block; width: 70px; height: 7px; border-radius: 2px; vertical-align: 0; background: linear-gradient(90deg, var(--bar-loss), var(--bar-draw), var(--bar-win)); }
+
+/* The tree's paint, as globals.css's .bv-* rules */
+.bv-grid { stroke: var(--border); stroke-width: 1; }
+.bv-ruler { font: 9px var(--body); fill: var(--muted-foreground); text-anchor: middle; }
+.bv-edge { fill: none; stroke: var(--view-edge); stroke-linecap: round; }
+.bv-edge.on-path { stroke: var(--view-path); }
+.bv-node { stroke-width: 1; }
+.bv-node.wm { fill: var(--view-white); stroke: var(--view-white-edge); }
+.bv-node.bm { fill: var(--view-black); stroke: var(--view-black-edge); }
+.bv-node.root { fill: var(--page); stroke: var(--foreground); stroke-width: 1.5; }
+.bv-node.on-path { stroke: var(--view-path); stroke-width: 1.6; }
+.bv-node.current { stroke: var(--view-hover); stroke-width: 3; }
+.bv-ring { fill: none; stroke: var(--primary); stroke-width: 1.6; stroke-dasharray: 3 2.5; }
+.bv-label { font: 9.5px var(--body); fill: var(--muted-foreground); paint-order: stroke; stroke: var(--muted); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+.bv-label.minor { opacity: 0; }
+.bv-label.on-path, .bv-label.kid { opacity: 1; fill: var(--foreground); }
+.bv-label.hi { fill: var(--primary); font-weight: 700; }
+.bv-label.current { fill: var(--view-hover); font-weight: 700; }
+.bv-hit { fill: transparent; cursor: pointer; }
+
+@container (max-width: 760px) {
+  .spread { grid-template-columns: 1fr; height: auto; box-shadow: none; }
+  .pg { padding: 20px 16px; }
+  .pg.left, .pg.right { background: var(--page); }
+  .pg.right { border-top: 6px solid var(--cover); }
+  .ribbon { left: auto; right: 28px; }
+  .tabs { display: none; }
+  .book { margin: 0 6px 6px; padding: 4px; }
+  .head h2 { font-size: 26px; }
+  .pick { grid-template-columns: 1fr; }
+  .games { max-height: 360px; flex: none; }
+  .posbox { grid-template-columns: 1fr; }
+  .posbox .board { max-width: 320px; }
+  .details .mv { padding-right: 0; }
+  .posbox .open { position: static; justify-self: start; order: 3; }
+  .viewbox { flex: none; height: 440px; }
+  .games td.tc, .games th.tc { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="intro">
+    <p class="eyebrow">Mockup · plans/game-history.md, step 9, second round</p>
+    <h1>The game history page</h1>
+    <p>Laid out by D30: the games on the left page, filtered by site, time, side and import, with the games through the current position; the board and the games' tree on the right, in ply columns (D31). The tree is live: click it, then use the arrow keys (D32) or drag it. The filters and imports change the tree too. Games, ratings and dates are made up; opponents' names are never kept (D8).</p>
+  </header>
+  <div class="studio" role="group" aria-label="Mockup options">
+    <fieldset><legend>Color</legend><div class="chips" data-key="mode"><button class="chip" data-value="light">Light</button><button class="chip" data-value="dark">Dark</button></div></fieldset>
+    <fieldset><legend>Width</legend><div class="chips" data-key="width"><button class="chip" data-value="desktop">Desktop</button><button class="chip" data-value="phone">Phone</button></div></fieldset>
+  </div>
+  <div class="stage"><div class="mock" id="mock"></div></div>
+  <section class="notes" aria-label="Notes">
+    <div>
+      <h2>The left page: which games</h2>
+      <ul>
+        <li><strong>Filters</strong> by site, time class, side, exact time control and dates, with the <strong>imports</strong> beside them: each import can be left out, so a tournament file or an old account can be looked at alone.</li>
+        <li><strong>The totals bar</strong> counts what the filters and imports leave.</li>
+        <li><strong>Games through</strong> the current position, newest first, each linking to its game on its site. At the starting position it is every game.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>The right page: where they went</h2>
+      <ul>
+        <li><strong>The board</strong> shows the current position, its results and the moves played next; "Open in Explorer" sits in the box's corner.</li>
+        <li><strong>The tree</strong> is ply columns, each line as thick as the games that went that way. <strong>Color</strong> switches between the book views' own paint and your score (red at 30% or less, grey at 50%, green at 70% or more).</li>
+        <li><strong>Zoom</strong> sits with the view's other controls, above the drawing.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Walking the tree (D32)</h2>
+      <ul>
+        <li><kbd>↑</kbd> <kbd>↓</kbd> move the dashed ring among the current position's moves, stopping at the first and last.</li>
+        <li><kbd>→</kbd> plays the ringed move; <kbd>←</kbd> goes back, with the ring on the move you came from.</li>
+        <li>The camera pans to keep the current position and its moves in view; drag to look elsewhere. "Fit" shows the whole tree.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+const ICONS = {
+  upload: '<path d="M12 15V3m0 0 4.5 4.5M12 3 7.5 7.5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',
+  chev: '<path d="m6 9 6 6 6-6"/>',
+  ext: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+};
+const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+const n = (v) => v.toLocaleString("en-US");
+const pct = (v) => `${Math.round(v * 100)}%`;
+
+// ── Made-up games: walks down weighted opening trees, one per game ─────────────────────────
+function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const rand = rng(7);
+const L = (san, w, kids = []) => [san, w, kids];
+const AS_WHITE = [L("e4", 1, [
+  L("e5", 5, [L("Nf3", 1, [
+    L("Nc6", 6, [L("Bc4", 1, [
+      L("Bc5", 5, [L("c3", 3, [L("Nf6", 1, [L("d4", 1, [L("exd4", 1, [L("cxd4", 1)])]), L("d3", 1, [L("d6", 1)])])]), L("O-O", 2, [L("Nf6", 1, [L("d3", 1, [L("d6", 1)])])]), L("b4", 1, [L("Bxb4", 1, [L("c3", 1)])])]),
+      L("Nf6", 4, [L("d3", 3, [L("Be7", 1, [L("O-O", 1)]), L("Bc5", 1, [L("c3", 1)]), L("h6", 1)]), L("Ng5", 2, [L("d5", 1, [L("exd5", 1, [L("Na5", 2), L("Nxd5", 1)])])])]),
+      L("Be7", 1, [L("d4", 1, [L("exd4", 1)])]), L("d6", 1, [L("c3", 1)])])]),
+    L("d6", 1, [L("d4", 1, [L("exd4", 1, [L("Nxd4", 1, [L("Nf6", 1)])]), L("Nd7", 1)])]),
+    L("Nf6", 1, [L("Nxe5", 1, [L("d6", 1, [L("Nf3", 1, [L("Nxe4", 1)])])])]),
+  ])]),
+  L("c5", 4, [L("Nf3", 1, [L("d6", 3, [L("d4", 1, [L("cxd4", 1, [L("Nxd4", 1, [L("Nf6", 1, [L("Nc3", 1, [L("a6", 2), L("g6", 1), L("Nc6", 1)])])])])])]), L("Nc6", 2, [L("d4", 1, [L("cxd4", 1, [L("Nxd4", 1, [L("Nf6", 1), L("g6", 1)])])])]), L("e6", 1, [L("d4", 1, [L("cxd4", 1, [L("Nxd4", 1)])])])])]),
+  L("e6", 2, [L("d4", 1, [L("d5", 1, [L("Nc3", 2, [L("Bb4", 1, [L("e5", 1)]), L("Nf6", 1, [L("Bg5", 1)])]), L("e5", 1, [L("c5", 1, [L("c3", 1)])])])])]),
+  L("c6", 2, [L("d4", 1, [L("d5", 1, [L("e5", 2, [L("Bf5", 1, [L("Nf3", 1)])]), L("Nc3", 1, [L("dxe4", 1)])])])]),
+  L("d5", 1, [L("exd5", 1, [L("Qxd5", 2, [L("Nc3", 1, [L("Qa5", 1)])]), L("Nf6", 1, [L("d4", 1)])])]),
+])];
+const AS_BLACK = [
+  L("e4", 3, [L("e5", 1, [L("Nf3", 5, [L("Nc6", 1, [L("Bb5", 3, [L("a6", 1, [L("Ba4", 3, [L("Nf6", 1, [L("O-O", 1)])]), L("Bxc6", 1, [L("dxc6", 1)])])]), L("Bc4", 3, [L("Nf6", 1, [L("d3", 2), L("Ng5", 1, [L("d5", 1)])])]), L("d4", 1, [L("exd4", 1, [L("Nxd4", 1)])])])]), L("Bc4", 1, [L("Nf6", 1)]), L("Nc3", 1, [L("Nf6", 1)])])]),
+  L("d4", 2, [L("d5", 1, [L("c4", 3, [L("e6", 1, [L("Nc3", 2, [L("Nf6", 1)]), L("Nf3", 1, [L("Nf6", 1)])])]), L("Bf4", 2, [L("Nf6", 1, [L("e3", 1, [L("c5", 1)])])]), L("Nf3", 1, [L("Nf6", 1)])])]),
+  L("c4", 1, [L("e5", 1, [L("Nc3", 1, [L("Nf6", 1)])])]),
+  L("Nf3", 1, [L("d5", 1, [L("g3", 1)])]),
+];
+const IMPORTS = [
+  { id: 1, file: "chess_com_games_2026-10-21.pgn", site: "Chess.com", at: "21 Oct 2026", count: 3264, from: [2023, 10], classes: [["bullet", 0.2], ["blitz", 0.5], ["rapid", 0.25], ["daily", 0.05]] },
+  { id: 2, file: "lichess_Bishop_Pair_2026-10-02.pgn", site: "Lichess", at: "2 Oct 2026", count: 412, from: [2025, 6], classes: [["bullet", 0.3], ["blitz", 0.6], ["rapid", 0.1]] },
+  { id: 3, file: "club_championship.pgn", site: "Other", at: "14 Sep 2026", count: 9, from: [2026, 9], classes: [["classical", 1]] },
+];
+const CONTROLS = { bullet: ["60+0", "120+1"], blitz: ["180+2", "300+0"], rapid: ["600+0", "900+10"], classical: ["5400+30"], daily: ["1/86400"] };
+const pickWeighted = (items) => { let r = rand() * items.reduce((s, i) => s + i[1], 0); for (const i of items) if ((r -= i[1]) <= 0) return i; return items[items.length - 1]; };
+const hash = (text) => { let h = 2166136261; for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return (h >>> 0) / 4294967296; };
+const GAMES = [];
+for (const imp of IMPORTS) {
+  for (let i = 0; i < imp.count; i++) {
+    const color = rand() < 0.56 ? "white" : "black";
+    let level = color === "white" ? AS_WHITE : AS_BLACK;
+    const moves = [];
+    while (level.length) { const step = pickWeighted(level); moves.push(step[0]); level = step[2]; }
+    const lean = hash(color + moves.join(" "));
+    const r = rand();
+    const result = r < 0.28 + 0.36 * lean ? "win" : r < 0.36 + 0.36 * lean ? "draw" : "loss";
+    const [y0, m0] = imp.from;
+    const span = (2026 - y0) * 12 + (10 - m0);
+    const month = Math.floor(rand() * (span + 1));
+    const yy = y0 + Math.floor((m0 - 1 + month) / 12), mm = ((m0 - 1 + month) % 12) + 1, dd = 1 + Math.floor(rand() * 28);
+    const timeClass = pickWeighted(imp.classes)[0];
+    const rating = 1050 + Math.round(month * 6 + rand() * 60);
+    GAMES.push({ imp: imp.id, site: imp.site, color, moves, result, date: `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`, timeClass, control: CONTROLS[timeClass][Math.floor(rand() * CONTROLS[timeClass].length)] });
+  }
+}
+GAMES.sort((a, b) => b.date.localeCompare(a.date));
+
+// ── State, and the tree built from the games the filters leave ─────────────────────────────
+const state = { mode: "light", width: "desktop", site: "All", time: "All", side: "White", imports: new Set([1, 2, 3]), paint: "book", zoom: 3 };
+try { const dark = document.documentElement.dataset.theme === "dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches); if (dark) state.mode = "dark"; } catch {}
+if (window.innerWidth < 760) state.width = "phone";
+let tree = null, current = null, hi = 0;
+
+function filtered() {
+  return GAMES.filter((g) => state.imports.has(g.imp)
+    && (state.site === "All" || g.site === state.site)
+    && (state.time === "All" || g.timeClass === state.time.toLowerCase())
+    && (state.side === "Both" || g.color === state.side.toLowerCase()));
+}
+function buildTree(games) {
+  const root = { id: "", san: null, ply: 0, parent: null, kids: new Map(), games: 0, w: 0, d: 0, l: 0 };
+  for (const g of games) {
+    let node = root;
+    const add = (x) => { x.games++; x[g.result[0]]++; };
+    add(node);
+    g.moves.forEach((san, i) => {
+      let next = node.kids.get(san);
+      if (!next) { next = { id: node.id ? `${node.id} ${san}` : san, san, ply: i + 1, parent: node, kids: new Map(), games: 0, w: 0, d: 0, l: 0 }; node.kids.set(san, next); }
+      add(next); node = next;
+    });
+  }
+  const all = new Map();
+  const finish = (x) => { all.set(x.id, x); x.children = [...x.kids.values()].sort((a, b) => b.games - a.games || a.san.localeCompare(b.san)); x.children.forEach(finish); x.score = x.games ? (x.w + x.d / 2) / x.games : 0; };
+  finish(root);
+  let depth = 0; for (const x of all.values()) depth = Math.max(depth, x.ply);
+  return { root, all, depth };
+}
+const pathOf = (x) => { const out = []; for (let at = x; at && at.san; at = at.parent) out.unshift(at); return out; };
+const moveText = (x) => `${Math.ceil(x.ply / 2)}${x.ply % 2 ? "." : "…"}${x.san}`;
+const lineText = (nodes) => nodes.map((x) => (x.ply % 2 ? `${Math.ceil(x.ply / 2)}.${x.san}` : x.san)).join(" ");
+
+function rebuild() {
+  const keep = current ? current.id : "";
+  tree = buildTree(filtered());
+  // Keep the deepest position of the old line that the new tree still has.
+  const parts = keep ? keep.split(" ") : [];
+  while (parts.length && !tree.all.has(parts.join(" "))) parts.pop();
+  current = tree.all.get(parts.join(" ")) ?? tree.root;
+  hi = 0;
+}
+
+// ── Ply columns, laid out as src/lib/books/views/plyColumns.ts does, with zoom steps ───────
+const ZOOMS = [1, 1.5, 2, 3];
+function layout(box) {
+  const pad = { left: 18, right: 40, top: 26, bottom: 16 };
+  const depth = Math.max(tree.depth, 1);
+  const fitCol = Math.min(72, Math.max(26, (box.width - pad.left - pad.right) / depth));
+  const leaves = [...tree.all.values()].filter((x) => !x.children.length).length;
+  const fitRow = Math.min(28, Math.max(9, (box.height - pad.top - pad.bottom) / Math.max(leaves - 1, 1)));
+  const z = ZOOMS[state.zoom - 1] ?? 1;
+  const colW = fitCol * Math.max(1, z * 0.7), rowH = fitRow * z;
+  const used = rowH * (leaves - 1);
+  const top = pad.top + Math.max(0, (box.height - pad.top - pad.bottom - used) / 2);
+  const points = new Map(); let row = 0;
+  const place = (x) => {
+    const px = pad.left + x.ply * colW;
+    if (!x.children.length) { points.set(x.id, { x: px, y: top + row++ * rowH }); return; }
+    x.children.forEach(place);
+    points.set(x.id, { x: px, y: (points.get(x.children[0].id).y + points.get(x.children[x.children.length - 1].id).y) / 2 });
+  };
+  place(tree.root);
+  return { points, colW, rowH, width: Math.max(box.width, pad.left + depth * colW + pad.right), height: Math.max(box.height, top + used + pad.bottom), pad };
+}
+function scoreColor(s) {
+  const dark = state.mode === "dark";
+  const loss = dark ? [224, 98, 90] : [180, 35, 24], draw = dark ? [139, 134, 118] : [143, 138, 122], win = dark ? [63, 191, 111] : [21, 128, 61];
+  const t = Math.min(1, Math.max(0, (s - 0.3) / 0.4));
+  const [a, b, u] = t < 0.5 ? [loss, draw, t * 2] : [draw, win, (t - 0.5) * 2];
+  return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * u)).join(" ")})`;
+}
+function drawTree() {
+  const scroll = document.getElementById("vscroll");
+  if (!scroll) return null;
+  const lay = layout({ width: scroll.clientWidth, height: scroll.clientHeight });
+  const at = (id) => lay.points.get(id);
+  const onPath = new Set(pathOf(current).map((x) => x.id)); onPath.add("");
+  const kids = current.children;
+  const rootGames = Math.max(tree.root.games, 1);
+  let grid = "", edges = "", nodes = "", labels = "", hits = "";
+  for (let d = 0; d <= tree.depth; d++) {
+    const x = lay.pad.left + d * lay.colW;
+    grid += `<line x1="${x}" x2="${x}" y1="${lay.pad.top - 10}" y2="${lay.height - lay.pad.bottom + 6}" class="bv-grid"/>`;
+    if (d % 2) grid += `<text x="${x}" y="13" class="bv-ruler">${Math.ceil(d / 2)}</text>`;
+  }
+  for (const x of tree.all.values()) {
+    const c = at(x.id);
+    if (x.parent) {
+      const p = at(x.parent.id), k = lay.colW * 0.55;
+      const width = 0.7 + 7 * Math.sqrt(x.games / rootGames);
+      const paint = state.paint === "success" ? ` style="stroke:${scoreColor(x.score)};opacity:${onPath.has(x.id) ? 1 : 0.85}"` : "";
+      edges += `<path d="M${p.x},${p.y} C${p.x + k},${p.y} ${c.x - k},${c.y} ${c.x},${c.y}" class="bv-edge${onPath.has(x.id) && state.paint === "book" ? " on-path" : ""}" stroke-width="${width.toFixed(2)}"${paint}/>`;
+    }
+    const cls = !x.san ? "root" : x.ply % 2 ? "wm" : "bm";
+    nodes += `<circle cx="${c.x}" cy="${c.y}" r="${x.san ? 2.8 : 4.2}" class="bv-node ${cls}${onPath.has(x.id) ? " on-path" : ""}${x === current ? " current" : ""}"/>`;
+    const isKid = x.parent === current, isHi = isKid && kids[hi] === x;
+    if (isHi) nodes += `<circle cx="${c.x}" cy="${c.y}" r="7" class="bv-ring"/>`;
+    const shown = onPath.has(x.id) || isKid || (lay.rowH >= 11 && (x.ply <= 3 || x.games >= rootGames * 0.03));
+    const above = !x.san || x.ply % 2 === 1;
+    labels += `<text x="${c.x}" y="${above ? c.y - 6 : c.y + 12}" text-anchor="middle" class="bv-label${shown ? "" : " minor"}${onPath.has(x.id) ? " on-path" : ""}${isKid ? " kid" : ""}${isHi ? " hi" : ""}${x === current ? " current" : ""}">${x.san ?? "Start"}</text>`;
+    hits += `<circle cx="${c.x}" cy="${c.y}" r="7" class="bv-hit" data-id="${x.id}"><title>${x.san ? moveText(x) : "Start"} · ${n(x.games)} games · ${pct(x.score)}</title></circle>`;
+  }
+  scroll.innerHTML = `<svg width="${lay.width}" height="${lay.height}" viewBox="0 0 ${lay.width} ${lay.height}" role="img" aria-label="Ply columns of your games">${grid}${edges}${nodes}${labels}${hits}</svg>`;
+  return lay;
+}
+
+/** Pans the view so the current position and its moves are in frame, centring the current one when they can't all fit. */
+function follow(lay, smooth = true) {
+  const scroll = document.getElementById("vscroll");
+  if (!scroll || !lay) return;
+  const pts = [current, ...current.children].map((x) => lay.points.get(x.id));
+  const m = 34;
+  const minX = Math.min(...pts.map((p) => p.x)) - m, maxX = Math.max(...pts.map((p) => p.x)) + m;
+  const minY = Math.min(...pts.map((p) => p.y)) - m, maxY = Math.max(...pts.map((p) => p.y)) + m;
+  const w = scroll.clientWidth, h = scroll.clientHeight, here = lay.points.get(current.id);
+  let left = scroll.scrollLeft, top = scroll.scrollTop;
+  if (maxX - minX > w) left = here.x - w * 0.3; else if (minX < left) left = minX; else if (maxX > left + w) left = maxX - w;
+  if (maxY - minY > h) top = here.y - h / 2; else if (minY < top) top = minY; else if (maxY > top + h) top = maxY - h;
+  scroll.scrollTo({ left: Math.max(0, left), top: Math.max(0, top), behavior: smooth ? "smooth" : "auto" });
+}
+
+// ── The board, from chess.js ───────────────────────────────────────────────────────────────
+function boardHtml(nodes) {
+  const game = new Chess();
+  let last = null;
+  for (const x of nodes) last = game.move(x.san);
+  const glyph = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟", K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙" };
+  const square = (r, f, ch) => {
+    const name = "abcdefgh"[f] + (8 - r);
+    const mark = last && last.from === name ? " from" : last && last.to === name ? " to" : "";
+    return `<i class="${(r + f) % 2 ? "d" : "l"}${ch ? (ch === ch.toUpperCase() ? " wp" : " bp") : ""}${mark}">${ch ? glyph[ch] + "︎" : ""}</i>`;
+  };
+  let out = "";
+  game.fen().split(" ")[0].split("/").forEach((row, r) => {
+    let f = 0;
+    for (const ch of row) {
+      if (/\d/.test(ch)) for (let i = 0; i < Number(ch); i++, f++) out += square(r, f, null);
+      else out += square(r, f++, ch);
+    }
+  });
+  return out;
+}
+const wdlBar = (x) => `<div class="wdl"><i style="flex:${x.w}"></i><i style="flex:${x.d}"></i><i style="flex:${x.l}"></i></div>`;
+
+// ── Rendering: the shell on option changes, the position's parts on every move ─────────────
+function seg(key, values, labels = values) {
+  return `<div class="seg" data-key="${key}">${values.map((v, i) => `<button aria-pressed="${state[key] === v}" data-value="${v}">${labels[i]}</button>`).join("")}</div>`;
+}
+function renderShell() {
+  const mock = document.getElementById("mock");
+  mock.dataset.mode = state.mode; mock.dataset.width = state.width;
+  mock.innerHTML = `
+    <div class="topbar"><span class="brand">ByTheBook</span><nav class="tabs" aria-label="Pages"><span>Overview</span><span>Explorer</span><span>Visualizations</span><span aria-current="page">Library</span><span>Bookstore</span><span>Train</span><span>Puzzles</span><span>Settings</span></nav>
+      <span class="grow"></span><span class="guest">Browsing as a guest</span><button class="desk-btn">Create account</button></div>
+    <div class="book"><span class="ribbon"></span><div class="spread">
+      <section class="pg left" aria-label="Left page">
+        <div class="running"><i>Library</i><span class="sc">Kept in this browser</span></div>
+        <div class="head"><h2>Your games</h2><button class="btn ghost">${icon("upload")} Import games</button><button class="btn ghost danger">${icon("trash")} Delete all</button></div>
+        <div class="pick">
+          <div class="filters">
+            <span>Site</span>${seg("site", ["All", "Chess.com", "Lichess", "Other"])}
+            <span>Time</span>${seg("time", ["All", "Bullet", "Blitz", "Rapid", "Classical", "Daily"])}
+            <span>Side</span>${seg("side", ["Both", "White", "Black"])}
+            <span>Control</span><span class="selectish">Any time control ${icon("chev")}</span>
+            <span>Dates</span><span class="selectish">All dates ${icon("chev")}</span>
+          </div>
+          <div class="imports" role="group" aria-label="Imports"><span class="sc">Imports</span>
+            ${IMPORTS.map((i) => `<label class="imp"><input type="checkbox" data-imp="${i.id}" ${state.imports.has(i.id) ? "checked" : ""}><b>${i.site} · ${i.at}</b><span class="fig soft">${n(i.count)}</span><span class="soft" title="${i.file}">${i.file}</span></label>`).join("")}
+          </div>
+        </div>
+        <div class="totals" id="totals"></div>
+        <div class="through"><div class="head"><h3 id="through-title">Games through</h3><span class="sc" id="through-count"></span></div><div class="crumbs" id="crumbs"></div><div class="games" id="games"></div></div>
+      </section>
+      <section class="pg right" aria-label="Right page">
+        <div class="running"><span class="sc">The current position</span><i>Game history</i></div>
+        <div class="posbox"><div class="board" id="board" aria-label="Board"></div><div class="details" id="details"></div><button class="btn outline open">Open in Explorer</button></div>
+        <div class="toolbar"><span class="selectish" style="width:150px">Ply columns ${icon("chev")}</span>
+          <span class="small soft">Color</span>${seg("paint", ["book", "success"], ["Book's own", "Your score"])}
+          <span class="grow"></span><span class="zoom" aria-label="Zoom"><button data-zoom="-1" aria-label="Zoom out">−</button><span>${state.zoom === 1 ? "Fit" : `${ZOOMS[state.zoom - 1]}×`}</span><button data-zoom="1" aria-label="Zoom in">+</button></span></div>
+        <div class="viewbox"><div class="vscroll" id="vscroll" tabindex="0" aria-label="Your games' tree. Arrow keys walk it."></div></div>
+        <div class="hint" id="hint"></div>
+      </section>
+    </div></div>`;
+  for (const chip of document.querySelectorAll(".studio .chip")) chip.setAttribute("aria-pressed", String(state[chip.parentElement.dataset.key] === chip.dataset.value));
+  bindShell();
+  renderPosition(false);
+}
+function renderPosition(smooth = true) {
+  const path = pathOf(current);
+  const t = tree.root;
+  document.getElementById("totals").innerHTML = `<div class="line"><span class="big">${n(t.games)}</span><span class="soft">games</span><span class="grow"></span><span class="small soft">Score <b class="fig" style="color:var(--foreground)">${pct(t.score)}</b></span></div>${wdlBar(t)}
+    <div class="legend"><span><i style="background:var(--bar-win)"></i>${n(t.w)} wins</span><span><i style="background:var(--bar-draw)"></i>${n(t.d)} draws</span><span><i style="background:var(--bar-loss)"></i>${n(t.l)} losses</span></div>`;
+  document.getElementById("through-title").textContent = current.san ? `Games through ${moveText(current)}` : "All games";
+  document.getElementById("through-count").textContent = `${n(current.games)} games`;
+  document.getElementById("crumbs").innerHTML = [`<button data-id="" ${current.san ? "" : 'aria-current="true"'}>Start</button>`, ...path.map((x) => `<span>›</span><button data-id="${x.id}" ${x === current ? 'aria-current="true"' : ""}>${moveText(x)}</button>`)].join("");
+  const games = filtered().filter((g) => g.moves.slice(0, current.ply).join(" ") === current.id);
+  const shown = games.slice(0, 80);
+  const fmt = (list, start) => list.map((san, i) => ((start + i) % 2 === 0 ? `${(start + i) / 2 + 1}.` : "") + san).join(" ");
+  document.getElementById("games").innerHTML = `<table><thead><tr><th>Date</th><th></th><th>Result</th><th class="tc">Time</th><th>Moves from here</th><th></th></tr></thead><tbody>${shown.map((g) => {
+    const rest = g.moves.slice(current.ply, current.ply + 6);
+    return `<tr><td class="fig">${g.date}</td><td><span class="side ${g.color[0]}" title="${g.color}"></span></td><td class="res-${g.result[0]}">${g.result === "win" ? "Win" : g.result === "draw" ? "Draw" : "Loss"}</td><td class="tc fig soft">${g.control}</td><td class="mv"><b>${rest.length ? fmt(rest, current.ply) : "—"}</b>${g.moves.length > current.ply + 6 ? " …" : ""}</td><td><a class="soft" href="#" title="Open on ${g.site === "Other" ? "its site" : g.site}" onclick="return false">${icon("ext")}</a></td></tr>`;
+  }).join("")}</tbody></table>${games.length > shown.length ? `<p class="more">The newest 80 of ${n(games.length)}. Older games load as you scroll.</p>` : ""}`;
+  document.getElementById("board").innerHTML = boardHtml(path);
+  const kids = current.children;
+  document.getElementById("details").innerHTML = `<span class="sc">${current.san ? "Current position" : "Starting position"}</span>
+    <div class="mv">${current.san ? moveText(current) : "Start"}</div>
+    <div class="line">${path.length ? lineText(path) : "Before the first move"}</div>
+    <div class="small"><b class="fig">${n(current.games)}</b> games · <span class="fig">${n(current.w)} · ${n(current.d)} · ${n(current.l)}</span> · score <b class="fig">${pct(current.score)}</b></div>${wdlBar(current)}
+    <span class="sc" style="margin-top:6px">${kids.length ? "Played next" : "No games go further here"}</span>
+    <div class="next" role="listbox" aria-label="Moves played next">${kids.slice(0, 6).map((x, i) => `<div class="nrow" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="fig soft">${n(x.games)}</span>${wdlBar(x)}<span class="fig">${pct(x.score)}</span></div>`).join("")}</div>`;
+  document.getElementById("hint").innerHTML = `<span><kbd>↑</kbd> <kbd>↓</kbd> choose a move</span><span><kbd>→</kbd> play it</span><span><kbd>←</kbd> back</span><span>Drag to look around</span><span class="grow"></span>${state.paint === "success" ? `<span>Your score <span class="ramp"></span> 30% → 70%+ · thickness: games</span>` : `<span>Thickness: games</span>`}`;
+  follow(drawTree(), smooth);
+}
+
+function goTo(node, from) {
+  current = node;
+  hi = from ? Math.max(0, current.children.indexOf(from)) : 0;
+  renderPosition();
+}
+function bindShell() {
+  const mock = document.getElementById("mock");
+  for (const group of mock.querySelectorAll(".seg")) {
+    group.addEventListener("click", (event) => {
+      const b = event.target.closest("button"); if (!b) return;
+      state[group.dataset.key] = b.dataset.value;
+      if (group.dataset.key !== "paint") rebuild();
+      renderShell();
+    });
+  }
+  for (const box of mock.querySelectorAll("[data-imp]")) {
+    box.addEventListener("change", () => { const id = Number(box.dataset.imp); box.checked ? state.imports.add(id) : state.imports.delete(id); rebuild(); renderShell(); });
+  }
+  for (const b of mock.querySelectorAll("[data-zoom]")) {
+    b.addEventListener("click", () => { state.zoom = Math.min(ZOOMS.length, Math.max(1, state.zoom + Number(b.dataset.zoom))); renderShell(); });
+  }
+  mock.querySelector("#crumbs").addEventListener("click", (event) => { const b = event.target.closest("button"); if (b) goTo(tree.all.get(b.dataset.id)); });
+  mock.querySelector("#details").addEventListener("click", (event) => { const r = event.target.closest(".nrow"); if (r) goTo(tree.all.get(r.dataset.id)); });
+  const scroll = mock.querySelector("#vscroll");
+  scroll.addEventListener("keydown", (event) => {
+    const kids = current.children;
+    if (event.key === "ArrowDown" && kids.length) hi = Math.min(kids.length - 1, hi + 1);
+    else if (event.key === "ArrowUp" && kids.length) hi = Math.max(0, hi - 1);
+    else if (event.key === "ArrowRight" && kids.length) { event.preventDefault(); goTo(kids[hi]); return; }
+    else if (event.key === "ArrowLeft" && current.parent) { event.preventDefault(); goTo(current.parent, current); return; }
+    else return;
+    event.preventDefault();
+    renderPosition();
+  });
+  // Drag to pan; a press that doesn't move picks the position under it.
+  let drag = null;
+  scroll.addEventListener("pointerdown", (event) => { drag = { x: event.clientX, y: event.clientY, left: scroll.scrollLeft, top: scroll.scrollTop, moved: false, target: event.target }; scroll.setPointerCapture(event.pointerId); });
+  scroll.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+    drag.moved = true; scroll.classList.add("dragging");
+    scroll.scrollLeft = drag.left - dx; scroll.scrollTop = drag.top - dy;
+  });
+  scroll.addEventListener("pointerup", () => {
+    if (drag && !drag.moved) { const id = drag.target.closest?.("[data-id]")?.dataset.id; if (id !== undefined) goTo(tree.all.get(id)); }
+    scroll.classList.remove("dragging"); drag = null; scroll.focus({ preventScroll: true });
+  });
+}
+
+for (const group of document.querySelectorAll(".studio .chips")) {
+  group.addEventListener("click", (event) => { const chip = event.target.closest(".chip"); if (!chip) return; state[group.dataset.key] = chip.dataset.value; renderShell(); });
+}
+let resizeTimer; addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => renderPosition(false), 150); });
+rebuild();
+current = tree.all.get("e4 e5 Nf3 Nc6 Bc4") ?? tree.root;
+renderShell();
+</script>
+</body>
+</html>

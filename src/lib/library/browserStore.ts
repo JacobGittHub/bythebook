@@ -201,7 +201,7 @@ let askedToKeep = false;
  * space runs low or the site goes unvisited. Chromium decides by itself, and Firefox may ask
  * the visitor. The answer is read with `browserKeepsData`.
  */
-function askToKeepData() {
+export function askToKeepData() {
   if (askedToKeep || typeof navigator === "undefined" || !navigator.storage?.persist) return;
   askedToKeep = true;
   navigator.storage.persist().catch(() => {});

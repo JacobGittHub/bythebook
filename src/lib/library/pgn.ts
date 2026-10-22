@@ -5,6 +5,7 @@
 
 import { Chess } from "chess.js";
 import { START_FEN } from "@/lib/chess/fen";
+import { lexPgn } from "@/lib/chess/pgnTokens";
 import type { Move, MoveNode } from "@/types/chess";
 import { addLine } from "./edit";
 
@@ -21,39 +22,6 @@ export type PgnRead =
     }
   | { ok: false; error: string };
 
-type Token =
-  | { kind: "move"; text: string }
-  | { kind: "open" }
-  | { kind: "close" };
-
-/** Comments, annotation glyphs, move numbers and results are dropped; moves and brackets stay. */
-function tokenize(body: string): Token[] {
-  const tokens: Token[] = [];
-  const text = body
-    .replace(/\{[^}]*\}/g, " ")
-    .replace(/;[^\n]*/g, " ")
-    .replace(/\(/g, " ( ")
-    .replace(/\)/g, " ) ");
-  for (const word of text.split(/\s+/)) {
-    if (!word) continue;
-    if (word === "(") tokens.push({ kind: "open" });
-    else if (word === ")") tokens.push({ kind: "close" });
-    else if (/^\$\d+$/.test(word)) continue;
-    else if (/^(1-0|0-1|1\/2-1\/2|\*)$/.test(word)) continue;
-    else {
-      // "12.", "12...", "12.e4" and "12...Nf6" lose their numbers; "e4!?" loses its glyphs.
-      // Castling written with zeros is read as with letters.
-      const move = word
-        .replace(/^\d+\.+/, "")
-        .replace(/[!?]+$/, "")
-        .replace(/^0-0-0/, "O-O-O")
-        .replace(/^0-0/, "O-O");
-      if (move && !/^\.+$/.test(move)) tokens.push({ kind: "move", text: move });
-    }
-  }
-  return tokens;
-}
-
 /** "5.Nf3" or "5...Nf6", for the position `fen` a move is played from. */
 function moveName(fen: string, san: string): string {
   const [, turn, , , , fullmove] = fen.split(" ");
@@ -64,13 +32,17 @@ function moveName(fen: string, san: string): string {
 export function readPgn(paste: string): PgnRead {
   if (paste.length > MAX_PGN_CHARS) return { ok: false, error: "That's too long to read as one book." };
 
+  const tokens = lexPgn(paste);
+  if (tokens.some((token) => token.kind === "error")) {
+    return { ok: false, error: "Part of it can't be read as PGN, such as a comment or header left open." };
+  }
+
   // Headers are read for a starting position and otherwise dropped.
-  const fenHeader = /\[\s*FEN\s+"([^"]+)"\s*\]/i.exec(paste)?.[1];
-  const body = paste.replace(/\[[^\]]*\]/g, " ");
+  const fenHeader = tokens.find((token) => token.kind === "header" && token.name.toUpperCase() === "FEN");
   let fromFen = START_FEN;
-  if (fenHeader) {
+  if (fenHeader?.kind === "header") {
     try {
-      fromFen = new Chess(fenHeader).fen();
+      fromFen = new Chess(fenHeader.value).fen();
     } catch {
       return { ok: false, error: "The FEN header isn't a position chess.js can read." };
     }
@@ -85,7 +57,7 @@ export function readPgn(paste: string): PgnRead {
     if (moves.length) lines.push(moves);
   };
 
-  for (const token of tokenize(body)) {
+  for (const token of tokens) {
     if (token.kind === "open") {
       // A variation replaces the move just played, so it starts from the position before it.
       if (!line.length) return { ok: false, error: "A variation in brackets comes before any move." };
@@ -96,13 +68,13 @@ export function readPgn(paste: string): PgnRead {
       if (!parent) return { ok: false, error: "There's a closing bracket without an opening one." };
       finish(line);
       line = parent;
-    } else {
+    } else if (token.kind === "move") {
       const game = new Chess(fenOf(line));
       try {
-        const played = game.move(token.text);
+        const played = game.move(token.san);
         line = [...line, { san: played.san, uci: played.lan, fen: game.fen() }];
       } catch {
-        return { ok: false, error: `${moveName(fenOf(line), token.text)} isn't a legal move there.` };
+        return { ok: false, error: `${moveName(fenOf(line), token.san)} isn't a legal move there.` };
       }
     }
   }

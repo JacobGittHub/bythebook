@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Mockup for plans/game-history.md step 9, second round (the import, step 10; D14, D16, D22, D28, D29; Q18). Published as the "Game Import" artifact. -->
+<title>Game Import</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&display=swap" rel="stylesheet">
+<style>
+/* Layout: a studio on top (step, scrolling, color mode and width pickers) over one mock of the
+   Library spread on its desk, then notes tying each step to the plan. The page chrome follows
+   the viewer's theme; the mock carries the app's own tokens from src/app/globals.css. */
+:root {
+  --c-page: #f2f1ec; --c-panel: #fbfaf6; --c-ink: #22252b; --c-soft: #5c636b; --c-line: #d6d8d0;
+  --c-accent: #2c4a74; --c-accent-ink: #ffffff; --c-chip: #e6e7e0;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --display: "Literata", Georgia, "Times New Roman", serif;
+  --figures: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-page: #15171b; --c-panel: #1c1f24; --c-ink: #e9e5dc; --c-soft: #a3a19b; --c-line: #33373e;
+    --c-accent: #a9c0e6; --c-accent-ink: #12161d; --c-chip: #262a30; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --c-page: #15171b; --c-panel: #1c1f24; --c-ink: #e9e5dc; --c-soft: #a3a19b; --c-line: #33373e;
+  --c-accent: #a9c0e6; --c-accent-ink: #12161d; --c-chip: #262a30; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--c-page); color: var(--c-ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1280px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.intro h1 { font: 600 32px/1.15 var(--display); letter-spacing: -0.01em; }
+.intro p { max-width: 74ch; color: var(--c-soft); margin-top: 8px; }
+.eyebrow { font: 500 11px/1 var(--figures); letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-soft); margin-bottom: 10px; }
+
+.studio { display: flex; flex-wrap: wrap; gap: 14px 28px; }
+.studio fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; min-width: 0; }
+.studio legend { padding: 0; margin-bottom: 6px; font: 500 11px/1 var(--figures); letter-spacing: 0.1em; text-transform: uppercase; color: var(--c-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px/1 var(--body); color: var(--c-ink); background: var(--c-chip); border: 1px solid var(--c-line); border-radius: 6px; padding: 8px 11px; cursor: pointer; }
+.chip:hover { border-color: var(--c-soft); }
+.chip[aria-pressed="true"] { background: var(--c-accent); color: var(--c-accent-ink); border-color: var(--c-accent); }
+.chip:focus-visible, .mock :focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+
+.stage { container-type: inline-size; min-width: 0; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px 32px; }
+.notes h2 { font: 600 19px/1.3 var(--display); margin-bottom: 6px; }
+.notes p, .notes li { color: var(--c-soft); max-width: 62ch; }
+.notes ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.notes strong { color: var(--c-ink); }
+
+/* ── The mock: the app's tokens (globals.css), light by default ─────────────────────────── */
+.mock {
+  --desk: #553826; --desk-low: #3a2518; --desk-foreground: #f1e8da; --desk-muted: #cdb9a1; --desk-line: rgb(241 232 218 / 0.24); --desk-mark: #e07a84;
+  --page: #fbfbf8; --page-alt: #f1f2ed; --rule: #d9dcd5; --cover: #26364f; --page-edge: #cfd2ca; --gutter: rgb(70 60 40 / 0.32); --bookmark: #8c2f39;
+  --foreground: #22252b; --muted: #eef0ea; --muted-foreground: #5c636b; --border: #d0d4cd; --primary: #2c4a74; --primary-foreground: #ffffff;
+  --accent: #e3e9f3; --destructive: #b42318; --warning: #b45309; --success: #15803d; --overlay: rgb(0 0 0 / 0.5);
+  --bar-win: #15803d; --bar-draw: #8f8a7a; --bar-loss: #b42318;
+  --sq-light: #f0d9b5; --sq-dark: #b58863;
+  --radius: 6px;
+  container-type: inline-size;
+  margin-inline: auto; max-width: 100%;
+  color: var(--foreground); font: 14px/1.5 var(--body);
+  background:
+    repeating-linear-gradient(97deg, rgb(255 255 255 / 0.025) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(93deg, rgb(0 0 0 / 0.06) 0 1px, transparent 1px 23px),
+    linear-gradient(var(--desk), var(--desk-low));
+  border-radius: 8px; overflow: hidden; position: relative;
+}
+.mock[data-mode="dark"] {
+  --desk: #33221a; --desk-low: #1f140e; --desk-foreground: #e9e1d3; --desk-muted: #bba892;
+  --page: #1c1f24; --page-alt: #23272d; --rule: #30343b; --cover: #1b2433; --page-edge: #2d3138; --gutter: rgb(0 0 0 / 0.5); --bookmark: #c9505c;
+  --foreground: #e9e5dc; --muted: #24282e; --muted-foreground: #a3a19b; --border: #383c44; --primary: #a9c0e6; --primary-foreground: #12161d;
+  --accent: rgb(169 192 230 / 0.13); --destructive: #ea5f57; --warning: #f0a64a; --success: #4ade80; --overlay: rgb(0 0 0 / 0.6);
+  --bar-win: #3fbf6f; --bar-draw: #8b8676; --bar-loss: #e0625a;
+  color-scheme: dark;
+}
+.mock[data-width="phone"] { width: 390px; }
+
+.topbar { display: flex; align-items: center; gap: 18px; padding: 10px 20px; color: var(--desk-foreground); }
+.brand { font: 700 19px/1 var(--display); letter-spacing: -0.01em; }
+.tabs { display: flex; gap: 14px; font-size: 13px; color: var(--desk-muted); flex-wrap: wrap; }
+.tabs span[aria-current] { color: var(--desk-foreground); font-weight: 700; box-shadow: inset 0 -2px 0 var(--desk-mark); padding-bottom: 6px; margin-bottom: -8px; }
+.topbar .grow { flex: 1; }
+.guest { font-size: 12px; color: var(--desk-muted); }
+.desk-btn { font: 500 13px/1 var(--body); color: var(--desk-foreground); border: 1px solid var(--desk-line); border-radius: var(--radius); padding: 8px 12px; background: transparent; }
+
+.book { margin: 2px 14px 14px; background: var(--cover); border-radius: 8px; padding: 5px 7px; position: relative; }
+.spread { display: grid; grid-template-columns: 1fr 1fr; height: 660px; border-radius: 4px; overflow: hidden; box-shadow: 3px 0 0 var(--page-edge), -3px 0 0 var(--page-edge); }
+.pg { background: var(--page); padding: 26px 34px 22px; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; position: relative; }
+.pg.left { background: linear-gradient(to left, var(--gutter), transparent 70px), var(--page); }
+.pg.right { background: linear-gradient(to right, var(--gutter), transparent 70px), var(--page); }
+.pg.scrolls { overflow-y: auto; scrollbar-width: thin; }
+.ribbon { position: absolute; top: 0; left: calc(50% - 60px); width: 14px; height: 30px; background: var(--bookmark); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); z-index: 1; }
+.running { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex: none; }
+.running i { font: italic 13px/1 var(--display); color: var(--muted-foreground); }
+.sc { font: 600 10.5px/1.2 var(--display); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-foreground); }
+.head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; flex: none; }
+.head h2 { font: 600 30px/1.15 var(--display); letter-spacing: -0.01em; flex: 1 1 auto; }
+.head h3 { font: 600 20px/1.2 var(--display); flex: 1 1 auto; }
+.pg p { color: var(--foreground); }
+.soft { color: var(--muted-foreground) !important; }
+.small { font-size: 12.5px; }
+.fig { font-family: var(--figures); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: var(--radius); font: 500 13.5px/1 var(--body); border: 1px solid transparent; background: transparent; color: var(--foreground); cursor: pointer; white-space: nowrap; }
+.btn.sm { height: 28px; padding: 0 10px; font-size: 13px; }
+.btn.primary { background: var(--primary); color: var(--primary-foreground); }
+.btn.outline { border-color: var(--border); background: var(--page); }
+.btn.ghost:hover, .btn.outline:hover { background: var(--accent); }
+.btn.icon { width: 28px; padding: 0; justify-content: center; }
+.jump { font: 500 9px/1 var(--figures); letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid currentColor; border-radius: 3px; padding: 3px 4px; opacity: 0.8; }
+.ico { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* The book list, and the import's place under it */
+.books { display: grid; align-content: start; }
+.books.scrolls { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; margin-inline: -6px; padding-inline: 6px; }
+.brow { display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; align-items: center; padding: 7px 6px; border-bottom: 1px solid var(--rule); border-radius: 4px; }
+.brow[aria-current] { background: var(--accent); border-bottom-color: transparent; }
+.thumb { height: 30px; border-radius: 3px; background: var(--page-alt); border: 1px solid var(--rule); display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; padding: 2px; overflow: hidden; }
+.thumb i { display: block; border-radius: 1px; }
+.side { display: inline-block; width: 9px; height: 9px; border: 1px solid var(--muted-foreground); margin-right: 5px; vertical-align: -1px; }
+.side.b { background: var(--foreground); border-color: var(--foreground); }
+.side.w { background: var(--page); }
+.imp { flex: none; border-top: 1px solid var(--rule); padding-top: 12px; display: grid; gap: 8px; }
+.imp.fixed { box-shadow: 0 -10px 12px -12px rgb(0 0 0 / 0.35); }
+.imp h3 { font: 600 17px/1.2 var(--display); }
+.imp .head { gap: 6px 10px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.bar { height: 6px; border-radius: 3px; background: var(--muted); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--primary); }
+.stage-line { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.wdl { display: flex; height: 8px; border-radius: 2px; overflow: hidden; }
+.wdl i:nth-child(1) { background: var(--bar-win); } .wdl i:nth-child(2) { background: var(--bar-draw); } .wdl i:nth-child(3) { background: var(--bar-loss); }
+.callout { border-left: 3px solid var(--warning); padding: 4px 0 4px 10px; display: grid; gap: 4px; font-size: 13px; }
+.counts { display: grid; grid-template-columns: 1fr auto; gap: 3px 16px; font-size: 12.5px; }
+.counts span:nth-child(even) { text-align: right; font-family: var(--figures); font-variant-numeric: tabular-nums; }
+.counts .total { font-weight: 700; }
+details.more summary { cursor: pointer; font-size: 12.5px; color: var(--primary); list-style-position: inside; }
+details.more .counts { margin-top: 6px; }
+
+/* The picked book on the right page */
+.tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted-foreground); }
+.tag { border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; background: var(--page-alt); color: var(--foreground); }
+.measures { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0; }
+.measures dt { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted-foreground); }
+.measures dd { margin: 0; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.reader-bar { display: flex; align-items: center; gap: 8px; flex: none; }
+.select { height: 28px; display: inline-flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; background: var(--page); width: 160px; justify-content: space-between; }
+.zoom { display: inline-flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted-foreground); }
+.viewbox { flex: 1 1 auto; min-height: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted); padding: 4px; overflow: hidden; }
+.viewbox svg { width: 100%; height: 100%; display: block; }
+
+/* The dialog, the Explorer behind the toast, and the toast */
+.scrim { position: absolute; inset: 0; background: var(--overlay); display: grid; place-items: center; padding: 16px; z-index: 2; }
+.dialog { width: min(100%, 520px); max-height: calc(100% - 32px); overflow: auto; background: var(--page); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 18px 50px -12px rgb(0 0 0 / 0.45); padding: 20px 22px; display: grid; gap: 14px; }
+.dialog .head h3 { font-size: 20px; }
+.x { width: 28px; height: 28px; display: grid; place-items: center; border-radius: var(--radius); color: var(--muted-foreground); }
+.foot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.drop { border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 20px 18px; display: grid; justify-items: center; gap: 8px; text-align: center; background: var(--page-alt); }
+.drop .ico { width: 26px; height: 26px; color: var(--muted-foreground); }
+.kept { display: grid; gap: 3px; margin: 0; padding-left: 18px; }
+.notice { border-block: 1px solid var(--rule); padding: 8px 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12.5px; }
+.notice p { flex: 1 1 240px; min-width: 0; }
+.where { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 13px; }
+details.paste summary { cursor: pointer; color: var(--primary); font-size: 13px; }
+textarea { width: 100%; min-height: 76px; margin-top: 8px; font: 12.5px/1.4 var(--figures); color: var(--foreground); background: var(--page); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; resize: vertical; }
+.file { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--page-alt); }
+.file .ico { color: var(--muted-foreground); }
+.file div { min-width: 0; flex: 1; }
+.file b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; }
+.field { display: grid; gap: 5px; }
+.field label { font-weight: 700; font-size: 13.5px; }
+.input { height: 32px; border: 1px solid var(--border); border-radius: var(--radius); padding: 0 10px; background: var(--page); color: var(--foreground); font: 14px var(--body); width: 100%; max-width: 320px; }
+.match { font-size: 12.5px; color: var(--muted-foreground); }
+.match b { color: var(--success); }
+.pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.pill { font-size: 12px; border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; background: var(--page); color: var(--foreground); cursor: pointer; }
+.pill[aria-pressed="true"] { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+.dialog .counts { border-top: 1px solid var(--rule); padding-top: 10px; font-size: 13px; }
+.choice { display: grid; gap: 8px; }
+.opt { display: grid; grid-template-columns: 18px 1fr; gap: 2px 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; background: var(--page); }
+.opt[aria-checked="true"] { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+.radio { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--muted-foreground); margin-top: 2px; display: grid; place-items: center; }
+.opt[aria-checked="true"] .radio { border-color: var(--primary); }
+.opt[aria-checked="true"] .radio::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+.opt p { grid-column: 2; font-size: 12.5px; color: var(--muted-foreground); }
+.warnline { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; }
+.warnline .ico { color: var(--warning); margin-top: 2px; }
+
+.board { display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; width: 100%; max-width: 420px; border: 2px solid var(--foreground); border-radius: 2px; }
+.board i { display: grid; place-items: center; font: 400 min(4.2cqi, 30px)/1 "Segoe UI Symbol", "DejaVu Sans", serif; font-style: normal; }
+.board i.l { background: var(--sq-light); } .board i.d { background: var(--sq-dark); }
+.board i.wp { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 0 1px #000; } .board i.bp { color: #111; }
+.moves { display: grid; grid-template-columns: 34px 1fr 1fr; gap: 3px 8px; font: 13px/1.5 var(--figures); }
+.moves span:nth-child(3n+1) { color: var(--muted-foreground); }
+
+.toast { position: absolute; right: 18px; bottom: 18px; z-index: 3; width: min(356px, calc(100% - 36px)); background: var(--page); color: var(--foreground); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 30px -8px rgb(0 0 0 / 0.4); padding: 12px 14px; display: grid; grid-template-columns: 18px 1fr auto; gap: 2px 10px; align-items: center; font-size: 13px; }
+.toast .ico { color: var(--success); }
+.toast b { font-weight: 700; }
+.toast p { grid-column: 2; color: var(--muted-foreground); font-size: 12.5px; }
+.toast .btn { grid-row: 1 / 3; grid-column: 3; }
+
+@container (max-width: 760px) {
+  .spread { grid-template-columns: 1fr; height: auto; box-shadow: none; }
+  .pg { padding: 20px 18px; }
+  .pg.left, .pg.right { background: var(--page); }
+  .pg.left { height: 620px; }
+  .pg.right { border-top: 6px solid var(--cover); }
+  .pg.right.picked { display: none; }
+  .ribbon { left: auto; right: 28px; }
+  .tabs { display: none; }
+  .book { margin: 0 6px 6px; padding: 4px; }
+  .head h2 { font-size: 26px; }
+  .brow .actions { display: none; }
+  .pg.explorer-side { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) { .bar i { transition: width 0.4s ease; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="intro">
+    <p class="eyebrow">Mockup · plans/game-history.md, step 9, second round</p>
+    <h1>Importing games into the Library</h1>
+    <p>The import as a guest would see it, following D29: the first three steps in a dialog, then the import running at the bottom of the Library's left page, under the books, where its report also lands. Pick "Done on another page" for the toast. "What scrolls" switches between the two answers to Q18. All names and numbers are examples.</p>
+  </header>
+
+  <div class="studio" role="group" aria-label="Mockup options">
+    <fieldset>
+      <legend>Step</legend>
+      <div class="chips" data-key="step">
+        <button class="chip" data-value="choose">1 · Choose a file</button>
+        <button class="chip" data-value="check">2 · Check the file</button>
+        <button class="chip" data-value="limit">2 · Over the limit</button>
+        <button class="chip" data-value="reading">3 · Importing</button>
+        <button class="chip" data-value="report">4 · Report</button>
+        <button class="chip" data-value="mismatch">4 · Report: wrong name</button>
+        <button class="chip" data-value="away">Done on another page</button>
+        <button class="chip" data-value="later">Later visits</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>What scrolls (Q18)</legend>
+      <div class="chips" data-key="scroll">
+        <button class="chip" data-value="B">B · The book list; the import stays put</button>
+        <button class="chip" data-value="A">A · The whole left page</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Color</legend>
+      <div class="chips" data-key="mode">
+        <button class="chip" data-value="light">Light</button>
+        <button class="chip" data-value="dark">Dark</button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Width</legend>
+      <div class="chips" data-key="width">
+        <button class="chip" data-value="desktop">Desktop</button>
+        <button class="chip" data-value="phone">Phone</button>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="stage"><div class="mock" id="mock"></div></div>
+
+  <section class="notes" aria-label="Notes">
+    <div>
+      <h2>Dialog first, then the page</h2>
+      <p>Choosing, checking and the limit choice ask for the user's attention, so they are a dialog, as New book is. Once the import starts nothing more is asked, so the dialog closes and the work shows at the bottom of the left page. The user can open a book, the Explorer or anything else meanwhile; the app is a little slower until it finishes, since the import's worker shares the computer.</p>
+    </div>
+    <div>
+      <h2>Q18 · What scrolls</h2>
+      <ul>
+        <li><strong>B:</strong> the book list scrolls in its own space, and the import sits fixed at the bottom of the page, with a soft edge above it. Progress and the report stay in view however many books there are.</li>
+        <li><strong>A:</strong> the whole left page scrolls, and the import is at the end of the list. Simpler, but with a long list the user has to scroll to see it, which defeats the point. Scroll the left page to see.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Finishing elsewhere</h2>
+      <p>The import belongs to the dashboard, not the Library page, so moving between pages doesn't stop it. Finished while the user is on another page, it says so with a toast in the bottom right, with the way to the game history. The full report waits at the bottom of the Library until it is dismissed, then the section shrinks to the history's one-line summary ("Later visits").</p>
+    </div>
+  </section>
+</div>
+
+<script>
+const ICONS = {
+  upload: '<path d="M12 15V3m0 0 4.5 4.5M12 3 7.5 7.5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>',
+  download: '<path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  checkc: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  alert: '<path d="M12 9v4m0 4h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  dots: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  chev: '<path d="m6 9 6 6 6-6"/>',
+};
+const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+const n = (value) => value.toLocaleString("en-US");
+
+const state = { step: "reading", scroll: "B", mode: "light", width: "desktop", limitChoice: "stop" };
+try {
+  const dark = document.documentElement.dataset.theme === "dark" ||
+    (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+  if (dark) state.mode = "dark";
+} catch {}
+if (window.innerWidth < 760) state.width = "phone";
+
+/** A miniature icicle for a book row, from a seed, in the book views' own colors. */
+function thumb(seed) {
+  const hues = ["#3f73a8", "#7fa7cf", "#3d9a8b", "#9fcfc4", "#d07a45", "#7c6aa8"];
+  let cells = "";
+  for (let i = 0; i < 6; i++) cells += `<i style="background:${hues[(seed + i) % hues.length]};margin-block:${(i * seed) % 4}px ${(i + seed) % 3}px"></i>`;
+  return `<span class="thumb" aria-hidden="true">${cells}</span>`;
+}
+
+const BOOKS = [
+  ["Italian Game", "w", 338, 1, "Saved from the Bookstore"], ["Caro-Kann Defense", "b", 256, 3, "Saved from the Bookstore"],
+  ["Queen's Gambit", "w", 198, 2, "Saved from the Bookstore"], ["London System", "w", 164, 4, "Made by you"],
+  ["Sicilian Najdorf", "b", 402, 5, "Made by you"], ["King's Indian Defense", "b", 288, 0, "Made by you"],
+  ["Ruy Lopez", "w", 253, 2, "Saved from the Bookstore"], ["Scandinavian Defense", "b", 97, 3, "Made by you"],
+  ["Gambits for fun", "w", 131, 1, "Made by you"],
+];
+
+/** The import's section at the bottom of the left page, for the current step. */
+function importSection() {
+  const step = state.step;
+  const head = (title, right = "") => `<div class="head"><h3>${title}</h3>${right}</div>`;
+  if (step === "reading") {
+    return `${head("Importing games", '<button class="btn sm outline">Cancel</button>')}
+      <p class="small soft" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">chess_com_games_2026-10-21.pgn · Bishop_Pair · 3,264 new games</p>
+      <div class="stage-line"><span>Replaying moves</span><span class="fig soft">1,912 of 3,264</span></div>
+      <div class="bar" role="progressbar" aria-valuenow="58" aria-label="Import progress"><i style="width:58%"></i></div>
+      <p class="small soft">You can keep using ByTheBook meanwhile; it may be a little slower until this finishes.</p>`;
+  }
+  if (step === "report" || step === "mismatch" || step === "away") {
+    const mismatch = step === "mismatch";
+    const imported = mismatch ? 2_142 : 3_264;
+    return `${head(`Imported ${n(imported)} games`, `<button class="btn sm icon ghost" aria-label="Dismiss">${icon("x")}</button>`)}
+      <div class="wdl" aria-label="Results"><i style="flex:${mismatch ? 1060 : 1610}"></i><i style="flex:${mismatch ? 130 : 205}"></i><i style="flex:${mismatch ? 952 : 1449}"></i></div>
+      <p class="small soft"><span class="fig">${mismatch ? "1,060 · 130 · 952" : "1,610 · 205 · 1,449"}</span> wins, draws and losses · <span class="fig">${n(imported)}</span> of <span class="fig">10,000</span> kept</p>
+      ${mismatch ? `<div class="callout"><b>1,122 games weren't played by Bishop_Pair, so they weren't imported.</b><span class="small soft">If you also played as BishopPair_old in this file, import it again with that name; games already imported are skipped.</span><div class="row"><button class="btn sm outline">Import again as BishopPair_old</button></div></div>` : ""}
+      <details class="more"><summary>What was skipped</summary><div class="counts">
+        <span>Already imported</span><span>0</span>
+        <span>Chess960 or a set-up position</span><span>58</span>
+        <span>Not played by Bishop_Pair</span><span>${mismatch ? "1,122" : "0"}</span>
+        <span>Not finished</span><span>0</span>
+        <span>Couldn't be read</span><span>0</span>
+        <span>Left out for room</span><span>0</span>
+      </div></details>
+      <div class="row"><button class="btn sm primary">Open game history <span class="jump">Jump to page</span></button><button class="btn sm ghost">${icon("upload")} Import more</button></div>`;
+  }
+  if (step === "later") {
+    return `${head("Game history", '<span class="sc">3,264 games</span>')}
+      <p class="small soft">Last import today, from Chess.com · kept in this browser</p>
+      <div class="row"><button class="btn sm outline">Open game history <span class="jump">Jump to page</span></button><button class="btn sm ghost">${icon("upload")} Import games</button></div>`;
+  }
+  // Before an import: steps 1 and 2 show this behind the dialog.
+  return `${head("Game history")}
+    <p class="small">Import your games from Chess.com, Lichess or a tournament file to see how you've done in your openings and where your games leave your books.</p>
+    <div class="row"><button class="btn sm outline">${icon("upload")} Import games</button></div>`;
+}
+
+function leftPage() {
+  const fixed = state.scroll === "B";
+  return `<section class="pg left ${fixed ? "" : "scrolls"}" aria-label="Left page">
+    <div class="running"><i>Library</i><span class="sc">Kept in this browser</span></div>
+    <div class="head"><h2>Your books</h2>
+      <div class="row"><button class="btn sm ghost">${icon("upload")} Restore</button><button class="btn sm ghost">${icon("download")} Back up</button><button class="btn sm primary">${icon("plus")} New book</button></div>
+    </div>
+    <div class="books ${fixed ? "scrolls" : ""}">${BOOKS.map(([name, side, positions, seed], i) => `
+      <div class="brow" ${i === 0 ? 'aria-current="true"' : ""}>${thumb(seed)}<div><div>${name}</div><div class="small soft"><span class="side ${side}"></span>${side === "w" ? "White" : "Black"} · <span class="fig">${positions}</span> positions</div></div><span class="small soft actions">Edited today</span></div>`).join("")}
+    </div>
+    <section class="imp ${fixed ? "fixed" : ""}" aria-label="Game history">${importSection()}</section>
+  </section>`;
+}
+
+/** A small icicle of the Italian Game: blocks in depth columns, colored by family. */
+function icicle() {
+  const W = 560, H = 330, cols = 12, cw = W / cols;
+  const fam = ["#3f73a8", "#3d9a8b", "#d07a45", "#7c6aa8", "#a08a3c"];
+  const light = ["#7fa7cf", "#9fcfc4", "#e3a882", "#ab9dcb", "#cbb878"];
+  let out = "";
+  const trunk = ["e4", "e5", "Nf3", "Nc6", "Bc4"];
+  trunk.forEach((san, d) => {
+    out += `<rect x="${d * cw + 0.5}" y="0.5" width="${cw - 1}" height="${H - 1}" rx="1.5" fill="${d % 2 ? "#4a4440" : "#9a948d"}"/><text x="${d * cw + 4}" y="12" font-size="9" fill="#fff" font-family="IBM Plex Mono, monospace">${san}</text>`;
+  });
+  const branches = [["Bc5", 0.48, 0], ["Nf6", 0.4, 1], ["Be7", 0.07, 2], ["d6", 0.05, 3]];
+  let y = 0;
+  for (const [san, share, f] of branches) {
+    const h = share * H;
+    let yy = y;
+    for (let d = 5; d < cols; d++) {
+      const parts = Math.max(1, Math.round((d - 4) * share * 3));
+      const each = h / parts;
+      for (let p = 0; p < parts; p++) {
+        if ((p * 7 + d * 3) % 5 === 4 && d > 6) continue;
+        const bh = Math.max(1.5, each - 1);
+        out += `<rect x="${d * cw + 0.5}" y="${yy + p * each + 0.5}" width="${cw - 1}" height="${bh}" rx="1" fill="${(p + d) % 2 ? light[f] : fam[f]}"/>`;
+        if (d === 5 && p === 0) out += `<text x="${d * cw + 4}" y="${yy + 12}" font-size="9" fill="#fff" font-family="IBM Plex Mono, monospace">${san}</text>`;
+      }
+    }
+    y += h;
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Icicle of Italian Game">${out}</svg>`;
+}
+
+function pickedPage() {
+  return `<section class="pg right picked" aria-label="Right page">
+    <div class="running"><span class="sc">White</span><i>Italian Game</i></div>
+    <div><div class="head"><h2>Italian Game</h2><span class="small soft"><span class="side w"></span>White</span></div>
+      <div class="tags" style="margin-top:6px"><span class="tag">ByTheBook</span>${icon("checkc")}<span>Verified</span><span>· Saved from the Bookstore</span></div></div>
+    <div class="row"><button class="btn sm primary">Open book page</button><button class="btn sm outline">Open in Explorer</button><button class="btn sm outline">Train</button><button class="btn sm icon ghost" aria-label="More">${icon("dots")}</button></div>
+    <dl class="measures">
+      <div><dt>Positions</dt><dd>338 / 1,000</dd></div><div><dt>Lines</dt><dd>88</dd></div><div><dt>Average line</dt><dd>14.1 plies</dd></div><div><dt>Longest line</dt><dd>24 plies</dd></div><div><dt>Clashes</dt><dd>36</dd></div>
+    </dl>
+    <div class="reader-bar"><span class="select">Icicle ${icon("chev")}</span><span style="flex:1"></span><span class="zoom">− <span>Fit</span> +</span></div>
+    <div class="viewbox">${icicle()}</div>
+  </section>`;
+}
+
+/** The Explorer, roughly, as the page the user moved to while the import ran. */
+function explorer() {
+  const rows = ["rnbqkbnr", "pppp.ppp", "........", "....p...", "..B.P...", ".....N..", "PPPP.PPP", "RNBQK..R"];
+  const glyph = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟", K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙" };
+  let squares = "";
+  rows.forEach((row, r) => [...row].forEach((c, f) => {
+    const cls = (r + f) % 2 ? "d" : "l";
+    const piece = c === "." ? "" : `${glyph[c]}︎`;
+    squares += `<i class="${cls} ${c === "." ? "" : c === c.toUpperCase() ? "wp" : "bp"}">${piece}</i>`;
+  }));
+  return `<section class="pg left" aria-label="Left page"><div class="running"><i>Explorer</i><span class="sc">Italian Game</span></div>
+      <div class="head"><h2>1.e4 e5 2.Nf3 Nc6 3.Bc4</h2></div><div class="board" aria-label="Board">${squares}</div></section>
+    <section class="pg right explorer-side" aria-label="Right page"><div class="running"><span class="sc">Masters</span><i>Moves</i></div>
+      <div class="moves"><span>3…</span><span>Bc5</span><span class="fig soft">48% · 41,220</span><span>3…</span><span>Nf6</span><span class="fig soft">40% · 34,108</span><span>3…</span><span>Be7</span><span class="fig soft">7% · 5,840</span><span>3…</span><span>d6</span><span class="fig soft">5% · 4,102</span></div></section>`;
+}
+
+/** The dialog's content for steps 1 and 2. */
+function dialog() {
+  const step = state.step;
+  const close = `<span class="x">${icon("x")}</span>`;
+  if (step === "choose") {
+    return `<div class="head"><h3>Import your games</h3>${close}</div><p class="small soft">From a PGN file. The file is read in this browser and never uploaded.</p>
+      <div class="drop">${icon("upload")}<p><b>Drop a PGN file here</b></p><p class="small soft">or</p><button class="btn sm primary">Choose file</button><p class="small soft">Up to 100 MB. Unzip a .zip export first.</p></div>
+      <details class="paste"><summary>Or paste PGN text (Q16)</summary><textarea aria-label="PGN text" placeholder='[Event "Club championship"]&#10;[White "You"] [Black "…"]&#10;1. e4 e5 2. Nf3 …'></textarea></details>
+      <div class="where"><b>Chess.com</b><span class="soft">Your game archive: the Download button for each month</span><b>Lichess</b><span class="soft">Your profile's menu: Export games</span></div>
+      <div><p class="sc" style="margin-bottom:6px">What is kept</p>
+        <ul class="kept small"><li>The first 40 plies (20 moves) of each game, enough to compare with your books</li><li>Date, time control, your color, result, both ratings and your time per move</li><li>Not opponents' names, comments or engine evaluations</li><li>Up to 10,000 games; you choose what gives way past that</li></ul></div>
+      <div class="notice"><p>Kept in this browser. Safari deletes a site's data after 7 days without a visit, so keep the PGN file to import it again.</p><button class="btn sm outline">Create account</button></div>
+      <div class="foot"><button class="btn outline">Cancel</button></div>`;
+  }
+  const limit = step === "limit";
+  const fileRow = `<div class="file">${icon("file")}<div><b>chess_com_games_2026-10-21.pgn</b><span class="small soft">7.9 MB · <span class="fig">3,322</span> games · Chess.com</span></div><button class="btn sm ghost">Change</button></div>`;
+  const nameField = `<div class="field"><label for="who">Which player are you?</label><input class="input" id="who" value="Bishop_Pair" autocomplete="off">
+      <span class="match"><b>${limit ? "1,240" : "3,264"} new games</b> match this name${limit ? " · 2,024 already imported" : ""}</span>
+      <div class="pills" aria-label="Names in the file"><button class="pill" aria-pressed="true">Bishop_Pair · 3,322</button><button class="pill">knightmare_22 · 5</button><button class="pill">e4_enjoyer · 4</button><button class="pill">More names…</button></div></div>`;
+  const counts = `<div class="counts"><span>Games in the file</span><span>3,322</span><span>Chess960 or a set-up position, skipped</span><span>58</span><span>Already imported</span><span>${limit ? "2,024" : "0"}</span><span class="total">New games to import</span><span class="total">${limit ? "1,240" : "3,264"}</span></div>`;
+  const choice = limit
+    ? `<div class="warnline">${icon("alert")}<p>There is room for <b>412</b> more games: <span class="fig">9,588</span> of <span class="fig">10,000</span> are kept.</p></div>
+      <div class="choice" role="radiogroup" aria-label="When the games don't fit">
+        <div class="opt" role="radio" aria-checked="${state.limitChoice !== "replace"}" data-choice="stop" tabindex="0"><span class="radio"></span><b>Import 412 and stop</b><p>Your current games stay. The 412 newest of the new games are imported, and 828 are left out.</p></div>
+        <div class="opt" role="radio" aria-checked="${state.limitChoice === "replace"}" data-choice="replace" tabindex="0"><span class="radio"></span><b>Import all 1,240, removing 828 older imports</b><p>The 828 games you imported earliest are removed, whenever they were played.</p></div>
+      </div>`
+    : "";
+  const go = limit ? (state.limitChoice === "replace" ? "Import 1,240 games" : "Import 412 games") : "Import 3,264 games";
+  return `<div class="head"><h3>Check the file</h3>${close}</div><p class="small soft">Nothing is saved until you import. The import then runs at the bottom of the Library while you carry on.</p>
+    ${fileRow}${nameField}${counts}${choice}
+    <div class="foot"><button class="btn outline">Cancel</button><button class="btn primary">${go}</button></div>`;
+}
+
+function render() {
+  const mock = document.getElementById("mock");
+  mock.dataset.mode = state.mode;
+  mock.dataset.width = state.width;
+  const away = state.step === "away";
+  const inDialog = state.step === "choose" || state.step === "check" || state.step === "limit";
+  const tabs = ["Overview", "Explorer", "Visualizations", "Library", "Bookstore", "Train", "Puzzles", "Settings"]
+    .map((tab) => `<span ${tab === (away ? "Explorer" : "Library") ? 'aria-current="page"' : ""}>${tab}</span>`).join("");
+  mock.innerHTML = `
+    <div class="topbar"><span class="brand">ByTheBook</span><nav class="tabs" aria-label="Pages">${tabs}</nav>
+      <span class="grow"></span><span class="guest">Browsing as a guest</span><button class="desk-btn">Create account</button></div>
+    <div class="book"><span class="ribbon"></span><div class="spread">${away ? explorer() : leftPage() + pickedPage()}</div></div>
+    ${inDialog ? `<div class="scrim"><div class="dialog" role="dialog" aria-label="Import games">${dialog()}</div></div>` : ""}
+    ${away ? `<div class="toast" role="status">${icon("checkc")}<b>Imported 3,264 games</b><p>Your game history is ready.</p><button class="btn sm outline">Open game history</button></div>` : ""}`;
+  for (const group of document.querySelectorAll(".studio .chips")) {
+    for (const chip of group.querySelectorAll(".chip")) chip.setAttribute("aria-pressed", String(state[group.dataset.key] === chip.dataset.value));
+  }
+  for (const opt of mock.querySelectorAll(".opt")) {
+    const pick = () => { state.limitChoice = opt.dataset.choice; render(); };
+    opt.addEventListener("click", pick);
+    opt.addEventListener("keydown", (event) => { if (event.key === " " || event.key === "Enter") { event.preventDefault(); pick(); } });
+  }
+}
+
+for (const group of document.querySelectorAll(".studio .chips")) {
+  group.addEventListener("click", (event) => {
+    const chip = event.target.closest(".chip");
+    if (!chip) return;
+    state[group.dataset.key] = chip.dataset.value;
+    render();
+  });
+}
+render();
+</script>
+</body>
+</html>

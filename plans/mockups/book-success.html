@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Mockup for plans/game-history.md step 9, second round (a book's own page with your games, steps 18-19; D9, D10, D27, D31, D32; Q19, Q20), and the book statistics in plans/bookstore.md Q5-Q8. Published as the "Book Success View" artifact. -->
+<title>Book Success View</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<style>
+/* Layout: a studio on top (page layout, success style, view, color mode, width) over one mock of
+   a book's own page in the Library, then notes. The book is the real Italian Game example book;
+   the games are made up. The mock carries the app's tokens from src/app/globals.css. */
+:root {
+  --c-page: #f2f1ec; --c-ink: #22252b; --c-soft: #5c636b; --c-line: #d6d8d0;
+  --c-accent: #2c4a74; --c-accent-ink: #ffffff; --c-chip: #e6e7e0;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --display: "Literata", Georgia, "Times New Roman", serif;
+  --figures: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --c-page: #15171b; --c-ink: #e9e5dc; --c-soft: #a3a19b; --c-line: #33373e; --c-accent: #a9c0e6; --c-accent-ink: #12161d; --c-chip: #262a30; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --c-page: #15171b; --c-ink: #e9e5dc; --c-soft: #a3a19b; --c-line: #33373e; --c-accent: #a9c0e6; --c-accent-ink: #12161d; --c-chip: #262a30; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--c-page); color: var(--c-ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1360px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.intro h1 { font: 600 32px/1.15 var(--display); letter-spacing: -0.01em; }
+.intro p { max-width: 78ch; color: var(--c-soft); margin-top: 8px; }
+.eyebrow { font: 500 11px/1 var(--figures); letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-soft); margin-bottom: 10px; }
+.studio { display: flex; flex-wrap: wrap; gap: 14px 28px; }
+.studio fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; min-width: 0; }
+.studio legend { padding: 0; margin-bottom: 6px; font: 500 11px/1 var(--figures); letter-spacing: 0.1em; text-transform: uppercase; color: var(--c-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px/1 var(--body); color: var(--c-ink); background: var(--c-chip); border: 1px solid var(--c-line); border-radius: 6px; padding: 8px 11px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--c-accent); color: var(--c-accent-ink); border-color: var(--c-accent); }
+.chip:focus-visible, .mock :focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+.stage { container-type: inline-size; min-width: 0; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px 32px; }
+.notes h2 { font: 600 19px/1.3 var(--display); margin-bottom: 6px; }
+.notes p, .notes li { color: var(--c-soft); max-width: 62ch; }
+.notes ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.notes strong { color: var(--c-ink); }
+
+/* ── The mock ─────────────────────────────────────────────────────────────────────────── */
+.mock {
+  --desk: #553826; --desk-low: #3a2518; --desk-foreground: #f1e8da; --desk-muted: #cdb9a1; --desk-line: rgb(241 232 218 / 0.24); --desk-mark: #e07a84;
+  --page: #fbfbf8; --page-alt: #f1f2ed; --rule: #d9dcd5; --cover: #26364f; --page-edge: #cfd2ca; --gutter: rgb(70 60 40 / 0.32); --bookmark: #8c2f39;
+  --foreground: #22252b; --muted: #eef0ea; --muted-foreground: #5c636b; --border: #d0d4cd; --primary: #2c4a74; --primary-foreground: #ffffff;
+  --accent: #e3e9f3; --destructive: #b42318; --warning: #b45309; --success: #15803d; --overlay: rgb(0 0 0 / 0.45);
+  --bar-win: #15803d; --bar-draw: #8f8a7a; --bar-loss: #b42318;
+  --view-edge: rgba(120, 108, 95, 0.42); --view-path: var(--foreground); --view-hover: #b45309; --view-clash: #d97706;
+  --view-white: #ece5d8; --view-white-edge: #9c9282; --view-black: #2a2420; --view-black-edge: #2a2420;
+  --sq-light: #f0d9b5; --sq-dark: #b58863; --star: #b7791f;
+  --radius: 6px;
+  container-type: inline-size; margin-inline: auto; max-width: 100%;
+  color: var(--foreground); font: 14px/1.5 var(--body);
+  background: repeating-linear-gradient(97deg, rgb(255 255 255 / 0.025) 0 2px, transparent 2px 9px), repeating-linear-gradient(93deg, rgb(0 0 0 / 0.06) 0 1px, transparent 1px 23px), linear-gradient(var(--desk), var(--desk-low));
+  border-radius: 8px; overflow: hidden; position: relative;
+}
+.mock[data-mode="dark"] {
+  --desk: #33221a; --desk-low: #1f140e; --desk-foreground: #e9e1d3; --desk-muted: #bba892;
+  --page: #1c1f24; --page-alt: #23272d; --rule: #30343b; --cover: #1b2433; --page-edge: #2d3138; --gutter: rgb(0 0 0 / 0.5); --bookmark: #c9505c;
+  --foreground: #e9e5dc; --muted: #24282e; --muted-foreground: #a3a19b; --border: #383c44; --primary: #a9c0e6; --primary-foreground: #12161d;
+  --accent: rgb(169 192 230 / 0.13); --destructive: #ea5f57; --warning: #f0a64a; --success: #4ade80; --overlay: rgb(0 0 0 / 0.6);
+  --bar-win: #3fbf6f; --bar-draw: #8b8676; --bar-loss: #e0625a;
+  --view-edge: rgba(170, 165, 200, 0.34); --view-hover: #f0a64a; --view-clash: #f59e0b;
+  --view-white: #d9d4e6; --view-white-edge: #8e8aa3; --view-black: #0b0b10; --view-black-edge: #8e8aa3; --star: #e0a63a;
+  color-scheme: dark;
+}
+.mock[data-width="phone"] { width: 390px; }
+.topbar { display: flex; align-items: center; gap: 18px; padding: 10px 20px; color: var(--desk-foreground); }
+.brand { font: 700 19px/1 var(--display); }
+.tabs { display: flex; gap: 14px; font-size: 13px; color: var(--desk-muted); flex-wrap: wrap; }
+.tabs span[aria-current] { color: var(--desk-foreground); font-weight: 700; box-shadow: inset 0 -2px 0 var(--desk-mark); padding-bottom: 6px; margin-bottom: -8px; }
+.grow { flex: 1; }
+.guest { font-size: 12px; color: var(--desk-muted); }
+.desk-btn { font: 500 13px/1 var(--body); color: var(--desk-foreground); border: 1px solid var(--desk-line); border-radius: var(--radius); padding: 8px 12px; background: transparent; }
+.book { margin: 2px 14px 14px; background: var(--cover); border-radius: 8px; padding: 5px 7px; position: relative; }
+.spread { display: grid; grid-template-columns: 250px 1fr; height: 900px; border-radius: 4px; overflow: hidden; box-shadow: 3px 0 0 var(--page-edge), -3px 0 0 var(--page-edge); }
+.pg { min-width: 0; min-height: 0; }
+.pg.left { background: linear-gradient(to left, var(--gutter), transparent 50px), var(--page); padding: 26px 22px; display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+.pg.right { background: linear-gradient(to right, var(--gutter), transparent 60px), var(--page); padding: 24px 32px 28px; overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 14px; }
+.shelf-head { text-align: right; display: grid; gap: 4px; }
+.shelf-head a { font-size: 13px; color: var(--foreground); text-decoration: none; }
+.shelf { display: grid; gap: 1px; }
+.shelf div { display: flex; align-items: baseline; gap: 6px; padding: 4px 6px; border-radius: 4px; font: 15px/1.3 var(--display); }
+.shelf div[aria-current] { background: var(--accent); }
+.shelf div .dots { flex: 1; border-bottom: 1px dotted var(--border); transform: translateY(-4px); }
+.shelf .fig { font-size: 11.5px; color: var(--muted-foreground); }
+.running { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex: none; }
+.running i { font: italic 13px/1 var(--display); color: var(--muted-foreground); }
+.sc { font: 600 10.5px/1.2 var(--display); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-foreground); }
+.title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.title h2 { font: 600 32px/1.1 var(--display); letter-spacing: -0.01em; }
+.soft { color: var(--muted-foreground); }
+.small { font-size: 12.5px; }
+.fig { font-family: var(--figures); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+.side { display: inline-block; width: 9px; height: 9px; border: 1px solid var(--muted-foreground); vertical-align: -1px; margin-right: 4px; }
+.side.w { background: var(--page); } .side.b { background: var(--foreground); border-color: var(--foreground); }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: var(--radius); font: 500 13px/1 var(--body); border: 1px solid transparent; background: transparent; color: var(--foreground); cursor: pointer; white-space: nowrap; }
+.btn.primary { background: var(--primary); color: var(--primary-foreground); }
+.btn.outline { border-color: var(--border); background: var(--page); }
+.btn.ghost:hover, .btn.outline:hover { background: var(--accent); }
+.btn.icon { width: 28px; padding: 0; justify-content: center; }
+.ico { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tag { font-size: 12px; border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; background: var(--page-alt); }
+.pub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12.5px; color: var(--muted-foreground); }
+.pub .ico { width: 14px; height: 14px; }
+.stars { color: var(--star); letter-spacing: 1px; }
+.pub a, .link { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.desc { font-size: 13.5px; max-width: 60ch; }
+
+/* The book's facts */
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, auto)); gap: 8px 22px; margin: 0; align-content: start; }
+.facts div { min-width: 0; }
+.facts dt { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); }
+.facts dd { margin: 0; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.facts dd .soft { font-weight: 400; font-size: 12px; }
+.facts .wide { grid-column: span 3; }
+.level { display: inline-flex; gap: 2px; vertical-align: 1px; margin-right: 6px; }
+.level i { width: 9px; height: 9px; border-radius: 2px; background: var(--muted); border: 1px solid var(--border); }
+.level i.on { background: var(--foreground); border-color: var(--foreground); }
+.headgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 16px 30px; align-items: start; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+.headgrid > div { display: grid; gap: 8px; min-width: 0; }
+.about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px 30px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.about > div { display: grid; gap: 8px; align-content: start; }
+
+/* Controls */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; flex: none; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.seg button { display: inline-flex; align-items: center; gap: 5px; font: 12.5px var(--body); color: var(--foreground); background: var(--page); border: 0; border-right: 1px solid var(--border); padding: 4px 9px; cursor: pointer; white-space: nowrap; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); font-weight: 700; }
+.seg button[disabled] { color: var(--muted-foreground); cursor: default; }
+.seg button[disabled] em { font-style: normal; font-size: 10.5px; }
+.zoom { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.zoom button { font: 12.5px var(--body); color: var(--foreground); background: var(--page); border: 0; padding: 4px 9px; cursor: pointer; }
+.zoom span { padding: 0 8px; font: 11.5px var(--figures); color: var(--muted-foreground); border-left: 1px solid var(--border); border-right: 1px solid var(--border); line-height: 26px; }
+.which { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--page); font-size: 12.5px; cursor: pointer; color: var(--foreground); }
+
+/* The drawing and the position beside it */
+.body { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 18px; flex: none; }
+.body > * { min-width: 0; }
+.viewcol { display: flex; flex-direction: column; gap: 6px; }
+.viewbox { position: relative; height: 470px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted); }
+.vscroll { position: absolute; inset: 0; overflow: auto; scrollbar-width: thin; cursor: grab; touch-action: none; }
+.vscroll.dragging { cursor: grabbing; }
+.vscroll:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.vscroll svg { display: block; }
+.hint { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted-foreground); }
+.hint kbd { font: 11px var(--figures); padding: 0 4px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 3px; background: var(--page); color: var(--foreground); }
+.ramp { display: inline-block; width: 60px; height: 7px; border-radius: 2px; background: linear-gradient(90deg, var(--bar-loss), var(--bar-draw), var(--bar-win)); }
+.pos { display: flex; flex-direction: column; gap: 6px; }
+.board { display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; width: 100%; border: 2px solid var(--foreground); border-radius: 2px; }
+.board i { display: grid; place-items: center; font: 400 23px/1 "Segoe UI Symbol", "DejaVu Sans", serif; font-style: normal; }
+.board i.l { background: var(--sq-light); } .board i.d { background: var(--sq-dark); }
+.board i.wp { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 0 1px #000; } .board i.bp { color: #111; }
+.board i.from, .board i.to { box-shadow: inset 0 0 0 100px rgb(255 214 0 / 0.32); }
+.pos .mv { font: 600 20px/1.2 var(--display); }
+.pos .line { font: 11.5px/1.45 var(--figures); color: var(--muted-foreground); }
+.wdl { display: flex; height: 7px; border-radius: 2px; overflow: hidden; background: var(--muted); }
+.wdl i:nth-child(1) { background: var(--bar-win); } .wdl i:nth-child(2) { background: var(--bar-draw); } .wdl i:nth-child(3) { background: var(--bar-loss); }
+.nrow { display: grid; grid-template-columns: 56px 30px 1fr 34px; gap: 6px; align-items: center; font-size: 12px; padding: 2px 4px; border-radius: 4px; cursor: pointer; border: 1px solid transparent; }
+.nrow:hover { background: var(--accent); }
+.nrow[aria-selected="true"] { border-color: var(--primary); }
+.nrow b { font: 500 12px var(--figures); }
+.nrow .wdl { height: 5px; }
+.who { font: 600 9.5px/1 var(--display); letter-spacing: 0.12em; text-transform: uppercase; border-radius: 3px; padding: 3px 4px; border: 1px solid var(--border); color: var(--muted-foreground); }
+.who.you { color: var(--primary); border-color: var(--primary); }
+
+/* Where you leave this book */
+.leave { display: grid; gap: 0; }
+.leave .lhead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+.leave h3 { font: 600 19px/1.2 var(--display); }
+.lrow { display: grid; grid-template-columns: 70px 70px minmax(0, 1fr) 52px 120px 40px; gap: 10px; align-items: center; padding: 6px 4px; border-top: 1px solid var(--rule); font-size: 12.5px; cursor: pointer; }
+.lrow:hover { background: var(--accent); }
+.lrow b { font: 500 13px var(--figures); }
+.lrow .soft { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Which games, the dialog */
+.scrim { position: absolute; inset: 0; background: var(--overlay); display: grid; place-items: center; z-index: 3; padding: 16px; }
+.dialog { width: min(100%, 420px); background: var(--page); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 18px 50px -12px rgb(0 0 0 / 0.45); padding: 18px 20px; display: grid; gap: 12px; }
+.dialog h3 { font: 600 19px/1.2 var(--display); }
+.dialog label { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+.dialog input { accent-color: var(--primary); }
+.foot { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* The tree's paint, as globals.css's .bv-* rules */
+.bv-grid { stroke: var(--border); stroke-width: 1; }
+.bv-ruler { font: 9px var(--body); fill: var(--muted-foreground); text-anchor: middle; }
+.bv-edge { fill: none; stroke: var(--view-edge); stroke-linecap: round; }
+.bv-edge.on-path { stroke: var(--view-path); }
+.bv-edge.cold { opacity: 0.35; }
+.bv-node { stroke-width: 1; }
+.bv-node.wm { fill: var(--view-white); stroke: var(--view-white-edge); }
+.bv-node.bm { fill: var(--view-black); stroke: var(--view-black-edge); }
+.bv-node.root { fill: var(--page); stroke: var(--foreground); stroke-width: 1.5; }
+.bv-node.clash { stroke: var(--view-clash); stroke-width: 2.2; }
+.bv-node.on-path { stroke: var(--view-path); stroke-width: 1.6; }
+.bv-node.current { stroke: var(--view-hover); stroke-width: 3; }
+.bv-ring { fill: none; stroke: var(--primary); stroke-width: 1.6; stroke-dasharray: 3 2.5; }
+.bv-label { font: 9.5px var(--body); fill: var(--muted-foreground); paint-order: stroke; stroke: var(--muted); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+.bv-label.minor { opacity: 0; }
+.bv-label.on-path, .bv-label.kid { opacity: 1; fill: var(--foreground); }
+.bv-label.hi { fill: var(--primary); font-weight: 700; }
+.bv-label.current { fill: var(--view-hover); font-weight: 700; }
+.bv-hit { fill: transparent; cursor: pointer; }
+
+@container (max-width: 760px) {
+  .spread { grid-template-columns: 1fr; height: auto; box-shadow: none; }
+  .pg.left { display: none; }
+  .pg.right { background: var(--page); padding: 18px 16px; overflow: visible; }
+  .tabs { display: none; }
+  .book { margin: 0 6px 6px; padding: 4px; }
+  .title h2 { font-size: 26px; }
+  .headgrid, .about { grid-template-columns: 1fr; }
+  .facts { grid-template-columns: repeat(2, minmax(0, auto)); }
+  .facts .wide { grid-column: span 2; }
+  .body { grid-template-columns: 1fr; }
+  .pos { order: -1; }
+  .pos .board { max-width: 300px; }
+  .viewbox { height: 420px; }
+  .lrow { grid-template-columns: auto 58px minmax(0, 1fr) 36px; gap: 8px; }
+  .lrow .bar, .lrow .pct { display: none; }
+  .back { display: inline-flex !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="intro">
+    <p class="eyebrow">Mockup · plans/game-history.md, step 9, second round · plans/bookstore.md, Q5–Q8</p>
+    <h1>A book's own page, with your games</h1>
+    <p>The Italian Game example book's own page in the Library, opened in ply columns (D31) with "Your games" on. Pick a layout (Q20) and a success style for ply columns (Q19). The tree is live: click it, then use the arrow keys or drag it (D32); a row of "Where you leave this book" jumps to its position. The book's facts are the ones the Bookstore questions propose. The book is real; the games, rating and reviews are made up.</p>
+  </header>
+  <div class="studio" role="group" aria-label="Mockup options">
+    <fieldset><legend>Layout (Q20)</legend><div class="chips" data-key="layout"><button class="chip" data-value="B">B · Facts beside the title</button><button class="chip" data-value="A">A · Choices beside the title</button></div></fieldset>
+    <fieldset><legend>Success on ply columns (Q19)</legend><div class="chips" data-key="style"><button class="chip" data-value="C">C · Color and thickness</button><button class="chip" data-value="A">A · Line color</button><button class="chip" data-value="B">B · Dot color</button></div></fieldset>
+    <fieldset><legend>Color</legend><div class="chips" data-key="mode"><button class="chip" data-value="light">Light</button><button class="chip" data-value="dark">Dark</button></div></fieldset>
+    <fieldset><legend>Width</legend><div class="chips" data-key="width"><button class="chip" data-value="desktop">Desktop</button><button class="chip" data-value="phone">Phone</button></div></fieldset>
+  </div>
+  <div class="stage"><div class="mock" id="mock"></div></div>
+  <section class="notes" aria-label="Notes">
+    <div>
+      <h2>Q20 · The page's layout</h2>
+      <ul>
+        <li><strong>B:</strong> the facts fill the space beside the title, like a book's front matter. The page scrolls, so below them the drawing, the board and "Where you leave this book" are seen together. The choices sit in one row just above the drawing.</li>
+        <li><strong>A:</strong> the choices sit in line with the title and the drawing comes first; the facts follow at the end, under "About this book".</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Q19 · Success on ply columns</h2>
+      <ul>
+        <li><strong>C:</strong> the line into each position takes your score's color, and its thickness is the games that went that way, so the drawing shows the flow of your games through the book. Lines no game reached stay faint.</li>
+        <li><strong>A:</strong> the color only; thickness stays the book's own (its lines below each position).</li>
+        <li><strong>B:</strong> each position's dot takes the color, and the lines keep the book's paint.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>The book's facts (bookstore.md Q5–Q8)</h2>
+      <ul>
+        <li><strong>Difficulty</strong> 1 to 5 from the moves to remember and the length of the lines, beside the publisher's own pick (Q5).</li>
+        <li><strong>Rating, saves and reviews</strong> come from the store book this copy was saved from, read live (Q6, Q7).</li>
+        <li><strong>Coverage</strong> is the share of master games that stay in the book to a leaf (D11), always beside the lines' length.</li>
+        <li>Zoom now sits with the view's other controls, at the end of the row above the drawing.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+const LINES = ["e4 e5 Nf3 Nc6 Bc4 Bc5 Bxf7+ Kxf7 Nxe5+ Nxe5 Qh5+","e4 e5 Nf3 Nc6 Bc4 Bc5 O-O Nf6 c3 O-O d4 exd4 cxd4 Bb6","e4 e5 Nf3 Nc6 Bc4 Bc5 O-O Nf6 d4 exd4","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bb6 b5 Na5 Nxe5 Nh6","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bb6 b5 Na5 Nxe5 Qg5 Nxf7 Qxg2","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 Nf6 dxe5 Ng4 Bg5 f6 exf6 gxf6 Bh4","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 Nf6 dxe5 Nxe4 Qd5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 b5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 d6 Bg5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Bc5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Bd6","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Be7","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Bf8","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 d5","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d3","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 b4 Bb6 e5","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 b4 Be7","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 cxd4 Bb4+ Kf1","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 cxd4 Bb4+ Nc3 Nxe4 O-O","e4 e5 Nf3 Nc6 Bc4 Bc5 d3 Nf6","e4 e5 Nf3 Nc6 Bc4 Bc5 d3 f5 Ng5 f4 Bf7+","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Bxd4 Nxd4","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Bxf7+ Kf8 Bxg8","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 Qxe4+ Kf1 Qxc2","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Bg5 O-O Ne5+ Be6 Bxe6+","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Bg5 O-O Ne5+ Be6 c3 Nc6","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Bf7+ Kf8 Qd3 Be2","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Bf7+ Kf8 f3 Nxe4 Be3","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Bf7+ Kf8 f3 Nxe4 fxg4","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Qd3 Nxd5","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 f3 Nxd5 c3 Nxf3+","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Nxh8","e4 e5 Nf3 Nc6 Bc4 Be7 O-O","e4 e5 Nf3 Nc6 Bc4 Be7 d4","e4 e5 Nf3 Nc6 Bc4 Nd4 Nxd4","e4 e5 Nf3 Nc6 Bc4 Nd4 Nxe5 Qg5 Nxf7 Qxg2 Rf1 Qxe4+ Be2 Nf3#","e4 e5 Nf3 Nc6 Bc4 Nd4 Nxe5 Qg5 O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 Nc3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Bxf7+ Ke7 Bd5 Rf8 Bxc6 dxc6 d3 Ng4 Nh3 Nxf2 Bg5+ Kd7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Bxf7+ Ke7 Bd5 Rf8 Bxc6 dxc6 d3 Ng4 Nh3 Nxf2 Bg5+ Ke8","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Bxf7+ Ke7 Bd5 Rf8 O-O d6 c3 Bg4 Qb3 Bb6 Bxc6 bxc6 h3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kf1 Qe7 Nxh8 d5 Kxf2","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kf1 Qe7 Nxh8 d5 exd5 Nd4 d6 Qxd6","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kxf2 Nxe4+ Ke3 Qh4 g3 Nxg3 hxg3 Qd4+ Kf3 O-O Rh4 e4+","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kxf2 Nxe4+ Kg1 Qh4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 d4 d5 Bxd5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nd5 Nxf7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nd5 d4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nxe4 Bxf7+ Ke7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nxe4 Nxf7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ Bd7 Qe2","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Ba4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Bd3 Nd5 Nf3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Bc5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Bd6 d4 exd3 Nxd3 Qc7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Bd6 f4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Qc7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Qd4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nh3 Bc5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nh3 Bd6 d3 O-O O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nh3 g5 d3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Qf3 Rb8 Bd3 h6 Ne4 Nd5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Qf3 cxb5 Qxa8 Qc7 Qf3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 d3 h6 Nf3 e4 Qe2 Nxc4 dxc4 Bc5 Nfd2 O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nb4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nd4 c3 b5 Bf1 Nxd5 Ne4 Qh4 Ng3 Bg4 f3 e4 cxd4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nd4 c3 b5 Bf1 Nxd5 cxd4 Qxg5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nd4 d6","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Ne7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 Nxf7 Kxf7 Qf3+ Ke6 Nc3 Nb4 a3 Nxc2+ Kd1 Nxa1","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 d4 Bb4+ c3 Be7 Nxf7 Kxf7 Qf3+ Ke6 Qe4 Rf8","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 b5 Bf1 Nd4 c3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 b5 Bxb5 Qxd5 Bxc6+ Qxc6","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 b5 Bxb5 Qxd5 Nc3 Qxg2","e4 e5 Nf3 Nc6 Bc4 Nf6 O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 c3","e4 e5 Nf3 Nc6 Bc4 Nf6 d3 Bc5","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Bc5 e5","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Nc3 dxc3 Bxf7+ Kxf7 Qd5+ Ke8 Re1 Be7 Rxe4 d6","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Nc3 dxc3 Bxf7+ Kxf7 Qd5+ Kf6 Qxe4 Be7","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Nc3 dxc3 Bxf7+ Kxf7 Qd5+ Kf6 Re1 Ne7 Qxe4 Kf7 Bg5 d5 Qf4+ Kg8","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Re1 d5 Bxd5 Qxd5 Nc3 Qa5","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 e5","e4 e5 Nf3 Nc6 Bc4 a6","e4 e5 Nf3 Nc6 Bc4 d6 Nc3 Bg4 Nxe5","e4 e5 Nf3 Nc6 Bc4 f5 d3","e4 e5 Nf3 Nc6 Bc4 f5 exf5","e4 e5 Nf3 Nc6 Bc4 h6"];
+const ICONS = {
+  check: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  chev: '<path d="m6 9 6 6 6-6"/>',
+  dots: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  back: '<path d="m15 18-6-6 6-6"/>',
+};
+const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+const n = (v) => v.toLocaleString("en-US");
+const pct = (v) => `${Math.round(v * 100)}%`;
+function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const hash = (text) => { let h = 2166136261; for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return (h >>> 0) / 4294967296; };
+
+// ── The book, from its lines, with its measures ────────────────────────────────────────────
+const root = { id: "", san: null, ply: 0, parent: null, kids: new Map() };
+for (const line of LINES) {
+  let node = root;
+  line.split(" ").forEach((san, i) => {
+    let next = node.kids.get(san);
+    if (!next) { next = { id: node.id ? `${node.id} ${san}` : san, san, ply: i + 1, parent: node, kids: new Map() }; node.kids.set(san, next); }
+    node = next;
+  });
+}
+const all = new Map();
+(function finish(x) {
+  all.set(x.id, x);
+  const kids = [...x.kids.values()];
+  kids.forEach(finish);
+  x.size = kids.length ? kids.reduce((s, k) => s + k.size, 0) : 1;
+  x.children = kids.sort((a, b) => b.size - a.size || a.san.localeCompare(b.san));
+  x.games = 0; x.w = 0; x.d = 0; x.l = 0;
+})(root);
+const nodes = [...all.values()];
+const leaves = nodes.filter((x) => !x.children.length);
+const depth = Math.max(...nodes.map((x) => x.ply));
+const ownMoves = nodes.filter((x) => x.san && x.ply % 2 === 1).length;
+const clashes = nodes.filter((x) => x.ply % 2 === 0 && x.children.length > 1).length;
+const averageLine = leaves.reduce((s, x) => s + x.ply, 0) / leaves.length;
+const points = ownMoves * averageLine / 10;
+const level = points <= 40 ? 1 : points <= 100 ? 2 : points <= 200 ? 3 : points <= 400 ? 4 : 5;
+const LEVELS = ["Starter", "Easy", "Medium", "Hard", "Expert"];
+
+// ── Made-up games as White, walked through the book until someone leaves it ───────────────
+const rand = rng(11);
+const legal = new Map();
+function offBook(x) {
+  if (!legal.has(x.id)) {
+    const game = new Chess();
+    for (let at = x, list = []; ; ) { if (!at.san) { list.reverse().forEach((s) => game.move(s)); break; } list.push(at.san); at = at.parent; }
+    const book = new Set(x.children.map((k) => k.san));
+    // The usual replies first after 1.e4, then castling, development and central pawns, as people play.
+    const usual = x.ply === 1 ? ["c5", "e6", "c6", "d5", "d6", "g6"] : [];
+    const natural = (m) => usual.includes(m) ? 10 - usual.indexOf(m) : m.startsWith("O-O") ? 5 : /^[NB]/.test(m) ? 4 : /^[cde]/.test(m) ? 3 : /^Q/.test(m) ? 1 : 0;
+    legal.set(x.id, game.moves().filter((m) => !book.has(m)).sort((a, b) => natural(b) - natural(a) || hash(x.id + a) - hash(x.id + b)).slice(0, 4));
+  }
+  const options = legal.get(x.id);
+  return options[Math.min(options.length - 1, Math.floor(rand() ** 2.2 * options.length))];
+}
+const exits = new Map();
+let stayed = 0;
+for (let i = 0; i < 1160; i++) {
+  let at = root;
+  const reached = [root];
+  let exit = null;
+  while (true) {
+    if (!at.children.length) { stayed++; break; }
+    const ours = at.ply % 2 === 0;
+    const chance = at.ply === 0 ? 0 : at.ply === 1 ? 0.55 : ours ? 0.05 : 0.11;
+    // A position whose only legal moves are the book's (as after a check) can't be left.
+    const san = rand() < chance ? offBook(at) : undefined;
+    if (san) { exit = { from: at, san, who: ours ? "you" : "them" }; break; }
+    let r = rand() * at.children.reduce((s, k) => s + k.size ** 0.8, 0);
+    at = at.children.find((k) => (r -= k.size ** 0.8) <= 0) ?? at.children[0];
+    reached.push(at);
+  }
+  const key = exit ? `${exit.from.id}|${exit.san}` : reached[reached.length - 1].id;
+  const lean = hash("w" + key);
+  const r = rand();
+  const result = r < 0.25 + 0.42 * lean ? "w" : r < 0.33 + 0.42 * lean ? "d" : "l";
+  for (const x of reached) { x.games++; x[result]++; }
+  if (exit) {
+    const e = exits.get(key) ?? { ...exit, games: 0, w: 0, d: 0, l: 0 };
+    e.games++; e[result]++; exits.set(key, e);
+  }
+}
+for (const x of nodes) x.score = x.games ? (x.w + x.d / 2) / x.games : 0;
+for (const e of exits.values()) e.score = (e.w + e.d / 2) / e.games;
+const EXITS = [...exits.values()].sort((a, b) => b.games - a.games || a.san.localeCompare(b.san));
+
+// ── State ──────────────────────────────────────────────────────────────────────────────────
+const state = { layout: "B", style: "C", view: "games", mode: "light", width: "desktop", zoom: 1, dialog: false };
+try { const dark = document.documentElement.dataset.theme === "dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches); if (dark) state.mode = "dark"; } catch {}
+if (window.innerWidth < 760) state.width = "phone";
+let current = all.get("e4 e5 Nf3 Nc6 Bc4 Nf6") ?? root, hi = 0;
+const pathOf = (x) => { const out = []; for (let at = x; at && at.san; at = at.parent) out.unshift(at); return out; };
+const moveText = (x) => `${Math.ceil(x.ply / 2)}${x.ply % 2 ? "." : "…"}${x.san}`;
+const exitText = (e) => `${Math.ceil((e.from.ply + 1) / 2)}${e.from.ply % 2 === 0 ? "." : "…"}${e.san}`;
+const lineText = (list) => list.map((x) => (x.ply % 2 ? `${Math.ceil(x.ply / 2)}.${x.san}` : x.san)).join(" ");
+const wdlBar = (x) => `<div class="wdl"><i style="flex:${x.w}"></i><i style="flex:${x.d}"></i><i style="flex:${x.l}"></i></div>`;
+
+// ── Ply columns (src/lib/books/views/plyColumns.ts), with zoom steps ───────────────────────
+const ZOOMS = [1, 1.5, 2, 3];
+function layout(box) {
+  const pad = { left: 18, right: 40, top: 26, bottom: 16 };
+  const fitCol = Math.min(72, Math.max(26, (box.width - pad.left - pad.right) / depth));
+  const fitRow = Math.min(28, Math.max(9, (box.height - pad.top - pad.bottom) / Math.max(leaves.length - 1, 1)));
+  const z = ZOOMS[state.zoom - 1];
+  const colW = fitCol * Math.max(1, z * 0.7), rowH = fitRow * z;
+  const used = rowH * (leaves.length - 1);
+  const top = pad.top + Math.max(0, (box.height - pad.top - pad.bottom - used) / 2);
+  const pts = new Map(); let row = 0;
+  const place = (x) => {
+    const px = pad.left + x.ply * colW;
+    if (!x.children.length) { pts.set(x.id, { x: px, y: top + row++ * rowH }); return; }
+    x.children.forEach(place);
+    pts.set(x.id, { x: px, y: (pts.get(x.children[0].id).y + pts.get(x.children[x.children.length - 1].id).y) / 2 });
+  };
+  place(root);
+  return { pts, colW, rowH, pad, width: Math.max(box.width, pad.left + depth * colW + pad.right), height: Math.max(box.height, top + used + pad.bottom) };
+}
+function scoreColor(s) {
+  const dark = state.mode === "dark";
+  const loss = dark ? [224, 98, 90] : [180, 35, 24], draw = dark ? [139, 134, 118] : [143, 138, 122], win = dark ? [63, 191, 111] : [21, 128, 61];
+  const t = Math.min(1, Math.max(0, (s - 0.3) / 0.4));
+  const [a, b, u] = t < 0.5 ? [loss, draw, t * 2] : [draw, win, (t - 0.5) * 2];
+  return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * u)).join(" ")})`;
+}
+function drawTree() {
+  const scroll = document.getElementById("vscroll");
+  const lay = layout({ width: scroll.clientWidth, height: scroll.clientHeight });
+  const at = (id) => lay.pts.get(id);
+  const onPath = new Set(pathOf(current).map((x) => x.id)); onPath.add("");
+  const games = state.view === "games";
+  const rootGames = Math.max(root.games, 1);
+  let grid = "", edges = "", dots = "", labels = "", hits = "";
+  for (let d = 0; d <= depth; d++) {
+    const x = lay.pad.left + d * lay.colW;
+    grid += `<line x1="${x}" x2="${x}" y1="${lay.pad.top - 10}" y2="${lay.height - lay.pad.bottom + 6}" class="bv-grid"/>`;
+    if (d % 2) grid += `<text x="${x}" y="13" class="bv-ruler">${Math.ceil(d / 2)}</text>`;
+  }
+  for (const x of nodes) {
+    const c = at(x.id);
+    const reached = x.games > 0;
+    if (x.parent) {
+      const p = at(x.parent.id), k = lay.colW * 0.55;
+      let width = 0.7 + 3.3 * (x.size / root.size), style = "", cls = "bv-edge";
+      if (games && state.style !== "B") {
+        if (reached) style = ` style="stroke:${scoreColor(x.score)}"`; else cls += " cold";
+        if (state.style === "C") width = reached ? 0.9 + 7 * Math.sqrt(x.games / rootGames) : 0.7;
+      } else if (onPath.has(x.id)) cls += " on-path";
+      edges += `<path d="M${p.x},${p.y} C${p.x + k},${p.y} ${c.x - k},${c.y} ${c.x},${c.y}" class="${cls}" stroke-width="${width.toFixed(2)}"${style}/>`;
+    }
+    const kind = !x.san ? "root" : x.ply % 2 ? "wm" : "bm";
+    const clash = x.ply % 2 === 0 && x.children.length > 1 ? " clash" : "";
+    const fill = games && state.style === "B" && reached && x.san ? ` style="fill:${scoreColor(x.score)}"` : "";
+    const r = games && state.style === "B" && reached && x.san ? 3.8 : x.san ? 2.8 : 4.2;
+    dots += `<circle cx="${c.x}" cy="${c.y}" r="${r}" class="bv-node ${kind}${clash}${onPath.has(x.id) ? " on-path" : ""}${x === current ? " current" : ""}"${fill}/>`;
+    const isKid = x.parent === current, isHi = isKid && current.children[hi] === x;
+    if (isHi) dots += `<circle cx="${c.x}" cy="${c.y}" r="7.5" class="bv-ring"/>`;
+    const shown = onPath.has(x.id) || isKid || (lay.rowH >= 11 && (x.ply <= 3 || x.size >= 10));
+    const above = !x.san || x.ply % 2 === 1;
+    labels += `<text x="${c.x}" y="${above ? c.y - 6 : c.y + 12}" text-anchor="middle" class="bv-label${shown ? "" : " minor"}${onPath.has(x.id) ? " on-path" : ""}${isKid ? " kid" : ""}${isHi ? " hi" : ""}${x === current ? " current" : ""}">${x.san ?? "Start"}</text>`;
+    hits += `<circle cx="${c.x}" cy="${c.y}" r="7" class="bv-hit" data-id="${x.id}"><title>${x.san ? moveText(x) : "Start"}${reached ? ` · ${n(x.games)} of your games · ${pct(x.score)}` : " · none of your games"}</title></circle>`;
+  }
+  scroll.innerHTML = `<svg width="${lay.width}" height="${lay.height}" viewBox="0 0 ${lay.width} ${lay.height}" role="img" aria-label="Ply columns of Italian Game">${grid}${edges}${dots}${labels}${hits}</svg>`;
+  return lay;
+}
+function follow(lay, smooth) {
+  const scroll = document.getElementById("vscroll");
+  const pts = [current, ...current.children].map((x) => lay.pts.get(x.id));
+  const m = 34, here = lay.pts.get(current.id);
+  const minX = Math.min(...pts.map((p) => p.x)) - m, maxX = Math.max(...pts.map((p) => p.x)) + m;
+  const minY = Math.min(...pts.map((p) => p.y)) - m, maxY = Math.max(...pts.map((p) => p.y)) + m;
+  const w = scroll.clientWidth, h = scroll.clientHeight;
+  let left = scroll.scrollLeft, top = scroll.scrollTop;
+  if (maxX - minX > w) left = here.x - w * 0.3; else if (minX < left) left = minX; else if (maxX > left + w) left = maxX - w;
+  if (maxY - minY > h) top = here.y - h / 2; else if (minY < top) top = minY; else if (maxY > top + h) top = maxY - h;
+  scroll.scrollTo({ left: Math.max(0, left), top: Math.max(0, top), behavior: smooth ? "smooth" : "auto" });
+}
+function boardHtml(list) {
+  const game = new Chess(); let last = null;
+  for (const x of list) last = game.move(x.san);
+  const glyph = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟", K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙" };
+  const square = (r, f, ch) => {
+    const name = "abcdefgh"[f] + (8 - r);
+    const mark = last && last.from === name ? " from" : last && last.to === name ? " to" : "";
+    return `<i class="${(r + f) % 2 ? "d" : "l"}${ch ? (ch === ch.toUpperCase() ? " wp" : " bp") : ""}${mark}">${ch ? glyph[ch] + "︎" : ""}</i>`;
+  };
+  let out = "";
+  game.fen().split(" ")[0].split("/").forEach((row, r) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) for (let i = 0; i < Number(ch); i++, f++) out += square(r, f, null); else out += square(r, f++, ch); } });
+  return out;
+}
+
+// ── The page ───────────────────────────────────────────────────────────────────────────────
+function facts() {
+  return `<dl class="facts">
+    <div class="wide"><dt>Difficulty</dt><dd><span class="level" aria-hidden="true">${[1, 2, 3, 4, 5].map((i) => `<i class="${i <= level ? "on" : ""}"></i>`).join("")}</span>${level} · ${LEVELS[level - 1]} <span class="soft">· publisher: 3 · Medium · ${n(ownMoves)} moves to remember</span></dd></div>
+    <div><dt>Positions</dt><dd>${n(nodes.length - 1)} <span class="soft">/ 1,000</span></dd></div>
+    <div><dt>Lines</dt><dd>${n(leaves.length)}</dd></div>
+    <div><dt>Clashes</dt><dd>${n(clashes)}</dd></div>
+    <div><dt>Average line</dt><dd>${averageLine.toFixed(1)} <span class="soft">plies</span></dd></div>
+    <div><dt>Longest line</dt><dd>${depth} <span class="soft">plies</span></dd></div>
+    <div><dt>Coverage</dt><dd>64% <span class="soft">of master games</span></dd></div>
+  </dl>`;
+}
+function publisher() {
+  return `<div class="pub"><span class="tag" style="color:var(--foreground)">ByTheBook</span>${icon("check")}<span>Verified</span><span>·</span><span class="stars" aria-label="4.6 of 5 stars">★★★★★</span><b style="color:var(--foreground)">4.6</b><span>(128)</span><span>· 2,340 saves ·</span><a>31 reviews in the Bookstore</a></div>`;
+}
+const description = `<p class="desc">1.e4 e5 2.Nf3 Nc6 3.Bc4: the Giuoco Piano, the Two Knights Defense, the Evans Gambit and their sidelines.</p>`;
+const actions = `<div class="row"><button class="btn primary">Open in Explorer</button><button class="btn outline">Train</button><button class="btn icon ghost" aria-label="More">${icon("dots")}</button></div>`;
+function choices() {
+  return `${seg("view", [["plain", "Plain"], ["games", "Your games"], ["drills", "Drills <em>soon</em>", true]])}
+    ${state.view === "games" ? `<button class="which" data-open="which">All 1,160 games as White ${icon("chev")}</button>` : ""}`;
+}
+function views() {
+  return seg("vk", [["ply", "Ply columns"], ["metro", "Metro map"], ["spine", "Spine and ribs"], ["icicle", "Icicle"], ["branch", "Branch points"]]);
+}
+const zoom = () => `<span class="zoom" aria-label="Zoom"><button data-zoom="-1" aria-label="Zoom out">−</button><span>${state.zoom === 1 ? "Fit" : `${ZOOMS[state.zoom - 1]}×`}</span><button data-zoom="1" aria-label="Zoom in">+</button></span>`;
+function seg(key, items) {
+  return `<div class="seg" data-key="${key}">${items.map(([v, label, off]) => `<button data-value="${v}" aria-pressed="${key === "vk" ? v === "ply" : state[key] === v}" ${off ? "disabled" : ""}>${label}</button>`).join("")}</div>`;
+}
+function leaveList() {
+  return `<section class="leave" aria-label="Where you leave this book"><div class="lhead"><h3>Where you leave this book</h3><span class="sc">${n(EXITS.length)} places · ${n(stayed)} games reached a line's end</span></div>
+    ${EXITS.slice(0, 10).map((e, i) => `<div class="lrow" data-exit="${i}"><span class="who ${e.who === "you" ? "you" : ""}">${e.who === "you" ? "You" : "Opponent"}</span><b>${exitText(e)}</b><span class="soft">after ${e.from.san ? lineText(pathOf(e.from).slice(-3)) : "the start"}; the book has ${e.from.children.slice(0, 2).map((k) => k.san).join(", ")}</span><span class="fig">${n(e.games)}</span><span class="bar">${wdlBar(e)}</span><span class="fig pct">${pct(e.score)}</span></div>`).join("")}
+  </section>`;
+}
+function renderShell() {
+  const mock = document.getElementById("mock");
+  mock.dataset.mode = state.mode; mock.dataset.width = state.width;
+  const shelf = [["Italian Game", "w", 338], ["Caro-Kann Defense", "b", 256], ["Queen's Gambit", "w", 198], ["London System", "w", 164], ["Sicilian Najdorf", "b", 402], ["King's Indian Defense", "b", 288], ["Ruy Lopez", "w", 253], ["Scandinavian Defense", "b", 97], ["Gambits for fun", "w", 131]];
+  const running = `<div class="running"><span class="sc">White · saved from the Bookstore</span><i>Italian Game</i></div><button class="btn ghost back" style="display:none;margin-left:-10px">${icon("back")} Back to the Library</button>`;
+  const title = `<div class="title"><h2>Italian Game</h2><span class="small soft"><span class="side w"></span>White</span>`;
+  const viewHead = state.layout === "B"
+    ? `<div class="toolbar">${views()}<span class="grow"></span>${zoom()}</div><div class="toolbar"><span class="small soft">Show</span>${choices()}</div>`
+    : `<div class="toolbar">${views()}<span class="grow"></span>${zoom()}</div>`;
+  const top = state.layout === "B"
+    ? `${running}<div class="headgrid"><div>${title}</div>${publisher()}${description}${actions}</div><div>${facts()}</div></div>`
+    : `${running}${title}<span class="grow"></span>${choices()}</div>`;
+  const about = state.layout === "A" ? `<section class="about" aria-label="About this book"><div><span class="sc">About this book</span>${publisher()}${description}${actions}</div><div>${facts()}</div></section>` : "";
+  mock.innerHTML = `
+    <div class="topbar"><span class="brand">ByTheBook</span><nav class="tabs" aria-label="Pages"><span>Overview</span><span>Explorer</span><span>Visualizations</span><span aria-current="page">Library</span><span>Bookstore</span><span>Train</span><span>Puzzles</span><span>Settings</span></nav>
+      <span class="grow"></span><span class="guest">Browsing as a guest</span><button class="desk-btn">Create account</button></div>
+    <div class="book"><div class="spread">
+      <section class="pg left" aria-label="Left page"><div class="shelf-head"><span class="sc">Library · 9 books</span><a href="#" onclick="return false">Back to the Library</a></div>
+        <div class="shelf">${shelf.map(([name, side, p], i) => `<div ${i === 0 ? 'aria-current="true"' : ""}><span class="side ${side}"></span>${name}<span class="dots"></span><span class="fig">${p}</span></div>`).join("")}</div></section>
+      <section class="pg right" aria-label="Right page">
+        ${top}
+        ${viewHead}
+        <div class="body"><div class="viewcol"><div class="viewbox"><div class="vscroll" id="vscroll" tabindex="0" aria-label="The book's tree. Arrow keys walk it."></div></div><div class="hint" id="hint"></div></div><div class="pos" id="pos"></div></div>
+        ${state.view === "games" ? leaveList() : ""}
+        ${about}
+      </section>
+    </div></div>
+    ${state.dialog ? `<div class="scrim"><div class="dialog" role="dialog" aria-label="Which games"><h3>Which games</h3><p class="small soft">Your games as White, from your game history. The same filters as the history page.</p>
+      <label><input type="checkbox" checked> Chess.com · 21 Oct 2026 · 3,264</label><label><input type="checkbox" checked> Lichess · 2 Oct 2026 · 412</label><label><input type="checkbox" checked> Other · 14 Sep 2026 · 9</label>
+      <label><input type="checkbox" checked> Bullet</label><label><input type="checkbox" checked> Blitz, rapid and classical</label><label><input type="checkbox"> Daily</label>
+      <div class="foot"><button class="btn outline" data-close>Cancel</button><button class="btn primary" data-close>Show 1,160 games</button></div></div></div>` : ""}`;
+  for (const chip of document.querySelectorAll(".studio .chip")) chip.setAttribute("aria-pressed", String(state[chip.parentElement.dataset.key] === chip.dataset.value));
+  bind();
+  renderPosition(false);
+}
+function renderPosition(smooth = true) {
+  const path = pathOf(current);
+  const games = state.view === "games";
+  const here = EXITS.filter((e) => e.from === current);
+  document.getElementById("pos").innerHTML = `<div class="board" aria-label="Board">${boardHtml(path)}</div>
+    <span class="sc">Selected</span><div class="mv">${current.san ? moveText(current) : "Start"}</div><div class="line">${path.length ? lineText(path) : "Before the first move"}</div>
+    ${games ? (current.games ? `<div class="small"><b class="fig">${n(current.games)}</b> of your games reached it · <span class="fig">${current.w} · ${current.d} · ${current.l}</span> · <b class="fig">${pct(current.score)}</b></div>${wdlBar(current)}` : `<div class="small soft">None of your games reached it.</div>`) : `<div class="small soft">${n(current.size)} lines through it</div>`}
+    ${current.children.length ? `<span class="sc" style="margin-top:4px">Next in the book</span>${current.children.map((x, i) => `<div class="nrow" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="fig soft">${games ? n(x.games) : x.size}</span>${games ? wdlBar(x) : "<span></span>"}<span class="fig">${games && x.games ? pct(x.score) : ""}</span></div>`).join("")}` : `<span class="small soft">The end of this line.</span>`}
+    ${games && here.length ? `<span class="sc" style="margin-top:4px">Left the book here</span>${here.slice(0, 4).map((e) => `<div class="nrow" style="cursor:default"><b>${exitText(e)}</b><span class="fig soft">${e.games}</span>${wdlBar(e)}<span class="fig">${pct(e.score)}</span></div>`).join("")}` : ""}
+    <button class="btn outline" style="margin-top:4px;justify-content:center">Open position in Explorer</button>`;
+  document.getElementById("hint").innerHTML = `<span><kbd>↑</kbd> <kbd>↓</kbd> choose a move</span><span><kbd>→</kbd> play it</span><span><kbd>←</kbd> back</span><span>Drag to look around</span><span class="grow"></span>${games ? `<span>Your score <span class="ramp"></span> 30% → 70%+${state.style === "C" ? " · thickness: your games" : ""} · faint: no games</span>` : ""}`;
+  follow(drawTree(), smooth);
+}
+function goTo(node, from) { current = node; hi = from ? Math.max(0, node.children.indexOf(from)) : 0; renderPosition(); }
+function bind() {
+  const mock = document.getElementById("mock");
+  for (const group of mock.querySelectorAll('.seg[data-key="view"]')) group.addEventListener("click", (e) => { const b = e.target.closest("button:not([disabled])"); if (b) { state.view = b.dataset.value; renderShell(); } });
+  for (const b of mock.querySelectorAll("[data-zoom]")) b.addEventListener("click", () => { state.zoom = Math.min(ZOOMS.length, Math.max(1, state.zoom + Number(b.dataset.zoom))); renderShell(); });
+  mock.querySelector("[data-open]")?.addEventListener("click", () => { state.dialog = true; renderShell(); });
+  for (const b of mock.querySelectorAll("[data-close]")) b.addEventListener("click", () => { state.dialog = false; renderShell(); });
+  mock.querySelector("#pos").addEventListener("click", (e) => { const r = e.target.closest(".nrow[data-id]"); if (r) goTo(all.get(r.dataset.id)); });
+  for (const r of mock.querySelectorAll(".lrow")) r.addEventListener("click", () => goTo(EXITS[Number(r.dataset.exit)].from));
+  const scroll = mock.querySelector("#vscroll");
+  scroll.addEventListener("keydown", (event) => {
+    const kids = current.children;
+    if (event.key === "ArrowDown" && kids.length) hi = Math.min(kids.length - 1, hi + 1);
+    else if (event.key === "ArrowUp" && kids.length) hi = Math.max(0, hi - 1);
+    else if (event.key === "ArrowRight" && kids.length) { event.preventDefault(); goTo(kids[hi]); return; }
+    else if (event.key === "ArrowLeft" && current.parent) { event.preventDefault(); goTo(current.parent, current); return; }
+    else return;
+    event.preventDefault(); renderPosition();
+  });
+  let drag = null;
+  scroll.addEventListener("pointerdown", (event) => { drag = { x: event.clientX, y: event.clientY, left: scroll.scrollLeft, top: scroll.scrollTop, moved: false, target: event.target }; scroll.setPointerCapture(event.pointerId); });
+  scroll.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+    drag.moved = true; scroll.classList.add("dragging");
+    scroll.scrollLeft = drag.left - dx; scroll.scrollTop = drag.top - dy;
+  });
+  scroll.addEventListener("pointerup", () => {
+    if (drag && !drag.moved) { const id = drag.target.closest?.("[data-id]")?.dataset.id; if (id !== undefined) goTo(all.get(id)); }
+    scroll.classList.remove("dragging"); drag = null; scroll.focus({ preventScroll: true });
+  });
+}
+for (const group of document.querySelectorAll(".studio .chips")) group.addEventListener("click", (e) => { const chip = e.target.closest(".chip"); if (!chip) return; state[group.dataset.key] = chip.dataset.value; renderShell(); });
+let resizeTimer; addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => renderPosition(false), 150); });
+renderShell();
+</script>
+</body>
+</html>

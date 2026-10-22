@@ -242,7 +242,8 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   from. "Add lines in the Explorer" is recommended: the Explorer opens with the book chosen
   (`explorerHref`, `src/lib/library/links.ts`). "Paste moves or PGN" reads the paste with
   `readPgn` (`src/lib/library/pgn.ts`), which replays every move, makes each bracketed
-  variation its own line, and names the first illegal move.
+  variation its own line, and names the first illegal move. It reads with the PGN tokenizer
+  that the game history import shares (`src/lib/chess/pgnTokens.ts`).
 - **Back up** downloads every book as the version 1 file (`src/lib/library/backup.ts`), through
   `useBackup` (`src/components/library/useBackup.ts`), which the Settings page shares.
   **Restore** reads one into the checklist (`CopyChecklist`, `src/lib/library/copyPlan.ts`),
