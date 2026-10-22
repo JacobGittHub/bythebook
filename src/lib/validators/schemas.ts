@@ -2,6 +2,7 @@ import { z } from "zod";
 import { isValidFen, normalizeFen } from "@/lib/chess/fen";
 import { cleanBookName, MAX_BOOK_NAME } from "@/lib/library/names";
 import { bookOriginSchema } from "@/lib/library/types";
+import { historyCommitSchema, roomRequestInputSchema, storedChunkSchema } from "@/lib/history/types";
 
 export const colorSchema = z.enum(["white", "black"]);
 
@@ -98,6 +99,20 @@ export const patchBookSchema = z
     "Nothing to change.",
   );
 
+// A game history's version as the client read it; a write planned from an older one is refused
+// with 409 (plans/game-history.md, step 12).
+const expectedVersionSchema = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
+
+// One chunk of a history write, staged until the commit. Its games are checked here, so the
+// commit is checked from the staged chunks' sizes (`checkedCommit`, src/lib/history/writes.ts).
+export const stageHistoryChunkSchema = z
+  .object({ expectedVersion: expectedVersionSchema, games: storedChunkSchema.shape.games })
+  .strict();
+
+export const commitHistorySchema = historyCommitSchema.extend({ expectedVersion: expectedVersionSchema });
+
+export const roomRequestSchema = roomRequestInputSchema;
+
 export const schemas = {
   createBook: createBookSchema,
   patchBook: patchBookSchema,
@@ -108,4 +123,7 @@ export const schemas = {
   credentials: credentialsInputSchema,
   register: registerInputSchema,
   resetPassword: resetPasswordInputSchema,
+  stageHistoryChunk: stageHistoryChunkSchema,
+  commitHistory: commitHistorySchema,
+  roomRequest: roomRequestSchema,
 };

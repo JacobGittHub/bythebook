@@ -138,14 +138,34 @@ export const historyImportSchema = z
   .strict();
 export type HistoryImport = z.infer<typeof historyImportSchema>;
 
+/** The most games an account may ask to keep (D37). */
+export const MAX_GAME_HISTORY_REQUEST = 50_000;
+/** The longest reason an account may give when asking for more room (D37). */
+export const MAX_ROOM_REQUEST_REASON_CHARS = 200;
+
+/** What an account asks for when it wants more room (D37). */
+export const roomRequestInputSchema = z
+  .object({
+    games: z.number().int().min(1).max(MAX_GAME_HISTORY_REQUEST),
+    reason: z.string().trim().max(MAX_ROOM_REQUEST_REASON_CHARS),
+  })
+  .strict();
+export type RoomRequestInput = z.infer<typeof roomRequestInputSchema>;
+
+/** An account's latest request for more room, which the user answers from the SQL editor. */
+export type RoomRequest = RoomRequestInput & { at: string; status: "pending" | "granted" | "declined" };
+
 /** A history's summary, which is read before any games are. */
 export type HistorySummary = {
   /** Games kept. */
   games: number;
   /** The most games the history may keep (D18, D25). */
   limit: number;
-  /** Each stored chunk's number and how many games it holds, in order. */
-  chunks: { n: number; games: number }[];
+  /**
+   * Each stored chunk's number, how many games it holds and the version that last wrote it, in
+   * order; the account's browser copy fetches a chunk again only when its version changes.
+   */
+  chunks: { n: number; games: number; version: number }[];
   /** The name the last import read as the user's (D22). */
   username: string | null;
   lastImportAt: string | null;
@@ -153,19 +173,29 @@ export type HistorySummary = {
   imports: HistoryImport[];
   /** Goes up with every write, so a write planned from an older read is refused. */
   version: number;
+  /** An account's latest request for more room (D37); always null for a guest's. */
+  roomRequest: RoomRequest | null;
 };
 
 /** One import's change to a history: the chunks written whole, the chunks deleted, and the imports after it. */
 export type HistoryWrite = { chunks: StoredChunk[]; deleted: number[]; username: string; imports: HistoryImport[] };
 
-export const historyWriteSchema = z
-  .object({
-    chunks: z.array(storedChunkSchema),
-    deleted: z.array(z.number().int().min(0)),
-    username: z.string().trim().min(1).max(MAX_USERNAME_CHARS),
-    imports: z.array(historyImportSchema).max(MAX_HISTORY_IMPORTS),
-  })
-  .strict();
+const chunkNumbersSchema = z.array(storedChunkSchema.shape.n).max(1_000);
+const writeFields = {
+  deleted: chunkNumbersSchema,
+  username: z.string().trim().min(1).max(MAX_USERNAME_CHARS),
+  imports: z.array(historyImportSchema).max(MAX_HISTORY_IMPORTS),
+};
+
+export const historyWriteSchema = z.object({ chunks: z.array(storedChunkSchema), ...writeFields }).strict();
+
+/**
+ * A write as an account commits it: its chunks named by number, since each was sent on its own
+ * first (staged), as one write can be larger than a request may be.
+ */
+export type HistoryCommit = { written: number[]; deleted: number[]; username: string; imports: HistoryImport[] };
+
+export const historyCommitSchema = z.object({ written: chunkNumbersSchema, ...writeFields }).strict();
 
 /**
  * Where a viewer's games are kept: this browser for a guest (D14), the account for a signed-in
@@ -180,6 +210,8 @@ export type GameHistoryStore = {
   write(change: HistoryWrite, expectedVersion: number): Promise<HistorySummary>;
   /** Deletes every game. */
   clear(): Promise<void>;
+  /** Asks for more room (D37). Only an account's store has it: a guest's games have no one to ask. */
+  requestRoom?(request: RoomRequestInput): Promise<RoomRequest>;
 };
 
 /**

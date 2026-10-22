@@ -277,7 +277,9 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   The import runs in `GameImportProvider` (`src/context/GameImport.tsx`), in the dashboard
   layout, so it carries on across pages. A viewer elsewhere when it ends gets a toast with a
   close button and the way back here, and the browser asks before a tab with an import running
-  closes. Only guests can import until accounts have their storage (game history Phase 3).
+  closes. A guest's games stay in the browser and an account's in the database. The section's
+  menu deletes every game, after asking, and an account whose games don't fit can ask for more
+  room from the dialog.
 
 ## Bookstore
 

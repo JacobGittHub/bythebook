@@ -158,8 +158,11 @@ direction"; the user expects one more round of adjustments before building.
   - the board's side keeps its size as the position changes: the moves played next sit in a
     box of fixed height that scrolls inside, so a position with many moves never reflows the
     page.
+  - the side can be White, Black or both at once (the user's word after the third mockup
+    round). With both, the tree holds every game from the starting position, and the score at a
+    position is the user's, whichever side they played.
   
-  How the filters are laid out is Q22. Choosing imports means each game records which import it came from, and the history keeps a
+  How the filters are laid out is D38. Choosing imports means each game records which import it came from, and the history keeps a
   list of its imports (when, which file, how many games); the step 8 store gains both before
   Phase 3's migration is written.
 - D31. **Ply columns is the default view on second-level pages:** a book's own page in the
@@ -187,6 +190,10 @@ direction"; the user expects one more round of adjustments before building.
   - Below 1 the drawing is hard to read, so the current position and the highlighted move are
     marked at a fixed size on screen, whatever the zoom: a ring and a label that don't shrink
     with the drawing.
+  - The camera's own moves, panning and zooming to frame a new position, are eased transitions
+    of about a quarter of a second, not jumps (the user found the mockup's "too snappy and
+    instant"). Dragging and the wheel follow the hand at once, and a browser set to reduce
+    motion gets jumps.
 
 From the user's answers to Q15, Q16 and Q18–Q20, and their second look at the mockups,
 2026-10-21.
@@ -197,7 +204,7 @@ From the user's answers to Q15, Q16 and Q18–Q20, and their second look at the 
   - Import them all and remove the games imported earliest.
   - Import none of them. For a signed-in beta account, this choice also lets the user ask for
     more room ("beta account holders should be allowed to submit a petition for increased game
-    storage"), which Q21 settles. A guest's history lives in their browser, so there is no one
+    storage"), which D37 settles. A guest's history lives in their browser, so there is no one
     to ask.
 - D34. **The import also takes pasted PGN** (Q16), for a few over-the-board games. The text
   goes through the same worker as a file, as a file of its own, with the same caps.
@@ -213,56 +220,52 @@ From the user's answers to Q15, Q16 and Q18–Q20, and their second look at the 
     apart, as drawn, and each is a box of fixed height that scrolls inside. The panel doesn't
     reflow as the position changes.
   - "Where you leave this book" scrolls inside its own box.
-  - The button for which games ("All 1,160 games as White") opens the checkboxes (Q22), so it
+  - The button for which games ("All 1,160 games as White") opens the checkboxes (D38), so it
     doesn't look like a dropdown: no arrow. Blitz, Rapid and Classical are separate checkboxes
     in it.
   - Difficulty is `bookstore.md` D17: the publisher's first, color coded, 0.0 to 5.0.
+  
+  *From the user's third look (2026-10-21):*
+  - Fewer scrollbars. Only the boxes above scroll inside; the page itself fits its spread where
+    the screen allows, and the drawing grows down into the space that was left empty below it.
+  - "Open in Explorer" sits right above the board, in the line with the position's name, not in
+    a row of its own, to save height.
+  - The publisher's and the measured difficulty are two dots on one scale, the publisher's
+    larger, with both numbers written.
+  - A little more space between the rating and "positions to remember".
+  - A "Leaderboard" link sits next to the reviews link (`bookstore.md` D18).
+
+From the user's answers to Q21 and Q22, 2026-10-21.
+
+- D37. **A beta account asks for more room with a row, one at a time (Q21).** Under the third
+  choice (D33), a signed-in account asks for a number of games, up to
+  `MAX_GAME_HISTORY_REQUEST` (50,000), with an optional reason of at most 200 characters. It
+  saves a row in `game_limit_requests` through one route, which answers a guest with 401. An
+  account has at most one pending request at a time ("one active request per account, 200
+  chars max"), which the database enforces. The user reads the requests in the SQL editor, sets
+  the account's `account_limits` row and marks the request granted or declined. Until then the
+  dialog says "Asked for more room on 21 Oct"; after a decline, the account may ask again. A row
+  rather than an email ties the request to the account and keeps them all in one place.
+- D38. **Choosing games (Q22), as `game-history.html` draws it** ("Looks good right now, but I
+  want the option to view all games"):
+  - The side is a toggle beside the title: White, Black or Both (D30), Both first, since the
+    page opens on all of the user's games. Every other choice is a set of checkboxes that all
+    start ticked, each with its number of games.
+  - Time is one list: Bullet, Blitz, Rapid, Classical and Daily, each with its exact time
+    controls nested beneath it; a class is part-ticked when only some of them are.
+  - Sources and imports are one list: Chess.com, Lichess and Other, each with its imports
+    nested beneath.
+  - Dates are a strip of games per month across the page, dragged to choose a span, with
+    presets beside it (3 months, a year, all).
+  - One row of buttons says what is chosen ("Blitz, Rapid · 2,140", "All sources", "Since Mar
+    2025"), each opening its checkboxes in a popover, with no dropdown arrow. "All games" ends
+    the row, in place of Reset: it ticks everything, both sides and every date, so every game is
+    one click away.
+  - The book page's "which games" uses the same panels in its dialog; its side is the book's.
 
 ## Open questions
 
-Q15–Q20 are settled by D29 and D33–D36.
-
-- Q21. How does a beta account ask for more room (D33)?
-  - **Rec:** a short form under the third choice: how many games the user would like (up to
-    50,000) and an optional reason (at most 200 characters). It saves one row per account in a
-    new `game_limit_requests` table, through one route that answers a guest with 401. The user
-    reads the requests in the SQL editor and answers by setting the account's `account_limits`
-    row (D25). Until then the dialog says "Asked for more room on 21 Oct". A request is a row, not
-    an email, so it is tied to the account, and the user sees them all in one place. It is built
-    with the account's storage in Phase 3, since guests can't ask.
-  - The alternative is a link that opens an email to the beta contact address
-    (`NEXT_PUBLIC_BETA_CONTACT_EMAIL`). It needs no table, but it depends on the user's mail app
-    and isn't tied to the account.
-
-> ME:
-
-- Q22. How does the user choose which games, on the history page and in the book page's
-  "which games"? The user found the first mockup's controls inconsistent: the imports were
-  checkboxes but the other choices weren't, time control appeared twice, and the date was a
-  dropdown. `game-history.html` draws this proposal:
-  - **One kind of control per kind of choice.** The side is the only either/or, since the tree
-    is drawn from one side, so it is a two-button toggle beside the title ("Your games as White
-    | Black"). Every other choice is a set of checkboxes that all start ticked, each with its
-    number of games. Dates are a span.
-  - **Time is one list, not two.** Bullet, Blitz, Rapid, Classical and Daily, each with its
-    exact time controls nested beneath it (3+0, 3+2, 5+0…). A class is part-ticked when only
-    some of its controls are.
-  - **Sources and imports are one list.** Chess.com, Lichess and Other, each with its imports
-    beneath ("12 Oct · 3,264 games"), nested the same way. This folds the site filter and the
-    choice of imports together.
-  - **Dates are a strip of games per month** across the page: a small histogram, dragged to
-    choose a span, with presets beside it (3 months, a year, all). It shows when the user played
-    as well as filtering.
-  - **On the page:** one row of buttons that say what is chosen ("Blitz, Rapid · 2,140", "All
-    sources", "Since Mar 2025"). Each opens its checkboxes in a popover, and Reset sits at the
-    end of the row. The buttons have no dropdown arrow, since they open panels, not menus. The
-    date strip sits under the row, above the totals bar.
-  - **The book page's "which games" uses the same panels,** in its dialog, so a choice reads the
-    same in both places.
-  - **Rec:** this. The alternative is a filter column that is always open, with every checkbox
-    in view. It is quicker to change but takes half the room from the list of games.
-
-> ME:
+Q15–Q22 are settled by D29 and D33–D38.
 
 ## Steps
 
@@ -313,16 +316,18 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
   Phase 3 routes share: records that pass their schema, at most the limit of games, at most
   `chunkCap` chunks. `saveImport` merges an import and writes it. `useGameHistory()`
   (`src/hooks/`) gives a guest the browser's store and, until Phase 3, a signed-in viewer none.
-- [ ] 9. Mockups (agent, then user): the import dialog, the history page and the book page's
+- [x] 9. Mockups (agent, then user): the import dialog, the history page and the book page's
   success view, saved in `plans/mockups/` with the app's tokens and controls. The user picks
   before any of them is built. Made 2026-10-21 as `game-import.html`, `game-history.html` and
-  `book-success.html`; the first picks are D29–D32, the second D33–D36. The history page's
-  filters wait on Q22, whose proposal `game-history.html` draws.
+  `book-success.html`; the first picks are D29–D32, the second D33–D36, the third D37–D38 and
+  the amendments to D30, D32 and D36 ("mockups look great"). The mockups don't draw the third
+  round's small changes (Both, the eased camera, the book page's tighter layout); the
+  decisions' text does, and the steps that build those pages follow it.
 - [x] 10. The import (agent, D29), which replaces the Library's "coming soon" line
   (`src/components/library/LibraryPage.tsx`). The dialog: a file picker or pasted PGN (D34), the
   first pass's summary, the username with its live match count, what is kept (40 plies, the
   limit, no opponents' names), the notice for browsers that may delete data (D14), and the three
-  choices when the new games don't fit (D33; asking for more room waits on Q21 and Phase 3).
+  choices when the new games don't fit (D33; asking for more room is D37, in Phase 3).
   Then, fixed at the bottom of the Library's left page under the scrolling book list (Q18):
   progress with Cancel, and the report: imported, duplicates, skipped by reason, the name
   mismatch prominent when large (D22), left out and removed. The import session lives in a
@@ -338,26 +343,55 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
 
 **Phase 3. An account's storage**
 
-- [ ] 11. The migration (agent writes, user runs, agent runs `npm run db:types`):
-  `game_history`, one row per user with the game count, chunk count, a version for writes
-  that check what they replace, the username and the last import's time;
-  `game_history_chunks`, keyed by user and chunk number, with `games` and `clocks` (JSONB)
-  and the game count; `account_limits`, games allowed per user, which the owner can read and
-  only the service role writes. Rows are private to their owner under RLS and go when the
-  account does.
-- [ ] 12. Database access and routes (agent): `src/lib/db/gameHistory.ts`, and under
-  `/api/history` a GET of the summary, with the chunks when the browser's copy is out of date
-  (capped by the limit, clocks only when asked); a write of an import's changed and deleted
-  chunks, checked by `writes.ts` against the user's limit (their `account_limits` row or the
-  default) and refused when the version has moved on; a DELETE of everything. Chunk numbers
+- [ ] 11. The migration (agent writes, user runs, agent runs `npm run db:types`),
+  `supabase/migrations/<ts>_game_history.sql`:
+  - `game_history`, one row per user: the game count, the chunks (each one's number, games and
+    the version that last wrote it), the imports, the username, the last import's time, and a
+    version for writes that check what they replace;
+  - `game_history_chunks`, keyed by user and chunk number: `games` (the records with their
+    import) and `clocks` as JSONB, the game count and the version that wrote it;
+  - `game_history_staged`: the chunks of a write still being sent, the same shape plus the
+    version they were planned from and the imports their games name;
+  - `account_limits`, the games allowed per user (D18), and `game_limit_requests` (D37), with
+    one pending request per user enforced by a unique index.
+  
+  Owners can read their own rows, and no one can write the tables through the API. Writes go
+  through three functions, `stage_game_history_chunk`, `commit_game_history` and
+  `clear_game_history`, which only the service role may run; the routes call them after taking
+  the user from the session. Each locks the user's summary row, and the commit checks the version,
+  the total against the limit, and that every chunk it names was staged from that version. So the
+  server's caps can't be skipped by writing to the tables directly (D13, D18), as the books'
+  "own books" rule would allow. Rows go when the account does.
+- [ ] 12. Database access and routes (agent), `src/lib/db/gameHistory.ts`, under `/api/history`:
+  - `GET /api/history`: the summary, the limit (the `account_limits` row or the default) and the
+    latest request for room;
+  - `GET /api/history/chunks/[n]`: one chunk, with its clocks;
+  - `PUT /api/history/chunks/[n]`: stages one chunk of a write planned from a version, refused
+    when the version has moved on or more than `chunkCap` chunks are staged;
+  - `POST /api/history`: commits a write, naming the chunks written and deleted, the username
+    and the imports. `writes.ts` checks it against the stored and staged chunks' sizes and the
+    imports their games name, so the route reads no games;
+  - `DELETE /api/history`: everything;
+  - `POST /api/history/requests`: asks for more room (D37).
+  
+  A write is staged because an import can change up to 11 chunks, about 6 MB, past Vercel's
+  4.5 MB per request. The chunks go one per request and appear together at the commit; an
+  import abandoned midway leaves only staged rows, which the next write replaces. Chunk numbers
   grow with each import (D28), so the server caps the games and the number of chunks, not the
-  chunk number. Each validates with Zod, answers a
-  guest with 401, takes the user from the session and counts its call with `recordUsage` (new
-  kinds `history_read` and `history_write`). A chunk of 1,000 games is about 0.5 MB, well
-  under Vercel's 4.5 MB. Asking for more room (D33), as Q21 settles.
-- [ ] 13. The account store (agent), with its IndexedDB copy keyed by the summary's version, so
-  opening a page reads only the summary row. Delete all history, behind an AlertDialog, for
-  both stores.
+  chunk number. Each route validates with Zod, answers a guest with 401, takes the user from the
+  session and counts its call with `recordUsage` (new kinds `history_read` and `history_write`).
+- [ ] 13. The account store (agent), `src/lib/history/accountHistory.ts`, with an IndexedDB copy of
+  the chunks: the summary lists the version that wrote each chunk, so opening a page reads the
+  summary and fetches only the chunks that changed, and a monthly import refetches one. The copy
+  belongs to one account and is deleted when a guest or another account opens the dashboard,
+  as after signing out. `useGameHistory()` gives a signed-in viewer this store. The import
+  dialog's third choice gets the request form (D37), and the Library's history section a "Delete
+  all games" behind an AlertDialog, for both stores. The `ACCESS_ROWS` row says the account
+  keeps them.
+
+Written 2026-10-21: the migration `20261021120000_game_history.sql`, `src/lib/db/gameHistory.ts`, the
+routes under `src/app/api/history/`, `accountHistory.ts` and the UI. Waiting on the user to run the
+migration; then `npm run db:types`, the typecheck of `gameHistory.ts`, and an account's browser test.
 
 **Phase 4. The history page**
 
@@ -374,7 +408,7 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
   a first-level default (the icicle) and a second-level one (ply columns). `docs/design/explorer.md`
   gains both.
 - [ ] 16. The page, `/dashboard/library/history` (agent), open to guests like the rest of the
-  Library, as a spread laid out by D30: on the left, the filters as Q22 settles them, the
+  Library, as a spread laid out by D30: on the left, the filters as D38 lays out, the
   totals bar, and the games through the current position, each with its link; on the right,
   the board with "Open in Explorer" and the moves played next in a box of fixed height, and
   the tree in ply columns weighted by games, under the "Your score" switch. The Library's
@@ -388,7 +422,7 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
   position it totals games, results, and exits by the user and by the opponent with their
   results (D10).
 - [ ] 18. The book's own page (agent, `src/components/library/LibraryBookPage.tsx`), laid out
-  by D36: the choice of plain, your games (with which games, the panels of Q22), or drills
+  by D36: the choice of plain, your games (with which games, the panels of D38), or drills
   (disabled until the trainer exists) (D9); the book's facts, difficulty as `bookstore.md` D17
   and the rest as its Q6–Q8 settle them; a "where you leave this book" list, scrolling in its
   own box, that selects its position in the view; the selected position's games and results,

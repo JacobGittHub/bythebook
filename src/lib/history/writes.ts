@@ -2,25 +2,29 @@
 // accepts only what the account's routes will (D13, D28): records that pass their schema, chunks
 // of at most `GAMES_PER_CHUNK`, no more games than the limit, no more chunks than the limit
 // needs, plus one for a chunk left partly full at each end, and a list of imports that accounts
-// for every game (D30).
+// for every game (D30). An account's commit is checked by the same rules from its staged chunks'
+// sizes (`checkedCommit`).
 
 import { mergeGames, type MergeReport } from "./merge";
 import {
   GAMES_PER_CHUNK,
   HistoryError,
   MAX_IMPORT_NAME_CHARS,
+  historyCommitSchema,
   historyWriteSchema,
   type GameHistoryStore,
+  type HistoryCommit,
   type HistoryImport,
   type HistorySummary,
   type HistoryWrite,
   type LimitChoice,
   type ReadGame,
+  type StoredChunk,
 } from "./types";
 
 /** A history with no games. */
 export function emptySummary(limit: number): HistorySummary {
-  return { games: 0, limit, chunks: [], username: null, lastImportAt: null, imports: [], version: 0 };
+  return { games: 0, limit, chunks: [], username: null, lastImportAt: null, imports: [], version: 0, roomRequest: null };
 }
 
 /** The most chunks a history under `limit` needs: full ones, and a partial one at each end. */
@@ -28,48 +32,71 @@ export function chunkCap(limit: number): number {
   return Math.ceil(limit / GAMES_PER_CHUNK) + 1;
 }
 
-/** `change` checked against the rules, and the summary after it, made at `at`. */
-export function checkedWrite(current: HistorySummary, change: unknown, at: Date): { change: HistoryWrite; summary: HistorySummary } {
-  const parsed = historyWriteSchema.safeParse(change);
-  if (!parsed.success) throw new HistoryError("invalid", "Some of the games aren't valid, so nothing was saved.");
-  const write = parsed.data;
+/** A chunk as a write is checked by: how many games it holds, and the imports they name. */
+export type ChunkFacts = { n: number; games: number; importIds: readonly number[] };
 
-  const written = write.chunks.map((chunk) => chunk.n);
-  if (new Set(written).size !== written.length || written.some((n) => write.deleted.includes(n))) {
+/** The facts of a chunk whose games are at hand. */
+export function chunkFacts(chunk: StoredChunk): ChunkFacts {
+  return { n: chunk.n, games: chunk.games.length, importIds: [...new Set(chunk.games.map((game) => game.importId))] };
+}
+
+/**
+ * The summary after a write that replaces the chunks `written` (by their facts) and deletes the
+ * chunks `deleted`, made at `at`, or a refusal when it breaks a rule. It needs no games, so the
+ * account's commit checks it from the sizes of the chunks it staged.
+ */
+function plannedSummary(
+  current: HistorySummary,
+  { written, deleted, username, imports }: { written: readonly ChunkFacts[]; deleted: readonly number[]; username: string; imports: HistoryImport[] },
+  at: Date,
+): HistorySummary {
+  const numbers = written.map((chunk) => chunk.n);
+  if (new Set(numbers).size !== numbers.length || numbers.some((n) => deleted.includes(n))) {
     throw new HistoryError("invalid", "A chunk is written twice, or written and deleted.");
   }
-  const sizes = new Map(current.chunks.map((chunk) => [chunk.n, chunk.games]));
-  for (const n of write.deleted) sizes.delete(n);
-  for (const chunk of write.chunks) sizes.set(chunk.n, chunk.games.length);
-  const chunks = [...sizes].map(([n, games]) => ({ n, games })).sort((a, b) => a.n - b.n);
+  const version = current.version + 1;
+  const kept = new Map(current.chunks.map((chunk) => [chunk.n, chunk]));
+  for (const n of deleted) kept.delete(n);
+  for (const chunk of written) kept.set(chunk.n, { n: chunk.n, games: chunk.games, version });
+  const chunks = [...kept.values()].sort((a, b) => a.n - b.n);
   const games = chunks.reduce((sum, chunk) => sum + chunk.games, 0);
   if (games > current.limit || chunks.length > chunkCap(current.limit)) {
     throw new HistoryError("invalid", `A history keeps at most ${current.limit.toLocaleString("en-US")} games.`);
   }
   // Each import's count can't be checked without every chunk, but the counts must add up, and
   // every game written must name an import on the list.
-  const importIds = new Set(write.imports.map((entry) => entry.id));
-  const listed = write.imports.reduce((sum, entry) => sum + entry.games, 0);
-  if (
-    importIds.size !== write.imports.length ||
-    listed !== games ||
-    write.chunks.some((chunk) => chunk.games.some((game) => !importIds.has(game.importId)))
-  ) {
+  const importIds = new Set(imports.map((entry) => entry.id));
+  const listed = imports.reduce((sum, entry) => sum + entry.games, 0);
+  if (importIds.size !== imports.length || listed !== games || written.some((chunk) => chunk.importIds.some((id) => !importIds.has(id)))) {
     throw new HistoryError("invalid", "The list of imports doesn't match the games.");
   }
+  return { ...current, games, chunks, username, lastImportAt: at.toISOString(), imports, version };
+}
 
-  return {
-    change: write,
-    summary: {
-      games,
-      limit: current.limit,
-      chunks,
-      username: write.username,
-      lastImportAt: at.toISOString(),
-      imports: write.imports,
-      version: current.version + 1,
-    },
-  };
+/** `change` checked against the rules, and the summary after it, made at `at`. */
+export function checkedWrite(current: HistorySummary, change: unknown, at: Date): { change: HistoryWrite; summary: HistorySummary } {
+  const parsed = historyWriteSchema.safeParse(change);
+  if (!parsed.success) throw new HistoryError("invalid", "Some of the games aren't valid, so nothing was saved.");
+  const write = parsed.data;
+  return { change: write, summary: plannedSummary(current, { ...write, written: write.chunks.map(chunkFacts) }, at) };
+}
+
+/**
+ * An account's commit checked against the rules, from the facts of the chunks staged for it
+ * (each checked against its schema when it was staged), and the summary after it.
+ */
+export function checkedCommit(
+  current: HistorySummary,
+  commit: unknown,
+  staged: readonly ChunkFacts[],
+  at: Date,
+): { commit: HistoryCommit; summary: HistorySummary } {
+  const parsed = historyCommitSchema.safeParse(commit);
+  if (!parsed.success) throw new HistoryError("invalid", "The write isn't valid, so nothing was saved.");
+  const byNumber = new Map(staged.map((chunk) => [chunk.n, chunk]));
+  const written = parsed.data.written.map((n) => byNumber.get(n));
+  if (written.some((chunk) => !chunk)) throw new HistoryError("stale", "Some of the games didn't arrive. Import the file again.");
+  return { commit: parsed.data, summary: plannedSummary(current, { ...parsed.data, written: written as ChunkFacts[] }, at) };
 }
 
 /**

@@ -1,10 +1,24 @@
 "use client";
 
-import { Upload, X } from "lucide-react";
+import { Ellipsis, Trash2, Upload, X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/shadcn/alert-dialog";
 import { Button } from "@/components/shadcn/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
 import { useGameImport, type ImportPhase, type Tally } from "@/context/GameImport";
 import { useGameHistory } from "@/hooks/useGameHistory";
 import { nameMismatch } from "@/lib/history/importFile";
+import { HistoryError, type GameHistoryStore } from "@/lib/history/types";
 import { ProgressBar } from "./GameImportDialog";
 
 const n = (count: number) => count.toLocaleString("en-US");
@@ -14,23 +28,15 @@ const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "n
 /**
  * Game history on the Library's first level (plans/game-history.md D29), fixed at the bottom of
  * the left page under the scrolling book list (Q18): what the history holds and Import games,
- * then the import's progress while it runs, then its report until it is dismissed.
+ * then the import's progress while it runs, then its report until it is dismissed. The history's
+ * menu deletes every game.
  */
 export function GameHistorySection() {
-  const { available, phase, openDialog } = useGameImport();
-  const { summary } = useGameHistory();
+  const { phase, openDialog } = useGameImport();
+  const { history, summary, reload } = useGameHistory();
 
   let body;
-  if (!available) {
-    body = (
-      <>
-        <Head title="Game history" />
-        <p className="text-xs text-muted-foreground">
-          Coming soon to accounts: import your own games to see where you leave your books.
-        </p>
-      </>
-    );
-  } else if (phase.kind === "importing") {
+  if (phase.kind === "importing") {
     body = <Importing phase={phase} />;
   } else if (phase.kind === "done") {
     body = <Report phase={phase} />;
@@ -42,12 +48,14 @@ export function GameHistorySection() {
       <>
         <Head title="Game history" aside={<span className="book-sc">{games(summary.games)}</span>} />
         <p className="text-xs text-muted-foreground">
-          {last ? `Last import ${day(last.at)}, ${last.name}` : "Imported"} · kept in this browser
+          {last ? `Last import ${day(last.at)}, ${last.name}` : "Imported"} ·{" "}
+          {history.store === "browser" ? "kept in this browser" : "kept in your account"}
         </p>
-        <div>
+        <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={openDialog}>
             <Upload /> Import games
           </Button>
+          <HistoryMenu history={history} games={summary.games} onCleared={reload} />
         </div>
       </>
     );
@@ -72,6 +80,70 @@ export function GameHistorySection() {
     <section aria-label="Game history" className="flex shrink-0 flex-col gap-2 border-t border-rule pt-2.5">
       {body}
     </section>
+  );
+}
+
+/** More for the history: deleting every game, after asking (AGENTS.md § UI). */
+function HistoryMenu({ history, games: count, onCleared }: { history: GameHistoryStore; games: number; onCleared: () => void }) {
+  const [deleting, setDeleting] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const clear = async () => {
+    setBusy(true);
+    try {
+      await history.clear();
+      toast.success(`Deleted ${games(count)}.`);
+      setDeleting(false);
+      onCleared();
+    } catch (caught) {
+      toast.error(caught instanceof HistoryError ? caught.message : "The games couldn't be deleted.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="icon-sm" aria-label="More for game history" disabled={busy}>
+            <Ellipsis />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(true)}>
+            <Trash2 /> Delete all games
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={deleting} onOpenChange={setDeleting}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete all {games(count)}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {history.store === "browser"
+                ? "They go from this browser for good. Keep your PGN files to import them again."
+                : "They go from your account for good. Keep your PGN files to import them again."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={busy}
+              onClick={(event) => {
+                // Stay open until the delete is done, so a failure can be read.
+                event.preventDefault();
+                void clear();
+              }}
+            >
+              Delete all
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 

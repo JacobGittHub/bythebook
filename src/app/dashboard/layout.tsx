@@ -34,7 +34,7 @@ export default async function DashboardLayout({
   return (
     // The bug report provider wraps the frame too, so its button can read the page.
     <BugReportProvider>
-      <ViewerProvider signedIn={viewer.signedIn} debug={debug}>
+      <ViewerProvider signedIn={viewer.signedIn} userId={viewer.signedIn ? viewer.userId : null} debug={debug}>
         <LibraryProvider>
           {/* The game import runs here, so it carries on across pages (plans/game-history.md D29). */}
           <GameImportProvider>

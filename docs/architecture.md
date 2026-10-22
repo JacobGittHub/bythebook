@@ -161,6 +161,11 @@ Supabase Postgres with Row Level Security on every table. Columns are in
 | `position_evals` | Engine evals per (position_key, depth), filled lazily by client Stockfish | Read: authenticated · Write: service role |
 | `drills` | Pre-generated drills: an intentional computer mistake plus the punishment line the user must find | Private |
 | `drill_attempts` | Log of individual drill attempts | Private |
+| `game_history` | One row per user: the game history's summary (game count, chunks, imports, version) | Read: own row · Write: the history functions below |
+| `game_history_chunks` | A user's games, up to 1,000 per row, as records (`games`) and times per move (`clocks`) | Read: own rows · Write: the history functions below |
+| `game_history_staged` | Chunks of a history write still being sent | Service role only |
+| `account_limits` | Games allowed per account, where the default isn't enough | Read: own row · Write: service role (the SQL editor) |
+| `game_limit_requests` | Accounts' requests for more room, one pending per account | Read: own rows · Write: service role |
 
 - **Drills.** A drill starts from a position in the user's book. The computer plays a
   mistake, and the user must find the forced punishment line up to a position where several
@@ -194,6 +199,17 @@ Supabase Postgres with Row Level Security on every table. Columns are in
   copying its books into the account (`plans/deployment.md` D22); a copied book leaves the
   browser once the account has it, so each book lives in one place. Both show on the
   Library page (`docs/design/dashboard.md` § "Library page").
+- **An account's game history is written only through functions** (`plans/game-history.md`
+  Phase 3). Owners can read their rows but no policy lets them write, so the limit can't be
+  skipped by calling the database directly. The routes check each write with
+  `src/lib/history/writes.ts`, then call `stage_game_history_chunk`, `commit_game_history` or
+  `clear_game_history` with the service role, for the user taken from the session. A write's
+  chunks are staged one request each, since an import can be larger than Vercel's 4.5 MB per
+  request, and the commit makes them live together under a lock on the summary row, checking
+  the version, the total against the limit and that each chunk was staged from that version.
+  The browser keeps a copy of the chunks (`src/lib/history/accountHistory.ts`), refetching
+  only those whose version changed; a guest's history stays in the browser
+  (`src/lib/history/browserHistory.ts`) under the same rules.
 - **As of 2026-09-29, no application code reads or writes `user_position_stats`,
   `position_evals` or `drills`.** They exist for the trainer.
 
@@ -284,6 +300,11 @@ walks trees or aggregates runs client-side.
   change names the `updatedAt` it read, so a stale tab gets a 409 instead of overwriting. A
   refusal carries a `LibraryError` code (`src/lib/library/http.ts`), and
   `src/lib/library/accountStore.ts` is the client side.
+- **The history routes** (`/api/history`, `/api/history/chunks/[n]` and
+  `/api/history/requests`) read the summary and one chunk at a time, stage a write's chunks
+  and commit them, delete every game, and ask for more room. A write names the version it read,
+  so a stale tab gets a 409. A refusal carries a `HistoryError` code
+  (`src/lib/history/http.ts`), and `src/lib/history/accountHistory.ts` is the client side.
 
 ## Stored vs computed
 
@@ -296,6 +317,8 @@ walks trees or aggregates runs client-side.
 | User book trees | `opening_books.trees` | Validated and summarized on every write; read when a book opens |
 | A book's summary | `opening_books.summary` | On every write; the book list reads only this |
 | A guest's books | The browser's IndexedDB | On every write, validated and summarized as an account's are |
+| An account's games | `game_history_chunks`, with a copy in the browser's IndexedDB | Read from PGN in the browser at import; checked by shape and bounds on every write |
+| A guest's games | The browser's IndexedDB | Read from PGN in the browser at import |
 | Per-position training stats | `user_position_stats` | Per drill (not built yet) |
 | Engine evaluations | `position_evals` | Lazily, by client Stockfish (not built yet) |
 | Visualization layouts | Client | On config change, memoized |

@@ -128,6 +128,13 @@ From the user's answers on 2026-10-06.
     gold in the middle to deep red (4 to 5). They are tokens so vibes can repaint them, and the
     number is always written beside the color.
   - The trainer can recalibrate the scale later from how users actually do.
+  - On a book's own page the two are dots on one scale, the publisher's larger, each with its
+    number (the user's word after the third mockup round, `game-history.md` D36).
+- D18. **A book's page has a "Leaderboard" link next to its reviews link** (the user's word,
+  2026-10-21). Later, users will choose whether to make their success with a book public
+  (probably only their drill stats), and see other users' public stats for that book, which is
+  where the link goes; until then it is marked as coming. This extends D10, and like D10 it
+  belongs to a trainer plan.
 
 ## Open questions
 

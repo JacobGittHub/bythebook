@@ -25,14 +25,20 @@ import {
   DEFAULT_GAME_HISTORY_LIMIT,
   GAME_HISTORY_PLIES,
   MAX_GAME_FILE_BYTES,
+  MAX_GAME_HISTORY_REQUEST,
   MAX_GAMES_PER_FILE,
+  MAX_ROOM_REQUEST_REASON_CHARS,
   MAX_USERNAME_CHARS,
+  HistoryError,
   type GameSource,
   type LimitChoice,
+  type RoomRequest,
+  type RoomRequestInput,
 } from "@/lib/history/types";
 
 const n = (count: number) => count.toLocaleString("en-US");
 const games = (count: number) => `${n(count)} ${count === 1 ? "game" : "games"}`;
+const shortDay = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 export const SOURCE_NAMES: Record<GameSource, string> = { chesscom: "Chess.com", lichess: "Lichess", other: "Other" };
 
@@ -256,6 +262,7 @@ export function ProgressBar({ value, label }: { value: number; label: string }) 
 
 function Check({ source, scan, base, preferredName }: { source: ImportSource; scan: FileScan; base: ImportBase; preferredName: string | null }) {
   const { start, closeDialog, back } = useGameImport();
+  const { history, summary, reload } = useGameHistory();
   const nameId = useId();
   const listId = useId();
   const offered = preferredName && scan.names.some((count) => count.name.toLowerCase() === preferredName.toLowerCase());
@@ -392,9 +399,13 @@ function Check({ source, scan, base, preferredName }: { source: ImportSource; sc
               {replace.keep < fresh && ` Only the newest ${n(replace.keep)} of the new games fit.`}
             </Choice>
             <Choice value="none" title="Import none of them">
-              Nothing changes. You could export fewer games, such as the last year&apos;s.
+              Nothing changes. You could export fewer games, such as the last year&apos;s
+              {history.requestRoom ? ", or ask for more room." : "."}
             </Choice>
           </RadioGroup>
+          {choice === "none" && history.requestRoom && (
+            <RoomRequestForm request={summary?.roomRequest ?? null} wanted={base.games + fresh} ask={history.requestRoom} onAsked={reload} />
+          )}
         </div>
       )}
 
@@ -411,6 +422,100 @@ function Check({ source, scan, base, preferredName }: { source: ImportSource; sc
         )}
       </DialogFooter>
     </form>
+  );
+}
+
+/**
+ * Asking for more room (D37), for an account: how many games and why. One request may wait for an
+ * answer at a time, so a pending one is shown in place of the form.
+ */
+function RoomRequestForm({
+  request,
+  wanted,
+  ask,
+  onAsked,
+}: {
+  request: RoomRequest | null;
+  wanted: number;
+  ask: (input: RoomRequestInput) => Promise<RoomRequest>;
+  onAsked: () => void;
+}) {
+  const gamesId = useId();
+  const reasonId = useId();
+  const [count, setCount] = useState(() => String(Math.min(MAX_GAME_HISTORY_REQUEST, Math.ceil(wanted / 1_000) * 1_000)));
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const asked = Number(count);
+  const valid = Number.isInteger(asked) && asked >= 1 && asked <= MAX_GAME_HISTORY_REQUEST;
+
+  if (request?.status === "pending") {
+    return (
+      <p className="rounded-md border border-dashed p-2.5 text-xs text-muted-foreground">
+        Asked for room for {games(request.games)} on {shortDay(request.at)}. You&apos;ll see the new limit here once it&apos;s
+        answered.
+      </p>
+    );
+  }
+
+  const send = async () => {
+    if (!valid) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await ask({ games: asked, reason: reason.trim() });
+      onAsked();
+    } catch (caught) {
+      setError(caught instanceof HistoryError ? caught.message : "The request couldn't be sent.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div role="group" aria-label="Ask for more room" className="grid gap-2 rounded-md border border-dashed p-2.5">
+      <p className="text-xs text-muted-foreground">
+        {request?.status === "declined"
+          ? `Your request of ${shortDay(request.at)} was declined. You can ask again.`
+          : "Beta accounts can ask for more room. The request is read by hand."}
+      </p>
+      <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
+        <Label htmlFor={gamesId} className="text-xs">
+          Games to keep
+        </Label>
+        <Input
+          id={gamesId}
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={MAX_GAME_HISTORY_REQUEST}
+          step={1_000}
+          value={count}
+          onChange={(event) => setCount(event.target.value)}
+          className="h-8 w-28"
+        />
+        <Label htmlFor={reasonId} className="self-start pt-1.5 text-xs">
+          Why <span className="font-normal text-muted-foreground">(optional)</span>
+        </Label>
+        <Textarea
+          id={reasonId}
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+          maxLength={MAX_ROOM_REQUEST_REASON_CHARS}
+          rows={2}
+          className="min-h-0 text-sm"
+        />
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {reason.length} / {MAX_ROOM_REQUEST_REASON_CHARS}
+        </span>
+        <Button type="button" size="sm" variant="outline" disabled={busy || !valid} onClick={() => void send()}>
+          Ask for room
+        </Button>
+      </div>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
   );
 }
 

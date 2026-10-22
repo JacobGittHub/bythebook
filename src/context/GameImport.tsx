@@ -45,8 +45,6 @@ export type ImportPhase =
   | { kind: "failed"; message: string; during: "reading" | "importing" };
 
 type GameImportValue = {
-  /** Whether this viewer has somewhere to keep games; a signed-in viewer has none until Phase 3. */
-  available: boolean;
   phase: ImportPhase;
   dialogOpen: boolean;
   openDialog: () => void;
@@ -131,7 +129,6 @@ export function GameImportProvider({ children }: { children: ReactNode }) {
 
   const read = useCallback(
     (source: ImportSource, preferredName: string | null = null) => {
-      if (!history) return;
       stopSession();
       const mine = run.current;
       const current = startImportSession();
@@ -161,7 +158,7 @@ export function GameImportProvider({ children }: { children: ReactNode }) {
     (username: string, choice: LimitChoice) => {
       const checked = phaseRef.current;
       const current = session.current;
-      if (!history || !current || checked.kind !== "checked") return;
+      if (!current || checked.kind !== "checked") return;
       const { source, scan, base } = checked;
       const { keep } = makeRoom(base.games, freshFor(scan, username), base.limit, choice);
       const mine = run.current;
@@ -194,7 +191,6 @@ export function GameImportProvider({ children }: { children: ReactNode }) {
   const value = useMemo((): GameImportValue => {
     const idle = () => setPhase({ kind: "idle" });
     return {
-      available: history !== null,
       phase,
       dialogOpen,
       openDialog: () => {
@@ -235,7 +231,7 @@ export function GameImportProvider({ children }: { children: ReactNode }) {
         read(now.source, name);
       },
     };
-  }, [history, phase, dialogOpen, read, start, stopSession]);
+  }, [phase, dialogOpen, read, start, stopSession]);
 
   useBugReportSection(() => {
     const now = phaseRef.current;

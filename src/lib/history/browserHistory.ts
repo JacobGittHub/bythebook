@@ -22,8 +22,11 @@ import {
 export const BROWSER_HISTORY_DB = "bythebook-history";
 const DB_VERSION = 1;
 
-/** The summary as kept; the limit is the guest's, from the constant, so raising it needs no write. */
-type KeptSummary = Omit<HistorySummary, "limit">;
+/**
+ * The summary as kept; the limit is the guest's, from the constant, so raising it needs no write,
+ * and a guest has no one to ask for room.
+ */
+type KeptSummary = Omit<HistorySummary, "limit" | "roomRequest">;
 
 interface HistorySchema extends DBSchema {
   chunks: { key: number; value: StoredChunk };
@@ -81,8 +84,17 @@ export function browserHistoryNamed(name: string, limit = DEFAULT_GAME_HISTORY_L
     }
   }
 
-  // A summary kept before imports were listed has none.
-  const withLimit = (kept: KeptSummary | undefined): HistorySummary => (kept ? { ...kept, imports: kept.imports ?? [], limit } : emptySummary(limit));
+  // A summary kept before imports were listed has none, and its chunks no versions.
+  const withLimit = (kept: KeptSummary | undefined): HistorySummary =>
+    kept
+      ? {
+          ...kept,
+          chunks: kept.chunks.map((chunk) => ({ ...chunk, version: chunk.version ?? 0 })),
+          imports: kept.imports ?? [],
+          limit,
+          roomRequest: null,
+        }
+      : emptySummary(limit);
   const toKept = ({ games, chunks, username, lastImportAt, imports, version }: HistorySummary): KeptSummary => ({
     games,
     chunks,
@@ -91,7 +103,7 @@ export function browserHistoryNamed(name: string, limit = DEFAULT_GAME_HISTORY_L
     imports,
     version,
   });
-  const changed = () => announceChange(name);
+  const changed = () => announceHistoryChange(name);
 
   return {
     store: "browser",
@@ -146,7 +158,8 @@ export function browserHistoryNamed(name: string, limit = DEFAULT_GAME_HISTORY_L
 /** This browser's game history. */
 export const browserHistory = browserHistoryNamed(BROWSER_HISTORY_DB);
 
-function announceChange(name: string) {
+/** Tells this browser's tabs listening on `name` (`onBrowserHistoryChange`) that a history changed. */
+export function announceHistoryChange(name: string) {
   if (typeof BroadcastChannel === "undefined") return;
   const channel = new BroadcastChannel(name);
   channel.postMessage("changed");

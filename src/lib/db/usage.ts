@@ -6,6 +6,8 @@ export type UsageKind =
   | "lichess"
   | "books_read"
   | "books_write"
+  | "history_read"
+  | "history_write"
   | "sessions"
   | "puzzles"
   | "user";
