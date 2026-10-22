@@ -81,12 +81,14 @@ export function browserHistoryNamed(name: string, limit = DEFAULT_GAME_HISTORY_L
     }
   }
 
-  const withLimit = (kept: KeptSummary | undefined): HistorySummary => (kept ? { ...kept, limit } : emptySummary(limit));
-  const toKept = ({ games, chunks, username, lastImportAt, version }: HistorySummary): KeptSummary => ({
+  // A summary kept before imports were listed has none.
+  const withLimit = (kept: KeptSummary | undefined): HistorySummary => (kept ? { ...kept, imports: kept.imports ?? [], limit } : emptySummary(limit));
+  const toKept = ({ games, chunks, username, lastImportAt, imports, version }: HistorySummary): KeptSummary => ({
     games,
     chunks,
     username,
     lastImportAt,
+    imports,
     version,
   });
   const changed = () => announceChange(name);

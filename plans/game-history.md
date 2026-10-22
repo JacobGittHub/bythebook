@@ -142,8 +142,9 @@ direction"; the user expects one more round of adjustments before building.
   takes the same place when it finishes, if it fits there well. A user on another page when it
   finishes gets a small toast in the bottom right corner, with the way to the report. The
   import therefore belongs to the dashboard, not the Library page, so moving between pages
-  doesn't stop it; only closing or reloading the tab does. Whether the whole left page scrolls
-  or only the book list, with the import fixed under it, is Q18.
+  doesn't stop it; only closing or reloading the tab does. Only the book list scrolls, and the
+  import stays fixed under it (Q18, the user's pick: "I like the import staying put"). The toast
+  has a close button, so the user can dismiss it.
 - D30. **The history page puts the games on the left and the tree on the right.** It is mockup
   B (tree first) with the tree and the games swapped:
   - the left page holds Your games: the filters, with the choice of imports beside them; the
@@ -151,9 +152,14 @@ direction"; the user expects one more round of adjustments before building.
     At the starting position that list is every game, which was mockup A's list;
   - the right page holds the board on top, with the position's results, the moves played next
     and "Open in Explorer" in its upper right, and the tree below it in ply columns (D31);
-  - the tree is colored as the book views are, or by success, which the user picks.
+  - the tree is colored by success, the user's score from each position, under a "Your score"
+    switch that starts on; off, it is painted as the book views are. (Amended 2026-10-21: a
+    choice named "Book's own" read oddly to the user.)
+  - the board's side keeps its size as the position changes: the moves played next sit in a
+    box of fixed height that scrolls inside, so a position with many moves never reflows the
+    page.
   
-  Choosing imports means each game records which import it came from, and the history keeps a
+  How the filters are laid out is Q22. Choosing imports means each game records which import it came from, and the history keeps a
   list of its imports (when, which file, how many games); the step 8 store gains both before
   Phase 3's migration is written.
 - D31. **Ply columns is the default view on second-level pages:** a book's own page in the
@@ -169,55 +175,94 @@ direction"; the user expects one more round of adjustments before building.
   The view's camera follows: a drawing larger than its box pans to keep the current position
   and its moves in frame, and the user can drag it to look around. This holds for every view
   and every page that draws one.
+  
+  *Amended 2026-10-21, after the user walked the mockups:* the camera zooms as well as pans, and
+  is more eager about both:
+  - It frames the current position and all its moves. When they don't fit at the present zoom
+    it zooms out, and when they would sit small in a large box it zooms in, within the zoom's
+    range. It moves as soon as the highlighted move nears the edge, not once it has left.
+  - Zoom is a continuous scale from 0.5 to 4 (half size to four times), with finer steps on
+    − and + (0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4), the wheel with Ctrl, and pinch.
+    Fit stays.
+  - Below 1 the drawing is hard to read, so the current position and the highlighted move are
+    marked at a fixed size on screen, whatever the zoom: a ring and a label that don't shrink
+    with the drawing.
+
+From the user's answers to Q15, Q16 and Q18–Q20, and their second look at the mockups,
+2026-10-21.
+
+- D33. **Three choices when an import doesn't fit (Q15, amends D28):**
+  - Import the newest played of the new games that fit, and stop. Newest played, since sites
+    order their exports differently (Chess.com oldest first, Lichess newest first).
+  - Import them all and remove the games imported earliest.
+  - Import none of them. For a signed-in beta account, this choice also lets the user ask for
+    more room ("beta account holders should be allowed to submit a petition for increased game
+    storage"), which Q21 settles. A guest's history lives in their browser, so there is no one
+    to ask.
+- D34. **The import also takes pasted PGN** (Q16), for a few over-the-board games. The text
+  goes through the same worker as a file, as a file of its own, with the same caps.
+- D35. **Ply columns show success as color and thickness** (Q19, option C, "for now"): the line
+  into each position is colored by the user's score from it, red through grey to green, and is
+  as thick as the number of games that went that way. Lines no game reached stay faint.
+- D36. **A book's own page reads as front matter, then body** (Q20, option B). The book's facts
+  (difficulty, rating, description and measures) sit to the right of the title. Below them, in
+  one row above the drawing, are the choices (the view, Plain / Your games / Drills, and which
+  games). The page scrolls down to the drawing, the board and "where you leave this book"
+  together. From the user's second look:
+  - The panel by the board keeps its size: "Next in the book" and "Left the book here" stay
+    apart, as drawn, and each is a box of fixed height that scrolls inside. The panel doesn't
+    reflow as the position changes.
+  - "Where you leave this book" scrolls inside its own box.
+  - The button for which games ("All 1,160 games as White") opens the checkboxes (Q22), so it
+    doesn't look like a dropdown: no arrow. Blitz, Rapid and Classical are separate checkboxes
+    in it.
+  - Difficulty is `bookstore.md` D17: the publisher's first, color coded, 0.0 to 5.0.
 
 ## Open questions
 
-- Q15. When the user chooses to stop (D28), which new games fill the room that is left?
-  - **Rec:** the newest played, since they show how the user plays now. Sites order their
-    exports differently (Chess.com oldest first, Lichess newest first), so "the first in the
-    file" would mean different games from different sites. This is what the code does now.
-  - The alternative is to import nothing new when the file doesn't fit whole.
+Q15–Q20 are settled by D29 and D33–D36.
 
-> ME: make the newest played games fill if that option is chosen. Also add a third option for stopping import. I that beta account holders should be allowed to submit a petition for increased game storage with the third option.
+- Q21. How does a beta account ask for more room (D33)?
+  - **Rec:** a short form under the third choice: how many games the user would like (up to
+    50,000) and an optional reason (at most 200 characters). It saves one row per account in a
+    new `game_limit_requests` table, through one route that answers a guest with 401. The user
+    reads the requests in the SQL editor and answers by setting the account's `account_limits`
+    row (D25). Until then the dialog says "Asked for more room on 21 Oct". A request is a row, not
+    an email, so it is tied to the account, and the user sees them all in one place. It is built
+    with the account's storage in Phase 3, since guests can't ask.
+  - The alternative is a link that opens an email to the beta contact address
+    (`NEXT_PUBLIC_BETA_CONTACT_EMAIL`). It needs no table, but it depends on the user's mail app
+    and isn't tied to the account.
 
-- Q16. Should the import also take PGN pasted into a text box, as well as a file?
-  - **Rec:** yes, for a few over-the-board games copied from a tournament site. The text goes
-    through the same worker as a file (as a `Blob`), with the same caps, so it costs one text
-    box in the dialog.
+> ME:
 
-> ME: Yes
+- Q22. How does the user choose which games, on the history page and in the book page's
+  "which games"? The user found the first mockup's controls inconsistent: the imports were
+  checkboxes but the other choices weren't, time control appeared twice, and the date was a
+  dropdown. `game-history.html` draws this proposal:
+  - **One kind of control per kind of choice.** The side is the only either/or, since the tree
+    is drawn from one side, so it is a two-button toggle beside the title ("Your games as White
+    | Black"). Every other choice is a set of checkboxes that all start ticked, each with its
+    number of games. Dates are a span.
+  - **Time is one list, not two.** Bullet, Blitz, Rapid, Classical and Daily, each with its
+    exact time controls nested beneath it (3+0, 3+2, 5+0…). A class is part-ticked when only
+    some of its controls are.
+  - **Sources and imports are one list.** Chess.com, Lichess and Other, each with its imports
+    beneath ("12 Oct · 3,264 games"), nested the same way. This folds the site filter and the
+    choice of imports together.
+  - **Dates are a strip of games per month** across the page: a small histogram, dragged to
+    choose a span, with presets beside it (3 months, a year, all). It shows when the user played
+    as well as filtering.
+  - **On the page:** one row of buttons that say what is chosen ("Blitz, Rapid · 2,140", "All
+    sources", "Since Mar 2025"). Each opens its checkboxes in a popover, and Reset sits at the
+    end of the row. The buttons have no dropdown arrow, since they open panels, not menus. The
+    date strip sits under the row, above the totals bar.
+  - **The book page's "which games" uses the same panels,** in its dialog, so a choice reads the
+    same in both places.
+  - **Rec:** this. The alternative is a filter column that is always open, with every checkbox
+    in view. It is quicker to change but takes half the room from the list of games.
 
-Q17 (which mockups) is settled by D29–D32.
-
-- Q18. On the Library's first level, what scrolls (D29)? `game-import.html` draws both.
-  - A: the whole left page scrolls, and the import's progress is at the end of it.
-  - B: only the book list scrolls, and the import stays fixed at the bottom of the page.
-  - **Rec:** B. The point of putting the progress there is that it stays in view, and with a
-    long book list A would push it off the page.
-
-> ME: B
-
-- Q19. How do ply columns show success from games (D31)? `book-success.html` draws three.
-  - A: the line into each position is colored by the user's score from it, red through grey to
-    green; lines no game reached stay faint.
-  - B: each position's dot is colored by the score instead, and the lines keep the book's paint.
-  - C: as A, and each line's thickness is the number of games that went that way, so the
-    drawing reads as the flow of the user's games through the book.
-  - **Rec:** C. Color alone says how a move went, not whether it matters; thickness shows at a
-    glance where the games really go, and thin red lines are where losses don't matter much.
-
-> ME: C for now
-
-- Q20. How is a book's own page laid out (`book-success.html`)?
-  - A: the choices (view, Plain / Your games / Drills, and which games) sit in line with the
-    title, and the book's facts follow the drawing.
-  - B: the book's facts (difficulty, rating, description and the measures) fill the space to
-    the right of the title, and the page scrolls, so below them the drawing, the board and
-    "where you leave this book" are seen together.
-  - **Rec:** B, with the choices in one row just above the drawing, where they act. The page
-    reads like a book's front matter, then its body.
-
-> ME: B
+> ME:
 
 ## Steps
 
@@ -271,19 +316,25 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
 - [ ] 9. Mockups (agent, then user): the import dialog, the history page and the book page's
   success view, saved in `plans/mockups/` with the app's tokens and controls. The user picks
   before any of them is built. Made 2026-10-21 as `game-import.html`, `game-history.html` and
-  `book-success.html`; the first picks are D29–D32, and the second round waits on Q18–Q20.
-- [ ] 10. The import (agent, D29), which replaces the Library's "coming soon" line
-  (`src/components/library/LibraryPage.tsx`). The dialog: a file picker, the first pass's
-  summary, the username with its live match count, what is kept (40 plies, the limit, no
-  opponents' names), the notice for browsers that may delete data (D14), and the choice to stop
-  or replace when the new games don't fit (D28). Then, at the bottom of the Library's left
-  page: progress with Cancel, and the report: imported, duplicates, skipped by reason, the name
+  `book-success.html`; the first picks are D29–D32, the second D33–D36. The history page's
+  filters wait on Q22, whose proposal `game-history.html` draws.
+- [x] 10. The import (agent, D29), which replaces the Library's "coming soon" line
+  (`src/components/library/LibraryPage.tsx`). The dialog: a file picker or pasted PGN (D34), the
+  first pass's summary, the username with its live match count, what is kept (40 plies, the
+  limit, no opponents' names), the notice for browsers that may delete data (D14), and the three
+  choices when the new games don't fit (D33; asking for more room waits on Q21 and Phase 3).
+  Then, fixed at the bottom of the Library's left page under the scrolling book list (Q18):
+  progress with Cancel, and the report: imported, duplicates, skipped by reason, the name
   mismatch prominent when large (D22), left out and removed. The import session lives in a
   provider in the dashboard's layout, so it keeps running across pages, and a `sonner` toast
-  reports it done when the Library isn't open. Each stored game records its import, and the
+  with a close button reports it done when the Library isn't open. Each stored game records its import, and the
   history keeps the list of imports (D30), in `types.ts`, `merge.ts` and `writes.ts`. Game
   history gets a row in `ACCESS_ROWS` (`src/lib/auth/access.ts`). A browser test then checks
-  the worker loads under Turbopack.
+  the worker loads under Turbopack. Done 2026-10-21: `GameImportProvider`
+  (`src/context/GameImport.tsx`), `GameImportDialog` and `GameHistorySection`
+  (`src/components/library/`). An import's id is the history's version after it, since the
+  version only grows. `e2e/gameImport.spec.ts` imports a fixture, and a 5,000-game file while
+  moving to the Explorer, where the toast closes with its ×.
 
 **Phase 3. An account's storage**
 
@@ -303,7 +354,7 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
   chunk number. Each validates with Zod, answers a
   guest with 401, takes the user from the session and counts its call with `recordUsage` (new
   kinds `history_read` and `history_write`). A chunk of 1,000 games is about 0.5 MB, well
-  under Vercel's 4.5 MB.
+  under Vercel's 4.5 MB. Asking for more room (D33), as Q21 settles.
 - [ ] 13. The account store (agent), with its IndexedDB copy keyed by the summary's version, so
   opening a page reads only the summary row. Delete all history, behind an AlertDialog, for
   both stores.
@@ -316,16 +367,17 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
   (`src/lib/books/viewTree.ts`), whose `games` count already weights the views. FENs come
   from the move player (step 6).
 - [ ] 15. Walking the views (agent, D31, D32), in `BookView` for all five views: the arrow keys
-  with the highlighted move, the camera that pans to keep the current position and its moves in
-  frame, and dragging to pan. The rules (which move is highlighted, where the camera goes) are
+  with the highlighted move, the camera that pans and zooms to keep the current position and its
+  moves in frame, dragging to pan, the zoom scale from 0.5 to 4 with its finer steps, and the
+  marks that keep their size below 1 (D32 as amended). The rules (which move is highlighted, where the camera goes) are
   pure functions in `src/lib/books/views/`, tested in Node. `DEFAULT_READER_VIEW` splits into
   a first-level default (the icicle) and a second-level one (ply columns). `docs/design/explorer.md`
   gains both.
 - [ ] 16. The page, `/dashboard/library/history` (agent), open to guests like the rest of the
-  Library, as a spread laid out by D30: on the left, filters (source, time class, exact time
-  control, color, dates) with the choice of imports, the totals bar, and the games through the
-  current position, each with its link; on the right, the board with "Open in Explorer", and
-  the tree in ply columns weighted by games, painted as a book or by success. The Library's
+  Library, as a spread laid out by D30: on the left, the filters as Q22 settles them, the
+  totals bar, and the games through the current position, each with its link; on the right,
+  the board with "Open in Explorer" and the moves played next in a box of fixed height, and
+  the tree in ply columns weighted by games, under the "Your score" switch. The Library's
   first level shows the number of games and the way to the page (`deployment.md` D21).
 
 **Phase 5. Comparing games with a book**
@@ -336,12 +388,13 @@ Measured on the user's 3,322 Chess.com games (7.9 MB): reading takes 0.3 s, reco
   position it totals games, results, and exits by the user and by the opponent with their
   results (D10).
 - [ ] 18. The book's own page (agent, `src/components/library/LibraryBookPage.tsx`), laid out
-  by Q20: the choice of plain, your games (with which games), or drills (disabled until the
-  trainer exists) (D9); the book's facts, as `bookstore.md` Q5–Q8 settle them; a "where you
-  leave this book" list that selects its position in the view; the selected position's games
-  and results.
+  by D36: the choice of plain, your games (with which games, the panels of Q22), or drills
+  (disabled until the trainer exists) (D9); the book's facts, difficulty as `bookstore.md` D17
+  and the rest as its Q6–Q8 settle them; a "where you leave this book" list, scrolling in its
+  own box, that selects its position in the view; the selected position's games and results,
+  in a panel that keeps its size.
 - [ ] 19. Success in color (agent), as `deployment.md` D21 lays out: `BookView` takes success per
-  position and paints it, leaving layouts unchanged. First ply columns, as Q19 settles; then
+  position and paints it, leaving layouts unchanged. First ply columns, as D35 says; then
   branch points and spine and ribs; then the metro map's red-to-green mark; then the icicle's
   texture.
 

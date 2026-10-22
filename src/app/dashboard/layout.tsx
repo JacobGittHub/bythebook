@@ -4,6 +4,7 @@ import { BrowserBooksNotice } from "@/components/repertoire/BrowserBooksOffer";
 import { Toaster } from "@/components/shadcn/sonner";
 import { TooltipProvider } from "@/components/shadcn/tooltip";
 import { BugReportProvider } from "@/context/BugReport";
+import { GameImportProvider } from "@/context/GameImport";
 import { LibraryProvider } from "@/context/Library";
 import { ViewerProvider } from "@/context/Viewer";
 import { bookContents, visibleNavItems } from "@/lib/auth/access";
@@ -35,21 +36,24 @@ export default async function DashboardLayout({
     <BugReportProvider>
       <ViewerProvider signedIn={viewer.signedIn} debug={debug}>
         <LibraryProvider>
-          <TooltipProvider delayDuration={300}>
-            <BookFrame
-              chapters={chapters}
-              chapterCount={contents.length}
-              initialForm={initialForm}
-              initialColumn={initialColumn}
-              viewer={{ signedIn: viewer.signedIn, displayName: viewer.signedIn ? viewer.displayName : null }}
-              debug={debug}
-              signOut={signOutAction}
-            >
-              {children}
-            </BookFrame>
-            <BrowserBooksNotice />
-            <Toaster position="bottom-right" />
-          </TooltipProvider>
+          {/* The game import runs here, so it carries on across pages (plans/game-history.md D29). */}
+          <GameImportProvider>
+            <TooltipProvider delayDuration={300}>
+              <BookFrame
+                chapters={chapters}
+                chapterCount={contents.length}
+                initialForm={initialForm}
+                initialColumn={initialColumn}
+                viewer={{ signedIn: viewer.signedIn, displayName: viewer.signedIn ? viewer.displayName : null }}
+                debug={debug}
+                signOut={signOutAction}
+              >
+                {children}
+              </BookFrame>
+              <BrowserBooksNotice />
+              <Toaster position="bottom-right" />
+            </TooltipProvider>
+          </GameImportProvider>
         </LibraryProvider>
       </ViewerProvider>
     </BugReportProvider>

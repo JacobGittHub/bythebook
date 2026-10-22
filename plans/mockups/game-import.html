@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Mockup for plans/game-history.md step 9, second round (the import, step 10; D14, D16, D22, D28, D29; Q18). Published as the "Game Import" artifact. -->
+<!-- Mockup for plans/game-history.md step 9, third round (the import, step 10, built 2026-10-21; D14, D16, D22, D28, D29, D33). Published as the "Game Import" artifact. -->
 <title>Game Import</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -207,6 +207,8 @@ textarea { width: 100%; min-height: 76px; margin-top: 8px; font: 12.5px/1.4 var(
 .toast b { font-weight: 700; }
 .toast p { grid-column: 2; color: var(--muted-foreground); font-size: 12.5px; }
 .toast .btn { grid-row: 1 / 3; grid-column: 3; }
+.toast .close { position: absolute; top: -7px; left: -7px; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--border); background: var(--page); color: var(--muted-foreground); cursor: pointer; padding: 0; }
+.toast .close .ico { width: 11px; height: 11px; color: inherit; }
 
 @container (max-width: 760px) {
   .spread { grid-template-columns: 1fr; height: auto; box-shadow: none; }
@@ -490,7 +492,7 @@ function render() {
       <span class="grow"></span><span class="guest">Browsing as a guest</span><button class="desk-btn">Create account</button></div>
     <div class="book"><span class="ribbon"></span><div class="spread">${away ? explorer() : leftPage() + pickedPage()}</div></div>
     ${inDialog ? `<div class="scrim"><div class="dialog" role="dialog" aria-label="Import games">${dialog()}</div></div>` : ""}
-    ${away ? `<div class="toast" role="status">${icon("checkc")}<b>Imported 3,264 games</b><p>Your game history is ready.</p><button class="btn sm outline">Open game history</button></div>` : ""}`;
+    ${away ? `<div class="toast" role="status">${icon("checkc")}<b>Imported 3,264 games</b><p>Your game history is ready.</p><button class="btn sm outline">Open the Library</button><button class="close" aria-label="Close toast">${icon("x")}</button></div>` : ""}`;
   for (const group of document.querySelectorAll(".studio .chips")) {
     for (const chip of group.querySelectorAll(".chip")) chip.setAttribute("aria-pressed", String(state[group.dataset.key] === chip.dataset.value));
   }

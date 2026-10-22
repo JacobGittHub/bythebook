@@ -5,7 +5,7 @@
 // earliest are dropped from the front). Either way only the chunks at the two ends change, so
 // only those are written again.
 
-import { GAMES_PER_CHUNK, type LimitChoice, type StoredChunk, type StoredGame } from "./types";
+import { GAMES_PER_CHUNK, type LimitChoice, type ReadGame, type StoredChunk, type StoredGame } from "./types";
 
 export type MergeReport = {
   /** New games kept. */
@@ -16,6 +16,8 @@ export type MergeReport = {
   leftOut: number;
   /** Stored games dropped, earliest imported first, to make room or to meet a lowered limit. */
   removed: number;
+  /** The dropped games counted by the import each came in. */
+  removedFrom: Record<number, number>;
   /** Games in the history after the merge. */
   total: number;
   /** The chunks to write whole, in order. */
@@ -33,8 +35,8 @@ export function comparePlayed(a: Dated, b: Dated): number {
   return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
 }
 
-/** `comparePlayed` for stored games. */
-export const compareGames = (a: StoredGame, b: StoredGame): number => comparePlayed(a.record, b.record);
+/** `comparePlayed` for games. */
+export const compareGames = (a: ReadGame, b: ReadGame): number => comparePlayed(a.record, b.record);
 
 /** Games split into chunks of `size`, in order. */
 export function toChunks<T>(games: readonly T[], size = GAMES_PER_CHUNK): T[][] {
@@ -58,16 +60,17 @@ export function makeRoom(stored: number, fresh: number, limit: number, choice: L
   return { keep, drop: over + Math.max(0, left + keep - cap) };
 }
 
-export type MergeOptions = { limit: number; choice: LimitChoice; size?: number };
+/** `importId` marks the games this import adds (D30). */
+export type MergeOptions = { limit: number; choice: LimitChoice; importId: number; size?: number };
 
 /** `chunks` with the new games among `incoming` added, under the limit and the user's choice. */
 export function mergeGames(
   chunks: readonly StoredChunk[],
-  incoming: readonly StoredGame[],
-  { limit, choice, size = GAMES_PER_CHUNK }: MergeOptions,
+  incoming: readonly ReadGame[],
+  { limit, choice, importId, size = GAMES_PER_CHUNK }: MergeOptions,
 ): { chunks: StoredChunk[]; report: MergeReport } {
   const seen = new Set(chunks.flatMap((chunk) => chunk.games.map((game) => game.record.key)));
-  const fresh: StoredGame[] = [];
+  const fresh: ReadGame[] = [];
   for (const game of incoming) {
     if (seen.has(game.record.key)) continue;
     seen.add(game.record.key);
@@ -77,17 +80,23 @@ export function mergeGames(
 
   const stored = chunks.reduce((sum, chunk) => sum + chunk.games.length, 0);
   const { keep, drop } = makeRoom(stored, fresh.length, limit, choice);
-  const added = fresh.slice(fresh.length - keep);
+  const added: StoredGame[] = fresh.slice(fresh.length - keep).map((game) => ({ ...game, importId }));
 
   const written = new Set<number>();
   const deleted: number[] = [];
   const result: StoredChunk[] = [];
+  const removedFrom: Record<number, number> = {};
+  const countRemoved = (games: readonly StoredGame[]) => {
+    for (const game of games) removedFrom[game.importId] = (removedFrom[game.importId] ?? 0) + 1;
+  };
   let toDrop = drop;
   for (const chunk of chunks) {
     if (toDrop > 0 && toDrop >= chunk.games.length) {
       deleted.push(chunk.n);
+      countRemoved(chunk.games);
       toDrop -= chunk.games.length;
     } else if (toDrop > 0) {
+      countRemoved(chunk.games.slice(0, toDrop));
       result.push({ n: chunk.n, games: chunk.games.slice(toDrop) });
       written.add(chunk.n);
       toDrop = 0;
@@ -117,6 +126,7 @@ export function mergeGames(
       duplicates: incoming.length - fresh.length,
       leftOut: fresh.length - added.length,
       removed: drop,
+      removedFrom,
       total: stored - drop + added.length,
       written: [...written].sort((a, b) => a - b),
       deleted,

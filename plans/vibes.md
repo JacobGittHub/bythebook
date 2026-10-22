@@ -1,6 +1,6 @@
 # Vibes
 
-Status: deciding · Updated: 2026-10-19 · Depends on: deployment.md, book-ui.md
+Status: deciding · Updated: 2026-10-21 · Depends on: deployment.md, book-ui.md
 
 **Goal:** the book the app is drawn as (`book-ui.md`) takes on a vibe chosen for the opening
 being shown, growing richer the deeper the line goes, with music to match, and the community
@@ -94,6 +94,13 @@ From the user's message of 2026-10-14, when the app became a book (`book-ui.md`)
 - D15. **The first vibes are static.** They change how the book looks and nothing on it
   moves. D12's moving ornaments wait until the static vibes work. Q10 asks whether static
   also means no depth layers at first.
+- D16. **The light book's palette gains gold** (the user's word, 2026-10-21). The light book
+  was mostly cream, some blue and a little red; it becomes mostly cream, some blue, a little
+  gold and a little red. Gold is the tertiary color, used delicately. The first candidate is
+  the cover's corner pieces, and any element that needs a third color reaches for gold. Gold
+  is a theme token like the others, and what it paints are book elements, so a vibe can restyle
+  them (D14). The same holds for every book element built from now on: it takes its look from
+  tokens and vibe areas, not fixed paint.
 
 ## Open questions
 

@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { browserHistoryNamed, onBrowserHistoryChange } from "./browserHistory";
 import { freshFor, importGames, pickGames, scanFile } from "./importFile";
 import { makeRoom } from "./merge";
-import { HistoryError, type GameHistoryStore, type StoredGame } from "./types";
+import { HistoryError, type GameHistoryStore, type HistoryImport, type ReadGame, type StoredGame } from "./types";
 import { chunkCap, saveImport } from "./writes";
 
 // The browser's game history on an IndexedDB that lives in memory (fake-indexeddb), each test
@@ -14,7 +14,7 @@ import { chunkCap, saveImport } from "./writes";
 let count = 0;
 const fresh = (limit?: number) => browserHistoryNamed(`test-history-${++count}`, limit);
 
-function game(n: number): StoredGame {
+function game(n: number): ReadGame {
   const id = String(n).padStart(8, "0");
   return {
     record: {
@@ -35,6 +35,10 @@ function game(n: number): StoredGame {
   };
 }
 const games = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => game(from + i));
+/** Games as stored, in import `importId`. */
+const stored = (from: number, to: number, importId = 1): StoredGame[] => games(from, to).map((g) => ({ ...g, importId }));
+/** A list of one import, holding `count` games. */
+const listed = (count: number): HistoryImport[] => [{ id: 1, at: "2024-01-01T00:00:00.000Z", name: "games.pgn", username: "Me", games: count }];
 
 async function refusal(work: Promise<unknown>) {
   try {
@@ -46,9 +50,9 @@ async function refusal(work: Promise<unknown>) {
 }
 
 /** Merges `incoming` into `history` and writes the change, as an import does. */
-async function importInto(history: GameHistoryStore, incoming: StoredGame[], choice: "stop" | "replace" = "stop") {
+async function importInto(history: GameHistoryStore, incoming: ReadGame[], choice: "stop" | "replace" = "stop", name = "games.pgn") {
   const { version } = await history.summary();
-  return saveImport(history, incoming, { choice, username: "Me", version });
+  return saveImport(history, incoming, { choice, username: "Me", version, name });
 }
 
 const stops: (() => void)[] = [];
@@ -60,32 +64,56 @@ describe("the browser's game history", () => {
     expect(await history.summary()).toMatchObject({ games: 0, chunks: [], version: 0, username: null });
     await importInto(history, games(1, 3));
     expect(await history.summary()).toMatchObject({ games: 3, chunks: [{ n: 0, games: 3 }], version: 1, username: "Me" });
-    expect((await history.chunks())[0].games).toEqual(games(1, 3));
+    expect((await history.chunks())[0].games).toEqual(stored(1, 3));
   });
 
   it("refuses a write planned from an older version", async () => {
     const history = fresh();
     await importInto(history, games(1, 3));
-    const write = { chunks: [{ n: 1, games: games(4, 4) }], deleted: [], username: "Me" };
+    const write = { chunks: [{ n: 1, games: stored(4, 4) }], deleted: [], username: "Me", imports: listed(4) };
     expect(await refusal(history.write(write, 0))).toBe("stale");
-    expect(await refusal(saveImport(history, games(5, 5), { choice: "stop", username: "Me", version: 0 }))).toBe("stale");
+    expect(await refusal(saveImport(history, games(5, 5), { choice: "stop", username: "Me", version: 0, name: "games.pgn" }))).toBe("stale");
     expect(await refusal(history.write(write, 1))).toBe("accepted");
   });
 
   it("refuses more games than the limit, and records that don't pass their schema", async () => {
     const history = fresh(3);
-    expect(await refusal(history.write({ chunks: [{ n: 0, games: games(1, 4) }], deleted: [], username: "Me" }, 0))).toBe("invalid");
-    const bad = { ...game(1), record: { ...game(1).record, key: "javascript:alert(1)" } };
-    expect(await refusal(history.write({ chunks: [{ n: 0, games: [bad] }], deleted: [], username: "Me" }, 0))).toBe("invalid");
-    const noName = { chunks: [{ n: 0, games: games(1, 1) }], deleted: [], username: " " };
+    expect(await refusal(history.write({ chunks: [{ n: 0, games: stored(1, 4) }], deleted: [], username: "Me", imports: listed(4) }, 0))).toBe("invalid");
+    const bad = { ...stored(1, 1)[0], record: { ...game(1).record, key: "javascript:alert(1)" } };
+    expect(await refusal(history.write({ chunks: [{ n: 0, games: [bad] }], deleted: [], username: "Me", imports: listed(1) }, 0))).toBe("invalid");
+    const noName = { chunks: [{ n: 0, games: stored(1, 1) }], deleted: [], username: " ", imports: listed(1) };
     expect(await refusal(history.write(noName, 0))).toBe("invalid");
     expect(await history.summary()).toMatchObject({ games: 0, version: 0 });
   });
 
   it("refuses more chunks than the limit needs", async () => {
     const history = fresh(1_000);
-    const chunks = Array.from({ length: chunkCap(1_000) + 1 }, (_, n) => ({ n, games: games(n, n) }));
-    expect(await refusal(history.write({ chunks, deleted: [], username: "Me" }, 0))).toBe("invalid");
+    const chunks = Array.from({ length: chunkCap(1_000) + 1 }, (_, n) => ({ n, games: stored(n, n) }));
+    expect(await refusal(history.write({ chunks, deleted: [], username: "Me", imports: listed(chunks.length) }, 0))).toBe("invalid");
+  });
+
+  it("refuses a list of imports that doesn't account for the games", async () => {
+    const history = fresh();
+    const write = (imports: HistoryImport[], games = stored(1, 3)) => history.write({ chunks: [{ n: 0, games }], deleted: [], username: "Me", imports }, 0);
+    expect(await refusal(write(listed(2)))).toBe("invalid");
+    expect(await refusal(write(listed(3), stored(1, 3, 5)))).toBe("invalid");
+    expect(await refusal(write([...listed(1), ...listed(2)]))).toBe("invalid");
+    expect(await refusal(write(listed(3)))).toBe("accepted");
+  });
+
+  it("lists each import with its games still kept, and drops one whose games are all removed", async () => {
+    const history = fresh(5);
+    await importInto(history, games(1, 3), "stop", "march.pgn");
+    await importInto(history, games(4, 5), "stop", "april.pgn");
+    expect((await history.summary()).imports).toMatchObject([
+      { id: 1, name: "march.pgn", username: "Me", games: 3 },
+      { id: 2, name: "april.pgn", games: 2 },
+    ]);
+    await importInto(history, games(6, 9), "replace", "may.pgn");
+    expect((await history.summary()).imports).toMatchObject([
+      { id: 2, games: 1 },
+      { id: 3, name: "may.pgn", games: 4 },
+    ]);
   });
 
   it("deletes chunks, and empties with the version still counting", async () => {

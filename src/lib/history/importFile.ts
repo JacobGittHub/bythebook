@@ -8,7 +8,7 @@
 import { comparePlayed } from "./merge";
 import { createGameReader, type RawGame } from "./pgnGames";
 import { fileSkipReason, gameKey, gameSource, playedAt, playerColor, readRecord, type SkipReason } from "./record";
-import { MAX_GAME_FILE_BYTES, type GameSource, type StoredGame } from "./types";
+import { MAX_GAME_FILE_BYTES, type GameSource, type ReadGame } from "./types";
 
 /** Why a file isn't read at all, in words the import can show, or null when it may be. */
 export function fileProblem(name: string, size: number, firstBytes: Uint8Array): string | null {
@@ -152,7 +152,7 @@ export function pickGames(candidates: readonly Candidate[], username: string, ke
 
 export type ImportResult = {
   /** The new games read for the user, which the merge adds. */
-  games: StoredGame[];
+  games: ReadGame[];
   /** Games not imported, by reason; "player" counts games the user didn't play (D22). */
   skipped: Record<SkipReason, number>;
   /** The user's games already stored, or repeated in the file. */
@@ -168,7 +168,7 @@ export async function importGames(
   onGames?: (games: number) => void,
 ): Promise<ImportResult> {
   const skipped: Record<SkipReason, number> = { variant: 0, unfinished: 0, player: 0, noMoves: 0, unreadable: 0 };
-  const games: StoredGame[] = [];
+  const games: ReadGame[] = [];
   const seen = new Set<string>();
   let count = 0;
   let duplicates = 0;
@@ -198,4 +198,26 @@ export async function importGames(
   });
   onGames?.(count);
   return { games, skipped, duplicates, leftOut };
+}
+
+/** The share of a file's games that the user didn't play past which the report leads with them (D22). */
+export const NAME_MISMATCH_SHARE = 0.1;
+
+/**
+ * The games left out because `username` didn't play them, whether that is a large part of the
+ * file, and then the name with the most new games besides, which the report offers to import
+ * as. A tournament file is mostly other people's games, so the offer is only a suggestion.
+ */
+export function nameMismatch(
+  scan: FileScan,
+  result: ImportResult,
+  username: string,
+): { games: number; large: boolean; other: NameCount | null } {
+  const games = result.skipped.player;
+  const large = games > 0 && games >= scan.games * NAME_MISMATCH_SHARE;
+  const mine = lower(username);
+  const other = large
+    ? (scan.names.filter((count) => count.name.toLowerCase() !== mine && count.fresh > 0).sort((a, b) => b.fresh - a.fresh)[0] ?? null)
+    : null;
+  return { games, large, other };
 }

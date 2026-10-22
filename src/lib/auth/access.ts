@@ -229,4 +229,5 @@ export const ACCESS_ROWS: AccessRow[] = [
   { feature: "Your books", guest: "Kept in this browser", account: "Saved to your account" },
   { feature: "Master statistics", guest: "Every named opening", account: "Any position, live" },
   { feature: "Prototype views", guest: "Listed only", account: "Yes" },
+  { feature: "Game history", guest: "Kept in this browser", account: "Coming soon" },
 ];

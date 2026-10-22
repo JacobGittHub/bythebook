@@ -85,11 +85,20 @@ export type GameRecord = z.infer<typeof gameRecordSchema>;
 export const gameClocksSchema = z.array(z.number().int().min(0).max(MAX_MOVE_TENTHS)).max(GAME_HISTORY_PLIES);
 export type GameClocks = z.infer<typeof gameClocksSchema>;
 
-/** A record with its clocks, which are stored apart from it (D15). */
-export type StoredGame = { record: GameRecord; clocks: GameClocks };
+/** A game as an import reads it: its record, with its clocks, which are stored apart from it (D15). */
+export type ReadGame = { record: GameRecord; clocks: GameClocks };
+
+/** The most imports a history lists; well past one a month for the years a limit holds. */
+export const MAX_HISTORY_IMPORTS = 1_000;
+/** The longest file name kept for an import. */
+export const MAX_IMPORT_NAME_CHARS = 200;
+const importIdSchema = z.number().int().min(1).max(Number.MAX_SAFE_INTEGER);
+
+/** A stored game: what was read, and the import it came in (D30). */
+export type StoredGame = ReadGame & { importId: number };
 
 export const storedGameSchema = z
-  .object({ record: gameRecordSchema, clocks: gameClocksSchema })
+  .object({ record: gameRecordSchema, clocks: gameClocksSchema, importId: importIdSchema })
   .strict()
   .refine((game) => !game.clocks.length || game.clocks.length === game.record.moves.split(" ").length, "A clock for each move.");
 
@@ -110,8 +119,24 @@ export const storedChunkSchema = z
   })
   .strict();
 
-/** What to do when an import holds more new games than the history has room for (D28). */
+/** What to do when an import holds more new games than the history has room for (D28, D33). */
 export type LimitChoice = "stop" | "replace";
+
+/** One import, which the history page can choose games by (D30). */
+export const historyImportSchema = z
+  .object({
+    id: importIdSchema,
+    /** When it was imported. */
+    at: z.iso.datetime(),
+    /** The file's name, or "Pasted games" (D34). */
+    name: z.string().trim().min(1).max(MAX_IMPORT_NAME_CHARS),
+    /** The name it read as the user's (D22). */
+    username: z.string().trim().min(1).max(MAX_USERNAME_CHARS),
+    /** Its games still kept; an import whose games have all been removed leaves the list. */
+    games: z.number().int().min(1),
+  })
+  .strict();
+export type HistoryImport = z.infer<typeof historyImportSchema>;
 
 /** A history's summary, which is read before any games are. */
 export type HistorySummary = {
@@ -124,18 +149,21 @@ export type HistorySummary = {
   /** The name the last import read as the user's (D22). */
   username: string | null;
   lastImportAt: string | null;
+  /** The imports with games still kept, oldest first. */
+  imports: HistoryImport[];
   /** Goes up with every write, so a write planned from an older read is refused. */
   version: number;
 };
 
-/** One import's change to a history: the chunks written whole, and the chunks deleted. */
-export type HistoryWrite = { chunks: StoredChunk[]; deleted: number[]; username: string };
+/** One import's change to a history: the chunks written whole, the chunks deleted, and the imports after it. */
+export type HistoryWrite = { chunks: StoredChunk[]; deleted: number[]; username: string; imports: HistoryImport[] };
 
 export const historyWriteSchema = z
   .object({
     chunks: z.array(storedChunkSchema),
     deleted: z.array(z.number().int().min(0)),
     username: z.string().trim().min(1).max(MAX_USERNAME_CHARS),
+    imports: z.array(historyImportSchema).max(MAX_HISTORY_IMPORTS),
   })
   .strict();
 

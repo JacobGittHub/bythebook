@@ -112,6 +112,22 @@ From the user's answers on 2026-10-06.
   and the maps match a later tree by its first position. The export format carries the list
   from version 1. It landed with the library work in `deployment.md` Phase 5, which moved
   every book into `opening_books.trees` on 2026-10-07.
+- D17. **Difficulty is a number from 0.0 to 5.0, to one decimal, color coded, and the
+  publisher's comes first** (Q5, the user's word, 2026-10-21: "Publisher difficulty should be
+  priority, color code the difficulty scale and allow it to be up to one decimal point").
+  - A book with a publisher's difficulty shows it first, as "Publisher 4.0", with the measured
+    one beside it, smaller ("measured 4.3"). Any other book shows only the measured one.
+  - The measured difficulty comes from what the user must remember: *m* = the book's own moves
+    (one per answer) × the average line in plies ÷ 10, since a long line is harder to recall in
+    order. Difficulty = log₂(*m* ÷ 12.5), kept between 0 and 5 and rounded to one decimal, so
+    each point doubles the load. On the example books: the English 0.9, the King's Gambit 1.0,
+    the French 2.3, the Queen's Gambit 2.9, the Sicilian 3.1, the Queen's Gambit masters 3.4,
+    the Caro-Kann and the Ruy Lopez 3.5, the Italian 4.3, and the 1,000-position catalog book
+    5.0.
+  - The color comes from five theme tokens, one per whole point, from green (0 to 1) through
+    gold in the middle to deep red (4 to 5). They are tokens so vibes can repaint them, and the
+    number is always written beside the color.
+  - The trainer can recalibrate the scale later from how users actually do.
 
 ## Open questions
 
@@ -229,18 +245,7 @@ longest line, clashes (D6) and the unconnected flag (D16). Coverage, the book–
 (D9), the publisher's difficulty, ratings (D8), reviews, descriptions, and how a library copy
 shows any of the store's numbers.
 
-### Q5. How is difficulty worked out and shown (D9)?
-
-**Recommendation:** a level from 1 to 5, named Starter, Easy, Medium, Hard and Expert, from
-the moves the user must remember (the book's own moves, one per answer) times the average line
-in plies over 10, since a long line is harder to recall in order. Levels change at 40, 100,
-200 and 400. On the example books: the English (51 moves, lines of 4.6 plies) and the King's
-Gambit are 1, the French and the Queen's Gambit 2, the Caro-Kann, Sicilian and Ruy Lopez 3, the
-Italian (171 moves, 14.1 plies) 4, and the 1,000-position catalog book 5. The publisher's
-difficulty uses the same five levels and shows beside it as "Publisher: Hard". The trainer can
-recalibrate the levels later from how users actually do.
-
-> ME:
+Q5 (how difficulty is worked out and shown) is settled by D17.
 
 ### Q6. What does a saved copy show of its store book?
 

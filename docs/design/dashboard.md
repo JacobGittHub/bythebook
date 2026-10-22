@@ -269,7 +269,15 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   library" and "Empty browser library", for guests and accounts alike (D23), and the bug
   report gains a Library section: the store, its book count and, signed in, the books
   still in the browser.
-- Game history keeps a "coming soon" line under the list.
+- **Game history** (`GameHistorySection.tsx`, `plans/game-history.md` D29) is fixed at the
+  foot of the left page, under the book list, which scrolls alone. It shows how many games are
+  kept and Import games, which opens `GameImportDialog`: a PGN file or pasted text, the file's
+  check with the player's name, and the choice when the games don't fit the limit. Once the
+  import starts, the dialog closes, and the progress, then the report, take the section's place.
+  The import runs in `GameImportProvider` (`src/context/GameImport.tsx`), in the dashboard
+  layout, so it carries on across pages. A viewer elsewhere when it ends gets a toast with a
+  close button and the way back here, and the browser asks before a tab with an import running
+  closes. Only guests can import until accounts have their storage (game history Phase 3).
 
 ## Bookstore
 

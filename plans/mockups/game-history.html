@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Mockup for plans/game-history.md step 9, second round (the history page, step 16; D8, D30, D31, D32). Published as the "Game History Page" artifact. -->
+<!-- Mockup for plans/game-history.md step 9, third round (the history page, step 16; D8, D30, D31, D32 as amended, and the filters proposed in Q22). Published as the "Game History Page" artifact. -->
 <title>Game History Page</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -103,23 +103,47 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .btn.danger { color: var(--destructive); }
 .ico { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
-/* Filters and imports */
-.pick { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 12px 18px; flex: none; }
-.filters { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; font-size: 12.5px; }
-.filters > span { color: var(--muted-foreground); }
+/* Which games (Q22): the side beside the title, a row of buttons that open checkbox panels, and a strip of months */
+.gamehead h2 { flex: none; }
+.gamehead .as { font: 400 16px var(--body); color: var(--muted-foreground); margin-left: 2px; }
 .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; width: fit-content; }
-.seg button { font: 12px var(--body); color: var(--foreground); background: var(--page); border: 0; border-right: 1px solid var(--border); padding: 3px 7px; cursor: pointer; white-space: nowrap; }
+.seg button { font: 12.5px var(--body); color: var(--foreground); background: var(--page); border: 0; border-right: 1px solid var(--border); padding: 4px 10px; cursor: pointer; white-space: nowrap; }
 .seg button:last-child { border-right: 0; }
 .seg button[aria-pressed="true"] { background: var(--accent); font-weight: 700; }
 .selectish { height: 26px; display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--page); font-size: 12.5px; width: 168px; }
-.imports { display: grid; gap: 4px; align-content: start; }
-.imports .sc { margin-bottom: 2px; }
-.imp { display: grid; grid-template-columns: 16px 1fr auto; gap: 0 8px; align-items: start; font-size: 12.5px; cursor: pointer; padding: 3px 4px; border-radius: 4px; }
-.imp:hover { background: var(--accent); }
-.imp input { margin: 3px 0 0; accent-color: var(--primary); }
-.imp b { font-weight: 700; display: block; }
-.imp .soft { grid-column: 2; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.imp .fig { grid-row: 1; grid-column: 3; }
+.which { flex: none; display: grid; gap: 8px; }
+.facets { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.facet { position: relative; }
+.facet > .btn { font-size: 12.5px; gap: 7px; }
+.facet > .btn .k { color: var(--muted-foreground); font-weight: 400; }
+.facet > .btn[aria-expanded="true"] { background: var(--accent); border-color: var(--foreground); }
+.facet > .btn.changed { border-color: var(--primary); }
+.panel { position: absolute; top: calc(100% + 4px); left: 0; z-index: 30; width: 270px; max-height: 330px; overflow-y: auto; scrollbar-width: thin; background: var(--page); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 10px 28px rgb(20 20 20 / 0.16); padding: 6px; display: grid; gap: 1px; }
+.panel label { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 0 8px; align-items: center; font-size: 12.5px; padding: 3px 6px; border-radius: 4px; cursor: pointer; }
+.panel label:hover { background: var(--accent); }
+.panel label.child { padding-left: 28px; font-size: 12px; }
+.panel label.zero { color: var(--muted-foreground); }
+.panel input { margin: 0; accent-color: var(--primary); }
+.panel .sub { grid-column: 2 / 4; font-size: 11px; color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel .pfoot { display: flex; justify-content: space-between; border-top: 1px solid var(--rule); margin-top: 4px; padding: 6px 4px 2px; }
+.linkbtn { font: 12px var(--body); color: var(--primary); background: none; border: 0; padding: 0; cursor: pointer; }
+.strip { display: grid; gap: 3px; }
+.strip .srow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; }
+.strip .srow b { font-weight: 600; }
+.strip svg { display: block; width: 100%; height: 34px; cursor: ew-resize; touch-action: none; }
+.strip .mbar { fill: var(--border); }
+.strip .mbar.in { fill: var(--primary); opacity: 0.7; }
+.strip .yr { font: 9px var(--body); fill: var(--muted-foreground); }
+.strip .edge { stroke: var(--primary); stroke-width: 1.5; }
+.presets { display: inline-flex; gap: 2px; }
+.presets button { font: 12px var(--body); color: var(--muted-foreground); background: none; border: 0; padding: 1px 6px; border-radius: 4px; cursor: pointer; }
+.presets button:hover { background: var(--accent); color: var(--foreground); }
+.presets button[aria-pressed="true"] { color: var(--foreground); font-weight: 700; }
+.switch { display: inline-flex; align-items: center; gap: 7px; font: 12.5px var(--body); color: var(--foreground); background: none; border: 0; padding: 0; cursor: pointer; }
+.switch .track { width: 30px; height: 17px; border-radius: 9px; background: var(--border); position: relative; transition: background 0.15s; }
+.switch .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--page); box-shadow: 0 1px 2px rgb(0 0 0 / 0.3); transition: left 0.15s; }
+.switch[aria-checked="true"] .track { background: var(--primary); }
+.switch[aria-checked="true"] .track::after { left: 15px; }
 
 /* Totals */
 .totals { flex: none; display: grid; gap: 5px; border-block: 1px solid var(--rule); padding-block: 10px; }
@@ -156,10 +180,11 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .board i.l { background: var(--sq-light); } .board i.d { background: var(--sq-dark); }
 .board i.wp { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 0 1px #000; } .board i.bp { color: #111; }
 .board i.from, .board i.to { box-shadow: inset 0 0 0 100px rgb(255 214 0 / 0.32); }
-.details { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.details .mv { font: 600 22px/1.2 var(--display); padding-right: 120px; }
-.details .line { font: 12px/1.45 var(--figures); color: var(--muted-foreground); }
-.next { display: grid; gap: 2px; }
+/* The details keep the board's height whatever the position, so nothing below them moves (D30). */
+.details { min-width: 0; height: 228px; display: flex; flex-direction: column; gap: 5px; }
+.details .mv { font: 600 22px/1.2 var(--display); padding-right: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; }
+.details .line { font: 12px/1.45 var(--figures); color: var(--muted-foreground); height: 2.9em; overflow: hidden; flex: none; }
+.next { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; display: grid; align-content: start; gap: 2px; border-top: 1px solid var(--rule); padding-top: 3px; }
 .nrow { display: grid; grid-template-columns: 58px 40px 1fr 38px; gap: 8px; align-items: center; font-size: 12.5px; padding: 2px 4px; border-radius: 4px; cursor: pointer; border: 1px solid transparent; }
 .nrow:hover { background: var(--accent); }
 .nrow[aria-selected="true"] { border-color: var(--primary); }
@@ -168,7 +193,8 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .toolbar { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .zoom { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .zoom button { font: 12.5px var(--body); color: var(--foreground); background: var(--page); border: 0; padding: 3px 9px; cursor: pointer; }
-.zoom span { padding: 0 8px; font: 11.5px var(--figures); color: var(--muted-foreground); border-left: 1px solid var(--border); border-right: 1px solid var(--border); line-height: 24px; }
+.zoom span { padding: 0 8px; font: 11.5px var(--figures); color: var(--muted-foreground); border-left: 1px solid var(--border); border-right: 1px solid var(--border); line-height: 24px; min-width: 46px; text-align: center; }
+.zoom button.fit { border-left: 1px solid var(--border); font-size: 12px; }
 .viewbox { flex: 1 1 auto; min-height: 0; position: relative; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted); }
 .vscroll { position: absolute; inset: 0; overflow: auto; scrollbar-width: thin; cursor: grab; touch-action: none; }
 .vscroll.dragging { cursor: grabbing; }
@@ -206,11 +232,12 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
   .tabs { display: none; }
   .book { margin: 0 6px 6px; padding: 4px; }
   .head h2 { font-size: 26px; }
-  .pick { grid-template-columns: 1fr; }
+  .panel { width: min(270px, calc(100vw - 48px)); }
   .games { max-height: 360px; flex: none; }
   .posbox { grid-template-columns: 1fr; }
   .posbox .board { max-width: 320px; }
   .details .mv { padding-right: 0; }
+  .details { height: auto; } .next { max-height: 150px; flex: none; }
   .posbox .open { position: static; justify-self: start; order: 3; }
   .viewbox { flex: none; height: 440px; }
   .games td.tc, .games th.tc { display: none; }
@@ -220,9 +247,9 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 <body>
 <div class="wrap">
   <header class="intro">
-    <p class="eyebrow">Mockup · plans/game-history.md, step 9, second round</p>
+    <p class="eyebrow">Mockup · plans/game-history.md, step 9, third round</p>
     <h1>The game history page</h1>
-    <p>Laid out by D30: the games on the left page, filtered by site, time, side and import, with the games through the current position; the board and the games' tree on the right, in ply columns (D31). The tree is live: click it, then use the arrow keys (D32) or drag it. The filters and imports change the tree too. Games, ratings and dates are made up; opponents' names are never kept (D8).</p>
+    <p>Laid out by D30, with the way of choosing games proposed in Q22: the side beside the title, Time and From as buttons that open checkbox panels, and a strip of months to drag across. The board and the games' tree are on the right, in ply columns (D31). The tree is live: click it, then use the arrow keys, drag it, or zoom with Ctrl and the wheel (D32 as amended). Games, ratings and dates are made up; opponents' names are never kept (D8).</p>
   </header>
   <div class="studio" role="group" aria-label="Mockup options">
     <fieldset><legend>Color</legend><div class="chips" data-key="mode"><button class="chip" data-value="light">Light</button><button class="chip" data-value="dark">Dark</button></div></fieldset>
@@ -231,19 +258,21 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
   <div class="stage"><div class="mock" id="mock"></div></div>
   <section class="notes" aria-label="Notes">
     <div>
-      <h2>The left page: which games</h2>
+      <h2>The left page: which games (Q22)</h2>
       <ul>
-        <li><strong>Filters</strong> by site, time class, side, exact time control and dates, with the <strong>imports</strong> beside them: each import can be left out, so a tournament file or an old account can be looked at alone.</li>
-        <li><strong>The totals bar</strong> counts what the filters and imports leave.</li>
-        <li><strong>Games through</strong> the current position, newest first, each linking to its game on its site. At the starting position it is every game.</li>
+        <li><strong>One kind of control per kind of choice.</strong> The side is the only either/or, since the tree is drawn from one side, so it is a toggle beside the title. Every other choice is checkboxes, all ticked to start, each with its games. Dates are a span.</li>
+        <li><strong>Time</strong> is one list: each class with its exact time controls beneath it. A class is part-ticked when only some of its controls are.</li>
+        <li><strong>From</strong> folds the site and the imports together: each site with its imports beneath it, so a tournament file or an old account can be looked at alone.</li>
+        <li><strong>The strip of months</strong> shows when you played and chooses the span: drag across it, or pick 3 months, a year or all.</li>
+        <li>The buttons say what is chosen and open panels, not menus, so they have no arrow. Counts in a panel are under the other choices.</li>
       </ul>
     </div>
     <div>
       <h2>The right page: where they went</h2>
       <ul>
-        <li><strong>The board</strong> shows the current position, its results and the moves played next; "Open in Explorer" sits in the box's corner.</li>
-        <li><strong>The tree</strong> is ply columns, each line as thick as the games that went that way. <strong>Color</strong> switches between the book views' own paint and your score (red at 30% or less, grey at 50%, green at 70% or more).</li>
-        <li><strong>Zoom</strong> sits with the view's other controls, above the drawing.</li>
+        <li><strong>The board</strong> shows the current position, its results and the moves played next. The details keep the board's height: the moves played next scroll in their own box, so a busy position never moves the tree.</li>
+        <li><strong>The tree</strong> is ply columns, each line as thick as the games that went that way. <strong>Your score</strong> is a switch, on to start: red at 30% or less, grey at 50%, green at 70% or more. Off, the lines take the book views' own paint.</li>
+        <li><strong>Zoom</strong> runs from 50% to 400% in finer steps on − and +, with Fit for the whole tree.</li>
       </ul>
     </div>
     <div>
@@ -251,7 +280,8 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
       <ul>
         <li><kbd>↑</kbd> <kbd>↓</kbd> move the dashed ring among the current position's moves, stopping at the first and last.</li>
         <li><kbd>→</kbd> plays the ringed move; <kbd>←</kbd> goes back, with the ring on the move you came from.</li>
-        <li>The camera pans to keep the current position and its moves in view; drag to look elsewhere. "Fit" shows the whole tree.</li>
+        <li>The camera is eager: it keeps the current position a third in from the left and re-centres its moves as soon as they near an edge. It zooms out when the moves don't fit and in when they would sit small, up to 200%.</li>
+        <li>Below 100% the moves you can choose are labelled beside their dots at full size, and the ring keeps its size, so walking still works zoomed out.</li>
       </ul>
     </div>
   </section>
@@ -320,18 +350,40 @@ for (const imp of IMPORTS) {
   }
 }
 GAMES.sort((a, b) => b.date.localeCompare(a.date));
+// Months from the first game to the last, for the strip of dates.
+const MONTHS = [];
+for (let y = 2023, m = 10; y < 2026 || (y === 2026 && m <= 10); m === 12 ? (y++, m = 1) : m++) MONTHS.push(`${y}-${String(m).padStart(2, "0")}`);
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const monthName = (i) => `${MONTH_NAMES[Number(MONTHS[i].slice(5)) - 1]} ${MONTHS[i].slice(0, 4)}`;
+for (const g of GAMES) g.m = MONTHS.indexOf(g.date.slice(0, 7));
+const CLASSES = ["bullet", "blitz", "rapid", "classical", "daily"];
+const CLASS_NAMES = { bullet: "Bullet", blitz: "Blitz", rapid: "Rapid", classical: "Classical", daily: "Daily" };
+const ALL_CONTROLS = CLASSES.flatMap((c) => CONTROLS[c]);
+const SITES = ["Chess.com", "Lichess", "Other"];
+function controlName(c) {
+  if (c === "1/86400") return "1 day a move";
+  const [base, inc] = c.split("+").map(Number);
+  return `${base >= 60 ? base / 60 : base + "s"}+${inc}`;
+}
 
 // ── State, and the tree built from the games the filters leave ─────────────────────────────
-const state = { mode: "light", width: "desktop", site: "All", time: "All", side: "White", imports: new Set([1, 2, 3]), paint: "book", zoom: 3 };
+const state = { mode: "light", width: "desktop", side: "White", controls: new Set(ALL_CONTROLS), imports: new Set([1, 2, 3]), from: 0, to: MONTHS.length - 1, score: true, zoom: 1.5, open: null };
 try { const dark = document.documentElement.dataset.theme === "dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches); if (dark) state.mode = "dark"; } catch {}
 if (window.innerWidth < 760) state.width = "phone";
 let tree = null, current = null, hi = 0;
 
-function filtered() {
-  return GAMES.filter((g) => state.imports.has(g.imp)
-    && (state.site === "All" || g.site === state.site)
-    && (state.time === "All" || g.timeClass === state.time.toLowerCase())
-    && (state.side === "Both" || g.color === state.side.toLowerCase()));
+/** Whether a game passes every choice, leaving out `skip` (a panel counts its options under the other choices). */
+function passes(g, skip) {
+  return g.color === state.side.toLowerCase()
+    && (skip === "source" || state.imports.has(g.imp))
+    && (skip === "time" || state.controls.has(g.control))
+    && (skip === "date" || (g.m >= state.from && g.m <= state.to));
+}
+const filtered = () => GAMES.filter((g) => passes(g));
+function countBy(skip, key) {
+  const out = new Map();
+  for (const g of GAMES) if (passes(g, skip)) out.set(g[key], (out.get(g[key]) ?? 0) + 1);
+  return out;
 }
 function buildTree(games) {
   const root = { id: "", san: null, ply: 0, parent: null, kids: new Map(), games: 0, w: 0, d: 0, l: 0 };
@@ -365,16 +417,23 @@ function rebuild() {
   hi = 0;
 }
 
-// ── Ply columns, laid out as src/lib/books/views/plyColumns.ts does, with zoom steps ───────
-const ZOOMS = [1, 1.5, 2, 3];
+// ── Ply columns, laid out as src/lib/books/views/plyColumns.ts does, on a zoom scale (D32) ──
+// Zoom 1 is the natural size; the scale runs from half to four times it, in these steps on − and +.
+const ZOOM_STEPS = [0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4];
+const ZOOM_MIN = 0.5, ZOOM_MAX = 4, COL = 52, ROW = 18;
+const clampZoom = (z) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
+const leafCount = () => [...tree.all.values()].filter((x) => !x.children.length).length;
+/** The zoom at which the whole tree fits the box. */
+function fitZoom(box) {
+  const pad = { left: 18, right: 40, top: 26, bottom: 16 };
+  return clampZoom(Math.min((box.width - pad.left - pad.right) / (Math.max(tree.depth, 1) * COL), (box.height - pad.top - pad.bottom) / (Math.max(leafCount() - 1, 1) * ROW)));
+}
 function layout(box) {
   const pad = { left: 18, right: 40, top: 26, bottom: 16 };
   const depth = Math.max(tree.depth, 1);
-  const fitCol = Math.min(72, Math.max(26, (box.width - pad.left - pad.right) / depth));
-  const leaves = [...tree.all.values()].filter((x) => !x.children.length).length;
-  const fitRow = Math.min(28, Math.max(9, (box.height - pad.top - pad.bottom) / Math.max(leaves - 1, 1)));
-  const z = ZOOMS[state.zoom - 1] ?? 1;
-  const colW = fitCol * Math.max(1, z * 0.7), rowH = fitRow * z;
+  const leaves = leafCount();
+  const z = state.zoom;
+  const colW = COL * Math.max(z, 0.6), rowH = ROW * z;
   const used = rowH * (leaves - 1);
   const top = pad.top + Math.max(0, (box.height - pad.top - pad.bottom - used) / 2);
   const points = new Map(); let row = 0;
@@ -413,8 +472,8 @@ function drawTree() {
     if (x.parent) {
       const p = at(x.parent.id), k = lay.colW * 0.55;
       const width = 0.7 + 7 * Math.sqrt(x.games / rootGames);
-      const paint = state.paint === "success" ? ` style="stroke:${scoreColor(x.score)};opacity:${onPath.has(x.id) ? 1 : 0.85}"` : "";
-      edges += `<path d="M${p.x},${p.y} C${p.x + k},${p.y} ${c.x - k},${c.y} ${c.x},${c.y}" class="bv-edge${onPath.has(x.id) && state.paint === "book" ? " on-path" : ""}" stroke-width="${width.toFixed(2)}"${paint}/>`;
+      const paint = state.score ? ` style="stroke:${scoreColor(x.score)};opacity:${onPath.has(x.id) ? 1 : 0.85}"` : "";
+      edges += `<path d="M${p.x},${p.y} C${p.x + k},${p.y} ${c.x - k},${c.y} ${c.x},${c.y}" class="bv-edge${onPath.has(x.id) && !state.score ? " on-path" : ""}" stroke-width="${width.toFixed(2)}"${paint}/>`;
     }
     const cls = !x.san ? "root" : x.ply % 2 ? "wm" : "bm";
     nodes += `<circle cx="${c.x}" cy="${c.y}" r="${x.san ? 2.8 : 4.2}" class="bv-node ${cls}${onPath.has(x.id) ? " on-path" : ""}${x === current ? " current" : ""}"/>`;
@@ -422,25 +481,44 @@ function drawTree() {
     if (isHi) nodes += `<circle cx="${c.x}" cy="${c.y}" r="7" class="bv-ring"/>`;
     const shown = onPath.has(x.id) || isKid || (lay.rowH >= 11 && (x.ply <= 3 || x.games >= rootGames * 0.03));
     const above = !x.san || x.ply % 2 === 1;
-    labels += `<text x="${c.x}" y="${above ? c.y - 6 : c.y + 12}" text-anchor="middle" class="bv-label${shown ? "" : " minor"}${onPath.has(x.id) ? " on-path" : ""}${isKid ? " kid" : ""}${isHi ? " hi" : ""}${x === current ? " current" : ""}">${x.san ?? "Start"}</text>`;
+    // Below zoom 1 the rows are tight, so the current position's moves are labelled beside their dots, at a fixed size.
+    const beside = isKid && lay.rowH < 13;
+    labels += `<text x="${beside ? c.x + 9 : c.x}" y="${beside ? c.y + 3.5 : above ? c.y - 6 : c.y + 12}" text-anchor="${beside ? "start" : "middle"}" class="bv-label${shown ? "" : " minor"}${onPath.has(x.id) ? " on-path" : ""}${isKid ? " kid" : ""}${isHi ? " hi" : ""}${x === current ? " current" : ""}">${x.san ?? "Start"}</text>`;
     hits += `<circle cx="${c.x}" cy="${c.y}" r="7" class="bv-hit" data-id="${x.id}"><title>${x.san ? moveText(x) : "Start"} · ${n(x.games)} games · ${pct(x.score)}</title></circle>`;
   }
   scroll.innerHTML = `<svg width="${lay.width}" height="${lay.height}" viewBox="0 0 ${lay.width} ${lay.height}" role="img" aria-label="Ply columns of your games">${grid}${edges}${nodes}${labels}${hits}</svg>`;
   return lay;
 }
 
-/** Pans the view so the current position and its moves are in frame, centring the current one when they can't all fit. */
+/**
+ * The zoom that frames the current position and its moves (D32 as amended): out when they don't
+ * fit, in when they would sit small, within the scale and never past AUTO_MAX. Null keeps the zoom.
+ */
+const AUTO_MAX = 2;
+function autoZoom(lay) {
+  const scroll = document.getElementById("vscroll");
+  if (!scroll || !lay || !current.children.length) return null;
+  const ys = [current, ...current.children].map((x) => lay.points.get(x.id).y);
+  const span = Math.max(...ys) - Math.min(...ys), room = scroll.clientHeight * 0.7;
+  const z = state.zoom;
+  let next = z;
+  if (span > room) next = clampZoom(z * room / span);
+  else if (span > 0 && span < room * 0.3 && z < AUTO_MAX) next = Math.min(AUTO_MAX, clampZoom(z * room * 0.6 / span));
+  else if (span === 0 && z < 1) next = 1;
+  return Math.abs(next - z) / z > 0.04 ? next : null;
+}
+
+/** Pans eagerly: the current position sits a third in from the left, and its moves are re-centred as soon as they near an edge. */
 function follow(lay, smooth = true) {
   const scroll = document.getElementById("vscroll");
   if (!scroll || !lay) return;
-  const pts = [current, ...current.children].map((x) => lay.points.get(x.id));
-  const m = 34;
-  const minX = Math.min(...pts.map((p) => p.x)) - m, maxX = Math.max(...pts.map((p) => p.x)) + m;
-  const minY = Math.min(...pts.map((p) => p.y)) - m, maxY = Math.max(...pts.map((p) => p.y)) + m;
-  const w = scroll.clientWidth, h = scroll.clientHeight, here = lay.points.get(current.id);
-  let left = scroll.scrollLeft, top = scroll.scrollTop;
-  if (maxX - minX > w) left = here.x - w * 0.3; else if (minX < left) left = minX; else if (maxX > left + w) left = maxX - w;
-  if (maxY - minY > h) top = here.y - h / 2; else if (minY < top) top = minY; else if (maxY > top + h) top = maxY - h;
+  const ys = [current, ...current.children].map((x) => lay.points.get(x.id).y);
+  const here = lay.points.get(current.id);
+  const w = scroll.clientWidth, h = scroll.clientHeight, edge = h * 0.18;
+  const left = here.x - w * 0.3;
+  let top = scroll.scrollTop;
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  if (minY < top + edge || maxY > top + h - edge) top = (minY + maxY) / 2 - h / 2;
   scroll.scrollTo({ left: Math.max(0, left), top: Math.max(0, top), behavior: smooth ? "smooth" : "auto" });
 }
 
@@ -471,6 +549,66 @@ const wdlBar = (x) => `<div class="wdl"><i style="flex:${x.w}"></i><i style="fle
 function seg(key, values, labels = values) {
   return `<div class="seg" data-key="${key}">${values.map((v, i) => `<button aria-pressed="${state[key] === v}" data-value="${v}">${labels[i]}</button>`).join("")}</div>`;
 }
+/** A checkbox row; `on` is "on", "some" or "off". */
+function box(attrs, on, label, count, cls = "", sub = "") {
+  return `<label class="${cls}${count ? "" : " zero"}"><input type="checkbox" ${attrs} ${on === "on" ? "checked" : ""} ${on === "some" ? "data-some" : ""}><span>${label}</span><span class="fig soft">${n(count)}</span>${sub ? `<span class="sub">${sub}</span>` : ""}</label>`;
+}
+const allOf = (items, has) => items.every(has) ? "on" : items.some(has) ? "some" : "off";
+function timeSummary() {
+  if (ALL_CONTROLS.every((c) => state.controls.has(c))) return "All time controls";
+  const parts = CLASSES.map((cl) => {
+    const st = allOf(CONTROLS[cl], (c) => state.controls.has(c));
+    if (st === "on") return CLASS_NAMES[cl];
+    if (st === "some") return CONTROLS[cl].filter((c) => state.controls.has(c)).map((c) => `${CLASS_NAMES[cl]} ${controlName(c)}`).join(", ");
+    return null;
+  }).filter(Boolean);
+  return parts.length ? parts.join(", ") : "No time controls";
+}
+function sourceSummary() {
+  if (IMPORTS.every((i) => state.imports.has(i.id))) return "All sources";
+  const chosen = IMPORTS.filter((i) => state.imports.has(i.id));
+  if (!chosen.length) return "No sources";
+  const full = SITES.filter((site) => { const mine = IMPORTS.filter((i) => i.site === site); return mine.length && mine.every((i) => state.imports.has(i.id)); });
+  return chosen.every((i) => full.includes(i.site)) ? full.join(", ") : `${chosen.length} of ${IMPORTS.length} imports`;
+}
+function timePanel() {
+  const counts = countBy("time", "control");
+  return `<div class="panel" role="group" aria-label="Time controls">${CLASSES.map((cl) => {
+    const total = CONTROLS[cl].reduce((sum, c) => sum + (counts.get(c) ?? 0), 0);
+    return box(`data-class="${cl}"`, allOf(CONTROLS[cl], (c) => state.controls.has(c)), CLASS_NAMES[cl], total)
+      + CONTROLS[cl].map((c) => box(`data-control="${c}"`, state.controls.has(c) ? "on" : "off", controlName(c), counts.get(c) ?? 0, "child")).join("");
+  }).join("")}<div class="pfoot"><button class="linkbtn" data-all="time">All</button><button class="linkbtn" data-close>Done</button></div></div>`;
+}
+function sourcePanel() {
+  const counts = countBy("source", "imp");
+  return `<div class="panel" role="group" aria-label="Sources and imports">${SITES.map((site) => {
+    const mine = IMPORTS.filter((i) => i.site === site);
+    const total = mine.reduce((sum, i) => sum + (counts.get(i.id) ?? 0), 0);
+    return box(`data-site="${site}"`, allOf(mine, (i) => state.imports.has(i.id)), site, total)
+      + mine.map((i) => box(`data-imp="${i.id}"`, state.imports.has(i.id) ? "on" : "off", `Imported ${i.at}`, counts.get(i.id) ?? 0, "child", i.file)).join("");
+  }).join("")}<div class="pfoot"><button class="linkbtn" data-all="source">All</button><button class="linkbtn" data-close>Done</button></div></div>`;
+}
+function facet(key, label, summary, changed) {
+  const panel = state.open === key ? (key === "time" ? timePanel() : sourcePanel()) : "";
+  return `<div class="facet"><button class="btn outline${changed ? " changed" : ""}" data-facet="${key}" aria-expanded="${state.open === key}"><span class="k">${label}</span> ${summary}</button>${panel}</div>`;
+}
+function stripHtml() {
+  const counts = new Array(MONTHS.length).fill(0);
+  for (const g of GAMES) if (passes(g, "date")) counts[g.m]++;
+  const max = Math.max(1, ...counts), W = 1000, H = 34, bw = W / MONTHS.length;
+  const bars = counts.map((c, i) => {
+    const h = c ? 3 + (H - 13) * Math.sqrt(c / max) : 0;
+    return `<rect class="mbar${i >= state.from && i <= state.to ? " in" : ""}" x="${(i * bw + 1).toFixed(1)}" y="${(H - 10 - h).toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${h.toFixed(1)}"><title>${monthName(i)} · ${n(c)} games</title></rect>`;
+  }).join("");
+  const years = MONTHS.map((m, i) => m.endsWith("-01") ? `<text class="yr" x="${(i * bw + 2).toFixed(1)}" y="${H - 1}">${m.slice(0, 4)}</text>` : "").join("");
+  const edges = `<line class="edge" x1="${state.from * bw}" x2="${state.from * bw}" y1="0" y2="${H - 10}"/><line class="edge" x1="${(state.to + 1) * bw}" x2="${(state.to + 1) * bw}" y1="0" y2="${H - 10}"/>`;
+  const last = MONTHS.length - 1;
+  const span = state.from === 0 && state.to === last ? "All dates" : state.to === last ? `Since ${monthName(state.from)}` : `${monthName(state.from)} – ${monthName(state.to)}`;
+  const preset = (label, from) => `<button data-preset="${from}" aria-pressed="${state.from === from && state.to === last}">${label}</button>`;
+  return `<div class="srow"><b>${span}</b><span class="grow"></span><span class="presets">${preset("3 months", MONTHS.length - 3)}${preset("Year", MONTHS.length - 12)}${preset("All", 0)}</span></div>
+    <svg id="strip" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="slider" aria-label="Dates: drag across the months to choose a span" aria-valuetext="${span}">${bars}${years}${edges}</svg>`;
+}
+const isDefault = () => state.controls.size === ALL_CONTROLS.length && state.imports.size === IMPORTS.length && state.from === 0 && state.to === MONTHS.length - 1;
 function renderShell() {
   const mock = document.getElementById("mock");
   mock.dataset.mode = state.mode; mock.dataset.width = state.width;
@@ -480,18 +618,10 @@ function renderShell() {
     <div class="book"><span class="ribbon"></span><div class="spread">
       <section class="pg left" aria-label="Left page">
         <div class="running"><i>Library</i><span class="sc">Kept in this browser</span></div>
-        <div class="head"><h2>Your games</h2><button class="btn ghost">${icon("upload")} Import games</button><button class="btn ghost danger">${icon("trash")} Delete all</button></div>
-        <div class="pick">
-          <div class="filters">
-            <span>Site</span>${seg("site", ["All", "Chess.com", "Lichess", "Other"])}
-            <span>Time</span>${seg("time", ["All", "Bullet", "Blitz", "Rapid", "Classical", "Daily"])}
-            <span>Side</span>${seg("side", ["Both", "White", "Black"])}
-            <span>Control</span><span class="selectish">Any time control ${icon("chev")}</span>
-            <span>Dates</span><span class="selectish">All dates ${icon("chev")}</span>
-          </div>
-          <div class="imports" role="group" aria-label="Imports"><span class="sc">Imports</span>
-            ${IMPORTS.map((i) => `<label class="imp"><input type="checkbox" data-imp="${i.id}" ${state.imports.has(i.id) ? "checked" : ""}><b>${i.site} · ${i.at}</b><span class="fig soft">${n(i.count)}</span><span class="soft" title="${i.file}">${i.file}</span></label>`).join("")}
-          </div>
+        <div class="head gamehead"><h2>Your games <span class="as">as</span></h2>${seg("side", ["White", "Black"])}<span class="grow"></span><button class="btn ghost">${icon("upload")} Import games</button><button class="btn ghost" aria-label="More: delete all games" title="More: delete all games">⋯</button></div>
+        <div class="which" role="group" aria-label="Which games">
+          <div class="facets">${facet("time", "Time", timeSummary(), state.controls.size !== ALL_CONTROLS.length)}${facet("source", "From", sourceSummary(), state.imports.size !== IMPORTS.length)}${isDefault() ? "" : '<button class="linkbtn" data-reset>Reset</button>'}</div>
+          <div class="strip" id="strip-box">${stripHtml()}</div>
         </div>
         <div class="totals" id="totals"></div>
         <div class="through"><div class="head"><h3 id="through-title">Games through</h3><span class="sc" id="through-count"></span></div><div class="crumbs" id="crumbs"></div><div class="games" id="games"></div></div>
@@ -500,17 +630,19 @@ function renderShell() {
         <div class="running"><span class="sc">The current position</span><i>Game history</i></div>
         <div class="posbox"><div class="board" id="board" aria-label="Board"></div><div class="details" id="details"></div><button class="btn outline open">Open in Explorer</button></div>
         <div class="toolbar"><span class="selectish" style="width:150px">Ply columns ${icon("chev")}</span>
-          <span class="small soft">Color</span>${seg("paint", ["book", "success"], ["Book's own", "Your score"])}
-          <span class="grow"></span><span class="zoom" aria-label="Zoom"><button data-zoom="-1" aria-label="Zoom out">−</button><span>${state.zoom === 1 ? "Fit" : `${ZOOMS[state.zoom - 1]}×`}</span><button data-zoom="1" aria-label="Zoom in">+</button></span></div>
+          <button class="switch" role="switch" aria-checked="${state.score}" data-switch="score"><span class="track"></span>Your score</button>
+          <span class="grow"></span><span class="zoom" aria-label="Zoom"><button data-zoom="-1" aria-label="Zoom out">−</button><span id="zoom-label">${Math.round(state.zoom * 100)}%</span><button data-zoom="1" aria-label="Zoom in">+</button><button class="fit" data-fit>Fit</button></span></div>
         <div class="viewbox"><div class="vscroll" id="vscroll" tabindex="0" aria-label="Your games' tree. Arrow keys walk it."></div></div>
         <div class="hint" id="hint"></div>
       </section>
     </div></div>`;
   for (const chip of document.querySelectorAll(".studio .chip")) chip.setAttribute("aria-pressed", String(state[chip.parentElement.dataset.key] === chip.dataset.value));
+  for (const input of mock.querySelectorAll("[data-some]")) input.indeterminate = true;
   bindShell();
   renderPosition(false);
 }
-function renderPosition(smooth = true) {
+/** `auto` lets the camera zoom as well as pan, which it does only when the position changes (D32). */
+function renderPosition(smooth = true, auto = false) {
   const path = pathOf(current);
   const t = tree.root;
   document.getElementById("totals").innerHTML = `<div class="line"><span class="big">${n(t.games)}</span><span class="soft">games</span><span class="grow"></span><span class="small soft">Score <b class="fig" style="color:var(--foreground)">${pct(t.score)}</b></span></div>${wdlBar(t)}
@@ -529,38 +661,97 @@ function renderPosition(smooth = true) {
   const kids = current.children;
   document.getElementById("details").innerHTML = `<span class="sc">${current.san ? "Current position" : "Starting position"}</span>
     <div class="mv">${current.san ? moveText(current) : "Start"}</div>
-    <div class="line">${path.length ? lineText(path) : "Before the first move"}</div>
+    <div class="line" title="${path.length ? lineText(path) : ""}">${path.length ? (path.length > 14 ? "… " + lineText(path.slice(-14)) : lineText(path)) : "Before the first move"}</div>
     <div class="small"><b class="fig">${n(current.games)}</b> games · <span class="fig">${n(current.w)} · ${n(current.d)} · ${n(current.l)}</span> · score <b class="fig">${pct(current.score)}</b></div>${wdlBar(current)}
-    <span class="sc" style="margin-top:6px">${kids.length ? "Played next" : "No games go further here"}</span>
-    <div class="next" role="listbox" aria-label="Moves played next">${kids.slice(0, 6).map((x, i) => `<div class="nrow" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="fig soft">${n(x.games)}</span>${wdlBar(x)}<span class="fig">${pct(x.score)}</span></div>`).join("")}</div>`;
-  document.getElementById("hint").innerHTML = `<span><kbd>↑</kbd> <kbd>↓</kbd> choose a move</span><span><kbd>→</kbd> play it</span><span><kbd>←</kbd> back</span><span>Drag to look around</span><span class="grow"></span>${state.paint === "success" ? `<span>Your score <span class="ramp"></span> 30% → 70%+ · thickness: games</span>` : `<span>Thickness: games</span>`}`;
-  follow(drawTree(), smooth);
+    <span class="sc" style="margin-top:4px">${kids.length ? `Played next · ${kids.length}` : "No games go further here"}</span>
+    <div class="next" role="listbox" aria-label="Moves played next">${kids.map((x, i) => `<div class="nrow" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="fig soft">${n(x.games)}</span>${wdlBar(x)}<span class="fig">${pct(x.score)}</span></div>`).join("")}</div>`;
+  document.getElementById("hint").innerHTML = `<span><kbd>↑</kbd> <kbd>↓</kbd> choose a move</span><span><kbd>→</kbd> play it</span><span><kbd>←</kbd> back</span><span>Drag to look around, Ctrl + wheel to zoom</span><span class="grow"></span>${state.score ? `<span>Your score <span class="ramp"></span> 30% → 70%+ · thickness: games</span>` : `<span>Thickness: games</span>`}`;
+  let lay = drawTree();
+  const z = auto ? autoZoom(lay) : null;
+  if (z) { state.zoom = z; lay = drawTree(); }
+  const label = document.getElementById("zoom-label");
+  if (label) label.textContent = `${Math.round(state.zoom * 100)}%`;
+  follow(lay, smooth);
 }
 
 function goTo(node, from) {
   current = node;
   hi = from ? Math.max(0, current.children.indexOf(from)) : 0;
-  renderPosition();
+  renderPosition(true, true);
 }
 function bindShell() {
   const mock = document.getElementById("mock");
+  const refilter = () => { rebuild(); renderShell(); };
   for (const group of mock.querySelectorAll(".seg")) {
     group.addEventListener("click", (event) => {
       const b = event.target.closest("button"); if (!b) return;
       state[group.dataset.key] = b.dataset.value;
-      if (group.dataset.key !== "paint") rebuild();
-      renderShell();
+      refilter();
     });
   }
-  for (const box of mock.querySelectorAll("[data-imp]")) {
-    box.addEventListener("change", () => { const id = Number(box.dataset.imp); box.checked ? state.imports.add(id) : state.imports.delete(id); rebuild(); renderShell(); });
+  for (const b of mock.querySelectorAll("[data-facet]")) {
+    b.addEventListener("click", () => { state.open = state.open === b.dataset.facet ? null : b.dataset.facet; renderShell(); });
   }
+  const toggle = (set, items, on) => { for (const item of items) on ? set.add(item) : set.delete(item); };
+  for (const input of mock.querySelectorAll(".panel input")) {
+    input.addEventListener("change", () => {
+      const d = input.dataset;
+      if (d.class) toggle(state.controls, CONTROLS[d.class], input.checked);
+      if (d.control) toggle(state.controls, [d.control], input.checked);
+      if (d.site) toggle(state.imports, IMPORTS.filter((i) => i.site === d.site).map((i) => i.id), input.checked);
+      if (d.imp) toggle(state.imports, [Number(d.imp)], input.checked);
+      refilter();
+    });
+  }
+  for (const b of mock.querySelectorAll("[data-all]")) {
+    b.addEventListener("click", () => { if (b.dataset.all === "time") toggle(state.controls, ALL_CONTROLS, true); else toggle(state.imports, IMPORTS.map((i) => i.id), true); refilter(); });
+  }
+  for (const b of mock.querySelectorAll("[data-close]")) b.addEventListener("click", () => { state.open = null; renderShell(); });
+  mock.querySelector("[data-reset]")?.addEventListener("click", () => {
+    toggle(state.controls, ALL_CONTROLS, true); toggle(state.imports, IMPORTS.map((i) => i.id), true);
+    state.from = 0; state.to = MONTHS.length - 1; refilter();
+  });
+  for (const b of mock.querySelectorAll("[data-preset]")) b.addEventListener("click", () => { state.from = Number(b.dataset.preset); state.to = MONTHS.length - 1; refilter(); });
+  // Dragging across the strip chooses a span of months; the tree follows when the drag ends.
+  const stripBox = mock.querySelector("#strip-box");
+  let anchor = null;
+  const monthAt = (event) => {
+    const r = mock.querySelector("#strip").getBoundingClientRect();
+    return Math.min(MONTHS.length - 1, Math.max(0, Math.floor((event.clientX - r.left) / r.width * MONTHS.length)));
+  };
+  stripBox.addEventListener("pointerdown", (event) => {
+    if (!event.target.closest("#strip")) return;
+    anchor = monthAt(event); state.from = state.to = anchor;
+    stripBox.setPointerCapture(event.pointerId);
+    mock.querySelectorAll("#strip .mbar").forEach((bar, i) => bar.classList.toggle("in", i === anchor));
+  });
+  stripBox.addEventListener("pointermove", (event) => {
+    if (anchor === null) return;
+    const m = monthAt(event); state.from = Math.min(anchor, m); state.to = Math.max(anchor, m);
+    mock.querySelectorAll("#strip .mbar").forEach((bar, i) => bar.classList.toggle("in", i >= state.from && i <= state.to));
+  });
+  stripBox.addEventListener("pointerup", () => { if (anchor === null) return; anchor = null; refilter(); });
+  mock.querySelector("[data-switch]").addEventListener("click", () => { state.score = !state.score; renderShell(); });
+  const zoomTo = (z) => { state.zoom = clampZoom(z); follow(drawTree(), false); document.getElementById("zoom-label").textContent = `${Math.round(state.zoom * 100)}%`; };
   for (const b of mock.querySelectorAll("[data-zoom]")) {
-    b.addEventListener("click", () => { state.zoom = Math.min(ZOOMS.length, Math.max(1, state.zoom + Number(b.dataset.zoom))); renderShell(); });
+    b.addEventListener("click", () => {
+      const up = Number(b.dataset.zoom) > 0;
+      const next = up ? ZOOM_STEPS.find((z) => z > state.zoom + 0.001) : [...ZOOM_STEPS].reverse().find((z) => z < state.zoom - 0.001);
+      zoomTo(next ?? state.zoom);
+    });
   }
+  mock.querySelector("[data-fit]").addEventListener("click", () => {
+    const sc = document.getElementById("vscroll");
+    zoomTo(fitZoom({ width: sc.clientWidth, height: sc.clientHeight }));
+  });
   mock.querySelector("#crumbs").addEventListener("click", (event) => { const b = event.target.closest("button"); if (b) goTo(tree.all.get(b.dataset.id)); });
   mock.querySelector("#details").addEventListener("click", (event) => { const r = event.target.closest(".nrow"); if (r) goTo(tree.all.get(r.dataset.id)); });
   const scroll = mock.querySelector("#vscroll");
+  scroll.addEventListener("wheel", (event) => {
+    if (!event.ctrlKey) return;
+    event.preventDefault();
+    zoomTo(state.zoom * Math.exp(-event.deltaY * 0.002));
+  }, { passive: false });
   scroll.addEventListener("keydown", (event) => {
     const kids = current.children;
     if (event.key === "ArrowDown" && kids.length) hi = Math.min(kids.length - 1, hi + 1);
@@ -587,6 +778,9 @@ function bindShell() {
   });
 }
 
+// A press outside an open panel, or Escape, closes it.
+document.addEventListener("pointerdown", (event) => { if (state.open && !event.target.closest(".facet")) { state.open = null; renderShell(); } });
+document.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.open) { state.open = null; renderShell(); } });
 for (const group of document.querySelectorAll(".studio .chips")) {
   group.addEventListener("click", (event) => { const chip = event.target.closest(".chip"); if (!chip) return; state[group.dataset.key] = chip.dataset.value; renderShell(); });
 }

@@ -31,6 +31,8 @@ import { libraryErrorMessage } from "@/lib/library/types";
 import { BookDetail } from "./BookDetail";
 import { countOf, originFolio, positionsOfLimit } from "./BookParts";
 import { BookList } from "./BookList";
+import { GameHistorySection } from "./GameHistorySection";
+import { GameImportDialog } from "./GameImportDialog";
 import { LibraryEmpty, StoreOffer } from "./LibraryEmpty";
 import { NewBookDialog } from "./NewBookDialog";
 import { adviceText, useBackup } from "./useBackup";
@@ -47,8 +49,8 @@ const opensElsewhere = (event: MouseEvent) => event.ctrlKey || event.metaKey || 
 
 /**
  * The Library's first level as a spread (plans/book-ui.md D8): the books as contents on the
- * left page, under New book, Back up and Restore, the backup notice and the copy at sign-in;
- * the picked book on the right, or a restore or copy checklist while one is open. The picked
+ * left page, under New book, Back up and Restore, the backup notice and the copy at sign-in,
+ * with game history fixed under them (plans/game-history.md D29); the picked book on the right, or a restore or copy checklist while one is open. The picked
  * book is kept in the address (`?book=`), which the page reads as `initialBook`. Where the halves stack, on a phone, the right page doesn't
  * show, and a book's row opens its own page instead. Debug mode adds the browser library's panel.
  */
@@ -184,15 +186,7 @@ export function LibraryPage({ initialBook }: { initialBook: string | null }) {
 
       {empty && <LibraryEmpty onNewBook={() => setCreating(true)} onRestore={openRestore} restoreBusy={busy === "restore"} />}
 
-      {books && books.length > 0 && (
-        <>
-          <BookList books={books} selectedId={selected?.id ?? null} onPick={pick} />
-          <p className="text-xs text-muted-foreground">
-            <span className="font-bold text-foreground">Game history</span> · coming soon: import your own games to see
-            where you left the book.
-          </p>
-        </>
-      )}
+      {books && books.length > 0 && <BookList books={books} selectedId={selected?.id ?? null} onPick={pick} />}
 
       {debug && (
         <section aria-label="Debug: browser library" className="mt-auto border-t border-dashed border-rule pt-2">
@@ -300,7 +294,14 @@ export function LibraryPage({ initialBook }: { initialBook: string | null }) {
             <span className="book-sc">{label}</span>
           </>
         ),
-        body: left,
+        // Only the books scroll; game history stays in view under them (plans/game-history.md Q18).
+        body: (
+          <div className="flex min-h-0 flex-1 flex-col gap-2.5">
+            {left}
+            <GameHistorySection />
+            <GameImportDialog />
+          </div>
+        ),
         folio: books && books.length > 0 && (
           <>
             <span>{countOf(books.length, "book")}</span>

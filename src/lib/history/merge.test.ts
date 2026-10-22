@@ -4,7 +4,7 @@ import { compareGames, makeRoom, mergeGames, toChunks } from "./merge";
 import type { LimitChoice, StoredChunk, StoredGame } from "./types";
 
 /** A game played on day `day` of 2024 (a number, so tests can count), or on no known day. */
-function game(day: number | null, id = day ?? 0): StoredGame {
+function game(day: number | null, id = day ?? 0, importId = 1): StoredGame {
   const playedAt = day === null ? null : new Date(Date.UTC(2024, 0, day)).toISOString().replace(".000", "");
   return {
     record: {
@@ -22,6 +22,7 @@ function game(day: number | null, id = day ?? 0): StoredGame {
       plies: 1,
     },
     clocks: [],
+    importId,
   };
 }
 const ids = (chunks: readonly StoredChunk[]) => chunks.flatMap((chunk) => chunk.games.map((g) => Number(g.record.id)));
@@ -33,21 +34,21 @@ const history = (games: StoredGame[], size: number, first = 0): StoredChunk[] =>
 describe("mergeGames", () => {
   it("adds an import's new games after the stored ones, oldest played first, and drops duplicates", () => {
     const stored = history([game(5), game(9)], 10);
-    const { chunks, report } = mergeGames(stored, [game(4), game(2), game(9), game(4)], { limit: 100, choice: "stop" });
+    const { chunks, report } = mergeGames(stored, [game(4), game(2), game(9), game(4)], { limit: 100, choice: "stop", importId: 1 });
     // Games 2 and 4 were played before 9 but imported after it, so they come after it.
     expect(ids(chunks)).toEqual([5, 9, 2, 4]);
     expect(report).toMatchObject({ added: 2, duplicates: 2, leftOut: 0, removed: 0, total: 4 });
   });
 
   it("puts games on no known day first within an import, then orders ties by key", () => {
-    const { chunks } = mergeGames([], [game(2, 7), game(null, 9), game(2, 3)], { limit: 10, choice: "stop" });
+    const { chunks } = mergeGames([], [game(2, 7), game(null, 9), game(2, 3)], { limit: 10, choice: "stop", importId: 1 });
     expect(ids(chunks)).toEqual([9, 3, 7]);
     const games = chunks.flatMap((chunk) => chunk.games);
     expect([...games].sort(compareGames)).toEqual(games);
   });
 
   it("stops at the limit, keeping the newest new games that fit", () => {
-    const { chunks, report } = mergeGames(history(range(1, 8), 4), [game(20), game(30), game(10)], { limit: 10, choice: "stop" });
+    const { chunks, report } = mergeGames(history(range(1, 8), 4), [game(20), game(30), game(10)], { limit: 10, choice: "stop", importId: 1 });
     expect(ids(chunks)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 20, 30]);
     expect(report).toMatchObject({ added: 2, leftOut: 1, removed: 0, total: 10 });
   });
@@ -55,20 +56,20 @@ describe("mergeGames", () => {
   it("replaces the games imported earliest, not those played earliest", () => {
     // The first import holds games played late; the second, games played early.
     const stored = history([...range(50, 53), ...range(1, 4)], 4);
-    const { chunks, report } = mergeGames(stored, range(60, 62), { limit: 8, choice: "replace" });
+    const { chunks, report } = mergeGames(stored, range(60, 62), { limit: 8, choice: "replace", importId: 1 });
     expect(ids(chunks)).toEqual([53, 1, 2, 3, 4, 60, 61, 62]);
     expect(report).toMatchObject({ added: 3, leftOut: 0, removed: 3, total: 8 });
   });
 
   it("keeps only the newest of an import larger than the whole limit", () => {
-    const { chunks, report } = mergeGames(history(range(1, 3), 2), range(10, 16), { limit: 4, choice: "replace" });
+    const { chunks, report } = mergeGames(history(range(1, 3), 2), range(10, 16), { limit: 4, choice: "replace", importId: 1 });
     expect(ids(chunks)).toEqual([13, 14, 15, 16]);
     expect(report).toMatchObject({ added: 4, leftOut: 3, removed: 3, total: 4, deleted: [0, 1] });
   });
 
   it("drops the earliest imported to meet a lowered limit, whatever the choice", () => {
     for (const choice of ["stop", "replace"] as const) {
-      const { chunks, report } = mergeGames(history(range(1, 6), 3), [], { limit: 4, choice });
+      const { chunks, report } = mergeGames(history(range(1, 6), 3), [], { limit: 4, choice, importId: 1 });
       expect(ids(chunks)).toEqual([3, 4, 5, 6]);
       expect(report).toMatchObject({ removed: 2, total: 4, written: [0], deleted: [] });
     }
@@ -77,32 +78,39 @@ describe("mergeGames", () => {
   it("rewrites only the chunks at either end, and numbers new chunks upward", () => {
     // Chunks 4, 5 and 6 of three games, the last holding one.
     const stored = history(range(1, 7), 3, 4);
-    const grown = mergeGames(stored, range(8, 11), { limit: 100, choice: "stop", size: 3 });
+    const grown = mergeGames(stored, range(8, 11), { limit: 100, choice: "stop", importId: 1, size: 3 });
     expect(grown.report).toMatchObject({ written: [6, 7], deleted: [] });
     expect(grown.chunks.map((chunk) => chunk.n)).toEqual([4, 5, 6, 7]);
     expect(grown.chunks[0]).toBe(stored[0]);
 
-    const replaced = mergeGames(stored, range(8, 11), { limit: 7, choice: "replace", size: 3 });
+    const replaced = mergeGames(stored, range(8, 11), { limit: 7, choice: "replace", importId: 1, size: 3 });
     expect(ids(replaced.chunks)).toEqual([5, 6, 7, 8, 9, 10, 11]);
     expect(replaced.report).toMatchObject({ written: [5, 6, 7], deleted: [4], removed: 4 });
     expect(replaced.chunks.map((chunk) => chunk.n)).toEqual([5, 6, 7]);
   });
 
+  it("marks the games it adds with the import, and counts the games it removes by their import", () => {
+    const stored = history([...range(1, 3).map((g) => ({ ...g, importId: 4 })), ...range(4, 5).map((g) => ({ ...g, importId: 7 }))], 2);
+    const { chunks, report } = mergeGames(stored, range(10, 12), { limit: 6, choice: "replace", importId: 9, size: 2 });
+    expect(chunks.flatMap((chunk) => chunk.games.map((g) => g.importId))).toEqual([4, 7, 7, 9, 9, 9]);
+    expect(report).toMatchObject({ added: 3, removed: 2, removedFrom: { 4: 2 } });
+  });
+
   it("starts after the last chunk's number when every chunk is dropped", () => {
-    const { chunks, report } = mergeGames(history(range(1, 4), 2, 3), range(10, 11), { limit: 2, choice: "replace", size: 2 });
+    const { chunks, report } = mergeGames(history(range(1, 4), 2, 3), range(10, 11), { limit: 2, choice: "replace", importId: 1, size: 2 });
     expect(chunks).toEqual([{ n: 5, games: range(10, 11) }]);
     expect(report).toMatchObject({ written: [5], deleted: [3, 4] });
   });
 
   it("changes nothing with nothing new, and keeps nothing with no room", () => {
     const stored = history(range(1, 3), 2);
-    expect(mergeGames(stored, range(1, 3), { limit: 10, choice: "stop" }).report).toMatchObject({
+    expect(mergeGames(stored, range(1, 3), { limit: 10, choice: "stop", importId: 1 }).report).toMatchObject({
       added: 0,
       duplicates: 3,
       written: [],
       deleted: [],
     });
-    expect(mergeGames(stored, [game(4)], { limit: 0, choice: "replace" }).report).toMatchObject({ total: 0, removed: 3, leftOut: 1 });
+    expect(mergeGames(stored, [game(4)], { limit: 0, choice: "replace", importId: 1 }).report).toMatchObject({ total: 0, removed: 3, leftOut: 1 });
   });
 
   it("keeps its shape over many imports: within the limit, chunks in order, only the ends partial", () => {
@@ -123,7 +131,7 @@ describe("mergeGames", () => {
         const incoming = [...repeats, ...Array.from({ length: next(12) }, () => game(next(400), day++))];
         const choice: LimitChoice = next(2) ? "stop" : "replace";
         const before = chunks;
-        const { chunks: after, report } = mergeGames(before, incoming, { limit, choice, size });
+        const { chunks: after, report } = mergeGames(before, incoming, { limit, choice, importId: 1, size });
         const label = `run ${run} import ${round}`;
         const keys = after.flatMap((chunk) => chunk.games.map((g) => g.record.key));
         if (keys.length !== report.total || report.total > limit) violations.push(`${label}: ${keys.length} games, total ${report.total}, limit ${limit}`);

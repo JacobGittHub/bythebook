@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { fileProblem, freshFor, importGames, likelyUser, pickGames, readText, scanFile } from "./importFile";
+import { fileProblem, freshFor, importGames, likelyUser, nameMismatch, pickGames, readText, scanFile, type FileScan, type ImportResult } from "./importFile";
 import { readGames } from "./pgnGames";
 import { gameKey, readRecord } from "./record";
 import { MAX_GAME_FILE_BYTES } from "./types";
@@ -101,5 +101,29 @@ describe("pickGames and importGames", () => {
     expect(someone.skipped.player).toBe(8);
     const me = await importGames(streamOf(text), { username: "DrNykterstein", wanted: new Set(), storedKeys: stored });
     expect(me).toMatchObject({ duplicates: 1, leftOut: 7, games: [] });
+  });
+});
+
+describe("nameMismatch", () => {
+  const scan = (games: number, names: [string, number][]): FileScan => ({
+    games,
+    truncated: false,
+    sources: { chesscom: games, lichess: 0, other: 0 },
+    skipped: { variant: 0, unfinished: 0, noMoves: 0, unreadable: 0 },
+    duplicates: 0,
+    names: names.map(([name, fresh]) => ({ name, games: fresh, fresh })),
+  });
+  const result = (player: number): ImportResult => ({
+    games: [],
+    skipped: { variant: 0, unfinished: 0, player, noMoves: 0, unreadable: 0 },
+    duplicates: 0,
+    leftOut: 0,
+  });
+
+  it("leads with the games the user didn't play when they are a large part of the file, and offers the next name", () => {
+    const file = scan(100, [["Me", 70], ["OldMe", 30], ["Rival", 4]]);
+    expect(nameMismatch(file, result(30), "me")).toEqual({ games: 30, large: true, other: { name: "OldMe", games: 30, fresh: 30 } });
+    expect(nameMismatch(file, result(5), "Me")).toEqual({ games: 5, large: false, other: null });
+    expect(nameMismatch(file, result(0), "Me")).toEqual({ games: 0, large: false, other: null });
   });
 });

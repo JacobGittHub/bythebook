@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Mockup for plans/game-history.md step 9, second round (a book's own page with your games, steps 18-19; D9, D10, D27, D31, D32; Q19, Q20), and the book statistics in plans/bookstore.md Q5-Q8. Published as the "Book Success View" artifact. -->
+<!-- Mockup for plans/game-history.md step 9, third round (a book's own page with your games, steps 18-19; D9, D10, D27, D31, D32, D35, D36; the which-games panels of Q22), and the book statistics in plans/bookstore.md D17 and Q6-Q8. Published as the "Book Success View" artifact. -->
 <title>Book Success View</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,6 +54,7 @@ p { margin: 0; }
   --foreground: #22252b; --muted: #eef0ea; --muted-foreground: #5c636b; --border: #d0d4cd; --primary: #2c4a74; --primary-foreground: #ffffff;
   --accent: #e3e9f3; --destructive: #b42318; --warning: #b45309; --success: #15803d; --overlay: rgb(0 0 0 / 0.45);
   --bar-win: #15803d; --bar-draw: #8f8a7a; --bar-loss: #b42318;
+  --difficulty-0: #2f7d4f; --difficulty-1: #6f8f2e; --difficulty-2: #b0832a; --difficulty-3: #c25a28; --difficulty-4: #9e2f2f;
   --view-edge: rgba(120, 108, 95, 0.42); --view-path: var(--foreground); --view-hover: #b45309; --view-clash: #d97706;
   --view-white: #ece5d8; --view-white-edge: #9c9282; --view-black: #2a2420; --view-black-edge: #2a2420;
   --sq-light: #f0d9b5; --sq-dark: #b58863; --star: #b7791f;
@@ -69,6 +70,7 @@ p { margin: 0; }
   --foreground: #e9e5dc; --muted: #24282e; --muted-foreground: #a3a19b; --border: #383c44; --primary: #a9c0e6; --primary-foreground: #12161d;
   --accent: rgb(169 192 230 / 0.13); --destructive: #ea5f57; --warning: #f0a64a; --success: #4ade80; --overlay: rgb(0 0 0 / 0.6);
   --bar-win: #3fbf6f; --bar-draw: #8b8676; --bar-loss: #e0625a;
+  --difficulty-0: #4fb37a; --difficulty-1: #a5bd4c; --difficulty-2: #d8ab4a; --difficulty-3: #e57f4d; --difficulty-4: #dc5d57;
   --view-edge: rgba(170, 165, 200, 0.34); --view-hover: #f0a64a; --view-clash: #f59e0b;
   --view-white: #d9d4e6; --view-white-edge: #8e8aa3; --view-black: #0b0b10; --view-black-edge: #8e8aa3; --star: #e0a63a;
   color-scheme: dark;
@@ -124,9 +126,15 @@ p { margin: 0; }
 .facts dd { margin: 0; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .facts dd .soft { font-weight: 400; font-size: 12px; }
 .facts .wide { grid-column: span 3; }
-.level { display: inline-flex; gap: 2px; vertical-align: 1px; margin-right: 6px; }
-.level i { width: 9px; height: 9px; border-radius: 2px; background: var(--muted); border: 1px solid var(--border); }
-.level i.on { background: var(--foreground); border-color: var(--foreground); }
+.diff { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.dbadge { display: inline-flex; align-items: baseline; gap: 5px; padding: 2px 7px; border-radius: 4px; color: #fff; font: 600 13px var(--figures); }
+.dbadge span { font: 500 10px var(--body); letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.9; }
+.dmeasured { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 400; color: var(--muted-foreground); }
+.dmeasured i { width: 8px; height: 8px; border-radius: 50%; }
+.dscale { position: relative; display: inline-grid; grid-template-columns: repeat(5, 18px); gap: 1px; height: 6px; margin: 0 2px; }
+.dscale i { border-radius: 1px; opacity: 0.85; }
+.dscale b { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--foreground); border-radius: 1px; }
+.dscale b.m { background: var(--muted-foreground); }
 .headgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 16px 30px; align-items: start; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
 .headgrid > div { display: grid; gap: 8px; min-width: 0; }
 .about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px 30px; border-top: 1px solid var(--rule); padding-top: 14px; }
@@ -144,6 +152,8 @@ p { margin: 0; }
 .zoom button { font: 12.5px var(--body); color: var(--foreground); background: var(--page); border: 0; padding: 4px 9px; cursor: pointer; }
 .zoom span { padding: 0 8px; font: 11.5px var(--figures); color: var(--muted-foreground); border-left: 1px solid var(--border); border-right: 1px solid var(--border); line-height: 26px; }
 .which { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--page); font-size: 12.5px; cursor: pointer; color: var(--foreground); }
+.which:hover { background: var(--accent); }
+.which .k { color: var(--muted-foreground); }
 
 /* The drawing and the position beside it */
 .body { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 18px; flex: none; }
@@ -163,8 +173,12 @@ p { margin: 0; }
 .board i.l { background: var(--sq-light); } .board i.d { background: var(--sq-dark); }
 .board i.wp { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 0 1px #000; } .board i.bp { color: #111; }
 .board i.from, .board i.to { box-shadow: inset 0 0 0 100px rgb(255 214 0 / 0.32); }
-.pos .mv { font: 600 20px/1.2 var(--display); }
-.pos .line { font: 11.5px/1.45 var(--figures); color: var(--muted-foreground); }
+.pos .mv { font: 600 20px/1.2 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pos .line { font: 11.5px/1.45 var(--figures); color: var(--muted-foreground); height: 2.9em; overflow: hidden; }
+.pos .stat { min-height: 2.9em; display: grid; gap: 4px; align-content: start; }
+.nbox { height: 124px; overflow-y: auto; scrollbar-width: thin; display: grid; align-content: start; gap: 1px; border-top: 1px solid var(--rule); padding-top: 3px; }
+.nbox.short { height: 78px; }
+.nbox .empty { font-size: 12px; color: var(--muted-foreground); padding: 3px 4px; }
 .wdl { display: flex; height: 7px; border-radius: 2px; overflow: hidden; background: var(--muted); }
 .wdl i:nth-child(1) { background: var(--bar-win); } .wdl i:nth-child(2) { background: var(--bar-draw); } .wdl i:nth-child(3) { background: var(--bar-loss); }
 .nrow { display: grid; grid-template-columns: 56px 30px 1fr 34px; gap: 6px; align-items: center; font-size: 12px; padding: 2px 4px; border-radius: 4px; cursor: pointer; border: 1px solid transparent; }
@@ -177,6 +191,7 @@ p { margin: 0; }
 
 /* Where you leave this book */
 .leave { display: grid; gap: 0; }
+.leave .lbody { max-height: 292px; overflow-y: auto; scrollbar-width: thin; border-bottom: 1px solid var(--rule); }
 .leave .lhead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
 .leave h3 { font: 600 19px/1.2 var(--display); }
 .lrow { display: grid; grid-template-columns: 70px 70px minmax(0, 1fr) 52px 120px 40px; gap: 10px; align-items: center; padding: 6px 4px; border-top: 1px solid var(--rule); font-size: 12.5px; cursor: pointer; }
@@ -188,8 +203,14 @@ p { margin: 0; }
 .scrim { position: absolute; inset: 0; background: var(--overlay); display: grid; place-items: center; z-index: 3; padding: 16px; }
 .dialog { width: min(100%, 420px); background: var(--page); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 18px 50px -12px rgb(0 0 0 / 0.45); padding: 18px 20px; display: grid; gap: 12px; }
 .dialog h3 { font: 600 19px/1.2 var(--display); }
-.dialog label { display: flex; gap: 8px; align-items: center; font-size: 13px; }
-.dialog input { accent-color: var(--primary); }
+.dialog { width: min(100%, 460px); }
+.dialog .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
+.dialog .group { display: grid; gap: 2px; align-content: start; }
+.dialog label { display: grid; grid-template-columns: 16px 1fr auto; gap: 8px; align-items: center; font-size: 13px; padding: 2px 0; }
+.dialog label.child { padding-left: 22px; font-size: 12.5px; }
+.dialog label .fig { color: var(--muted-foreground); }
+.dialog input { accent-color: var(--primary); margin: 0; }
+.dialog .dates { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; }
 .foot { display: flex; justify-content: flex-end; gap: 8px; }
 
 /* The tree's paint, as globals.css's .bv-* rules */
@@ -228,6 +249,7 @@ p { margin: 0; }
   .pos .board { max-width: 300px; }
   .viewbox { height: 420px; }
   .lrow { grid-template-columns: auto 58px minmax(0, 1fr) 36px; gap: 8px; }
+  .dialog .cols { grid-template-columns: 1fr; }
   .lrow .bar, .lrow .pct { display: none; }
   .back { display: inline-flex !important; }
 }
@@ -236,37 +258,35 @@ p { margin: 0; }
 <body>
 <div class="wrap">
   <header class="intro">
-    <p class="eyebrow">Mockup · plans/game-history.md, step 9, second round · plans/bookstore.md, Q5–Q8</p>
+    <p class="eyebrow">Mockup · plans/game-history.md, step 9, third round · plans/bookstore.md, D17 and Q6–Q8</p>
     <h1>A book's own page, with your games</h1>
-    <p>The Italian Game example book's own page in the Library, opened in ply columns (D31) with "Your games" on. Pick a layout (Q20) and a success style for ply columns (Q19). The tree is live: click it, then use the arrow keys or drag it (D32); a row of "Where you leave this book" jumps to its position. The book's facts are the ones the Bookstore questions propose. The book is real; the games, rating and reviews are made up.</p>
+    <p>The Italian Game example book's own page in the Library, opened in ply columns (D31) with "Your games" on, laid out by D36 (facts beside the title) with success as color and thickness (D35). The tree is live: click it, then use the arrow keys or drag it (D32); a row of "Where you leave this book" jumps to its position. The book's facts are the ones the Bookstore questions propose. The book is real; the games, rating and reviews are made up.</p>
   </header>
   <div class="studio" role="group" aria-label="Mockup options">
-    <fieldset><legend>Layout (Q20)</legend><div class="chips" data-key="layout"><button class="chip" data-value="B">B · Facts beside the title</button><button class="chip" data-value="A">A · Choices beside the title</button></div></fieldset>
-    <fieldset><legend>Success on ply columns (Q19)</legend><div class="chips" data-key="style"><button class="chip" data-value="C">C · Color and thickness</button><button class="chip" data-value="A">A · Line color</button><button class="chip" data-value="B">B · Dot color</button></div></fieldset>
     <fieldset><legend>Color</legend><div class="chips" data-key="mode"><button class="chip" data-value="light">Light</button><button class="chip" data-value="dark">Dark</button></div></fieldset>
     <fieldset><legend>Width</legend><div class="chips" data-key="width"><button class="chip" data-value="desktop">Desktop</button><button class="chip" data-value="phone">Phone</button></div></fieldset>
   </div>
   <div class="stage"><div class="mock" id="mock"></div></div>
   <section class="notes" aria-label="Notes">
     <div>
-      <h2>Q20 · The page's layout</h2>
+      <h2>The page (D36)</h2>
       <ul>
-        <li><strong>B:</strong> the facts fill the space beside the title, like a book's front matter. The page scrolls, so below them the drawing, the board and "Where you leave this book" are seen together. The choices sit in one row just above the drawing.</li>
-        <li><strong>A:</strong> the choices sit in line with the title and the drawing comes first; the facts follow at the end, under "About this book".</li>
+        <li>The facts fill the space beside the title, like a book's front matter. The page scrolls, so below them the drawing, the board and "Where you leave this book" are seen together. The choices sit in one row just above the drawing.</li>
+        <li>The panel by the board keeps its size: "Next in the book" and "Left the book here" are boxes of fixed height that scroll inside, so moving through the tree never moves the page.</li>
+        <li>"Where you leave this book" lists every place and scrolls in its own box.</li>
+        <li>"Games: All 1,160 as White" opens the checkboxes (Q22): Bullet, Blitz, Rapid, Classical and Daily each on their own, the sources with their imports, and the dates. It opens a panel, not a menu, so it has no arrow.</li>
       </ul>
     </div>
     <div>
-      <h2>Q19 · Success on ply columns</h2>
+      <h2>Success on ply columns (D35)</h2>
       <ul>
-        <li><strong>C:</strong> the line into each position takes your score's color, and its thickness is the games that went that way, so the drawing shows the flow of your games through the book. Lines no game reached stay faint.</li>
-        <li><strong>A:</strong> the color only; thickness stays the book's own (its lines below each position).</li>
-        <li><strong>B:</strong> each position's dot takes the color, and the lines keep the book's paint.</li>
+        <li>The line into each position takes your score's color, and its thickness is the games that went that way, so the drawing shows the flow of your games through the book. Lines no game reached stay faint.</li>
       </ul>
     </div>
     <div>
-      <h2>The book's facts (bookstore.md Q5–Q8)</h2>
+      <h2>The book's facts (bookstore.md D17, Q6–Q8)</h2>
       <ul>
-        <li><strong>Difficulty</strong> 1 to 5 from the moves to remember and the length of the lines, beside the publisher's own pick (Q5).</li>
+        <li><strong>Difficulty</strong> (D17) runs from 0.0 to 5.0, color coded from green through gold to deep red. The publisher's comes first; the measured one, from the moves to remember and the length of the lines, sits beside it, with both marked on the scale.</li>
         <li><strong>Rating, saves and reviews</strong> come from the store book this copy was saved from, read live (Q6, Q7).</li>
         <li><strong>Coverage</strong> is the share of master games that stay in the book to a leaf (D11), always beside the lines' length.</li>
         <li>Zoom now sits with the view's other controls, at the end of the row above the drawing.</li>
@@ -315,8 +335,9 @@ const ownMoves = nodes.filter((x) => x.san && x.ply % 2 === 1).length;
 const clashes = nodes.filter((x) => x.ply % 2 === 0 && x.children.length > 1).length;
 const averageLine = leaves.reduce((s, x) => s + x.ply, 0) / leaves.length;
 const points = ownMoves * averageLine / 10;
-const level = points <= 40 ? 1 : points <= 100 ? 2 : points <= 200 ? 3 : points <= 400 ? 4 : 5;
-const LEVELS = ["Starter", "Easy", "Medium", "Hard", "Expert"];
+const measured = Math.round(Math.min(5, Math.max(0, Math.log2(points / 12.5))) * 10) / 10;
+const PUBLISHER_DIFFICULTY = 4.0;
+const diffColor = (d) => `var(--difficulty-${Math.min(4, Math.floor(d))})`;
 
 // ── Made-up games as White, walked through the book until someone leaves it ───────────────
 const rand = rng(11);
@@ -472,7 +493,10 @@ function boardHtml(list) {
 // ── The page ───────────────────────────────────────────────────────────────────────────────
 function facts() {
   return `<dl class="facts">
-    <div class="wide"><dt>Difficulty</dt><dd><span class="level" aria-hidden="true">${[1, 2, 3, 4, 5].map((i) => `<i class="${i <= level ? "on" : ""}"></i>`).join("")}</span>${level} · ${LEVELS[level - 1]} <span class="soft">· publisher: 3 · Medium · ${n(ownMoves)} moves to remember</span></dd></div>
+    <div class="wide"><dt>Difficulty</dt><dd class="diff">
+      <span class="dbadge" style="background:${diffColor(PUBLISHER_DIFFICULTY)}"><span>Publisher</span>${PUBLISHER_DIFFICULTY.toFixed(1)}</span>
+      <span class="dscale" aria-hidden="true">${[0, 1, 2, 3, 4].map((i) => `<i style="background:var(--difficulty-${i})"></i>`).join("")}<b style="left:calc(${PUBLISHER_DIFFICULTY / 5 * 100}% - 1px)"></b><b class="m" style="left:calc(${measured / 5 * 100}% - 1px)"></b></span>
+      <span class="dmeasured"><i style="background:${diffColor(measured)}"></i>measured ${measured.toFixed(1)} of 5 · ${n(ownMoves)} moves to remember</span></dd></div>
     <div><dt>Positions</dt><dd>${n(nodes.length - 1)} <span class="soft">/ 1,000</span></dd></div>
     <div><dt>Lines</dt><dd>${n(leaves.length)}</dd></div>
     <div><dt>Clashes</dt><dd>${n(clashes)}</dd></div>
@@ -488,7 +512,7 @@ const description = `<p class="desc">1.e4 e5 2.Nf3 Nc6 3.Bc4: the Giuoco Piano, 
 const actions = `<div class="row"><button class="btn primary">Open in Explorer</button><button class="btn outline">Train</button><button class="btn icon ghost" aria-label="More">${icon("dots")}</button></div>`;
 function choices() {
   return `${seg("view", [["plain", "Plain"], ["games", "Your games"], ["drills", "Drills <em>soon</em>", true]])}
-    ${state.view === "games" ? `<button class="which" data-open="which">All 1,160 games as White ${icon("chev")}</button>` : ""}`;
+    ${state.view === "games" ? `<button class="which" data-open="which"><span class="k">Games</span> All 1,160 as White</button>` : ""}`;
 }
 function views() {
   return seg("vk", [["ply", "Ply columns"], ["metro", "Metro map"], ["spine", "Spine and ribs"], ["icicle", "Icicle"], ["branch", "Branch points"]]);
@@ -499,7 +523,7 @@ function seg(key, items) {
 }
 function leaveList() {
   return `<section class="leave" aria-label="Where you leave this book"><div class="lhead"><h3>Where you leave this book</h3><span class="sc">${n(EXITS.length)} places · ${n(stayed)} games reached a line's end</span></div>
-    ${EXITS.slice(0, 10).map((e, i) => `<div class="lrow" data-exit="${i}"><span class="who ${e.who === "you" ? "you" : ""}">${e.who === "you" ? "You" : "Opponent"}</span><b>${exitText(e)}</b><span class="soft">after ${e.from.san ? lineText(pathOf(e.from).slice(-3)) : "the start"}; the book has ${e.from.children.slice(0, 2).map((k) => k.san).join(", ")}</span><span class="fig">${n(e.games)}</span><span class="bar">${wdlBar(e)}</span><span class="fig pct">${pct(e.score)}</span></div>`).join("")}
+    <div class="lbody">${EXITS.map((e, i) => `<div class="lrow" data-exit="${i}"><span class="who ${e.who === "you" ? "you" : ""}">${e.who === "you" ? "You" : "Opponent"}</span><b>${exitText(e)}</b><span class="soft">after ${e.from.san ? lineText(pathOf(e.from).slice(-3)) : "the start"}; the book has ${e.from.children.slice(0, 2).map((k) => k.san).join(", ")}</span><span class="fig">${n(e.games)}</span><span class="bar">${wdlBar(e)}</span><span class="fig pct">${pct(e.score)}</span></div>`).join("")}</div>
   </section>`;
 }
 function renderShell() {
@@ -529,9 +553,12 @@ function renderShell() {
         ${about}
       </section>
     </div></div>
-    ${state.dialog ? `<div class="scrim"><div class="dialog" role="dialog" aria-label="Which games"><h3>Which games</h3><p class="small soft">Your games as White, from your game history. The same filters as the history page.</p>
-      <label><input type="checkbox" checked> Chess.com · 21 Oct 2026 · 3,264</label><label><input type="checkbox" checked> Lichess · 2 Oct 2026 · 412</label><label><input type="checkbox" checked> Other · 14 Sep 2026 · 9</label>
-      <label><input type="checkbox" checked> Bullet</label><label><input type="checkbox" checked> Blitz, rapid and classical</label><label><input type="checkbox"> Daily</label>
+    ${state.dialog ? `<div class="scrim"><div class="dialog" role="dialog" aria-label="Which games"><h3>Which games</h3><p class="small soft">Your games as White, from your game history, chosen as on the history page (Q22). Each count is under the other choices.</p>
+      <div class="cols"><div class="group"><span class="sc">Time</span>${[["Bullet", 232], ["Blitz", 581], ["Rapid", 290], ["Classical", 5], ["Daily", 52]].map(([label, count]) => `<label><input type="checkbox" checked><span>${label}</span><span class="fig">${count}</span></label>`).join("")}</div>
+      <div class="group"><span class="sc">From</span><label><input type="checkbox" checked><span>Chess.com</span><span class="fig">1,021</span></label><label class="child"><input type="checkbox" checked><span>Imported 21 Oct 2026</span><span class="fig">1,021</span></label>
+        <label><input type="checkbox" checked><span>Lichess</span><span class="fig">134</span></label><label class="child"><input type="checkbox" checked><span>Imported 2 Oct 2026</span><span class="fig">134</span></label>
+        <label><input type="checkbox" checked><span>Other</span><span class="fig">5</span></label><label class="child"><input type="checkbox" checked><span>Imported 14 Sep 2026</span><span class="fig">5</span></label></div></div>
+      <div class="dates"><span class="sc">Dates</span><span class="seg"><button aria-pressed="false">3 months</button><button aria-pressed="false">Year</button><button aria-pressed="true">All</button></span></div>
       <div class="foot"><button class="btn outline" data-close>Cancel</button><button class="btn primary" data-close>Show 1,160 games</button></div></div></div>` : ""}`;
   for (const chip of document.querySelectorAll(".studio .chip")) chip.setAttribute("aria-pressed", String(state[chip.parentElement.dataset.key] === chip.dataset.value));
   bind();
@@ -542,10 +569,12 @@ function renderPosition(smooth = true) {
   const games = state.view === "games";
   const here = EXITS.filter((e) => e.from === current);
   document.getElementById("pos").innerHTML = `<div class="board" aria-label="Board">${boardHtml(path)}</div>
-    <span class="sc">Selected</span><div class="mv">${current.san ? moveText(current) : "Start"}</div><div class="line">${path.length ? lineText(path) : "Before the first move"}</div>
-    ${games ? (current.games ? `<div class="small"><b class="fig">${n(current.games)}</b> of your games reached it · <span class="fig">${current.w} · ${current.d} · ${current.l}</span> · <b class="fig">${pct(current.score)}</b></div>${wdlBar(current)}` : `<div class="small soft">None of your games reached it.</div>`) : `<div class="small soft">${n(current.size)} lines through it</div>`}
-    ${current.children.length ? `<span class="sc" style="margin-top:4px">Next in the book</span>${current.children.map((x, i) => `<div class="nrow" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="fig soft">${games ? n(x.games) : x.size}</span>${games ? wdlBar(x) : "<span></span>"}<span class="fig">${games && x.games ? pct(x.score) : ""}</span></div>`).join("")}` : `<span class="small soft">The end of this line.</span>`}
-    ${games && here.length ? `<span class="sc" style="margin-top:4px">Left the book here</span>${here.slice(0, 4).map((e) => `<div class="nrow" style="cursor:default"><b>${exitText(e)}</b><span class="fig soft">${e.games}</span>${wdlBar(e)}<span class="fig">${pct(e.score)}</span></div>`).join("")}` : ""}
+    <span class="sc">Selected</span><div class="mv">${current.san ? moveText(current) : "Start"}</div><div class="line" title="${path.length ? lineText(path) : ""}">${path.length ? (path.length > 12 ? "… " + lineText(path.slice(-12)) : lineText(path)) : "Before the first move"}</div>
+    <div class="stat">${games ? (current.games ? `<div class="small"><b class="fig">${n(current.games)}</b> of your games reached it · <span class="fig">${current.w} · ${current.d} · ${current.l}</span> · <b class="fig">${pct(current.score)}</b></div>${wdlBar(current)}` : `<div class="small soft">None of your games reached it.</div>`) : `<div class="small soft">${n(current.size)} lines through it</div>`}</div>
+    <span class="sc" style="margin-top:4px">Next in the book${current.children.length ? ` · ${current.children.length}` : ""}</span>
+    <div class="nbox" role="listbox" aria-label="Next in the book">${current.children.length ? current.children.map((x, i) => `<div class="nrow" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="fig soft">${games ? n(x.games) : x.size}</span>${games ? wdlBar(x) : "<span></span>"}<span class="fig">${games && x.games ? pct(x.score) : ""}</span></div>`).join("") : `<span class="empty">The end of this line.</span>`}</div>
+    ${games ? `<span class="sc" style="margin-top:4px">Left the book here${here.length ? ` · ${here.length}` : ""}</span>
+    <div class="nbox short">${here.length ? here.map((e) => `<div class="nrow" style="cursor:default"><b>${exitText(e)}</b><span class="fig soft">${e.games}</span>${wdlBar(e)}<span class="fig">${pct(e.score)}</span></div>`).join("") : `<span class="empty">No games left the book here.</span>`}</div>` : ""}
     <button class="btn outline" style="margin-top:4px;justify-content:center">Open position in Explorer</button>`;
   document.getElementById("hint").innerHTML = `<span><kbd>↑</kbd> <kbd>↓</kbd> choose a move</span><span><kbd>→</kbd> play it</span><span><kbd>←</kbd> back</span><span>Drag to look around</span><span class="grow"></span>${games ? `<span>Your score <span class="ramp"></span> 30% → 70%+${state.style === "C" ? " · thickness: your games" : ""} · faint: no games</span>` : ""}`;
   follow(drawTree(), smooth);
