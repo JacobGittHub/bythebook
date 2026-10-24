@@ -61,8 +61,25 @@ type Props = {
   /** The highlighted move, for a page that shows it elsewhere too; the view keeps its own without. */
   walk?: Walk | null;
   onWalkChange?: (walk: Walk) => void;
+  /**
+   * The arrow keys walk the view from anywhere on the page, not only once it has the focus, for a
+   * page whose view is its main part. At most one view on a page may take them.
+   */
+  keysAnywhere?: boolean;
   className?: string;
 };
+
+/**
+ * Whether a key pressed with the focus on `target` is free for a view to take: not typed into a
+ * field, and not used by a control that moves with the arrow keys or by an open dialog or menu.
+ */
+function keyIsFree(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return true;
+  if (target instanceof HTMLElement && target.isContentEditable) return false;
+  return !target.closest(
+    'input, textarea, select, [role="radio"], [role="tab"], [role="slider"], [role="combobox"], [role="menu"], [role="menuitem"], [role="dialog"], [role="alertdialog"]',
+  );
+}
 
 /** The family names a metro map writes at its routes' ends, keyed by each route's first station. */
 function familyNames(tree: ViewTree): Map<string, string> {
@@ -162,6 +179,7 @@ export function BookView({
   success,
   walk: givenWalk,
   onWalkChange,
+  keysAnywhere = false,
   className = "",
 }: Props) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -446,13 +464,32 @@ export function BookView({
     onClick: () => onSelect(node),
   });
 
-  const onKeyDown = (event: KeyboardEvent) => {
-    const step = walkKey(event.key, selected, walk);
-    if (!step) return;
-    event.preventDefault();
+  /** Walks by an arrow key, and says whether it did. */
+  const walkBy = (key: string) => {
+    const step = walkKey(key, selected, walk);
+    if (!step) return false;
     setWalk(step.walk);
     if (step.go) onSelect(step.go);
+    return true;
   };
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (walkBy(event.key)) event.preventDefault();
+  };
+  const walkLatest = useRef(walkBy);
+  useLayoutEffect(() => {
+    walkLatest.current = walkBy;
+  });
+  // A key the focused view already took is marked as handled, so it isn't walked twice.
+  useEffect(() => {
+    if (!keysAnywhere) return;
+    const onWindowKey = (event: globalThis.KeyboardEvent) => {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (!keyIsFree(event.target)) return;
+      if (walkLatest.current(event.key)) event.preventDefault();
+    };
+    window.addEventListener("keydown", onWindowKey);
+    return () => window.removeEventListener("keydown", onWindowKey);
+  }, [keysAnywhere]);
 
   const common = { tree, marks, bind, side, family, weight: weightOf, success };
   // The highlight's ring, and below 100% the moves' names, keep their size on screen.

@@ -32,6 +32,7 @@ test.describe("Game import, as a guest", () => {
     await check.getByRole("button", { name: "Import 17 games" }).click();
     await expect(check).toBeHidden();
     await expect(history.getByRole("heading", { name: "Imported 17 games" })).toBeVisible();
+    await expect(history.getByRole("link", { name: "Open game history" })).toBeVisible();
 
     await page.reload();
     await expect(history.getByText("17 games")).toBeVisible();
@@ -40,8 +41,8 @@ test.describe("Game import, as a guest", () => {
     await history.getByRole("link", { name: "Open game history" }).click();
     await expect(page).toHaveURL(/\/dashboard\/library\/history$/);
     await expect(page.getByRole("img", { name: "Ply columns of your games" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "All games" })).toBeVisible();
-    await page.getByLabel(/arrow keys walk the moves/).focus();
+    // The arrow keys walk the tree from anywhere on the page, not only once it has the focus.
+    await page.getByRole("heading", { name: "All games" }).click();
     await page.keyboard.press("ArrowRight");
     await expect(page.getByRole("heading", { name: /^Games through 1\./ })).toBeVisible();
     await page.getByRole("radio", { name: "Black" }).click();

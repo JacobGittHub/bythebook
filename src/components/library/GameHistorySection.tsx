@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis, Trash2, Upload, X } from "lucide-react";
+import { Ellipsis, Trash2, Upload } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -231,8 +231,8 @@ function Report({ phase }: { phase: Extract<ImportPhase, { kind: "done" }> }) {
       <Head
         title={report.added ? `Imported ${games(report.added)}` : "No new games imported"}
         aside={
-          <Button size="icon-xs" variant="ghost" aria-label="Dismiss the report" onClick={dismiss}>
-            <X />
+          <Button size="xs" variant="outline" onClick={dismiss}>
+            Close
           </Button>
         }
       />
@@ -275,8 +275,16 @@ function Report({ phase }: { phase: Extract<ImportPhase, { kind: "done" }> }) {
           ))}
         </dl>
       </details>
-      <div>
-        <Button size="sm" variant="ghost" onClick={openDialog}>
+      {/* Opening the history is the next step after an import, so the report keeps its way there. */}
+      <div className="flex items-center gap-2">
+        {report.total > 0 && (
+          <Button asChild size="sm">
+            <Link href={GAME_HISTORY_HREF} onClick={dismiss}>
+              Open game history
+            </Link>
+          </Button>
+        )}
+        <Button size="sm" variant="outline" onClick={openDialog}>
           <Upload /> Import more
         </Button>
       </div>
@@ -291,8 +299,8 @@ function Failed({ message }: { message: string }) {
       <Head
         title="The import stopped"
         aside={
-          <Button size="icon-xs" variant="ghost" aria-label="Dismiss" onClick={dismiss}>
-            <X />
+          <Button size="xs" variant="outline" onClick={dismiss}>
+            Close
           </Button>
         }
       />

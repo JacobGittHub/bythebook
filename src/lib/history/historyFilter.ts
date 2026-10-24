@@ -55,6 +55,34 @@ export function chooseGames<T extends HistoryGame>(games: readonly T[], filter: 
   return games.filter((game) => passes(game, filter));
 }
 
+/** The span the history page opens on and the strip's "Year": this many months, up to the newest game's. */
+export const RECENT_MONTHS = 12;
+
+/** "2025-03" moved by `by` months. */
+function addMonths(month: string, by: number): string {
+  const index = Number(month.slice(0, 4)) * 12 + Number(month.slice(5, 7)) - 1 + by;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
+}
+
+/**
+ * The filter the history page opens on: the last `RECENT_MONTHS` months of games, counted back
+ * from the newest game rather than today, so an old history still opens full; every game when
+ * they span no more than that.
+ */
+export function recentGames(games: readonly HistoryGame[]): HistoryFilter {
+  let first: string | null = null;
+  let last: string | null = null;
+  for (const game of games) {
+    const month = monthOf(game);
+    if (!month) continue;
+    if (!first || month < first) first = month;
+    if (!last || month > last) last = month;
+  }
+  if (!first || !last) return ALL_GAMES;
+  const from = addMonths(last, 1 - RECENT_MONTHS);
+  return from > first ? { ...ALL_GAMES, from } : ALL_GAMES;
+}
+
 export function isAllGames(filter: HistoryFilter): boolean {
   return filter.side === "both" && !filter.offTimes.size && !filter.offSources.size && !filter.from && !filter.to;
 }

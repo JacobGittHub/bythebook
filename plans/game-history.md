@@ -1,6 +1,6 @@
 # Game history import
 
-Status: active · Updated: 2026-10-21 · Depends on: deployment.md
+Status: active · Updated: 2026-10-24 · Depends on: deployment.md
 
 **Goal:** let a user import their own games and see how they have done in their openings.
 **Done when:** a user can import a PGN file of their games in the browser, see their games and
@@ -270,6 +270,33 @@ From the user's answers to Q21 and Q22, 2026-10-21.
 
 Q15–Q22 are settled by D29 and D33–D38.
 
+- Q23. **Should the history tree fold rarely played moves into an "Other" node?** The user asked
+  for "some kind of top p and top k setup with an expandable 'other' option" so the page doesn't
+  draw too many nodes. Since 2026-10-24 the page opens on the last year of games, which drew 254
+  positions from the user's 3,264 games against 5,436 for all of them, so this matters most
+  when "All" is chosen.
+  - **Rec:** at each position of the history tree, keep moves, most played first, until they
+    hold 90% of its games or number 8, whichever comes first, and fold the rest into one
+    "Other · 5 moves, 23 games" node. Picking it (a click, or Right with it highlighted) opens
+    it in place, showing its moves, for that position only. Folding happens in
+    `historyTree.ts`, pure and tested, so every view draws fewer nodes without knowing why.
+  - Books are left whole: their authors chose every move in them.
+  > ME:
+- Q24. **Should a book's own page be a whole spread, like the history page?** The user asked
+  for mockups after seeing the history page ("looks so damn good"); `book-spread.html` draws it
+  with the Italian Game example book. Both pages become this book, with no zoom (as D30's
+  framing), and the other books move under a "Switch book" button. The layouts it draws:
+  - **A, like the history page:** the front matter, the facts, the choice of Plain, Your games
+    or Drills, and a list that fills the rest of the left page; the board and the drawing on
+    the right. With "Your games" the list is "Where you leave this book"; with Plain it is the
+    book's contents, its openings nested in tree order, named from the catalog.
+  - **B, the drawing on the left:** a short title strip and the drawing at the left page's full
+    height; the board, the totals and the list on the right.
+  - **Rec:** A. It reads the same as the history page, so a user learns one layout, and it
+    keeps the drawing beside the board. D36's choices, facts and boxes stay; only where they sit
+    changes. It amends `book-ui.md` D8 for book pages, as D30's framing did for the history page.
+  > ME:
+
 ## Steps
 
 Drafted 2026-10-21. The code lives in a new `src/lib/history/`, kept free of browser APIs and
@@ -427,6 +454,18 @@ deletes them.
   2026-10-21: `GameHistoryPage`, `HistoryFilters` and `HistoryPosition` (`src/components/library/`),
   on `historyFilter.ts` and `useHistoryGames`, as a whole spread (D30's framing). Ply columns paint
   the score (D35) through `BookView`'s `success`.
+  *After the user's first look (2026-10-24):*
+  - The Library's import report keeps "Open game history" and closes with a "Close" button, not
+    a small ✕.
+  - The page opens on the last 12 months up to the newest game (`recentGames`), which also keeps
+    the first tree small.
+  - The current position names its opening, and a move played next names one where it starts it.
+  - The board draws an arrow for the highlighted move, or for the hovered one.
+  - The list of moves played next scrolls to keep the highlighted one in view.
+  - The arrow keys walk the tree from anywhere on the page (`BookView`'s `keysAnywhere`), as on a
+    book's own page, unless a field, a menu or a dialog has them.
+  
+  The "Other" node the user asked about is Q23.
 
 **Phase 5. Comparing games with a book**
 

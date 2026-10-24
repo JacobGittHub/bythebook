@@ -27,7 +27,8 @@ type Props = {
   book: { id: string; name: string; color: BookSide; trees: readonly MoveNode[] };
   /**
    * "compact" picks the view from a menu, for the Library's list page; "large" shows the five
-   * views as buttons and gives the drawing more room, for a book's own page.
+   * views as buttons and gives the drawing more room, for a book's own page, where the arrow keys
+   * walk the drawing from anywhere on the page.
    */
   size: "compact" | "large";
   /** A view fixed by the page, as on a book view's own page, in place of the reader's picker. */
@@ -120,6 +121,7 @@ export function BookReader({ book, size, view: fixedView, positionActions, fill 
               onHover={(node) => setHovered(node)}
               label={`${viewInfo.label} of ${book.name}`}
               zoom={zoom}
+              keysAnywhere={size === "large"}
               className="flex-1"
             />
           )}

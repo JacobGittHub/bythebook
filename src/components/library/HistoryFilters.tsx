@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/shadcn/checkbox";
 import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover";
 import {
   ALL_GAMES,
+  RECENT_MONTHS,
   dateSummary,
   groupState,
   isAllGames,
@@ -203,7 +204,7 @@ function MonthStrip({ games, filter, onChange }: { games: readonly HistoryGame[]
         <b className="font-semibold">{drag ? dateSummary({ ...filter, from: months[drag.from], to: months[drag.to] }) : dateSummary(filter)}</b>
         <span className="grow" />
         {preset("3 months", last - 2)}
-        {preset("Year", last - 11)}
+        {preset("Year", last - (RECENT_MONTHS - 1))}
         {preset("All", 0)}
       </div>
       <div className="relative h-[34px]">

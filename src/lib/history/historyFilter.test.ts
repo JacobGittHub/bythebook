@@ -6,6 +6,7 @@ import {
   dateSummary,
   isAllGames,
   monthStrip,
+  recentGames,
   sourceGroups,
   sourceSummary,
   timeGroups,
@@ -62,6 +63,14 @@ describe("choosing games", () => {
     const filter: HistoryFilter = { ...ALL_GAMES, offTimes: new Set(["blitz 180+2"]), offSources: new Set(["chesscom 2"]), from: "2025-04", to: null };
     expect(chooseGames(games, filter).map((g) => g.record.timeClass)).toEqual(["rapid"]);
     expect(isAllGames(filter)).toBe(false);
+  });
+
+  it("opens on the last 12 months up to the newest game, or every game when they span no more", () => {
+    expect(recentGames(games)).toEqual(ALL_GAMES);
+    const older = [...games, game({ key: "lichess:old", id: "old", playedAt: "2023-11-30" }), game({ key: "lichess:new", id: "new", playedAt: "2026-01-05" })];
+    expect(recentGames(older)).toEqual({ ...ALL_GAMES, from: "2025-02" });
+    expect(chooseGames(older, recentGames(older)).map((g) => g.record.playedAt)).toEqual(["2025-03-10", "2025-05-01", "2025-07-20", "2025-04-02", "2026-01-05"]);
+    expect(recentGames([game({ playedAt: null })])).toEqual(ALL_GAMES);
   });
 
   it("puts keys back in and leaves them out", () => {

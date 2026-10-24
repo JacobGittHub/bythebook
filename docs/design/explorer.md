@@ -205,7 +205,9 @@ pages (`dashboard.md`) show them. They came from concept mockups the user ranked
   first `FAMILY_COLORS` get their own color.
 - **A drawing bigger than its box scrolls,** and a mouse drags it to look around.
 - **Every view is walked with the arrow keys** (`plans/game-history.md` D32) once it has
-  focus: the selected position is the current one, Up and Down move a highlight among its
+  focus, or from anywhere on a page whose view is its main part (`keysAnywhere`: the history
+  page and the large `BookReader`), unless a field, a menu, a dialog or a control that uses the
+  arrows has the focus: the selected position is the current one, Up and Down move a highlight among its
   moves, stopping at the first and last, Right goes to the highlighted move and Left back to
   the parent, highlighting the move it came from (`walkKey`, `src/lib/books/views/camera.ts`).
   The highlight starts on the most played move, carries a dashed ring, and its name shows.

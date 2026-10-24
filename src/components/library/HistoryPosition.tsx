@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { BoardDisplay } from "@/components/board/BoardDisplay";
 import { Button } from "@/components/shadcn/button";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { lineText, moveLabel, pathTo, type ViewNode } from "@/lib/books/viewTree";
+import { getOpeningEndingAt, getOpeningForLine } from "@/lib/chess/openingCatalog";
 import { scoreOf } from "@/lib/history/historyTree";
 import type { Tally } from "@/lib/history/types";
 import { explorerHref } from "@/lib/library/links";
@@ -16,8 +19,12 @@ type Props = {
   results: ReadonlyMap<string, Tally>;
   /** The move the arrow keys would play, marked in the list of moves played next. */
   highlightId: string | null;
+  /** The move drawn as an arrow on the board: a hovered move of this position, else the highlighted one. */
+  arrow: ViewNode | null;
   orientation: "white" | "black";
   onSelect: (node: ViewNode) => void;
+  /** A move in the list is hovered, or none (null). */
+  onHover: (node: ViewNode | null) => void;
 };
 
 const count = (n: number) => n.toLocaleString("en-US");
@@ -25,30 +32,54 @@ const percent = (score: number | null) => (score === null ? "–" : `${Math.roun
 const NONE: Tally = { win: 0, draw: 0, loss: 0 };
 
 /**
- * The history page's current position (plans/game-history.md D30): the board, the move and the
- * line to it, the user's results from it, and the moves played next with theirs. The details keep
- * the board's height and the moves scroll inside them, so a position with many moves never moves
- * the tree below.
+ * The history page's current position (plans/game-history.md D30): the board, the move, its
+ * opening and the line to it, the user's results from it, and the moves played next with theirs.
+ * The details keep the board's height and the moves scroll inside them, so a position with many
+ * moves never moves the tree below; the list scrolls itself to keep the highlighted move in view.
  */
-export function HistoryPosition({ node, results, highlightId, orientation, onSelect }: Props) {
+export function HistoryPosition({ node, results, highlightId, arrow, orientation, onSelect, onHover }: Props) {
   const tally = results.get(node.id) ?? NONE;
   const path = pathTo(node);
+  const opening = getOpeningForLine(path.slice(1).map((step) => step.fen))?.name;
+  const arrowColor = useThemeColor("--board-arrow", "rgb(44 74 116 / 0.55)");
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Only the list scrolls, never the page around it.
+  useEffect(() => {
+    const list = listRef.current;
+    const row = list?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (!list || !row) return;
+    const box = list.getBoundingClientRect();
+    const at = row.getBoundingClientRect();
+    if (at.top < box.top) list.scrollTop -= box.top - at.top;
+    else if (at.bottom > box.bottom) list.scrollTop += at.bottom - box.bottom;
+  }, [node.id, highlightId]);
+
   return (
     <div className="grid shrink-0 gap-4 md:grid-cols-[13rem_minmax(0,1fr)]">
       <div className="w-full max-w-72 md:max-w-none">
-        <BoardDisplay fen={node.fen} size="md" orientation={orientation} />
+        <BoardDisplay
+          fen={node.fen}
+          size="md"
+          orientation={orientation}
+          arrows={arrow?.uci ? [{ startSquare: arrow.uci.slice(0, 2), endSquare: arrow.uci.slice(2, 4), color: arrowColor }] : []}
+        />
       </div>
       <div className="flex min-w-0 flex-col gap-1 md:h-52">
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
             <p className="book-sc">{node.san ? "Current position" : "Starting position"}</p>
             <p className="truncate font-heading text-[22px] leading-tight font-semibold">{node.san ? moveLabel(node) : "Start"}</p>
+            {/* Always a line, so a position with no name doesn't move what is below. */}
+            <p className="h-5 truncate font-heading text-sm text-muted-foreground italic" title={opening}>
+              {opening}
+            </p>
           </div>
           <Button asChild size="sm" variant="outline" className="shrink-0">
             <Link href={explorerHref({ line: path })}>Open in Explorer</Link>
           </Button>
         </div>
-        <p className="line-clamp-2 h-9 shrink-0 font-mono text-xs leading-[1.5] text-muted-foreground" title={lineText(path)}>
+        <p className="truncate font-mono text-xs leading-[1.5] text-muted-foreground" title={lineText(path)}>
           {node.san ? lineText(path) : "Before the first move"}
         </p>
         <p className="text-xs">
@@ -57,9 +88,17 @@ export function HistoryPosition({ node, results, highlightId, orientation, onSel
         </p>
         <ResultsBar results={tally} />
         <p className="mt-1 book-sc">{node.children.length ? `Played next · ${node.children.length}` : "No games go further here"}</p>
-        <div role="listbox" aria-label="Moves played next" className="flex min-h-0 flex-col gap-px overflow-y-auto border-t border-rule pt-0.5 [scrollbar-width:thin] max-md:max-h-40 md:flex-1">
+        <div
+          ref={listRef}
+          role="listbox"
+          aria-label="Moves played next"
+          onMouseLeave={() => onHover(null)}
+          className="flex min-h-0 flex-col gap-px overflow-y-auto border-t border-rule pt-0.5 [scrollbar-width:thin] max-md:max-h-40 md:flex-1"
+        >
           {node.children.map((child) => {
             const next = results.get(child.id) ?? NONE;
+            // A move is named where it starts an opening of its own.
+            const named = getOpeningEndingAt(child.fen)?.name;
             return (
               <button
                 key={child.id}
@@ -67,12 +106,16 @@ export function HistoryPosition({ node, results, highlightId, orientation, onSel
                 role="option"
                 aria-selected={child.id === highlightId}
                 onClick={() => onSelect(child)}
+                onMouseEnter={() => onHover(child)}
                 className={cn(
-                  "grid grid-cols-[4rem_2.75rem_minmax(0,1fr)_2.5rem] items-center gap-2 rounded-sm border border-transparent px-1 py-0.5 text-left text-xs hover:bg-accent",
+                  "grid grid-cols-[4rem_minmax(0,1fr)_2.75rem_4.5rem_2.5rem] items-center gap-2 rounded-sm border border-transparent px-1 py-0.5 text-left text-xs hover:bg-accent",
                   child.id === highlightId && "border-primary",
                 )}
               >
                 <b className="font-mono font-medium">{moveLabel(child)}</b>
+                <span className="truncate font-heading text-muted-foreground italic" title={named}>
+                  {named !== opening ? named : null}
+                </span>
                 <span className="text-muted-foreground tabular-nums">{count(child.games ?? 0)}</span>
                 <ResultsBar results={next} className="h-1.5" />
                 <span className="text-right tabular-nums">{percent(scoreOf(next))}</span>

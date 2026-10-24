@@ -1,5 +1,6 @@
 "use client";
 
+import type { ChessboardOptions } from "react-chessboard";
 import { BoardBase } from "./BoardBase";
 
 type BoardDisplayProps = {
@@ -11,6 +12,8 @@ type BoardDisplayProps = {
   orientation?: "white" | "black";
   /** Slide the pieces when the position changes, for a board that follows a selection. */
   animate?: boolean;
+  /** Arrows over the board, such as the move a view would play next. */
+  arrows?: ChessboardOptions["arrows"];
 };
 
 /** The same speed as a move on the playable board (`BoardBase`'s default). */
@@ -25,6 +28,7 @@ export function BoardDisplay({
   size = "sm",
   orientation = "white",
   animate = false,
+  arrows,
 }: BoardDisplayProps) {
   return (
     <BoardBase
@@ -34,6 +38,7 @@ export function BoardDisplay({
       size={size}
       showNotation={false}
       animationDuration={animate ? ANIMATION_MS : 0}
+      arrows={arrows}
     />
   );
 }

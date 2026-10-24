@@ -237,10 +237,13 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   page is "Your games": the side (Both, White or Black), the time controls and the sources with
   their imports as buttons that open check boxes (`HistoryFilters`, `src/lib/history/historyFilter.ts`),
   a strip of games per month to drag a span across, "All games" to choose everything again, the
+  page opening on the last `RECENT_MONTHS` months up to the newest game (`recentGames`), the
   totals, and the games through the current position, newest first, each with its next moves
   and a link to its site. The right page is the current position (`HistoryPosition`): the
-  board, "Open in Explorer", the user's results and the moves played next in a box of fixed
-  height; under it the games' tree (`buildHistoryTree`, `src/lib/history/historyTree.ts`) in
+  board with an arrow for the highlighted (or hovered) move, the opening
+  (`getOpeningForLine`), "Open in Explorer", the user's results and the moves played next in a
+  box of fixed height that scrolls to keep the highlighted move in view, each named where it
+  starts an opening; under it the games' tree (`buildHistoryTree`, `src/lib/history/historyTree.ts`) in
   ply columns, weighted by games and painted by the user's score under the "Your score"
   switch. The games are read in the browser (`useHistoryGames`), and each filter builds the
   tree again from them.
@@ -291,7 +294,8 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   foot of the left page, under the book list, which scrolls alone. It shows how many games are
   kept, Open game history and Import games, which opens `GameImportDialog`: a PGN file or pasted text, the file's
   check with the player's name, and the choice when the games don't fit the limit. Once the
-  import starts, the dialog closes, and the progress, then the report, take the section's place.
+  import starts, the dialog closes, and the progress, then the report, take the section's place;
+  the report keeps Open game history and closes with its Close button.
   The import runs in `GameImportProvider` (`src/context/GameImport.tsx`), in the dashboard
   layout, so it carries on across pages. A viewer elsewhere when it ends gets a toast with a
   close button and the way back here, and the browser asks before a tab with an import running

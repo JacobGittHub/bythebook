@@ -16,7 +16,7 @@ import { useHistoryGames } from "@/hooks/useHistoryGames";
 import { highlightIndex, type Walk } from "@/lib/books/views/camera";
 import { buildViewTree, moveLabel, pathTo, type ViewNode, type ViewTree } from "@/lib/books/viewTree";
 import { applyUci, uciToSan } from "@/lib/chess/applyUci";
-import { ALL_GAMES, chooseGames, controlName, type HistoryFilter, type HistorySide } from "@/lib/history/historyFilter";
+import { ALL_GAMES, chooseGames, controlName, recentGames, type HistoryFilter, type HistorySide } from "@/lib/history/historyFilter";
 import { buildHistoryTree, gamesThrough, scoreOf, type PositionNames } from "@/lib/history/historyTree";
 import { comparePlayed } from "@/lib/history/merge";
 import { gameLink } from "@/lib/history/record";
@@ -53,15 +53,19 @@ function deepestOf(tree: ViewTree, id: string): ViewNode {
 export function GameHistoryPage() {
   const { history, summary, games: all, error, reload } = useHistoryGames();
   const { openDialog } = useGameImport();
-  const [filter, setFilter] = useState<HistoryFilter>(ALL_GAMES);
+  const [pickedFilter, setFilter] = useState<HistoryFilter | null>(null);
   const [chosenId, setChosenId] = useState("root");
   const [walk, setWalk] = useState<Walk | null>(null);
   const [painted, setPainted] = useState(true);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [shown, setShown] = useState({ id: "root", count: GAMES_SHOWN });
   const zoom = useViewZoom();
   // Positions and move names, kept between trees so a change of filter only counts games again.
   const [names] = useState<PositionNames>(() => new Map());
 
+  // The page opens on the last year of games, which also keeps the first tree small, until a filter is picked.
+  const opening = useMemo(() => (all ? recentGames(all) : null), [all]);
+  const filter = pickedFilter ?? opening ?? ALL_GAMES;
   const chosen = useMemo(() => (all ? chooseGames(all, filter) : []), [all, filter]);
   const built = useMemo(() => buildHistoryTree(chosen.map((game) => game.record), names), [chosen, names]);
   const tree = useMemo(() => buildViewTree(built.source), [built]);
@@ -69,6 +73,9 @@ export function GameHistoryPage() {
   const selected = deepestOf(tree, chosenId);
   const highlight = highlightIndex(selected, walk);
   const highlightId = highlight >= 0 ? selected.children[highlight].id : null;
+  // The board draws the hovered move of this position, else the one the arrow keys would play.
+  const hovered = hoveredId ? tree.byId.get(hoveredId) : undefined;
+  const arrow = hovered?.parent === selected ? hovered : highlight >= 0 ? selected.children[highlight] : null;
   const through = useMemo(
     () => gamesThrough(chosen, built.lines.get(selected.id) ?? "").sort((a, b) => comparePlayed(b.record, a.record)),
     [chosen, built, selected],
@@ -186,7 +193,15 @@ export function GameHistoryPage() {
     );
     right = (
       <div className="flex min-h-0 flex-1 flex-col gap-3">
-        <HistoryPosition node={selected} results={built.results} highlightId={highlightId} orientation={orientation} onSelect={select} />
+        <HistoryPosition
+          node={selected}
+          results={built.results}
+          highlightId={highlightId}
+          arrow={arrow}
+          orientation={orientation}
+          onSelect={select}
+          onHover={(node) => setHoveredId(node?.id ?? null)}
+        />
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-[13px]">
             <Switch checked={painted} onCheckedChange={setPainted} />
@@ -206,11 +221,13 @@ export function GameHistoryPage() {
             side={null}
             weight="games"
             onSelect={select}
+            onHover={(node) => setHoveredId(node?.id ?? null)}
             label="Ply columns of your games"
             zoom={zoom}
             success={painted ? success : undefined}
             walk={walk}
             onWalkChange={setWalk}
+            keysAnywhere
             className="flex-1"
           />
         </div>

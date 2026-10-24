@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Mockup for plans/game-history.md (a book's own page, step 18; D30's whole-spread framing, D31, D32, D35, D36) and plans/book-ui.md D8: the book page laid out on a whole spread, as the history page is. Published as the "Book Page Spread" artifact. -->
+<title>Book Page Spread</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<style>
+/* Layout: a studio on top (layout, what the page shows, color mode, width) over one mock of a
+   book's own page on a whole spread, then notes. The book is the real Italian Game example book;
+   the games are made up. The mock carries the app's tokens from src/app/globals.css. */
+:root {
+  --c-page: #f2f1ec; --c-ink: #22252b; --c-soft: #5c636b; --c-line: #d6d8d0;
+  --c-accent: #2c4a74; --c-accent-ink: #ffffff; --c-chip: #e6e7e0;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --display: "Literata", Georgia, "Times New Roman", serif;
+  --figures: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --c-page: #15171b; --c-ink: #e9e5dc; --c-soft: #a3a19b; --c-line: #33373e; --c-accent: #a9c0e6; --c-accent-ink: #12161d; --c-chip: #262a30; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --c-page: #15171b; --c-ink: #e9e5dc; --c-soft: #a3a19b; --c-line: #33373e; --c-accent: #a9c0e6; --c-accent-ink: #12161d; --c-chip: #262a30; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--c-page); color: var(--c-ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1320px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.intro h1 { font: 600 32px/1.15 var(--display); letter-spacing: -0.01em; }
+.intro p { max-width: 76ch; color: var(--c-soft); margin-top: 8px; }
+.eyebrow { font: 500 11px/1 var(--figures); letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-soft); margin-bottom: 10px; }
+.studio { display: flex; flex-wrap: wrap; gap: 14px 28px; }
+.studio fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; min-width: 0; }
+.studio legend { padding: 0; margin-bottom: 6px; font: 500 11px/1 var(--figures); letter-spacing: 0.1em; text-transform: uppercase; color: var(--c-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px/1 var(--body); color: var(--c-ink); background: var(--c-chip); border: 1px solid var(--c-line); border-radius: 6px; padding: 8px 11px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--c-accent); color: var(--c-accent-ink); border-color: var(--c-accent); }
+.chip:focus-visible, .mock :focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+.stage { container-type: inline-size; min-width: 0; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px 32px; }
+.notes h2 { font: 600 19px/1.3 var(--display); margin-bottom: 6px; }
+.notes p, .notes li { color: var(--c-soft); max-width: 62ch; }
+.notes ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.notes strong { color: var(--c-ink); }
+kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--c-chip); }
+
+/* ── The mock ─────────────────────────────────────────────────────────────────────────── */
+.mock {
+  --desk: #553826; --desk-low: #3a2518; --desk-foreground: #f1e8da; --desk-muted: #cdb9a1; --desk-line: rgb(241 232 218 / 0.24); --desk-mark: #e07a84;
+  --page: #fbfbf8; --page-alt: #f1f2ed; --rule: #d9dcd5; --cover: #26364f; --page-edge: #cfd2ca; --gutter: rgb(70 60 40 / 0.32); --bookmark: #8c2f39;
+  --foreground: #22252b; --muted: #eef0ea; --muted-foreground: #5c636b; --border: #d0d4cd; --primary: #2c4a74; --primary-foreground: #ffffff;
+  --accent: #e3e9f3; --destructive: #b42318; --success: #15803d; --star: #b7791f;
+  --bar-win: #15803d; --bar-draw: #8f8a7a; --bar-loss: #b42318;
+  --difficulty-0: #2f7d4f; --difficulty-1: #6f8f2e; --difficulty-2: #b0832a; --difficulty-3: #c25a28; --difficulty-4: #9e2f2f;
+  --view-edge: rgba(120, 108, 95, 0.42); --view-path: var(--foreground); --view-hover: #b45309; --view-clash: #d97706;
+  --view-white: #ece5d8; --view-white-edge: #9c9282; --view-black: #2a2420; --view-black-edge: #2a2420;
+  --sq-light: #f0d9b5; --sq-dark: #b58863; --board-arrow: rgb(44 74 116 / 0.55);
+  --radius: 6px;
+  container-type: inline-size; margin-inline: auto; max-width: 100%;
+  color: var(--foreground); font: 14px/1.5 var(--body);
+  background: repeating-linear-gradient(97deg, rgb(255 255 255 / 0.025) 0 2px, transparent 2px 9px), repeating-linear-gradient(93deg, rgb(0 0 0 / 0.06) 0 1px, transparent 1px 23px), linear-gradient(var(--desk), var(--desk-low));
+  border-radius: 8px; overflow: hidden; position: relative;
+}
+.mock[data-mode="dark"] {
+  --desk: #33221a; --desk-low: #1f140e; --desk-foreground: #e9e1d3; --desk-muted: #bba892;
+  --page: #1c1f24; --page-alt: #23272d; --rule: #30343b; --cover: #1b2433; --page-edge: #2d3138; --gutter: rgb(0 0 0 / 0.5); --bookmark: #c9505c;
+  --foreground: #e9e5dc; --muted: #24282e; --muted-foreground: #a3a19b; --border: #383c44; --primary: #a9c0e6; --primary-foreground: #12161d;
+  --accent: rgb(169 192 230 / 0.13); --destructive: #ea5f57; --success: #4ade80; --star: #e3b04b;
+  --bar-win: #3fbf6f; --bar-draw: #8b8676; --bar-loss: #e0625a;
+  --difficulty-0: #4fb37a; --difficulty-1: #a5bd4c; --difficulty-2: #d8ab4a; --difficulty-3: #e57f4d; --difficulty-4: #dc5d57;
+  --view-edge: rgba(170, 165, 200, 0.34); --view-hover: #f0a64a; --view-clash: #f59e0b;
+  --view-white: #d9d4e6; --view-white-edge: #8e8aa3; --view-black: #0b0b10; --view-black-edge: #8e8aa3;
+  --board-arrow: rgb(169 192 230 / 0.6);
+  color-scheme: dark;
+}
+.mock[data-width="phone"] { width: 390px; }
+.topbar { display: flex; align-items: center; gap: 18px; padding: 10px 20px; color: var(--desk-foreground); }
+.brand { font: 700 19px/1 var(--display); }
+.tabs { display: flex; gap: 14px; font-size: 13px; color: var(--desk-muted); flex-wrap: wrap; }
+.tabs span[aria-current] { color: var(--desk-foreground); font-weight: 700; box-shadow: inset 0 -2px 0 var(--desk-mark); padding-bottom: 6px; margin-bottom: -8px; }
+.grow { flex: 1; }
+.guest { font-size: 12px; color: var(--desk-muted); }
+.desk-btn { font: 500 13px/1 var(--body); color: var(--desk-foreground); border: 1px solid var(--desk-line); border-radius: var(--radius); padding: 8px 12px; background: transparent; }
+.book { margin: 2px 14px 14px; background: var(--cover); border-radius: 8px; padding: 5px 7px; position: relative; }
+.spread { display: grid; grid-template-columns: 1fr 1fr; height: 820px; border-radius: 4px; overflow: hidden; box-shadow: 3px 0 0 var(--page-edge), -3px 0 0 var(--page-edge); }
+.pg { padding: 24px 30px 20px; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; position: relative; }
+.pg.left { background: linear-gradient(to left, var(--gutter), transparent 70px), var(--page); }
+.pg.right { background: linear-gradient(to right, var(--gutter), transparent 70px), var(--page); }
+.ribbon { position: absolute; top: 0; left: calc(50% - 60px); width: 14px; height: 30px; background: var(--bookmark); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); z-index: 1; }
+.running { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex: none; }
+.running i { font: italic 13px/1 var(--display); color: var(--muted-foreground); }
+.backlink { font-size: 13px; color: var(--foreground); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); cursor: pointer; background: none; border: 0; padding: 0; }
+.sc { font: 600 10.5px/1.2 var(--display); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-foreground); }
+.soft { color: var(--muted-foreground); }
+.small { font-size: 12.5px; }
+.fig { font-family: var(--figures); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: var(--radius); font: 500 13px/1 var(--body); border: 1px solid transparent; background: transparent; color: var(--foreground); cursor: pointer; white-space: nowrap; }
+.btn.outline { border-color: var(--border); background: var(--page); }
+.btn.primary { background: var(--primary); color: var(--primary-foreground); }
+.btn.ghost:hover, .btn.outline:hover { background: var(--accent); }
+.btn.sm { height: 26px; font-size: 12.5px; padding: 0 8px; }
+.ico { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.linkbtn { font: 12px var(--body); color: var(--primary); background: none; border: 0; padding: 0; cursor: pointer; }
+.side { display: inline-block; width: 9px; height: 9px; border: 1px solid var(--muted-foreground); vertical-align: -1px; margin-right: 5px; }
+.side.b { background: var(--foreground); border-color: var(--foreground); } .side.w { background: var(--page); }
+
+/* The book's front matter */
+.front { flex: none; display: grid; gap: 7px; }
+.title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.title h2 { font: 600 32px/1.1 var(--display); letter-spacing: -0.01em; }
+.tag { font-size: 12px; border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; background: var(--page-alt); }
+.pub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12.5px; color: var(--muted-foreground); }
+.pub .ico { width: 14px; height: 14px; }
+.stars { color: var(--star); letter-spacing: 1px; }
+.pub a { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.desc { font-size: 13.5px; max-width: 62ch; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, auto)); gap: 7px 22px; margin: 0; align-content: start; flex: none; padding-block: 10px; border-block: 1px solid var(--rule); }
+.facts div { min-width: 0; }
+.facts dt { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); }
+.facts dd { margin: 0; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.facts dd .soft { font-weight: 400; font-size: 12px; }
+.facts .wide { grid-column: span 3; }
+.diff { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12.5px; font-weight: 400; }
+.dscale { position: relative; display: inline-grid; grid-template-columns: repeat(5, 22px); gap: 1px; height: 6px; margin: 0 4px; }
+.dscale i { border-radius: 1px; opacity: 0.85; }
+.dscale b { position: absolute; top: 50%; border-radius: 50%; transform: translate(-50%, -50%); border: 2px solid var(--page); }
+.dscale b.p { width: 13px; height: 13px; } .dscale b.m { width: 9px; height: 9px; }
+.factline { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 12.5px; color: var(--muted-foreground); flex: none; }
+.factline b { color: var(--foreground); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* What the page shows */
+.showrow { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; width: fit-content; }
+.seg button { font: 12.5px var(--body); color: var(--foreground); background: var(--page); border: 0; border-right: 1px solid var(--border); padding: 4px 10px; cursor: pointer; white-space: nowrap; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); font-weight: 700; }
+.seg button:disabled { color: var(--muted-foreground); cursor: default; }
+.seg em { font: normal 9.5px var(--figures); text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid var(--border); border-radius: 3px; padding: 0 3px; margin-left: 3px; }
+.facet { position: relative; }
+.facet > .btn { font-size: 12.5px; gap: 7px; height: 26px; }
+.facet > .btn .k { color: var(--muted-foreground); font-weight: 400; }
+.panel { position: absolute; top: calc(100% + 4px); left: 0; z-index: 30; width: 260px; max-height: 330px; overflow-y: auto; scrollbar-width: thin; background: var(--page); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 10px 28px rgb(20 20 20 / 0.16); padding: 6px; display: grid; gap: 1px; }
+.panel.right { left: auto; right: 0; }
+.panel label, .panel .opt { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 0 8px; align-items: center; font-size: 12.5px; padding: 3px 6px; border-radius: 4px; cursor: pointer; }
+.panel label:hover, .panel .opt:hover { background: var(--accent); }
+.panel .opt { grid-template-columns: 12px minmax(0, 1fr) auto; font: 14px/1.3 var(--display); border: 0; background: none; color: var(--foreground); text-align: left; }
+.panel .opt[aria-current] { background: var(--accent); }
+.panel .opt .fig { font-size: 11px; color: var(--muted-foreground); }
+.panel input { margin: 0; accent-color: var(--primary); }
+.panel .ph { padding: 4px 6px 2px; }
+.panel .pfoot { display: flex; justify-content: space-between; border-top: 1px solid var(--rule); margin-top: 4px; padding: 6px 4px 2px; }
+
+/* Totals */
+.totals { flex: none; display: grid; gap: 4px; }
+.totals .line { display: flex; align-items: baseline; gap: 10px; }
+.totals .big { font: 600 22px/1 var(--display); }
+.wdl { display: flex; height: 8px; border-radius: 2px; overflow: hidden; background: var(--muted); }
+.wdl i:nth-child(1) { background: var(--bar-win); } .wdl i:nth-child(2) { background: var(--bar-draw); } .wdl i:nth-child(3) { background: var(--bar-loss); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted-foreground); }
+.legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+/* The list that fills the rest of a page: where you leave the book, or its contents */
+.listbox { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
+.listbox .lhead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex: none; }
+.listbox h3 { font: 600 19px/1.2 var(--display); }
+.lbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; border-top: 1px solid var(--rule); }
+.lrow { display: grid; grid-template-columns: 70px 56px minmax(0, 1fr) 40px 70px 36px; gap: 8px; align-items: center; padding: 5px 4px; border-bottom: 1px solid var(--rule); font-size: 12.5px; cursor: pointer; }
+.lrow:hover { background: var(--accent); }
+.lrow[aria-current] { background: var(--accent); }
+.lrow b { font: 500 12.5px var(--figures); }
+.lrow .what { min-width: 0; display: grid; }
+.lrow .what span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lrow .what .on { font: italic 12.5px var(--display); color: var(--foreground); }
+.lrow .wdl { height: 6px; }
+.who { font: 600 9px/1 var(--display); letter-spacing: 0.12em; text-transform: uppercase; border-radius: 3px; padding: 3px 4px; border: 1px solid var(--border); color: var(--muted-foreground); text-align: center; }
+.who.you { color: var(--primary); border-color: var(--primary); }
+.crow { display: grid; grid-template-columns: minmax(0, 1fr) auto 52px; gap: 10px; align-items: baseline; padding: 4px 4px; border-bottom: 1px solid var(--rule); cursor: pointer; }
+.crow:hover, .crow[aria-current] { background: var(--accent); }
+.crow .cn { font: 15px/1.3 var(--display); min-width: 0; display: flex; align-items: baseline; gap: 6px; }
+.crow .cn span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crow .cn .dots { flex: 1; min-width: 12px; border-bottom: 1px dotted var(--border); transform: translateY(-4px); }
+.crow.d1 .cn { padding-left: 18px; font-size: 14px; } .crow.d2 .cn { padding-left: 36px; font-size: 13.5px; } .crow.d3 .cn { padding-left: 54px; font-size: 13px; }
+.crow .fig { font-size: 11.5px; color: var(--muted-foreground); text-align: right; }
+
+/* The current position: the board, then its details at the board's height */
+.posbox { flex: none; position: relative; display: grid; grid-template-columns: 256px 1fr; gap: 16px; }
+.board { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; width: 100%; border: 2px solid var(--foreground); border-radius: 2px; }
+.board i { display: grid; place-items: center; font: 400 23px/1 "Segoe UI Symbol", "DejaVu Sans", serif; font-style: normal; }
+.board i.l { background: var(--sq-light); } .board i.d { background: var(--sq-dark); }
+.board i.wp { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 0 1px #000; } .board i.bp { color: #111; }
+.board i.from, .board i.to { box-shadow: inset 0 0 0 100px rgb(255 214 0 / 0.32); }
+.board svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.board line.arrow { stroke: var(--board-arrow); }
+.board polygon.arrow { fill: var(--board-arrow); stroke: none; }
+.details { min-width: 0; height: 256px; overflow: hidden; display: flex; flex-direction: column; gap: 4px; }
+.dhead { display: flex; align-items: flex-start; gap: 8px; flex: none; }
+.dhead > div { min-width: 0; flex: 1; }
+.mvline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; }
+.mvline .mv { font: 600 22px/1.2 var(--display); flex: none; }
+.mvline .on { font: italic 14px/1.3 var(--display); color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; max-width: 100%; }
+.details .line { font: 11.5px/1.45 var(--figures); color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: none; }
+.stat { flex: none; display: grid; gap: 3px; }
+.boxes { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
+.box { flex: 1 1 0; min-height: 44px; display: flex; flex-direction: column; }
+.box .sc { flex: none; padding-bottom: 2px; }
+.next { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; display: grid; align-content: start; gap: 1px; border-top: 1px solid var(--rule); padding-top: 2px; }
+.nrow { display: grid; grid-template-columns: 54px minmax(0, 1fr) 34px 64px 34px; gap: 8px; align-items: center; font-size: 12.5px; padding: 1px 4px; border-radius: 4px; cursor: pointer; border: 1px solid transparent; }
+.nrow.plain { grid-template-columns: 54px minmax(0, 1fr) auto; }
+.nrow:hover { background: var(--accent); }
+.nrow[aria-selected="true"] { border-color: var(--primary); }
+.nrow b { font: 500 12.5px var(--figures); }
+.nrow .on { font: italic 12px var(--display); color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nrow .wdl { height: 6px; }
+.nrow .who { padding: 2px 3px; }
+.empty { font-size: 12px; color: var(--muted-foreground); padding: 3px 4px; }
+.toolbar { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.selectish { height: 26px; display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--page); font-size: 12.5px; width: 150px; }
+.zoom { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.zoom button { font: 12.5px var(--body); color: var(--foreground); background: var(--page); border: 0; padding: 3px 9px; cursor: pointer; }
+.zoom span { padding: 0 8px; font: 11.5px var(--figures); color: var(--muted-foreground); border-left: 1px solid var(--border); border-right: 1px solid var(--border); line-height: 24px; min-width: 46px; text-align: center; }
+.zoom button.fit { border-left: 1px solid var(--border); font-size: 12px; }
+.viewbox { flex: 1 1 auto; min-height: 0; position: relative; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted); }
+.vscroll { position: absolute; inset: 0; overflow: auto; scrollbar-width: thin; cursor: grab; touch-action: none; }
+.vscroll.dragging { cursor: grabbing; }
+.vscroll svg { display: block; }
+.hint { flex: none; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted-foreground); }
+.hint kbd { font-size: 11px; padding: 0 4px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 3px; background: var(--page); color: var(--foreground); }
+.ramp { display: inline-block; width: 70px; height: 7px; border-radius: 2px; vertical-align: 0; background: linear-gradient(90deg, var(--bar-loss), var(--bar-draw), var(--bar-win)); }
+
+/* The tree's paint, as globals.css's .bv-* rules */
+.bv-grid { stroke: var(--border); stroke-width: 1; }
+.bv-ruler { font: 9px var(--body); fill: var(--muted-foreground); text-anchor: middle; }
+.bv-edge { fill: none; stroke: var(--view-edge); stroke-linecap: round; }
+.bv-edge.on-path { stroke: var(--view-path); }
+.bv-edge.cold { opacity: 0.35; }
+.bv-node { stroke-width: 1; }
+.bv-node.wm { fill: var(--view-white); stroke: var(--view-white-edge); }
+.bv-node.bm { fill: var(--view-black); stroke: var(--view-black-edge); }
+.bv-node.root { fill: var(--page); stroke: var(--foreground); stroke-width: 1.5; }
+.bv-node.clash { stroke: var(--view-clash); stroke-width: 2.2; }
+.bv-node.on-path { stroke: var(--view-path); stroke-width: 1.6; }
+.bv-node.current { stroke: var(--view-hover); stroke-width: 3; }
+.bv-ring { fill: none; stroke: var(--primary); stroke-width: 1.6; stroke-dasharray: 3 2.5; }
+.bv-label { font: 9.5px var(--body); fill: var(--muted-foreground); paint-order: stroke; stroke: var(--muted); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+.bv-label.minor { opacity: 0; }
+.bv-label.on-path, .bv-label.kid { opacity: 1; fill: var(--foreground); }
+.bv-label.hi { fill: var(--primary); font-weight: 700; }
+.bv-label.current { fill: var(--view-hover); font-weight: 700; }
+.bv-hit { fill: transparent; cursor: pointer; }
+
+@container (max-width: 760px) {
+  .spread { grid-template-columns: 1fr; height: auto; box-shadow: none; }
+  .pg { padding: 20px 16px; }
+  .pg.left, .pg.right { background: var(--page); }
+  .pg.right { border-top: 6px solid var(--cover); }
+  .ribbon { left: auto; right: 28px; }
+  .tabs { display: none; }
+  .book { margin: 0 6px 6px; padding: 4px; }
+  .title h2 { font-size: 26px; }
+  .facts { grid-template-columns: repeat(2, minmax(0, auto)); } .facts .wide { grid-column: span 2; }
+  .lbody { max-height: 320px; flex: none; }
+  .lrow { grid-template-columns: 70px 50px minmax(0, 1fr) 34px; } .lrow .wdl, .lrow .pct { display: none; }
+  .posbox { grid-template-columns: 1fr; }
+  .posbox .board { max-width: 320px; }
+  .details { height: auto; } .box { flex: none; } .next { max-height: 130px; flex: none; }
+  .viewbox { flex: none; height: 440px; }
+  .panel { width: min(260px, calc(100vw - 48px)); }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="intro">
+    <p class="eyebrow">Mockup · plans/game-history.md step 18 · plans/book-ui.md D8</p>
+    <h1>A book's own page on a whole spread</h1>
+    <p>The book page laid out as the history page is: both pages in view at once, no zoom, nothing scrolls but the boxes. Two ways to share the spread: A puts the book's front matter on the left and the position and drawing on the right, as the history page does; B gives the drawing the whole left page. The tree is live: click anywhere on the mock, then use the arrow keys. The book is the real Italian Game example book; the games, rating and reviews are made up.</p>
+  </header>
+  <div class="studio" role="group" aria-label="Mockup options">
+    <fieldset><legend>Layout</legend><div class="chips" data-key="layout"><button class="chip" data-value="A">A · Like the history page</button><button class="chip" data-value="B">B · Drawing on the left</button></div></fieldset>
+    <fieldset><legend>Show</legend><div class="chips" data-key="show"><button class="chip" data-value="plain">Plain</button><button class="chip" data-value="games">Your games</button></div></fieldset>
+    <fieldset><legend>Color</legend><div class="chips" data-key="mode"><button class="chip" data-value="light">Light</button><button class="chip" data-value="dark">Dark</button></div></fieldset>
+    <fieldset><legend>Width</legend><div class="chips" data-key="width"><button class="chip" data-value="desktop">Desktop</button><button class="chip" data-value="phone">Phone</button></div></fieldset>
+  </div>
+  <div class="stage"><div class="mock" id="mock"></div></div>
+  <section class="notes" aria-label="Notes">
+    <div>
+      <h2>What moves where</h2>
+      <ul>
+        <li><strong>The spread is the book.</strong> Today the left page lists your other books and the right page holds this one, under D8's zoom. Here both pages are this book, shown whole as the history page is. Other books are one click away under <strong>Switch book</strong>, and "Back to all books" returns to the Library with this book picked.</li>
+        <li><strong>A</strong> reads like the history page: what the book is and which way through it on the left, where you are on the right. The drawing gets the right page's height under the board.</li>
+        <li><strong>B</strong> gives the drawing a whole page, the tallest it can be, and puts the board, the facts and the list on the right. The title strip stays short so the drawing starts high.</li>
+        <li>Nothing scrolls but the boxes (D36's third look). On a phone the pages stack.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>The list that fills the page</h2>
+      <ul>
+        <li><strong>Your games:</strong> "Where you leave this book", every place your games left it, most games first, with who left and the opening they went into. A row jumps to its position.</li>
+        <li><strong>Plain:</strong> the book's <strong>contents</strong>, its openings in tree order, nested, with lines and positions, like a table of contents. A row jumps to where that opening starts. Names come from the opening catalog, so they cost the book nothing.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>From your notes on the history page</h2>
+      <ul>
+        <li><strong>Opening names</strong> follow the move: "4.Ng5 Two Knights Defense: Knight Attack". In the lists, a move shows a name only where the name changes.</li>
+        <li><strong>The arrow on the board</strong> shows the move the ring is on, in the Explorer's hover color. Hovering a move in the list or the drawing shows that one instead.</li>
+        <li><strong>Keys anywhere:</strong> once you've clicked anywhere on the page, the arrow keys walk the drawing. Only a text field or an open panel keeps them.</li>
+        <li><strong>The list follows:</strong> when <kbd>↑</kbd> <kbd>↓</kbd> move the ring past the box's edge, the box beside the board scrolls to keep the ringed move in view.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+const LINES = ["e4 e5 Nf3 Nc6 Bc4 Bc5 Bxf7+ Kxf7 Nxe5+ Nxe5 Qh5+","e4 e5 Nf3 Nc6 Bc4 Bc5 O-O Nf6 c3 O-O d4 exd4 cxd4 Bb6","e4 e5 Nf3 Nc6 Bc4 Bc5 O-O Nf6 d4 exd4","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bb6 b5 Na5 Nxe5 Nh6","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bb6 b5 Na5 Nxe5 Qg5 Nxf7 Qxg2","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 Nf6 dxe5 Ng4 Bg5 f6 exf6 gxf6 Bh4","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 Nf6 dxe5 Nxe4 Qd5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 b5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 d6 Bg5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Bc5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Bd6","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Be7","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Bf8","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 d5","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d3","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 b4 Bb6 e5","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 b4 Be7","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 cxd4 Bb4+ Kf1","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 cxd4 Bb4+ Nc3 Nxe4 O-O","e4 e5 Nf3 Nc6 Bc4 Bc5 d3 Nf6","e4 e5 Nf3 Nc6 Bc4 Bc5 d3 f5 Ng5 f4 Bf7+","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Bxd4 Nxd4","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Bxf7+ Kf8 Bxg8","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 Qxe4+ Kf1 Qxc2","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Bg5 O-O Ne5+ Be6 Bxe6+","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Bg5 O-O Ne5+ Be6 c3 Nc6","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Bf7+ Kf8 Qd3 Be2","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Bf7+ Kf8 f3 Nxe4 Be3","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Bf7+ Kf8 f3 Nxe4 fxg4","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Qd3 Nxd5","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 f3 Nxd5 c3 Nxf3+","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Nxh8","e4 e5 Nf3 Nc6 Bc4 Be7 O-O","e4 e5 Nf3 Nc6 Bc4 Be7 d4","e4 e5 Nf3 Nc6 Bc4 Nd4 Nxd4","e4 e5 Nf3 Nc6 Bc4 Nd4 Nxe5 Qg5 Nxf7 Qxg2 Rf1 Qxe4+ Be2 Nf3#","e4 e5 Nf3 Nc6 Bc4 Nd4 Nxe5 Qg5 O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 Nc3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Bxf7+ Ke7 Bd5 Rf8 Bxc6 dxc6 d3 Ng4 Nh3 Nxf2 Bg5+ Kd7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Bxf7+ Ke7 Bd5 Rf8 Bxc6 dxc6 d3 Ng4 Nh3 Nxf2 Bg5+ Ke8","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Bxf7+ Ke7 Bd5 Rf8 O-O d6 c3 Bg4 Qb3 Bb6 Bxc6 bxc6 h3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kf1 Qe7 Nxh8 d5 Kxf2","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kf1 Qe7 Nxh8 d5 exd5 Nd4 d6 Qxd6","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kxf2 Nxe4+ Ke3 Qh4 g3 Nxg3 hxg3 Qd4+ Kf3 O-O Rh4 e4+","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kxf2 Nxe4+ Kg1 Qh4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 d4 d5 Bxd5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nd5 Nxf7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nd5 d4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nxe4 Bxf7+ Ke7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nxe4 Nxf7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ Bd7 Qe2","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Ba4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Bd3 Nd5 Nf3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Bc5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Bd6 d4 exd3 Nxd3 Qc7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Bd6 f4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Qc7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Qd4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nh3 Bc5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nh3 Bd6 d3 O-O O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nh3 g5 d3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Qf3 Rb8 Bd3 h6 Ne4 Nd5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Qf3 cxb5 Qxa8 Qc7 Qf3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 d3 h6 Nf3 e4 Qe2 Nxc4 dxc4 Bc5 Nfd2 O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nb4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nd4 c3 b5 Bf1 Nxd5 Ne4 Qh4 Ng3 Bg4 f3 e4 cxd4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nd4 c3 b5 Bf1 Nxd5 cxd4 Qxg5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nd4 d6","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Ne7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 Nxf7 Kxf7 Qf3+ Ke6 Nc3 Nb4 a3 Nxc2+ Kd1 Nxa1","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 d4 Bb4+ c3 Be7 Nxf7 Kxf7 Qf3+ Ke6 Qe4 Rf8","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 b5 Bf1 Nd4 c3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 b5 Bxb5 Qxd5 Bxc6+ Qxc6","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 b5 Bxb5 Qxd5 Nc3 Qxg2","e4 e5 Nf3 Nc6 Bc4 Nf6 O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 c3","e4 e5 Nf3 Nc6 Bc4 Nf6 d3 Bc5","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Bc5 e5","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Nc3 dxc3 Bxf7+ Kxf7 Qd5+ Ke8 Re1 Be7 Rxe4 d6","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Nc3 dxc3 Bxf7+ Kxf7 Qd5+ Kf6 Qxe4 Be7","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Nc3 dxc3 Bxf7+ Kxf7 Qd5+ Kf6 Re1 Ne7 Qxe4 Kf7 Bg5 d5 Qf4+ Kg8","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Re1 d5 Bxd5 Qxd5 Nc3 Qa5","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 e5","e4 e5 Nf3 Nc6 Bc4 a6","e4 e5 Nf3 Nc6 Bc4 d6 Nc3 Bg4 Nxe5","e4 e5 Nf3 Nc6 Bc4 f5 d3","e4 e5 Nf3 Nc6 Bc4 f5 exf5","e4 e5 Nf3 Nc6 Bc4 h6"];
+const ICONS = {
+  check: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  chev: '<path d="m6 9 6 6 6-6"/>',
+  dots: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+};
+const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+const n = (v) => v.toLocaleString("en-US");
+const pct = (v) => `${Math.round(v * 100)}%`;
+function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const hash = (text) => { let h = 2166136261; for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return (h >>> 0) / 4294967296; };
+
+// ── Opening names, as the catalog would give them (getOpeningForLine) ─────────────────────
+const P = "e4 e5 Nf3 Nc6 Bc4";
+const NAMES = {
+  "e4": "King's Pawn Opening", "e4 e5": "Open Game", "e4 e5 Nf3": "King's Knight Opening", "e4 e5 Nf3 Nc6": "King's Knight Opening: Normal Variation",
+  [P]: "Italian Game",
+  [`${P} Bc5`]: "Giuoco Piano", [`${P} Bc5 c3`]: "Giuoco Piano: Main Line", [`${P} Bc5 c3 Nf6 d4 exd4 cxd4 Bb4+ Nc3`]: "Giuoco Piano: Greco's Attack",
+  [`${P} Bc5 d3`]: "Giuoco Pianissimo", [`${P} Bc5 Bxf7+`]: "Italian Game: Jerome Gambit",
+  [`${P} Bc5 b4`]: "Evans Gambit", [`${P} Bc5 b4 Bxb4`]: "Evans Gambit Accepted", [`${P} Bc5 b4 Bb6`]: "Evans Gambit Declined",
+  [`${P} Nf6`]: "Two Knights Defense", [`${P} Nf6 Ng5`]: "Two Knights Defense: Knight Attack",
+  [`${P} Nf6 Ng5 d5 exd5 Na5`]: "Two Knights Defense: Polerio Defense", [`${P} Nf6 Ng5 d5 exd5 Nxd5 Nxf7`]: "Two Knights Defense: Fried Liver Attack",
+  [`${P} Nf6 Ng5 d5 exd5 Nxd5 d4`]: "Two Knights Defense: Lolli Attack", [`${P} Nf6 Ng5 d5 exd5 Nd4`]: "Two Knights Defense: Fritz Variation",
+  [`${P} Nf6 Ng5 d5 exd5 b5`]: "Two Knights Defense: Ulvestad Variation", [`${P} Nf6 Ng5 Bc5`]: "Two Knights Defense: Traxler Counterattack",
+  [`${P} Nf6 d4 exd4 O-O Bc5 e5`]: "Two Knights Defense: Max Lange Attack", [`${P} Nf6 d3`]: "Two Knights Defense: Modern Bishop's Opening",
+  [`${P} Nf6 Nc3`]: "Italian Game: Four Knights", [`${P} Be7`]: "Hungarian Defense", [`${P} Nd4`]: "Blackburne Shilling Gambit",
+  [`${P} d6`]: "Italian Game: Paris Defense", [`${P} f5`]: "Rousseau Gambit", [`${P} h6`]: "Italian Game: Anti-Fried Liver Defense",
+  "e4 c5": "Sicilian Defense", "e4 e6": "French Defense", "e4 c6": "Caro-Kann Defense", "e4 d5": "Scandinavian Defense", "e4 d6": "Pirc Defense", "e4 g6": "Modern Defense",
+};
+
+// ── The book, from its lines, with its measures ────────────────────────────────────────────
+const root = { id: "", san: null, ply: 0, parent: null, kids: new Map() };
+for (const line of LINES) {
+  let node = root;
+  line.split(" ").forEach((san, i) => {
+    let next = node.kids.get(san);
+    if (!next) { next = { id: node.id ? `${node.id} ${san}` : san, san, ply: i + 1, parent: node, kids: new Map() }; node.kids.set(san, next); }
+    node = next;
+  });
+}
+const all = new Map();
+(function finish(x) {
+  all.set(x.id, x);
+  const kids = [...x.kids.values()];
+  kids.forEach(finish);
+  x.size = kids.length ? kids.reduce((s, k) => s + k.size, 0) : 1;
+  x.positions = 1 + kids.reduce((s, k) => s + k.positions, 0);
+  x.children = kids.sort((a, b) => b.size - a.size || a.san.localeCompare(b.san));
+  x.games = 0; x.w = 0; x.d = 0; x.l = 0;
+})(root);
+// Names are given top down, once every node exists: a position takes its own name or its parent's.
+(function name(x) { x.name = NAMES[x.id] ?? x.parent?.name ?? null; x.children.forEach(name); })(root);
+const nodes = [...all.values()];
+const leaves = nodes.filter((x) => !x.children.length);
+const depth = Math.max(...nodes.map((x) => x.ply));
+const ownMoves = nodes.filter((x) => x.san && x.ply % 2 === 1).length;
+const clashes = nodes.filter((x) => x.ply % 2 === 0 && x.children.length > 1).length;
+const averageLine = leaves.reduce((s, x) => s + x.ply, 0) / leaves.length;
+const measured = Math.round(Math.min(5, Math.max(0, Math.log2(ownMoves * averageLine / 10 / 12.5))) * 10) / 10;
+const PUBLISHER_DIFFICULTY = 4.0;
+/** A name worth writing beside a move: the move's own, where it differs from its parent's. */
+const newName = (x) => (x.name && x.name !== x.parent?.name ? x.name : "");
+const exitName = (e) => NAMES[e.from.id ? `${e.from.id} ${e.san}` : e.san] ?? "";
+
+// ── Made-up games as White, walked through the book until someone leaves it ───────────────
+const rand = rng(11);
+const legal = new Map();
+function offBook(x) {
+  if (!legal.has(x.id)) {
+    const game = new Chess();
+    for (const s of pathOf(x)) game.move(s.san);
+    const book = new Set(x.children.map((k) => k.san));
+    const usual = x.ply === 1 ? ["c5", "e6", "c6", "d5", "d6", "g6"] : [];
+    const natural = (m) => usual.includes(m) ? 10 - usual.indexOf(m) : m.startsWith("O-O") ? 5 : /^[NB]/.test(m) ? 4 : /^[cde]/.test(m) ? 3 : /^Q/.test(m) ? 1 : 0;
+    legal.set(x.id, game.moves().filter((m) => !book.has(m)).sort((a, b) => natural(b) - natural(a) || hash(x.id + a) - hash(x.id + b)).slice(0, 4));
+  }
+  const options = legal.get(x.id);
+  return options[Math.min(options.length - 1, Math.floor(rand() ** 2.2 * options.length))];
+}
+function pathOf(x) { const out = []; for (let at = x; at && at.san; at = at.parent) out.unshift(at); return out; }
+const exits = new Map();
+let stayed = 0;
+for (let i = 0; i < 1160; i++) {
+  let at = root;
+  const reached = [root];
+  let exit = null;
+  while (true) {
+    if (!at.children.length) { stayed++; break; }
+    const ours = at.ply % 2 === 0;
+    const chance = at.ply === 0 ? 0 : at.ply === 1 ? 0.55 : ours ? 0.05 : 0.11;
+    const san = rand() < chance ? offBook(at) : undefined;
+    if (san) { exit = { from: at, san, who: ours ? "you" : "them" }; break; }
+    let r = rand() * at.children.reduce((s, k) => s + k.size ** 0.8, 0);
+    at = at.children.find((k) => (r -= k.size ** 0.8) <= 0) ?? at.children[0];
+    reached.push(at);
+  }
+  const key = exit ? `${exit.from.id}|${exit.san}` : reached[reached.length - 1].id;
+  const lean = hash("w" + key);
+  const r = rand();
+  const result = r < 0.25 + 0.42 * lean ? "w" : r < 0.33 + 0.42 * lean ? "d" : "l";
+  for (const x of reached) { x.games++; x[result]++; }
+  if (exit) {
+    const e = exits.get(key) ?? { ...exit, games: 0, w: 0, d: 0, l: 0 };
+    e.games++; e[result]++; exits.set(key, e);
+  }
+}
+for (const x of nodes) x.score = x.games ? (x.w + x.d / 2) / x.games : 0;
+for (const e of exits.values()) e.score = (e.w + e.d / 2) / e.games;
+const EXITS = [...exits.values()].sort((a, b) => b.games - a.games || a.san.localeCompare(b.san));
+
+// The book's contents: each place a new opening name starts, in tree order, nested under the one it grows from.
+const CONTENTS = [];
+(function walk(x, level) {
+  let next = level;
+  if (x.san && newName(x) && x.ply >= 5) { CONTENTS.push({ node: x, level }); next = level + 1; }
+  x.children.forEach((k) => walk(k, next));
+})(root, 0);
+
+const SHELF = [["Italian Game", "w", 338], ["Caro-Kann Defense", "b", 256], ["Queen's Gambit", "w", 198], ["London System", "w", 164], ["Sicilian Najdorf", "b", 402], ["King's Indian Defense", "b", 288], ["Ruy Lopez", "w", 253], ["Scandinavian Defense", "b", 97], ["Gambits for fun", "w", 131]];
+
+// ── State ──────────────────────────────────────────────────────────────────────────────────
+const state = { layout: "A", show: "games", mode: "light", width: "desktop", zoom: 1, open: null };
+try { const dark = document.documentElement.dataset.theme === "dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches); if (dark) state.mode = "dark"; } catch {}
+if (window.innerWidth < 760) state.width = "phone";
+let current = all.get(`${P} Nf6 Ng5`) ?? root, hi = 0, hover = null, active = false;
+const moveText = (x) => `${Math.ceil(x.ply / 2)}${x.ply % 2 ? "." : "…"}${x.san}`;
+const exitText = (e) => `${Math.ceil((e.from.ply + 1) / 2)}${e.from.ply % 2 === 0 ? "." : "…"}${e.san}`;
+const lineText = (list) => list.map((x) => (x.ply % 2 ? `${Math.ceil(x.ply / 2)}.${x.san}` : x.san)).join(" ");
+const wdlBar = (x) => `<div class="wdl"><i style="flex:${x.w}"></i><i style="flex:${x.d}"></i><i style="flex:${x.l}"></i></div>`;
+const games = () => state.show === "games";
+
+// ── Ply columns on a zoom scale, with the eager camera (D32 as amended) ────────────────────
+const ZOOM_STEPS = [0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4];
+const ZOOM_MIN = 0.5, ZOOM_MAX = 4, COL = 52, ROW = 18, AUTO_MAX = 2;
+const clampZoom = (z) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
+const PAD = { left: 18, right: 40, top: 26, bottom: 16 };
+function fitZoom(box) {
+  return clampZoom(Math.min((box.width - PAD.left - PAD.right) / (depth * COL), (box.height - PAD.top - PAD.bottom) / (Math.max(leaves.length - 1, 1) * ROW)));
+}
+function layout(box) {
+  const z = state.zoom;
+  const colW = COL * Math.max(z, 0.6), rowH = ROW * z;
+  const used = rowH * (leaves.length - 1);
+  const top = PAD.top + Math.max(0, (box.height - PAD.top - PAD.bottom - used) / 2);
+  const pts = new Map(); let row = 0;
+  const place = (x) => {
+    const px = PAD.left + x.ply * colW;
+    if (!x.children.length) { pts.set(x.id, { x: px, y: top + row++ * rowH }); return; }
+    x.children.forEach(place);
+    pts.set(x.id, { x: px, y: (pts.get(x.children[0].id).y + pts.get(x.children[x.children.length - 1].id).y) / 2 });
+  };
+  place(root);
+  return { pts, colW, rowH, width: Math.max(box.width, PAD.left + depth * colW + PAD.right), height: Math.max(box.height, top + used + PAD.bottom) };
+}
+function scoreColor(s) {
+  const dark = state.mode === "dark";
+  const loss = dark ? [224, 98, 90] : [180, 35, 24], draw = dark ? [139, 134, 118] : [143, 138, 122], win = dark ? [63, 191, 111] : [21, 128, 61];
+  const t = Math.min(1, Math.max(0, (s - 0.3) / 0.4));
+  const [a, b, u] = t < 0.5 ? [loss, draw, t * 2] : [draw, win, (t - 0.5) * 2];
+  return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * u)).join(" ")})`;
+}
+function drawTree() {
+  const scroll = document.getElementById("vscroll");
+  if (!scroll) return null;
+  const lay = layout({ width: scroll.clientWidth, height: scroll.clientHeight });
+  const at = (id) => lay.pts.get(id);
+  const onPath = new Set(pathOf(current).map((x) => x.id)); onPath.add("");
+  const rootGames = Math.max(root.games, 1);
+  let grid = "", edges = "", dots = "", labels = "", hits = "";
+  for (let d = 0; d <= depth; d++) {
+    const x = PAD.left + d * lay.colW;
+    grid += `<line x1="${x}" x2="${x}" y1="${PAD.top - 10}" y2="${lay.height - PAD.bottom + 6}" class="bv-grid"/>`;
+    if (d % 2) grid += `<text x="${x}" y="13" class="bv-ruler">${Math.ceil(d / 2)}</text>`;
+  }
+  for (const x of nodes) {
+    const c = at(x.id);
+    const reached = x.games > 0;
+    if (x.parent) {
+      const p = at(x.parent.id), k = lay.colW * 0.55;
+      let width = 0.7 + 3.3 * (x.size / root.size), style = "", cls = "bv-edge";
+      if (games()) {
+        if (reached) style = ` style="stroke:${scoreColor(x.score)}"`; else cls += " cold";
+        width = reached ? 0.9 + 7 * Math.sqrt(x.games / rootGames) : 0.7;
+      } else if (onPath.has(x.id)) cls += " on-path";
+      edges += `<path d="M${p.x},${p.y} C${p.x + k},${p.y} ${c.x - k},${c.y} ${c.x},${c.y}" class="${cls}" stroke-width="${width.toFixed(2)}"${style}/>`;
+    }
+    const kind = !x.san ? "root" : x.ply % 2 ? "wm" : "bm";
+    const clash = x.ply % 2 === 0 && x.children.length > 1 ? " clash" : "";
+    dots += `<circle cx="${c.x}" cy="${c.y}" r="${x.san ? 2.8 : 4.2}" class="bv-node ${kind}${clash}${onPath.has(x.id) ? " on-path" : ""}${x === current ? " current" : ""}"/>`;
+    const isKid = x.parent === current, isHi = isKid && current.children[hi] === x;
+    if (isHi) dots += `<circle cx="${c.x}" cy="${c.y}" r="7" class="bv-ring"/>`;
+    const shown = onPath.has(x.id) || isKid || (lay.rowH >= 11 && (x.ply <= 3 || x.size >= 10));
+    const above = !x.san || x.ply % 2 === 1;
+    const beside = isKid && lay.rowH < 13;
+    labels += `<text x="${beside ? c.x + 9 : c.x}" y="${beside ? c.y + 3.5 : above ? c.y - 6 : c.y + 12}" text-anchor="${beside ? "start" : "middle"}" class="bv-label${shown ? "" : " minor"}${onPath.has(x.id) ? " on-path" : ""}${isKid ? " kid" : ""}${isHi ? " hi" : ""}${x === current ? " current" : ""}">${x.san ?? "Start"}</text>`;
+    hits += `<circle cx="${c.x}" cy="${c.y}" r="7" class="bv-hit" data-id="${x.id}"><title>${x.san ? moveText(x) : "Start"}${x.name ? ` · ${x.name}` : ""}${games() ? (reached ? ` · ${n(x.games)} of your games · ${pct(x.score)}` : " · none of your games") : ""}</title></circle>`;
+  }
+  scroll.innerHTML = `<svg width="${lay.width}" height="${lay.height}" viewBox="0 0 ${lay.width} ${lay.height}" role="img" aria-label="Ply columns of Italian Game">${grid}${edges}${dots}${labels}${hits}</svg>`;
+  return lay;
+}
+function autoZoom(lay) {
+  const scroll = document.getElementById("vscroll");
+  if (!scroll || !lay || !current.children.length) return null;
+  const ys = [current, ...current.children].map((x) => lay.pts.get(x.id).y);
+  const span = Math.max(...ys) - Math.min(...ys), room = scroll.clientHeight * 0.7;
+  const z = state.zoom;
+  let next = z;
+  if (span > room) next = clampZoom(z * room / span);
+  else if (span > 0 && span < room * 0.3 && z < AUTO_MAX) next = Math.min(AUTO_MAX, clampZoom(z * room * 0.6 / span));
+  else if (span === 0 && z < 1) next = 1;
+  return Math.abs(next - z) / z > 0.04 ? next : null;
+}
+function follow(lay, smooth = true) {
+  const scroll = document.getElementById("vscroll");
+  if (!scroll || !lay) return;
+  const ys = [current, ...current.children].map((x) => lay.pts.get(x.id).y);
+  const here = lay.pts.get(current.id);
+  const w = scroll.clientWidth, h = scroll.clientHeight, edge = h * 0.18;
+  let top = scroll.scrollTop;
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  if (minY < top + edge || maxY > top + h - edge) top = (minY + maxY) / 2 - h / 2;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  scroll.scrollTo({ left: Math.max(0, here.x - w * 0.3), top: Math.max(0, top), behavior: smooth && !reduce ? "smooth" : "auto" });
+}
+
+// ── The board, from chess.js, with the arrow for the ringed or hovered move ────────────────
+function boardHtml(list, arrowTo) {
+  const game = new Chess(); let last = null;
+  for (const x of list) last = game.move(x.san);
+  const glyph = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟", K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙" };
+  const square = (r, f, ch) => {
+    const name = "abcdefgh"[f] + (8 - r);
+    const mark = last && last.from === name ? " from" : last && last.to === name ? " to" : "";
+    return `<i class="${(r + f) % 2 ? "d" : "l"}${ch ? (ch === ch.toUpperCase() ? " wp" : " bp") : ""}${mark}">${ch ? glyph[ch] + "︎" : ""}</i>`;
+  };
+  let out = "";
+  game.fen().split(" ")[0].split("/").forEach((row, r) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) for (let i = 0; i < Number(ch); i++, f++) out += square(r, f, null); else out += square(r, f++, ch); } });
+  const move = arrowTo ? game.move(arrowTo) : null;
+  if (move) {
+    const at = (sq) => [("abcdefgh".indexOf(sq[0]) + 0.5), (8 - Number(sq[1]) + 0.5)];
+    const [x1, y1] = at(move.from), [x2, y2] = at(move.to);
+    const len = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+    const head = 0.42, ex = x2 - ux * head, ey = y2 - uy * head, px = -uy * 0.24, py = ux * 0.24;
+    out += `<svg viewBox="0 0 8 8" aria-hidden="true"><line class="arrow" x1="${x1}" y1="${y1}" x2="${ex}" y2="${ey}" stroke-width="0.17" stroke-linecap="round"/><polygon class="arrow" points="${x2},${y2} ${ex + px},${ey + py} ${ex - px},${ey - py}" stroke="none"/></svg>`;
+  }
+  return out;
+}
+
+// ── The page's parts ───────────────────────────────────────────────────────────────────────
+const switchBook = () => `<div class="facet"><button class="btn ghost sm" data-open="shelf" aria-expanded="${state.open === "shelf"}">Switch book</button>${state.open === "shelf" ? `<div class="panel right" role="group" aria-label="Your books"><span class="sc ph">Library · 9 books</span>${SHELF.map(([name, side, p], i) => `<button class="opt" ${i === 0 ? 'aria-current="true"' : ""} data-close><span class="side ${side}"></span><span>${name}</span><span class="fig">${p}</span></button>`).join("")}</div>` : ""}</div>`;
+const runningLeft = () => `<div class="running"><button class="backlink">Back to all books</button><span class="grow"></span><span class="sc">Book 1 of 9</span>${switchBook()}</div>`;
+const titleHtml = () => `<div class="title"><h2>Italian Game</h2><span class="small soft"><span class="side w"></span>White</span></div>`;
+const publisher = () => `<div class="pub"><span class="tag" style="color:var(--foreground)">ByTheBook</span>${icon("check")}<span>Verified</span><span>·</span><span class="stars" aria-label="4.6 of 5 stars">★★★★★</span><b style="color:var(--foreground)">4.6</b><span>(128)</span><span>· 2,340 saves ·</span><a>31 reviews</a><a>Leaderboard</a></div>`;
+const description = `<p class="desc">1.e4 e5 2.Nf3 Nc6 3.Bc4: the Giuoco Piano, the Two Knights Defense, the Evans Gambit and their sidelines.</p>`;
+const actions = () => `<div class="row"><button class="btn primary">Open in Explorer</button><button class="btn outline">Train this book</button><button class="btn ghost" aria-label="More for this book">${icon("dots")}</button></div>`;
+const diffColor = (d) => `var(--difficulty-${Math.min(4, Math.floor(d))})`;
+const difficulty = () => `<span class="dscale" aria-hidden="true">${[0, 1, 2, 3, 4].map((i) => `<i style="background:var(--difficulty-${i})"></i>`).join("")}<b class="m" style="left:${measured / 5 * 100}%;background:${diffColor(measured)}"></b><b class="p" style="left:${PUBLISHER_DIFFICULTY / 5 * 100}%;background:${diffColor(PUBLISHER_DIFFICULTY)}"></b></span><span><b>${PUBLISHER_DIFFICULTY.toFixed(1)}</b> publisher · ${measured.toFixed(1)} measured</span>`;
+const facts = () => `<dl class="facts">
+  <div class="wide"><dt>Difficulty</dt><dd class="diff">${difficulty()}<span class="soft">· ${n(ownMoves)} moves to remember</span></dd></div>
+  <div><dt>Positions</dt><dd>${n(nodes.length - 1)} <span class="soft">/ 1,000</span></dd></div>
+  <div><dt>Lines</dt><dd>${n(leaves.length)} <span class="soft">· longest ${depth} plies</span></dd></div>
+  <div><dt>Coverage</dt><dd>64% <span class="soft">of master games</span></dd></div></dl>`;
+const factLine = () => `<div class="factline"><span class="diff" style="display:inline-flex">Difficulty ${difficulty()}</span><span><b>${n(nodes.length - 1)}</b> positions</span><span><b>${n(leaves.length)}</b> lines</span><span><b>64%</b> coverage</span></div>`;
+function whichGames() {
+  const panel = state.open === "which" ? `<div class="panel" role="group" aria-label="Which games"><span class="sc ph">Time</span>${[["Bullet", 232], ["Blitz", 581], ["Rapid", 290], ["Classical", 5], ["Daily", 52]].map(([l, c]) => `<label><input type="checkbox" checked><span>${l}</span><span class="fig soft">${c}</span></label>`).join("")}<span class="sc ph">From</span>${[["Chess.com", "1,021"], ["Lichess", 134], ["Other", 5]].map(([l, c]) => `<label><input type="checkbox" checked><span>${l}</span><span class="fig soft">${c}</span></label>`).join("")}<span class="sc ph">Dates</span><span class="small" style="padding:0 6px">The last 12 months, on the history page's strip</span><div class="pfoot"><button class="linkbtn">All</button><button class="linkbtn" data-close>Done</button></div></div>` : "";
+  return `<div class="facet"><button class="btn outline" data-open="which" aria-expanded="${state.open === "which"}"><span class="k">Games</span> All 1,160 as White</button>${panel}</div>`;
+}
+const showRow = () => `<div class="showrow"><span class="small soft">Show</span><div class="seg" data-key="show"><button data-value="plain" aria-pressed="${!games()}">Plain</button><button data-value="games" aria-pressed="${games()}">Your games</button><button disabled>Drills<em>soon</em></button></div>${games() ? whichGames() : ""}</div>`;
+const totals = () => games() ? `<div class="totals"><div class="line"><span class="big">${n(root.games)}</span><span class="soft">of your games as White</span><span class="grow"></span><span class="small soft">Score <b class="fig" style="color:var(--foreground)">${pct(root.score)}</b> · ${n(stayed)} reached a line's end</span></div>${wdlBar(root)}</div>` : "";
+function listHtml() {
+  if (games()) {
+    return `<section class="listbox" aria-label="Where you leave this book"><div class="lhead"><h3>Where you leave this book</h3><span class="sc">${n(EXITS.length)} places</span></div>
+      <div class="lbody" id="lbody">${EXITS.map((e, i) => `<div class="lrow" data-exit="${i}" ${e.from === current ? 'aria-current="true"' : ""}><span class="who ${e.who === "you" ? "you" : ""}">${e.who === "you" ? "You" : "Opponent"}</span><b>${exitText(e)}</b><span class="what">${exitName(e) ? `<span class="on">${exitName(e)}</span>` : ""}<span class="soft">after ${e.from.san ? lineText(pathOf(e.from).slice(-3)) : "the start"}; the book has ${e.from.children.slice(0, 2).map((k) => k.san).join(", ")}</span></span><span class="fig">${n(e.games)}</span>${wdlBar(e)}<span class="fig pct">${pct(e.score)}</span></div>`).join("")}</div></section>`;
+  }
+  return `<section class="listbox" aria-label="Contents"><div class="lhead"><h3>Contents</h3><span class="sc">${n(CONTENTS.length)} openings · lines · positions</span></div>
+    <div class="lbody" id="lbody">${CONTENTS.map(({ node, level }) => `<div class="crow d${Math.min(level, 3)}" data-id="${node.id}" ${pathOf(current).includes(node) ? 'aria-current="true"' : ""}><span class="cn"><span>${level ? node.name.replace(/^[^:]+: /, "") : node.name}</span><span class="fig" style="text-align:left">${moveText(node)}</span><span class="dots"></span></span><span class="fig">${node.size}</span><span class="fig">${node.positions}</span></div>`).join("")}</div></section>`;
+}
+function positionHtml() {
+  const path = pathOf(current);
+  const kids = current.children;
+  const target = hover ?? kids[hi] ?? null;
+  const leftHere = EXITS.filter((e) => e.from === current);
+  const nextRows = kids.map((x, i) => games()
+    ? `<div class="nrow" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="on">${newName(x)}</span><span class="fig soft">${n(x.games)}</span>${wdlBar(x)}<span class="fig">${x.games ? pct(x.score) : "–"}</span></div>`
+    : `<div class="nrow plain" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="on">${newName(x)}</span><span class="fig soft">${x.size} ${x.size === 1 ? "line" : "lines"}</span></div>`).join("");
+  const leftRows = leftHere.map((e) => `<div class="nrow"><b>${exitText(e)}</b><span class="who ${e.who === "you" ? "you" : ""}">${e.who === "you" ? "You" : "Opponent"}</span><span class="fig soft">${n(e.games)}</span>${wdlBar(e)}<span class="fig">${pct(e.score)}</span></div>`).join("");
+  return `<div class="posbox"><div class="board" id="board" aria-label="Board">${boardHtml(path, target?.san)}</div><div class="details">
+    <div class="dhead"><div><span class="sc">${current.san ? "Current position" : "Starting position"}</span>
+      <div class="mvline"><span class="mv">${current.san ? moveText(current) : "Start"}</span><span class="on">${current.name ?? ""}</span></div></div>
+      <button class="btn outline sm">Open in Explorer</button></div>
+    <div class="line" title="${lineText(path)}">${path.length ? (path.length > 10 ? "… " + lineText(path.slice(-10)) : lineText(path)) : "Before the first move"}</div>
+    ${games() ? `<div class="stat"><div class="small">${current.games ? `<b class="fig">${n(current.games)}</b> of your games · <span class="fig">${current.w} · ${current.d} · ${current.l}</span> · score <b class="fig">${pct(current.score)}</b>` : "None of your games reached it"}</div>${wdlBar(current)}</div>` : ""}
+    <div class="boxes"><div class="box"><span class="sc">${kids.length ? `Next in the book · ${kids.length}` : "The line ends here"}</span><div class="next" id="next" role="listbox" aria-label="Next in the book">${nextRows || '<span class="empty">No moves after this one.</span>'}</div></div>
+      ${games() ? `<div class="box"><span class="sc">Left the book here · ${leftHere.length}</span><div class="next">${leftRows || '<span class="empty">None of your games left the book here.</span>'}</div></div>` : ""}</div>
+  </div></div>`;
+}
+const zoomCtl = () => `<span class="zoom" aria-label="Zoom"><button data-zoom="-1" aria-label="Zoom out">−</button><span id="zoom-label">${Math.round(state.zoom * 100)}%</span><button data-zoom="1" aria-label="Zoom in">+</button><button class="fit" data-fit>Fit</button></span>`;
+const drawing = () => `<div class="toolbar"><span class="selectish">Ply columns ${icon("chev")}</span><span class="grow"></span>${zoomCtl()}</div>
+  <div class="viewbox"><div class="vscroll" id="vscroll" tabindex="0" aria-label="Italian Game: arrow keys walk the moves"></div></div>
+  <div class="hint"><span><kbd>↑</kbd> <kbd>↓</kbd> choose a move</span><span><kbd>→</kbd> play it</span><span><kbd>←</kbd> back</span><span>Drag to look around</span><span class="grow"></span>${games() ? `<span>Your score <span class="ramp"></span> 30% → 70%+ · thickness: games</span>` : ""}</div>`;
+
+function renderShell() {
+  const mock = document.getElementById("mock");
+  mock.dataset.mode = state.mode; mock.dataset.width = state.width;
+  const runningRight = `<div class="running"><span class="sc">White · saved from the Bookstore</span><i>Italian Game</i></div>`;
+  let left, right;
+  if (state.layout === "A") {
+    left = `${runningLeft()}<div class="front">${titleHtml()}${publisher()}${description}${actions()}</div>${facts()}${showRow()}${totals()}${listHtml()}`;
+    right = `${runningRight}<div id="pos">${positionHtml()}</div>${drawing()}`;
+  } else {
+    left = `${runningLeft()}<div class="front"><div class="title" style="justify-content:space-between">${titleHtml()}${actions()}</div>${factLine()}</div>${showRow()}${drawing()}`;
+    right = `${runningRight}<div id="pos">${positionHtml()}</div>${totals()}${listHtml()}`;
+  }
+  mock.innerHTML = `
+    <div class="topbar"><span class="brand">ByTheBook</span><nav class="tabs" aria-label="Pages"><span>Overview</span><span>Explorer</span><span>Visualizations</span><span aria-current="page">Library</span><span>Bookstore</span><span>Train</span><span>Puzzles</span><span>Settings</span></nav>
+      <span class="grow"></span><span class="guest">Browsing as a guest</span><button class="desk-btn">Create account</button></div>
+    <div class="book"><span class="ribbon"></span><div class="spread">
+      <section class="pg left" aria-label="Left page">${left}</section>
+      <section class="pg right" aria-label="Right page">${right}</section>
+    </div></div>`;
+  for (const chip of document.querySelectorAll(".studio .chip")) chip.setAttribute("aria-pressed", String(state[chip.parentElement.dataset.key] === chip.dataset.value));
+  bindShell();
+  renderPosition(false);
+}
+/** The parts that change with the position; `auto` lets the camera zoom, which it does only on a new position. */
+function renderPosition(smooth = true, auto = false) {
+  const pos = document.getElementById("pos");
+  pos.innerHTML = positionHtml();
+  // The box beside the board keeps the ringed move in view, scrolling only itself.
+  const box = document.getElementById("next"), row = box?.querySelector('[aria-selected="true"]');
+  if (row) { const top = row.offsetTop - box.offsetTop; if (top < box.scrollTop) box.scrollTop = top; else if (top + row.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = top + row.offsetHeight - box.clientHeight; }
+  for (const r of document.querySelectorAll("#lbody [data-exit]")) r.toggleAttribute("aria-current", EXITS[Number(r.dataset.exit)].from === current);
+  const onPath = new Set(pathOf(current));
+  for (const r of document.querySelectorAll("#lbody [data-id]")) r.toggleAttribute("aria-current", onPath.has(all.get(r.dataset.id)));
+  let lay = drawTree();
+  const z = auto ? autoZoom(lay) : null;
+  if (z) { state.zoom = z; lay = drawTree(); }
+  const label = document.getElementById("zoom-label");
+  if (label) label.textContent = `${Math.round(state.zoom * 100)}%`;
+  follow(lay, smooth);
+}
+function goTo(node, from) {
+  current = node; hover = null;
+  hi = from ? Math.max(0, current.children.indexOf(from)) : 0;
+  renderPosition(true, true);
+}
+/** Only the board's arrow changes on hover. */
+function showArrow() { const b = document.getElementById("board"); if (b) b.innerHTML = boardHtml(pathOf(current), (hover ?? current.children[hi])?.san); }
+
+function bindShell() {
+  const mock = document.getElementById("mock");
+  mock.querySelector('.seg[data-key="show"]').addEventListener("click", (event) => {
+    const b = event.target.closest("button[data-value]"); if (!b) return;
+    state.show = b.dataset.value; state.open = null; renderShell();
+  });
+  for (const b of mock.querySelectorAll("[data-open]")) b.addEventListener("click", () => { state.open = state.open === b.dataset.open ? null : b.dataset.open; renderShell(); });
+  for (const b of mock.querySelectorAll("[data-close]")) b.addEventListener("click", () => { state.open = null; renderShell(); });
+  const zoomTo = (z) => { state.zoom = clampZoom(z); follow(drawTree(), false); document.getElementById("zoom-label").textContent = `${Math.round(state.zoom * 100)}%`; };
+  for (const b of mock.querySelectorAll("[data-zoom]")) {
+    b.addEventListener("click", () => {
+      const up = Number(b.dataset.zoom) > 0;
+      const next = up ? ZOOM_STEPS.find((z) => z > state.zoom + 0.001) : [...ZOOM_STEPS].reverse().find((z) => z < state.zoom - 0.001);
+      zoomTo(next ?? state.zoom);
+    });
+  }
+  mock.querySelector("[data-fit]").addEventListener("click", () => { const sc = document.getElementById("vscroll"); zoomTo(fitZoom({ width: sc.clientWidth, height: sc.clientHeight })); });
+  mock.querySelector("#lbody").addEventListener("click", (event) => {
+    const r = event.target.closest(".lrow, .crow"); if (!r) return;
+    if (r.dataset.exit) goTo(EXITS[Number(r.dataset.exit)].from); else goTo(all.get(r.dataset.id));
+  });
+  const pos = mock.querySelector("#pos");
+  pos.addEventListener("click", (event) => { const r = event.target.closest(".nrow[data-id]"); if (r) goTo(all.get(r.dataset.id)); });
+  pos.addEventListener("pointerover", (event) => { const r = event.target.closest(".nrow[data-id]"); const next = r ? all.get(r.dataset.id) : null; if (next !== hover) { hover = next; showArrow(); } });
+  pos.addEventListener("pointerleave", () => { if (hover) { hover = null; showArrow(); } });
+  const scroll = mock.querySelector("#vscroll");
+  scroll.addEventListener("wheel", (event) => { if (!event.ctrlKey) return; event.preventDefault(); zoomTo(state.zoom * Math.exp(-event.deltaY * 0.002)); }, { passive: false });
+  scroll.addEventListener("pointerover", (event) => { const id = event.target.closest?.("[data-id]")?.dataset.id; const x = id !== undefined ? all.get(id) : null; const next = x && x.parent === current ? x : null; if (next !== hover) { hover = next; showArrow(); } });
+  scroll.addEventListener("pointerleave", () => { if (hover) { hover = null; showArrow(); } });
+  let drag = null;
+  scroll.addEventListener("pointerdown", (event) => { drag = { x: event.clientX, y: event.clientY, left: scroll.scrollLeft, top: scroll.scrollTop, moved: false, target: event.target }; scroll.setPointerCapture(event.pointerId); });
+  scroll.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+    drag.moved = true; scroll.classList.add("dragging");
+    scroll.scrollLeft = drag.left - dx; scroll.scrollTop = drag.top - dy;
+  });
+  scroll.addEventListener("pointerup", () => {
+    if (drag && !drag.moved) { const id = drag.target.closest?.("[data-id]")?.dataset.id; if (id !== undefined) goTo(all.get(id)); }
+    scroll.classList.remove("dragging"); drag = null;
+  });
+}
+
+// The arrow keys walk the drawing once the page has been clicked anywhere, unless a text field or an open panel has them.
+document.addEventListener("pointerdown", (event) => {
+  active = Boolean(event.target.closest("#mock"));
+  if (state.open && !event.target.closest(".facet")) { state.open = null; renderShell(); }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && state.open) { state.open = null; renderShell(); return; }
+  if (!active || state.open || event.target.closest?.("input, textarea, select")) return;
+  const kids = current.children;
+  if (event.key === "ArrowDown" && kids.length) hi = Math.min(kids.length - 1, hi + 1);
+  else if (event.key === "ArrowUp" && kids.length) hi = Math.max(0, hi - 1);
+  else if (event.key === "ArrowRight" && kids.length) { event.preventDefault(); goTo(kids[hi]); return; }
+  else if (event.key === "ArrowLeft" && current.parent) { event.preventDefault(); goTo(current.parent, current); return; }
+  else return;
+  event.preventDefault(); hover = null;
+  renderPosition();
+});
+for (const group of document.querySelectorAll(".studio .chips")) {
+  group.addEventListener("click", (event) => { const chip = event.target.closest(".chip"); if (!chip) return; state[group.dataset.key] = chip.dataset.value; state.open = null; renderShell(); });
+}
+let resizeTimer; addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => renderPosition(false), 150); });
+renderShell();
+</script>
+</body>
+</html>
