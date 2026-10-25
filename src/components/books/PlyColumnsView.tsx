@@ -56,7 +56,7 @@ export function PlyColumnsView({ tree, layout, marks, bind, side, weight, succes
               cx={c.x}
               cy={c.y}
               r={node.depth ? 2.8 : 4.2}
-              className={`bv-node ${moveClass(node)}${clashClass(node, side)}${markClasses(marks, node.id)}`}
+              className={`bv-node ${moveClass(node)}${clashClass(node, side)}${outClass(node)}${markClasses(marks, node.id)}`}
             />
           );
         })}

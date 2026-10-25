@@ -206,7 +206,7 @@ pages (`dashboard.md`) show them. They came from concept mockups the user ranked
 - **A drawing bigger than its box scrolls,** and a mouse drags it to look around.
 - **Every view is walked with the arrow keys** (`plans/game-history.md` D32) once it has
   focus, or from anywhere on a page whose view is its main part (`keysAnywhere`: the history
-  page and the large `BookReader`), unless a field, a menu, a dialog or a control that uses the
+  page, a Library book's page and the large `BookReader`), unless a field, a menu, a dialog or a control that uses the
   arrows has the focus: the selected position is the current one, Up and Down move a highlight among its
   moves, stopping at the first and last, Right goes to the highlighted move and Left back to
   the parent, highlighting the move it came from (`walkKey`, `src/lib/books/views/camera.ts`).
@@ -228,7 +228,12 @@ pages (`dashboard.md`) show them. They came from concept mockups the user ranked
   around it moves.
 - **Ply columns can paint the user's score** (`success`, D35): each edge takes the color of the
   score from the position it leads to (`successColor`, mixed from the theme's colors), and is
-  as thick as its games.
+  as thick as its games: the tree's own `games`, or a book's `thickness`, which leaves the
+  book's layout as it is.
+- **A clash is ringed while it is left to resolve** (`isClash`): a position where the book's
+  side has more than one drilled move. A move left unticked there (`MoveNode.skip`,
+  `plans/game-history.md` D41) and everything after it are drawn dashed and faded
+  (`.undrilled`), in every view.
 
 ## Planned
 

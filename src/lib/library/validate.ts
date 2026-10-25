@@ -75,6 +75,8 @@ function grow(target: MoveNode, raw: Raw, game: Chess, line: string[]): string |
       };
       target.children.push(node);
     }
+    // The one flag kept besides the moves (plans/game-history.md D41).
+    if (child.skip === true) node.skip = true;
     const problem = grow(node, child, game, [...line, played.san]);
     game.undo();
     if (problem) return problem;
@@ -86,9 +88,9 @@ const lineName = (line: string[]) => (line.length ? line.join(" ") : "the first 
 
 /**
  * The trees of a book, rebuilt from `input`, a list of trees as `MoveNode`s. Only each tree's
- * first position and each move's UCI are read. Trees that start from the same position are
- * merged, as are repeated moves, and trees without moves are dropped; a book with no moves
- * at all is one empty tree from the starting position. The book must keep within its
+ * first position, each move's UCI and its `skip` flag are read. Trees that start from the same
+ * position are merged, as are repeated moves, and trees without moves are dropped; a book with
+ * no moves at all is one empty tree from the starting position. The book must keep within its
  * position limit (bookstore.md D15).
  */
 export function validateTrees(

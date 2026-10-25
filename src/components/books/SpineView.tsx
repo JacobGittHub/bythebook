@@ -67,7 +67,7 @@ export function SpineView({
               cx={x}
               cy={midY}
               r={node.depth ? 4.2 : 5}
-              className={`bv-node ${moveClass(node)}${clashClass(node, side)}${markClasses(marks, node.id)}`}
+              className={`bv-node ${moveClass(node)}${clashClass(node, side)}${outClass(node)}${markClasses(marks, node.id)}`}
             />
             <text x={x} y={midY + 17} className={`bv-spine-label${ahead(i) ? " ahead" : ""}`}>
               {node.san ?? "Start"}

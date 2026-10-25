@@ -17,6 +17,8 @@ export type ViewSource = {
   pinned?: boolean;
   /** A move played past the end of the Explorer's chosen book, which the views draw dashed. */
   out?: boolean;
+  /** A move the book's owner left unticked at a clash (`MoveNode.skip`, plans/game-history.md D41). */
+  skip?: boolean;
   children: readonly ViewSource[];
 };
 
@@ -39,6 +41,8 @@ export type ViewNode = {
   games: number | null;
   /** Played past the end of the Explorer's chosen book (`ViewSource.out`). */
   out: boolean;
+  /** Drills skip it: it, or a move on the way to it, was left unticked (`ViewSource.skip`). */
+  undrilled: boolean;
 };
 
 export type ViewTree = {
@@ -92,6 +96,7 @@ export function buildViewTree(source: ViewSource): ViewTree {
       leaves: 0,
       games: from.games ?? null,
       out: from.out ?? false,
+      undrilled: Boolean(from.skip) || Boolean(parent?.undrilled),
     };
     maxDepth = Math.max(maxDepth, depth);
     if (from.pinned) pinned.add(from.id);
@@ -113,6 +118,15 @@ export function buildViewTree(source: ViewSource): ViewTree {
   };
   visit(root);
   return { root, nodes, byId, maxDepth };
+}
+
+/** The position `id` names, or the deepest position on its line that the tree still has. */
+export function deepestOf(tree: ViewTree, id: string): ViewNode {
+  for (let at = id; ; at = at.slice(0, at.lastIndexOf(":"))) {
+    const node = tree.byId.get(at);
+    if (node) return node;
+    if (!at.includes(":")) return tree.root;
+  }
 }
 
 /** The nodes from the root to `node`, both included. */
@@ -146,9 +160,12 @@ export function sideToMove(node: ViewNode): BookSide {
   return node.ply % 2 === 0 ? "white" : "black";
 }
 
-/** A position where the book's own side has more than one move (`findClashes`, D6). */
+/**
+ * A clash still to resolve: a drilled position where the book's own side has more than one
+ * drilled move (`findClashes`, D6; `src/lib/books/drills.ts`). Without unticked moves, every clash.
+ */
 export function isClash(node: ViewNode, side: BookSide): boolean {
-  return node.children.length > 1 && sideToMove(node) === side;
+  return !node.undrilled && sideToMove(node) === side && node.children.filter((child) => !child.undrilled).length > 1;
 }
 
 /** "5.Bf5" for White's move, "5...Bf5" for Black's, "Start" for the root. */

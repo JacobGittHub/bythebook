@@ -85,7 +85,6 @@ function ChoicePanel({
   off: ReadonlySet<string>;
   onChange: (off: ReadonlySet<string>) => void;
 }) {
-  const keys = (group: OptionGroup) => group.options.map((option) => option.key);
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -95,32 +94,7 @@ function ChoicePanel({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="flex max-h-80 w-72 flex-col gap-px overflow-y-auto p-1.5 [scrollbar-width:thin]">
-        <div role="group" aria-label={name === "Time" ? "Time controls" : "Sources and imports"} className="flex flex-col gap-px">
-          {groups.map((group) => {
-            const state = groupState(group, off);
-            return (
-              <div key={group.label} className="flex flex-col gap-px">
-                <Choice
-                  label={group.label}
-                  games={group.games}
-                  checked={state === "all" ? true : state === "some" ? "indeterminate" : false}
-                  onChange={(on) => onChange(withKeys(off, keys(group), on))}
-                />
-                {group.options.map((option) => (
-                  <Choice
-                    key={option.key}
-                    label={option.label}
-                    note={option.note}
-                    games={option.games}
-                    checked={!off.has(option.key)}
-                    onChange={(on) => onChange(withKeys(off, [option.key], on))}
-                    nested
-                  />
-                ))}
-              </div>
-            );
-          })}
-        </div>
+        <ChoiceGroups label={name === "Time" ? "Time controls" : "Sources and imports"} groups={groups} off={off} onChange={onChange} />
         <div className="mt-1 flex justify-between border-t border-rule px-1 pt-1.5">
           <Button variant="link" size="xs" className="h-auto p-0" onClick={() => onChange(new Set())}>
             All
@@ -133,6 +107,49 @@ function ChoicePanel({
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/** Check boxes for groups of options, each group's box ticking or clearing all of its options. */
+export function ChoiceGroups({
+  label,
+  groups,
+  off,
+  onChange,
+}: {
+  label: string;
+  groups: readonly OptionGroup[];
+  off: ReadonlySet<string>;
+  onChange: (off: ReadonlySet<string>) => void;
+}) {
+  const keys = (group: OptionGroup) => group.options.map((option) => option.key);
+  return (
+    <div role="group" aria-label={label} className="flex flex-col gap-px">
+      {groups.map((group) => {
+        const state = groupState(group, off);
+        return (
+          <div key={group.label} className="flex flex-col gap-px">
+            <Choice
+              label={group.label}
+              games={group.games}
+              checked={state === "all" ? true : state === "some" ? "indeterminate" : false}
+              onChange={(on) => onChange(withKeys(off, keys(group), on))}
+            />
+            {group.options.map((option) => (
+              <Choice
+                key={option.key}
+                label={option.label}
+                note={option.note}
+                games={option.games}
+                checked={!off.has(option.key)}
+                onChange={(on) => onChange(withKeys(off, [option.key], on))}
+                nested
+              />
+            ))}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

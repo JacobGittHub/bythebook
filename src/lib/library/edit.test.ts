@@ -22,6 +22,14 @@ describe("book edits", () => {
     expect(apart.map((t) => t.fen)).toEqual([START_FEN, AFTER_E4]);
   });
 
+  it("keep the moves' skip flags through edits and copies", () => {
+    const flagged = buildMoveTreeFromLines([movesOf("d4 d5 c4"), movesOf("d4 d5 Nf3")], START_FEN);
+    flagged.children[0].children[0].children[1].skip = true;
+    const flagOf = (trees: typeof flagged[]) => trees[0].children[0].children[0].children[1]?.skip;
+    expect(flagOf(addLine([flagged], movesOf("d4 Nf6")))).toBe(true);
+    expect(flagOf(removeMove([flagged], 0, "root:d2d4:g8f6"))).toBe(true);
+  });
+
   it("remove a move with everything after it, but never a tree's first position", () => {
     expect(countPositions(removeMove([tree], 0, "root:d2d4:d7d5"))).toBe(1);
     expect(removeMove([tree], 0, "root")).toEqual([tree]);

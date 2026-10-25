@@ -19,7 +19,8 @@ export function positionLimit(verifiedPublisher: boolean): number {
   return verifiedPublisher ? MAX_VERIFIED_BOOK_POSITIONS : MAX_BOOK_POSITIONS;
 }
 
-function sideToMove(fen: string): BookSide {
+/** Whose move it is in a FEN. */
+export function sideToMoveAt(fen: string): BookSide {
   return fen.split(" ")[1] === "b" ? "black" : "white";
 }
 
@@ -83,11 +84,38 @@ export function averageLeafDepth(trees: readonly MoveNode[]): number | null {
 export function findClashes(trees: readonly MoveNode[], side: BookSide): MoveNode[] {
   const clashes: MoveNode[] = [];
   const walk = (node: MoveNode) => {
-    if (node.children.length > 1 && sideToMove(node.fen) === side) clashes.push(node);
+    if (node.children.length > 1 && sideToMoveAt(node.fen) === side) clashes.push(node);
     node.children.forEach(walk);
   };
   trees.forEach(walk);
   return clashes;
+}
+
+/** The book's own moves: one for each position its side has to answer (D17's "moves to remember"). */
+export function countOwnMoves(trees: readonly MoveNode[], side: BookSide): number {
+  let moves = 0;
+  const walk = (node: MoveNode) => {
+    if (sideToMoveAt(node.fen) === side) moves += node.children.length;
+    node.children.forEach(walk);
+  };
+  trees.forEach(walk);
+  return moves;
+}
+
+/** The highest difficulty (D17). */
+export const MAX_DIFFICULTY = 5;
+
+/**
+ * How hard a book is to remember (D17): its own moves × its average line in plies ÷ 10, as
+ * log₂ of that ÷ 12.5, so each point doubles the load; kept between 0 and `MAX_DIFFICULTY`,
+ * to one decimal. Null for a book without moves.
+ */
+export function measuredDifficulty(trees: readonly MoveNode[], side: BookSide): number | null {
+  const average = averageLeafDepth(trees);
+  const own = countOwnMoves(trees, side);
+  if (average === null || own === 0) return null;
+  const load = Math.log2((own * average) / 10 / 12.5);
+  return Math.round(Math.min(MAX_DIFFICULTY, Math.max(0, load)) * 10) / 10;
 }
 
 /** A master move from a position, with the number of games that played it. */
@@ -141,7 +169,7 @@ export function coverage(
     const gamesOf = (child: MoveNode) =>
       moves?.find((move) => move.uci === child.uci)?.games ?? 0;
 
-    if (sideToMove(node.fen) === side) {
+    if (sideToMoveAt(node.fen) === side) {
       const bookGames = node.children.reduce((sum, child) => sum + gamesOf(child), 0);
       for (const child of node.children) {
         flow(child, bookGames > 0 ? (share * gamesOf(child)) / bookGames : share / node.children.length);

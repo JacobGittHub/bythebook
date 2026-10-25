@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { NAV_ITEMS } from "@/lib/auth/access";
-import { bookOrder, chapterAt, levelAt, roman } from "./chapters";
+import { bookOrder, chapterAt, levelAt, roman, zoomsAt } from "./chapters";
 
 const HREFS = NAV_ITEMS.map((item) => item.href);
 const index = (href: string) => HREFS.indexOf(href);
@@ -27,6 +27,15 @@ describe("levelAt", () => {
     expect(levelAt("/dashboard/library", "/dashboard/library")).toBe(1);
     expect(levelAt("/dashboard/library/abc", "/dashboard/library")).toBe(2);
     expect(levelAt("/dashboard/visualizations/books/icicle", "/dashboard/visualizations")).toBe(2);
+  });
+});
+
+describe("zoomsAt", () => {
+  it("zooms in on a second level, but not on the Library's, which are whole spreads", () => {
+    expect(zoomsAt("/dashboard/bookstore/abc", 2)).toBe(true);
+    expect(zoomsAt("/dashboard/library/abc", 2)).toBe(false);
+    expect(zoomsAt("/dashboard/library/history", 2)).toBe(false);
+    expect(zoomsAt("/dashboard/library", 1)).toBe(false);
   });
 });
 

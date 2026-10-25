@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Mockup for plans/game-history.md (a book's own page, step 18; D30's whole-spread framing, D31, D32, D35, D36) and plans/book-ui.md D8: the book page laid out on a whole spread, as the history page is. Published as the "Book Page Spread" artifact. -->
+<!-- Mockup for plans/game-history.md (a book's own page, step 17 and 18; Q24, layout A with the user's notes; D30's whole-spread framing, D31, D32, D35, D36) and plans/book-ui.md D8: the Library's book page laid out on a whole spread, as the history page is. Published as the "Book Page Spread" artifact. -->
 <title>Book Page Spread</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,9 +11,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <style>
-/* Layout: a studio on top (layout, what the page shows, color mode, width) over one mock of a
-   book's own page on a whole spread, then notes. The book is the real Italian Game example book;
-   the games are made up. The mock carries the app's tokens from src/app/globals.css. */
+/* Layout: a studio on top (the mock's options) over one mock of a book's page on a whole spread,
+   then notes. The book is the real Italian Game example book; the games, ratings, reviews and
+   choices are made up. The mock carries the app's tokens from src/app/globals.css. */
 :root {
   --c-page: #f2f1ec; --c-ink: #22252b; --c-soft: #5c636b; --c-line: #d6d8d0;
   --c-accent: #2c4a74; --c-accent-ink: #ffffff; --c-chip: #e6e7e0;
@@ -53,12 +53,12 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
   --desk: #553826; --desk-low: #3a2518; --desk-foreground: #f1e8da; --desk-muted: #cdb9a1; --desk-line: rgb(241 232 218 / 0.24); --desk-mark: #e07a84;
   --page: #fbfbf8; --page-alt: #f1f2ed; --rule: #d9dcd5; --cover: #26364f; --page-edge: #cfd2ca; --gutter: rgb(70 60 40 / 0.32); --bookmark: #8c2f39;
   --foreground: #22252b; --muted: #eef0ea; --muted-foreground: #5c636b; --border: #d0d4cd; --primary: #2c4a74; --primary-foreground: #ffffff;
-  --accent: #e3e9f3; --destructive: #b42318; --success: #15803d; --star: #b7791f;
+  --accent: #e3e9f3; --destructive: #b42318; --success: #15803d; --star: #b7791f; --warning: #b45309; --warning-soft: rgb(217 119 6 / 0.12);
   --bar-win: #15803d; --bar-draw: #8f8a7a; --bar-loss: #b42318;
   --difficulty-0: #2f7d4f; --difficulty-1: #6f8f2e; --difficulty-2: #b0832a; --difficulty-3: #c25a28; --difficulty-4: #9e2f2f;
   --view-edge: rgba(120, 108, 95, 0.42); --view-path: var(--foreground); --view-hover: #b45309; --view-clash: #d97706;
   --view-white: #ece5d8; --view-white-edge: #9c9282; --view-black: #2a2420; --view-black-edge: #2a2420;
-  --sq-light: #f0d9b5; --sq-dark: #b58863; --board-arrow: rgb(44 74 116 / 0.55);
+  --sq-light: #f0d9b5; --sq-dark: #b58863; --board-arrow: rgb(44 74 116 / 0.55); --scrim: rgb(24 18 12 / 0.48);
   --radius: 6px;
   container-type: inline-size; margin-inline: auto; max-width: 100%;
   color: var(--foreground); font: 14px/1.5 var(--body);
@@ -69,12 +69,12 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
   --desk: #33221a; --desk-low: #1f140e; --desk-foreground: #e9e1d3; --desk-muted: #bba892;
   --page: #1c1f24; --page-alt: #23272d; --rule: #30343b; --cover: #1b2433; --page-edge: #2d3138; --gutter: rgb(0 0 0 / 0.5); --bookmark: #c9505c;
   --foreground: #e9e5dc; --muted: #24282e; --muted-foreground: #a3a19b; --border: #383c44; --primary: #a9c0e6; --primary-foreground: #12161d;
-  --accent: rgb(169 192 230 / 0.13); --destructive: #ea5f57; --success: #4ade80; --star: #e3b04b;
+  --accent: rgb(169 192 230 / 0.13); --destructive: #ea5f57; --success: #4ade80; --star: #e3b04b; --warning: #f0a64a; --warning-soft: rgb(245 158 11 / 0.14);
   --bar-win: #3fbf6f; --bar-draw: #8b8676; --bar-loss: #e0625a;
   --difficulty-0: #4fb37a; --difficulty-1: #a5bd4c; --difficulty-2: #d8ab4a; --difficulty-3: #e57f4d; --difficulty-4: #dc5d57;
   --view-edge: rgba(170, 165, 200, 0.34); --view-hover: #f0a64a; --view-clash: #f59e0b;
   --view-white: #d9d4e6; --view-white-edge: #8e8aa3; --view-black: #0b0b10; --view-black-edge: #8e8aa3;
-  --board-arrow: rgb(169 192 230 / 0.6);
+  --board-arrow: rgb(169 192 230 / 0.6); --scrim: rgb(0 0 0 / 0.6);
   color-scheme: dark;
 }
 .mock[data-width="phone"] { width: 390px; }
@@ -103,8 +103,10 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .btn.primary { background: var(--primary); color: var(--primary-foreground); }
 .btn.ghost:hover, .btn.outline:hover { background: var(--accent); }
 .btn.sm { height: 26px; font-size: 12.5px; padding: 0 8px; }
+.jump { font: 500 9.5px/1 var(--body); letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid currentColor; border-radius: 3px; padding: 2px 4px; opacity: 0.75; }
 .ico { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-.linkbtn { font: 12px var(--body); color: var(--primary); background: none; border: 0; padding: 0; cursor: pointer; }
+.linkbtn { font: 12px var(--body); color: var(--primary); background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+.linkbtn:hover { text-decoration: underline; }
 .side { display: inline-block; width: 9px; height: 9px; border: 1px solid var(--muted-foreground); vertical-align: -1px; margin-right: 5px; }
 .side.b { background: var(--foreground); border-color: var(--foreground); } .side.w { background: var(--page); }
 
@@ -119,19 +121,35 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .pub a { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .desc { font-size: 13.5px; max-width: 62ch; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.facts { display: grid; grid-template-columns: repeat(3, minmax(0, auto)); gap: 7px 22px; margin: 0; align-content: start; flex: none; padding-block: 10px; border-block: 1px solid var(--rule); }
+.saved { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; margin-right: 4px; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, auto)); gap: 7px 22px; margin: 0; align-content: start; flex: none; padding-block: 10px; border-block: 1px solid var(--rule); }
 .facts div { min-width: 0; }
 .facts dt { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); }
 .facts dd { margin: 0; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .facts dd .soft { font-weight: 400; font-size: 12px; }
-.facts .wide { grid-column: span 3; }
-.diff { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12.5px; font-weight: 400; }
+.facts .wide { grid-column: 1 / -1; }
+.diff { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font-size: 13px; font-weight: 400 !important; }
+.diff b { font-weight: 600; }
 .dscale { position: relative; display: inline-grid; grid-template-columns: repeat(5, 22px); gap: 1px; height: 6px; margin: 0 4px; }
 .dscale i { border-radius: 1px; opacity: 0.85; }
 .dscale b { position: absolute; top: 50%; border-radius: 50%; transform: translate(-50%, -50%); border: 2px solid var(--page); }
 .dscale b.p { width: 13px; height: 13px; } .dscale b.m { width: 9px; height: 9px; }
-.factline { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 12.5px; color: var(--muted-foreground); flex: none; }
-.factline b { color: var(--foreground); font-weight: 500; font-variant-numeric: tabular-nums; }
+/* A fact that tells more on hover or focus */
+.tip { position: relative; display: inline-flex; align-items: center; padding-block: 5px; cursor: help; border-radius: 3px; }
+.tip.dotted { border-bottom: 1px dotted var(--muted-foreground); padding-block: 0; border-radius: 0; }
+.tipbox { position: absolute; left: -6px; top: calc(100% + 6px); z-index: 40; width: 250px; padding: 9px 11px; display: grid; gap: 5px; background: var(--page); color: var(--foreground); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 10px 28px rgb(20 20 20 / 0.18); font: 400 12.5px/1.4 var(--body); opacity: 0; visibility: hidden; transform: translateY(-2px); transition: opacity 0.12s, transform 0.12s, visibility 0.12s; pointer-events: none; }
+.tip:hover .tipbox, .tip:focus-visible .tipbox { opacity: 1; visibility: visible; transform: none; }
+.tipbox .trow { display: grid; grid-template-columns: 14px 30px 1fr; align-items: center; gap: 6px; }
+.tipbox .tdot { justify-self: center; border-radius: 50%; }
+.tipbox .tscale { display: flex; justify-content: space-between; font: 10.5px var(--figures); color: var(--muted-foreground); border-top: 1px solid var(--rule); padding-top: 5px; }
+@media (prefers-reduced-motion: reduce) { .tipbox { transition: none; } }
+/* Clashes: a button that opens their dialog, flagged while any are left to resolve */
+.clashbtn { display: inline-flex; align-items: center; gap: 7px; font: 500 14px/1 var(--body); font-variant-numeric: tabular-nums; color: var(--foreground); background: var(--page); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px 7px 3px 8px; cursor: pointer; margin-top: 1px; }
+.clashbtn:hover { background: var(--accent); }
+.clashbtn.open { border-color: var(--view-clash); }
+.flag { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--warning); background: var(--warning-soft); border-radius: 3px; padding: 2px 5px; }
+.flag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--view-clash); }
+.okflag { font-size: 11.5px; font-weight: 500; color: var(--success); }
 
 /* What the page shows */
 .showrow { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -141,18 +159,16 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .seg button[aria-pressed="true"] { background: var(--accent); font-weight: 700; }
 .seg button:disabled { color: var(--muted-foreground); cursor: default; }
 .seg em { font: normal 9.5px var(--figures); text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid var(--border); border-radius: 3px; padding: 0 3px; margin-left: 3px; }
+.seg .fig { font-size: 11px; color: var(--muted-foreground); margin-left: 3px; }
 .facet { position: relative; }
 .facet > .btn { font-size: 12.5px; gap: 7px; height: 26px; }
 .facet > .btn .k { color: var(--muted-foreground); font-weight: 400; }
-.panel { position: absolute; top: calc(100% + 4px); left: 0; z-index: 30; width: 260px; max-height: 330px; overflow-y: auto; scrollbar-width: thin; background: var(--page); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 10px 28px rgb(20 20 20 / 0.16); padding: 6px; display: grid; gap: 1px; }
-.panel.right { left: auto; right: 0; }
-.panel label, .panel .opt { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 0 8px; align-items: center; font-size: 12.5px; padding: 3px 6px; border-radius: 4px; cursor: pointer; }
-.panel label:hover, .panel .opt:hover { background: var(--accent); }
-.panel .opt { grid-template-columns: 12px minmax(0, 1fr) auto; font: 14px/1.3 var(--display); border: 0; background: none; color: var(--foreground); text-align: left; }
-.panel .opt[aria-current] { background: var(--accent); }
-.panel .opt .fig { font-size: 11px; color: var(--muted-foreground); }
+.panel { position: absolute; top: calc(100% + 4px); left: 0; z-index: 30; width: 270px; max-height: 360px; overflow-y: auto; scrollbar-width: thin; background: var(--page); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 10px 28px rgb(20 20 20 / 0.16); padding: 6px; display: grid; gap: 1px; }
+.panel label { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 0 8px; align-items: center; font-size: 12.5px; padding: 3px 6px; border-radius: 4px; cursor: pointer; }
+.panel label:hover { background: var(--accent); }
 .panel input { margin: 0; accent-color: var(--primary); }
-.panel .ph { padding: 4px 6px 2px; }
+.panel .ph { padding: 6px 6px 3px; }
+.panel .seg { margin: 0 6px 4px; }
 .panel .pfoot { display: flex; justify-content: space-between; border-top: 1px solid var(--rule); margin-top: 4px; padding: 6px 4px 2px; }
 
 /* Totals */
@@ -161,17 +177,14 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .totals .big { font: 600 22px/1 var(--display); }
 .wdl { display: flex; height: 8px; border-radius: 2px; overflow: hidden; background: var(--muted); }
 .wdl i:nth-child(1) { background: var(--bar-win); } .wdl i:nth-child(2) { background: var(--bar-draw); } .wdl i:nth-child(3) { background: var(--bar-loss); }
-.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted-foreground); }
-.legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
 
-/* The list that fills the rest of a page: where you leave the book, or its contents */
+/* The list that fills the rest of a page */
 .listbox { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
-.listbox .lhead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex: none; }
+.listbox .lhead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex: none; flex-wrap: wrap; }
 .listbox h3 { font: 600 19px/1.2 var(--display); }
 .lbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; border-top: 1px solid var(--rule); }
 .lrow { display: grid; grid-template-columns: 70px 56px minmax(0, 1fr) 40px 70px 36px; gap: 8px; align-items: center; padding: 5px 4px; border-bottom: 1px solid var(--rule); font-size: 12.5px; cursor: pointer; }
-.lrow:hover { background: var(--accent); }
-.lrow[aria-current] { background: var(--accent); }
+.lrow:hover, .lrow[aria-current] { background: var(--accent); }
 .lrow b { font: 500 12.5px var(--figures); }
 .lrow .what { min-width: 0; display: grid; }
 .lrow .what span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -186,10 +199,24 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .crow .cn .dots { flex: 1; min-width: 12px; border-bottom: 1px dotted var(--border); transform: translateY(-4px); }
 .crow.d1 .cn { padding-left: 18px; font-size: 14px; } .crow.d2 .cn { padding-left: 36px; font-size: 13.5px; } .crow.d3 .cn { padding-left: 54px; font-size: 13px; }
 .crow .fig { font-size: 11.5px; color: var(--muted-foreground); text-align: right; }
+.crow.dim .cn { color: var(--muted-foreground); }
+/* Reviews and how the book was made, on the Bookstore's page */
+.ratings { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 18px; align-items: center; padding: 8px 4px 10px; border-bottom: 1px solid var(--rule); }
+.ratings .score { font: 600 34px/1 var(--display); }
+.ratings .bars { display: grid; gap: 2px; }
+.ratings .bar { display: grid; grid-template-columns: 22px minmax(0, 1fr) 30px; gap: 8px; align-items: center; font: 11px var(--figures); color: var(--muted-foreground); }
+.ratings .bar span:nth-child(2) { height: 5px; border-radius: 2px; background: var(--muted); overflow: hidden; }
+.ratings .bar span:nth-child(2) i { display: block; height: 100%; background: var(--star); }
+.review { display: grid; gap: 3px; padding: 9px 4px; border-bottom: 1px solid var(--rule); }
+.review .rhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 12.5px; }
+.review .rhead b { font-weight: 600; }
+.review p { font-size: 13px; max-width: 64ch; }
+.about { display: grid; gap: 8px; padding: 10px 4px; font-size: 13px; max-width: 64ch; }
+.about a { color: var(--primary); }
 
 /* The current position: the board, then its details at the board's height */
 .posbox { flex: none; position: relative; display: grid; grid-template-columns: 256px 1fr; gap: 16px; }
-.board { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; width: 100%; border: 2px solid var(--foreground); border-radius: 2px; }
+.board { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; width: 100%; max-width: 100%; border: 2px solid var(--foreground); border-radius: 2px; }
 .board i { display: grid; place-items: center; font: 400 23px/1 "Segoe UI Symbol", "DejaVu Sans", serif; font-style: normal; }
 .board i.l { background: var(--sq-light); } .board i.d { background: var(--sq-dark); }
 .board i.wp { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 0 1px #000; } .board i.bp { color: #111; }
@@ -215,6 +242,7 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .nrow[aria-selected="true"] { border-color: var(--primary); }
 .nrow b { font: 500 12.5px var(--figures); }
 .nrow .on { font: italic 12px var(--display); color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nrow .on .skip { font: normal 10.5px var(--body); color: var(--muted-foreground); border: 1px dashed var(--border); border-radius: 3px; padding: 0 4px; margin-right: 5px; }
 .nrow .wdl { height: 6px; }
 .nrow .who { padding: 2px 3px; }
 .empty { font-size: 12px; color: var(--muted-foreground); padding: 3px 4px; }
@@ -231,6 +259,48 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .hint { flex: none; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted-foreground); }
 .hint kbd { font-size: 11px; padding: 0 4px; border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 3px; background: var(--page); color: var(--foreground); }
 .ramp { display: inline-block; width: 70px; height: 7px; border-radius: 2px; vertical-align: 0; background: linear-gradient(90deg, var(--bar-loss), var(--bar-draw), var(--bar-win)); }
+.dashkey { display: inline-block; width: 22px; border-top: 1.5px dashed var(--muted-foreground); vertical-align: 3px; margin-right: 4px; }
+
+/* The clashes dialog */
+.dlgwrap { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); }
+.dialog { position: relative; width: min(860px, 100%); max-height: 100%; display: flex; flex-direction: column; background: var(--page); color: var(--foreground); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 24px 60px rgb(0 0 0 / 0.35); overflow: hidden; }
+.dialog > header { padding: 16px 20px 10px; display: grid; gap: 4px; border-bottom: 1px solid var(--rule); }
+.dialog > header h3 { font: 600 21px/1.2 var(--display); }
+.dialog > header p { font-size: 13px; color: var(--muted-foreground); max-width: 74ch; }
+.dbody { display: grid; grid-template-columns: 290px minmax(0, 1fr); min-height: 0; height: 470px; }
+.clist { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--rule); }
+.clist .seg { margin: 10px 12px 8px; flex: none; }
+.clist .rows { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; border-top: 1px solid var(--rule); }
+.cl { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 2px 8px; align-items: baseline; width: 100%; padding: 6px 12px; border: 0; border-bottom: 1px solid var(--rule); background: none; color: var(--foreground); text-align: left; cursor: pointer; font: 12.5px var(--body); }
+.cl:hover { background: var(--accent); }
+.cl[aria-current] { background: var(--accent); box-shadow: inset 3px 0 0 var(--primary); }
+.cl .mk { width: 8px; height: 8px; border-radius: 50%; align-self: center; }
+.cl .mk.open { background: var(--view-clash); }
+.cl .mk.done { background: var(--success); }
+.cl .mk.off { border: 1.5px dashed var(--muted-foreground); }
+.cl b { font: 500 12.5px var(--figures); }
+.cl .on { grid-column: 2 / -1; font: italic 12px var(--display); color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl .cnt { font: 11px var(--figures); color: var(--muted-foreground); }
+.cl.off b, .cl.off .cnt { color: var(--muted-foreground); }
+.cpane { min-width: 0; min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 14px 18px; display: grid; align-content: start; gap: 12px; }
+.cpane .top { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; }
+.cpane .board i { font-size: 18px; }
+.cpane .info { min-width: 0; display: grid; align-content: start; gap: 5px; }
+.cpane .info .mvline .mv { font-size: 19px; }
+.state { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; }
+.state.open { color: var(--warning); } .state.done { color: var(--success); } .state.off { color: var(--muted-foreground); font-weight: 400; }
+.picks { display: grid; border-top: 1px solid var(--rule); }
+.pick { display: grid; grid-template-columns: 18px 56px minmax(0, 1fr) 54px 42px 60px 36px; gap: 8px; align-items: center; padding: 5px 4px; border-bottom: 1px solid var(--rule); font-size: 12.5px; cursor: pointer; }
+.pick:hover { background: var(--accent); }
+.pick.head { cursor: default; font: 600 9.5px/1.2 var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); padding-block: 4px; }
+.pick.head:hover { background: none; }
+.pick input { margin: 0; accent-color: var(--primary); }
+.pick b { font: 500 12.5px var(--figures); }
+.pick .on { font: italic 12px var(--display); color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick .wdl { height: 6px; }
+.pick.unticked b, .pick.unticked .fig { color: var(--muted-foreground); }
+.dialog > footer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 20px; border-top: 1px solid var(--rule); background: var(--page-alt); }
 
 /* The tree's paint, as globals.css's .bv-* rules */
 .bv-grid { stroke: var(--border); stroke-width: 1; }
@@ -238,10 +308,12 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .bv-edge { fill: none; stroke: var(--view-edge); stroke-linecap: round; }
 .bv-edge.on-path { stroke: var(--view-path); }
 .bv-edge.cold { opacity: 0.35; }
+.bv-edge.undrilled { stroke-dasharray: 3 3; opacity: 0.45; }
 .bv-node { stroke-width: 1; }
 .bv-node.wm { fill: var(--view-white); stroke: var(--view-white-edge); }
 .bv-node.bm { fill: var(--view-black); stroke: var(--view-black-edge); }
 .bv-node.root { fill: var(--page); stroke: var(--foreground); stroke-width: 1.5; }
+.bv-node.undrilled { opacity: 0.45; }
 .bv-node.clash { stroke: var(--view-clash); stroke-width: 2.2; }
 .bv-node.on-path { stroke: var(--view-path); stroke-width: 1.6; }
 .bv-node.current { stroke: var(--view-hover); stroke-width: 3; }
@@ -262,26 +334,31 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
   .tabs { display: none; }
   .book { margin: 0 6px 6px; padding: 4px; }
   .title h2 { font-size: 26px; }
-  .facts { grid-template-columns: repeat(2, minmax(0, auto)); } .facts .wide { grid-column: span 2; }
+  .facts { grid-template-columns: repeat(2, minmax(0, auto)); }
   .lbody { max-height: 320px; flex: none; }
   .lrow { grid-template-columns: 70px 50px minmax(0, 1fr) 34px; } .lrow .wdl, .lrow .pct { display: none; }
   .posbox { grid-template-columns: 1fr; }
   .posbox .board { max-width: 320px; }
   .details { height: auto; } .box { flex: none; } .next { max-height: 130px; flex: none; }
   .viewbox { flex: none; height: 440px; }
-  .panel { width: min(260px, calc(100vw - 48px)); }
+  .panel { width: min(270px, calc(100vw - 48px)); }
+  .dlgwrap { padding: 8px; align-items: start; }
+  .dbody { grid-template-columns: 1fr; height: auto; }
+  .clist { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .clist .rows { max-height: 190px; }
+  .cpane .top { grid-template-columns: 1fr; } .cpane .board { max-width: 240px; }
+  .pick { grid-template-columns: 18px 52px minmax(0, 1fr) 42px; } .pick > :nth-child(n+6) { display: none; }
 }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="intro">
-    <p class="eyebrow">Mockup · plans/game-history.md step 18 · plans/book-ui.md D8</p>
-    <h1>A book's own page on a whole spread</h1>
-    <p>The book page laid out as the history page is: both pages in view at once, no zoom, nothing scrolls but the boxes. Two ways to share the spread: A puts the book's front matter on the left and the position and drawing on the right, as the history page does; B gives the drawing the whole left page. The tree is live: click anywhere on the mock, then use the arrow keys. The book is the real Italian Game example book; the games, rating and reviews are made up.</p>
+    <p class="eyebrow">Mockup · plans/game-history.md Q24 · plans/book-ui.md D8</p>
+    <h1>The Library's book page on a whole spread</h1>
+    <p>Layout A with your notes on Q24. The games filter picks 3 months, 12 months or all time. The difficulty scale shows its numbers on hover. The average line sits beside moves to remember. Clashes opens a dialog where you tick the moves to drill, and stays flagged while any clash is left to resolve. Switch book is gone. The tree is live: click anywhere on the mock, then use the arrow keys. The book is the real Italian Game example book; the games, rating, reviews and the clashes already resolved are made up.</p>
   </header>
   <div class="studio" role="group" aria-label="Mockup options">
-    <fieldset><legend>Layout</legend><div class="chips" data-key="layout"><button class="chip" data-value="A">A · Like the history page</button><button class="chip" data-value="B">B · Drawing on the left</button></div></fieldset>
     <fieldset><legend>Show</legend><div class="chips" data-key="show"><button class="chip" data-value="plain">Plain</button><button class="chip" data-value="games">Your games</button></div></fieldset>
     <fieldset><legend>Color</legend><div class="chips" data-key="mode"><button class="chip" data-value="light">Light</button><button class="chip" data-value="dark">Dark</button></div></fieldset>
     <fieldset><legend>Width</legend><div class="chips" data-key="width"><button class="chip" data-value="desktop">Desktop</button><button class="chip" data-value="phone">Phone</button></div></fieldset>
@@ -289,43 +366,48 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
   <div class="stage"><div class="mock" id="mock"></div></div>
   <section class="notes" aria-label="Notes">
     <div>
-      <h2>What moves where</h2>
+      <h2>Clashes</h2>
       <ul>
-        <li><strong>The spread is the book.</strong> Today the left page lists your other books and the right page holds this one, under D8's zoom. Here both pages are this book, shown whole as the history page is. Other books are one click away under <strong>Switch book</strong>, and "Back to all books" returns to the Library with this book picked.</li>
-        <li><strong>A</strong> reads like the history page: what the book is and which way through it on the left, where you are on the right. The drawing gets the right page's height under the board.</li>
-        <li><strong>B</strong> gives the drawing a whole page, the tallest it can be, and puts the board, the facts and the list on the right. The title strip stays short so the drawing starts high.</li>
-        <li>Nothing scrolls but the boxes (D36's third look). On a phone the pages stack.</li>
+        <li><strong>A clash</strong> is a position where the book plays more than one move for your side. The count is clickable and opens the dialog.</li>
+        <li><strong>In the dialog</strong> each clash shows its board with an arrow for every ticked move, and each move's lines, your games and your score. A clash is <strong>resolved</strong> when one move is ticked. One move always stays ticked.</li>
+        <li><strong>The flag</strong> on the count ("9 to resolve") shows while any clash has two or more ticked, so a book you haven't trimmed says so. A clash under an unticked move doesn't count: drills never reach it.</li>
+        <li><strong>Unticked moves stay in the book.</strong> The drawing dashes them, the contents greys their openings, and "Next in the book" tags them "not drilled". Drills skip them. Editing the book is still a separate action.</li>
+        <li><strong>Leaderboards</strong>, which you mentioned, would have to compare players who drill different parts of a book. That's left for the leaderboard's plan.</li>
       </ul>
     </div>
     <div>
-      <h2>The list that fills the page</h2>
+      <h2>Facts</h2>
       <ul>
-        <li><strong>Your games:</strong> "Where you leave this book", every place your games left it, most games first, with who left and the opening they went into. A row jumps to its position.</li>
-        <li><strong>Plain:</strong> the book's <strong>contents</strong>, its openings in tree order, nested, with lines and positions, like a table of contents. A row jumps to where that opening starts. Names come from the opening catalog, so they cost the book nothing.</li>
+        <li><strong>Difficulty</strong> is the scale alone. Hovering or focusing it shows the publisher's rating and the measured one, and what the measure counts.</li>
+        <li>The measure comes from <strong>moves to remember</strong> and the <strong>average line</strong>, so both sit beside the scale on one row.</li>
+        <li>Positions, lines with the longest, coverage and <strong>Clashes</strong> share the row below.</li>
       </ul>
     </div>
     <div>
-      <h2>From your notes on the history page</h2>
+      <h2>Your games, and the rest</h2>
       <ul>
-        <li><strong>Opening names</strong> follow the move: "4.Ng5 Two Knights Defense: Knight Attack". In the lists, a move shows a name only where the name changes.</li>
-        <li><strong>The arrow on the board</strong> shows the move the ring is on, in the Explorer's hover color. Hovering a move in the list or the drawing shows that one instead.</li>
-        <li><strong>Keys anywhere:</strong> once you've clicked anywhere on the page, the arrow keys walk the drawing. Only a text field or an open panel keeps them.</li>
-        <li><strong>The list follows:</strong> when <kbd>↑</kbd> <kbd>↓</kbd> move the ring past the box's edge, the box beside the board scrolls to keep the ringed move in view.</li>
+        <li><strong>The games filter</strong> opens on the last 12 months, as the history page does, with 3 months, 12 months and all time at its top. The tree, the list and the totals follow it.</li>
+        <li><strong>Switch book is gone.</strong> "Back to all books" returns to the Library with this book picked, and you choose another there.</li>
+        <li>The arrow keys work after a click anywhere on the page. The box beside the board follows the ringed move, and the board's arrow shows the move the keys would play, or the hovered one.</li>
       </ul>
     </div>
   </section>
 </div>
 
 <script>
+const PAGE = "library";
+const STORE = PAGE === "store";
 const LINES = ["e4 e5 Nf3 Nc6 Bc4 Bc5 Bxf7+ Kxf7 Nxe5+ Nxe5 Qh5+","e4 e5 Nf3 Nc6 Bc4 Bc5 O-O Nf6 c3 O-O d4 exd4 cxd4 Bb6","e4 e5 Nf3 Nc6 Bc4 Bc5 O-O Nf6 d4 exd4","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bb6 b5 Na5 Nxe5 Nh6","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bb6 b5 Na5 Nxe5 Qg5 Nxf7 Qxg2","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 Nf6 dxe5 Ng4 Bg5 f6 exf6 gxf6 Bh4","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 Nf6 dxe5 Nxe4 Qd5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 b5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 d6 Bg5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Bc5","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Bd6","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Be7","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Bf8","e4 e5 Nf3 Nc6 Bc4 Bc5 b4 d5","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d3","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 b4 Bb6 e5","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 b4 Be7","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 cxd4 Bb4+ Kf1","e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d4 exd4 cxd4 Bb4+ Nc3 Nxe4 O-O","e4 e5 Nf3 Nc6 Bc4 Bc5 d3 Nf6","e4 e5 Nf3 Nc6 Bc4 Bc5 d3 f5 Ng5 f4 Bf7+","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Bxd4 Nxd4","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Bxf7+ Kf8 Bxg8","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 Qxe4+ Kf1 Qxc2","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Bg5 O-O Ne5+ Be6 Bxe6+","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Bg5 O-O Ne5+ Be6 c3 Nc6","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Bf7+ Kf8 Qd3 Be2","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Bf7+ Kf8 f3 Nxe4 Be3","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Bf7+ Kf8 f3 Nxe4 fxg4","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 Qd3 Nxd5","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Bxd5 Nf6 Nxh8 Bg4 f3 Nxd5 c3 Nxf3+","e4 e5 Nf3 Nc6 Bc4 Bc5 d4 Nxd4 Nxe5 Qe7 Nxf7 d5 Nxh8","e4 e5 Nf3 Nc6 Bc4 Be7 O-O","e4 e5 Nf3 Nc6 Bc4 Be7 d4","e4 e5 Nf3 Nc6 Bc4 Nd4 Nxd4","e4 e5 Nf3 Nc6 Bc4 Nd4 Nxe5 Qg5 Nxf7 Qxg2 Rf1 Qxe4+ Be2 Nf3#","e4 e5 Nf3 Nc6 Bc4 Nd4 Nxe5 Qg5 O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 Nc3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Bxf7+ Ke7 Bd5 Rf8 Bxc6 dxc6 d3 Ng4 Nh3 Nxf2 Bg5+ Kd7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Bxf7+ Ke7 Bd5 Rf8 Bxc6 dxc6 d3 Ng4 Nh3 Nxf2 Bg5+ Ke8","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Bxf7+ Ke7 Bd5 Rf8 O-O d6 c3 Bg4 Qb3 Bb6 Bxc6 bxc6 h3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kf1 Qe7 Nxh8 d5 Kxf2","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kf1 Qe7 Nxh8 d5 exd5 Nd4 d6 Qxd6","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kxf2 Nxe4+ Ke3 Qh4 g3 Nxg3 hxg3 Qd4+ Kf3 O-O Rh4 e4+","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 Nxf7 Bxf2+ Kxf2 Nxe4+ Kg1 Qh4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Bc5 d4 d5 Bxd5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nd5 Nxf7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nd5 d4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nxe4 Bxf7+ Ke7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 Nxe4 Nxf7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ Bd7 Qe2","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Ba4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Bd3 Nd5 Nf3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Bc5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Bd6 d4 exd3 Nxd3 Qc7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Bd6 f4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Qc7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nf3 e4 Ne5 Qd4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nh3 Bc5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nh3 Bd6 d3 O-O O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Be2 h6 Nh3 g5 d3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Qf3 Rb8 Bd3 h6 Ne4 Nd5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 Bb5+ c6 dxc6 bxc6 Qf3 cxb5 Qxa8 Qc7 Qf3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Na5 d3 h6 Nf3 e4 Qe2 Nxc4 dxc4 Bc5 Nfd2 O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nb4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nd4 c3 b5 Bf1 Nxd5 Ne4 Qh4 Ng3 Bg4 f3 e4 cxd4","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nd4 c3 b5 Bf1 Nxd5 cxd4 Qxg5","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nd4 d6","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Ne7","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 Nxf7 Kxf7 Qf3+ Ke6 Nc3 Nb4 a3 Nxc2+ Kd1 Nxa1","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 d4 Bb4+ c3 Be7 Nxf7 Kxf7 Qf3+ Ke6 Qe4 Rf8","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 b5 Bf1 Nd4 c3","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 b5 Bxb5 Qxd5 Bxc6+ Qxc6","e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 b5 Bxb5 Qxd5 Nc3 Qxg2","e4 e5 Nf3 Nc6 Bc4 Nf6 O-O","e4 e5 Nf3 Nc6 Bc4 Nf6 c3","e4 e5 Nf3 Nc6 Bc4 Nf6 d3 Bc5","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Bc5 e5","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Nc3 dxc3 Bxf7+ Kxf7 Qd5+ Ke8 Re1 Be7 Rxe4 d6","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Nc3 dxc3 Bxf7+ Kxf7 Qd5+ Kf6 Qxe4 Be7","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Nc3 dxc3 Bxf7+ Kxf7 Qd5+ Kf6 Re1 Ne7 Qxe4 Kf7 Bg5 d5 Qf4+ Kg8","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 O-O Nxe4 Re1 d5 Bxd5 Qxd5 Nc3 Qa5","e4 e5 Nf3 Nc6 Bc4 Nf6 d4 exd4 e5","e4 e5 Nf3 Nc6 Bc4 a6","e4 e5 Nf3 Nc6 Bc4 d6 Nc3 Bg4 Nxe5","e4 e5 Nf3 Nc6 Bc4 f5 d3","e4 e5 Nf3 Nc6 Bc4 f5 exf5","e4 e5 Nf3 Nc6 Bc4 h6"];
 const ICONS = {
   check: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  tick: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
   chev: '<path d="m6 9 6 6 6-6"/>',
   dots: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
 };
 const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
 const n = (v) => v.toLocaleString("en-US");
 const pct = (v) => `${Math.round(v * 100)}%`;
+const plural = (count, noun) => `${n(count)} ${count === 1 ? noun : `${noun}s`}`;
 function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const hash = (text) => { let h = 2166136261; for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return (h >>> 0) / 4294967296; };
 
@@ -373,15 +455,26 @@ const nodes = [...all.values()];
 const leaves = nodes.filter((x) => !x.children.length);
 const depth = Math.max(...nodes.map((x) => x.ply));
 const ownMoves = nodes.filter((x) => x.san && x.ply % 2 === 1).length;
-const clashes = nodes.filter((x) => x.ply % 2 === 0 && x.children.length > 1).length;
 const averageLine = leaves.reduce((s, x) => s + x.ply, 0) / leaves.length;
 const measured = Math.round(Math.min(5, Math.max(0, Math.log2(ownMoves * averageLine / 10 / 12.5))) * 10) / 10;
 const PUBLISHER_DIFFICULTY = 4.0;
 /** A name worth writing beside a move: the move's own, where it differs from its parent's. */
 const newName = (x) => (x.name && x.name !== x.parent?.name ? x.name : "");
 const exitName = (e) => NAMES[e.from.id ? `${e.from.id} ${e.san}` : e.san] ?? "";
+function pathOf(x) { const out = []; for (let at = x; at && at.san; at = at.parent) out.unshift(at); return out; }
 
-// ── Made-up games as White, walked through the book until someone leaves it ───────────────
+// ── Clashes: positions where the book plays more than one White move, in tree order ─────────
+const CLASHES = [];
+(function walk(x) { if (x.ply % 2 === 0 && x.children.length > 1) CLASHES.push(x); x.children.forEach(walk); })(root);
+const isClash = (x) => x.ply % 2 === 0 && x.children.length > 1;
+/** The moves ticked at each clash; every move to start with. A few clashes are made up as already settled. */
+let picks = new Map(CLASHES.map((c, i) => [c.id, new Set(i % 4 === 2 ? [c.children[0].id] : c.children.map((k) => k.id))]));
+/** Whether drills reach a position: every clash above it has the move toward it ticked. */
+function drilled(x, p = picks) { for (let y = x; y.parent; y = y.parent) { const s = p.get(y.parent.id); if (s && !s.has(y.id)) return false; } return true; }
+const toResolve = (p = picks) => CLASHES.filter((c) => drilled(c, p) && p.get(c.id).size > 1);
+const clashState = (c, p = picks) => (!drilled(c, p) ? "off" : p.get(c.id).size > 1 ? "open" : "done");
+
+// ── Made-up games as White, each with a month, walked through the book until someone leaves it ─
 const rand = rng(11);
 const legal = new Map();
 function offBook(x) {
@@ -396,15 +489,13 @@ function offBook(x) {
   const options = legal.get(x.id);
   return options[Math.min(options.length - 1, Math.floor(rand() ** 2.2 * options.length))];
 }
-function pathOf(x) { const out = []; for (let at = x; at && at.san; at = at.parent) out.unshift(at); return out; }
-const exits = new Map();
-let stayed = 0;
+const GAMES = [];
 for (let i = 0; i < 1160; i++) {
   let at = root;
   const reached = [root];
   let exit = null;
   while (true) {
-    if (!at.children.length) { stayed++; break; }
+    if (!at.children.length) break;
     const ours = at.ply % 2 === 0;
     const chance = at.ply === 0 ? 0 : at.ply === 1 ? 0.55 : ours ? 0.05 : 0.11;
     const san = rand() < chance ? offBook(at) : undefined;
@@ -417,15 +508,27 @@ for (let i = 0; i < 1160; i++) {
   const lean = hash("w" + key);
   const r = rand();
   const result = r < 0.25 + 0.42 * lean ? "w" : r < 0.33 + 0.42 * lean ? "d" : "l";
-  for (const x of reached) { x.games++; x[result]++; }
-  if (exit) {
-    const e = exits.get(key) ?? { ...exit, games: 0, w: 0, d: 0, l: 0 };
-    e.games++; e[result]++; exits.set(key, e);
-  }
+  // Months back from the newest game; recent months hold more games.
+  GAMES.push({ month: Math.floor(rand() ** 1.6 * 36), reached, exit, key, result });
 }
-for (const x of nodes) x.score = x.games ? (x.w + x.d / 2) / x.games : 0;
-for (const e of exits.values()) e.score = (e.w + e.d / 2) / e.games;
-const EXITS = [...exits.values()].sort((a, b) => b.games - a.games || a.san.localeCompare(b.san));
+const SPANS = [[3, "3 months"], [12, "12 months"], [36, "All time"]];
+let EXITS = [], stayed = 0;
+/** The games in the chosen span, counted onto the book's positions and the places they leave it. */
+function tally() {
+  for (const x of nodes) { x.games = 0; x.w = 0; x.d = 0; x.l = 0; }
+  const exits = new Map();
+  stayed = 0;
+  for (const g of GAMES) {
+    if (g.month >= state.span) continue;
+    for (const x of g.reached) { x.games++; x[g.result]++; }
+    if (!g.exit) { stayed++; continue; }
+    const e = exits.get(g.key) ?? { ...g.exit, games: 0, w: 0, d: 0, l: 0 };
+    e.games++; e[g.result]++; exits.set(g.key, e);
+  }
+  for (const x of nodes) x.score = x.games ? (x.w + x.d / 2) / x.games : 0;
+  for (const e of exits.values()) e.score = (e.w + e.d / 2) / e.games;
+  EXITS = [...exits.values()].sort((a, b) => b.games - a.games || a.san.localeCompare(b.san));
+}
 
 // The book's contents: each place a new opening name starts, in tree order, nested under the one it grows from.
 const CONTENTS = [];
@@ -435,16 +538,24 @@ const CONTENTS = [];
   x.children.forEach((k) => walk(k, next));
 })(root, 0);
 
-const SHELF = [["Italian Game", "w", 338], ["Caro-Kann Defense", "b", 256], ["Queen's Gambit", "w", 198], ["London System", "w", 164], ["Sicilian Najdorf", "b", 402], ["King's Indian Defense", "b", 288], ["Ruy Lopez", "w", 253], ["Scandinavian Defense", "b", 97], ["Gambits for fun", "w", 131]];
+const REVIEWS = [
+  { who: "knightowl_77", stars: 5, when: "18 Oct 2026", text: "The Two Knights section is the best part. Every Fried Liver and Traxler sideline I've met in blitz is in here, and the drawing makes it easy to see how far the book goes." },
+  { who: "e4_or_bust", stars: 5, when: "2 Oct 2026", text: "Huge for a free book. I unticked the Jerome Gambit and the 4.d4 lines at their clashes and drill the Giuoco Piano and the Evans only." },
+  { who: "rookie_rook", stars: 4, when: "21 Sep 2026", text: "Lots of clashes: it gives White several moves in many places, so it reads more like a reference than a repertoire until you pick yours." },
+  { who: "PawnStormer", stars: 4, when: "30 Aug 2026", text: "Would like more of the quiet d3 lines. The gambits are covered deeply." },
+];
+const RATING_SPLIT = [92, 24, 8, 3, 1];
 
 // ── State ──────────────────────────────────────────────────────────────────────────────────
-const state = { layout: "A", show: "games", mode: "light", width: "desktop", zoom: 1, open: null };
+const state = { show: STORE ? "plain" : "games", mode: "light", width: "desktop", zoom: 1, open: null, span: 12, saved: "no", tab: "contents", dialog: null };
 try { const dark = document.documentElement.dataset.theme === "dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches); if (dark) state.mode = "dark"; } catch {}
 if (window.innerWidth < 760) state.width = "phone";
+tally();
 let current = all.get(`${P} Nf6 Ng5`) ?? root, hi = 0, hover = null, active = false;
 const moveText = (x) => `${Math.ceil(x.ply / 2)}${x.ply % 2 ? "." : "…"}${x.san}`;
 const exitText = (e) => `${Math.ceil((e.from.ply + 1) / 2)}${e.from.ply % 2 === 0 ? "." : "…"}${e.san}`;
 const lineText = (list) => list.map((x) => (x.ply % 2 ? `${Math.ceil(x.ply / 2)}.${x.san}` : x.san)).join(" ");
+const shortLine = (list, keep = 6) => (list.length > keep ? "… " + lineText(list.slice(-keep)) : lineText(list));
 const wdlBar = (x) => `<div class="wdl"><i style="flex:${x.w}"></i><i style="flex:${x.d}"></i><i style="flex:${x.l}"></i></div>`;
 const games = () => state.show === "games";
 
@@ -485,6 +596,8 @@ function drawTree() {
   const at = (id) => lay.pts.get(id);
   const onPath = new Set(pathOf(current).map((x) => x.id)); onPath.add("");
   const rootGames = Math.max(root.games, 1);
+  // The Library's book draws undrilled lines dashed; a clash is marked while it's left to resolve.
+  const open = STORE ? null : new Set(toResolve().map((c) => c.id));
   let grid = "", edges = "", dots = "", labels = "", hits = "";
   for (let d = 0; d <= depth; d++) {
     const x = PAD.left + d * lay.colW;
@@ -494,6 +607,7 @@ function drawTree() {
   for (const x of nodes) {
     const c = at(x.id);
     const reached = x.games > 0;
+    const off = !STORE && !drilled(x);
     if (x.parent) {
       const p = at(x.parent.id), k = lay.colW * 0.55;
       let width = 0.7 + 3.3 * (x.size / root.size), style = "", cls = "bv-edge";
@@ -501,18 +615,19 @@ function drawTree() {
         if (reached) style = ` style="stroke:${scoreColor(x.score)}"`; else cls += " cold";
         width = reached ? 0.9 + 7 * Math.sqrt(x.games / rootGames) : 0.7;
       } else if (onPath.has(x.id)) cls += " on-path";
+      if (off) cls += " undrilled";
       edges += `<path d="M${p.x},${p.y} C${p.x + k},${p.y} ${c.x - k},${c.y} ${c.x},${c.y}" class="${cls}" stroke-width="${width.toFixed(2)}"${style}/>`;
     }
     const kind = !x.san ? "root" : x.ply % 2 ? "wm" : "bm";
-    const clash = x.ply % 2 === 0 && x.children.length > 1 ? " clash" : "";
-    dots += `<circle cx="${c.x}" cy="${c.y}" r="${x.san ? 2.8 : 4.2}" class="bv-node ${kind}${clash}${onPath.has(x.id) ? " on-path" : ""}${x === current ? " current" : ""}"/>`;
+    const clash = (STORE ? isClash(x) : open.has(x.id)) ? " clash" : "";
+    dots += `<circle cx="${c.x}" cy="${c.y}" r="${x.san ? 2.8 : 4.2}" class="bv-node ${kind}${clash}${off ? " undrilled" : ""}${onPath.has(x.id) ? " on-path" : ""}${x === current ? " current" : ""}"/>`;
     const isKid = x.parent === current, isHi = isKid && current.children[hi] === x;
     if (isHi) dots += `<circle cx="${c.x}" cy="${c.y}" r="7" class="bv-ring"/>`;
     const shown = onPath.has(x.id) || isKid || (lay.rowH >= 11 && (x.ply <= 3 || x.size >= 10));
     const above = !x.san || x.ply % 2 === 1;
     const beside = isKid && lay.rowH < 13;
     labels += `<text x="${beside ? c.x + 9 : c.x}" y="${beside ? c.y + 3.5 : above ? c.y - 6 : c.y + 12}" text-anchor="${beside ? "start" : "middle"}" class="bv-label${shown ? "" : " minor"}${onPath.has(x.id) ? " on-path" : ""}${isKid ? " kid" : ""}${isHi ? " hi" : ""}${x === current ? " current" : ""}">${x.san ?? "Start"}</text>`;
-    hits += `<circle cx="${c.x}" cy="${c.y}" r="7" class="bv-hit" data-id="${x.id}"><title>${x.san ? moveText(x) : "Start"}${x.name ? ` · ${x.name}` : ""}${games() ? (reached ? ` · ${n(x.games)} of your games · ${pct(x.score)}` : " · none of your games") : ""}</title></circle>`;
+    hits += `<circle cx="${c.x}" cy="${c.y}" r="7" class="bv-hit" data-id="${x.id}"><title>${x.san ? moveText(x) : "Start"}${x.name ? ` · ${x.name}` : ""}${games() ? (reached ? ` · ${n(x.games)} of your games · ${pct(x.score)}` : " · none of your games") : ""}${off ? " · not drilled" : ""}</title></circle>`;
   }
   scroll.innerHTML = `<svg width="${lay.width}" height="${lay.height}" viewBox="0 0 ${lay.width} ${lay.height}" role="img" aria-label="Ply columns of Italian Game">${grid}${edges}${dots}${labels}${hits}</svg>`;
   return lay;
@@ -542,8 +657,8 @@ function follow(lay, smooth = true) {
   scroll.scrollTo({ left: Math.max(0, here.x - w * 0.3), top: Math.max(0, top), behavior: smooth && !reduce ? "smooth" : "auto" });
 }
 
-// ── The board, from chess.js, with the arrow for the ringed or hovered move ────────────────
-function boardHtml(list, arrowTo) {
+// ── The board, from chess.js, with an arrow for each move given ────────────────────────────
+function boardHtml(list, arrows = []) {
   const game = new Chess(); let last = null;
   for (const x of list) last = game.move(x.san);
   const glyph = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟", K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙" };
@@ -554,92 +669,187 @@ function boardHtml(list, arrowTo) {
   };
   let out = "";
   game.fen().split(" ")[0].split("/").forEach((row, r) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) for (let i = 0; i < Number(ch); i++, f++) out += square(r, f, null); else out += square(r, f++, ch); } });
-  const move = arrowTo ? game.move(arrowTo) : null;
-  if (move) {
+  let svg = "";
+  for (const san of arrows) {
+    const move = san ? game.move(san) : null;
+    if (!move) continue;
+    game.undo();
     const at = (sq) => [("abcdefgh".indexOf(sq[0]) + 0.5), (8 - Number(sq[1]) + 0.5)];
     const [x1, y1] = at(move.from), [x2, y2] = at(move.to);
     const len = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / len, uy = (y2 - y1) / len;
     const head = 0.42, ex = x2 - ux * head, ey = y2 - uy * head, px = -uy * 0.24, py = ux * 0.24;
-    out += `<svg viewBox="0 0 8 8" aria-hidden="true"><line class="arrow" x1="${x1}" y1="${y1}" x2="${ex}" y2="${ey}" stroke-width="0.17" stroke-linecap="round"/><polygon class="arrow" points="${x2},${y2} ${ex + px},${ey + py} ${ex - px},${ey - py}" stroke="none"/></svg>`;
+    svg += `<line class="arrow" x1="${x1}" y1="${y1}" x2="${ex}" y2="${ey}" stroke-width="0.17" stroke-linecap="round"/><polygon class="arrow" points="${x2},${y2} ${ex + px},${ey + py} ${ex - px},${ey - py}"/>`;
   }
+  if (svg) out += `<svg viewBox="0 0 8 8" aria-hidden="true">${svg}</svg>`;
   return out;
 }
 
 // ── The page's parts ───────────────────────────────────────────────────────────────────────
-const switchBook = () => `<div class="facet"><button class="btn ghost sm" data-open="shelf" aria-expanded="${state.open === "shelf"}">Switch book</button>${state.open === "shelf" ? `<div class="panel right" role="group" aria-label="Your books"><span class="sc ph">Library · 9 books</span>${SHELF.map(([name, side, p], i) => `<button class="opt" ${i === 0 ? 'aria-current="true"' : ""} data-close><span class="side ${side}"></span><span>${name}</span><span class="fig">${p}</span></button>`).join("")}</div>` : ""}</div>`;
-const runningLeft = () => `<div class="running"><button class="backlink">Back to all books</button><span class="grow"></span><span class="sc">Book 1 of 9</span>${switchBook()}</div>`;
+const runningLeft = () => STORE
+  ? `<div class="running"><button class="backlink">Back to the shelf</button><span class="grow"></span><span class="sc">Bookstore · Book 3 of 24</span></div>`
+  : `<div class="running"><button class="backlink">Back to all books</button><span class="grow"></span><span class="sc">Library · Book 1 of 9</span></div>`;
 const titleHtml = () => `<div class="title"><h2>Italian Game</h2><span class="small soft"><span class="side w"></span>White</span></div>`;
 const publisher = () => `<div class="pub"><span class="tag" style="color:var(--foreground)">ByTheBook</span>${icon("check")}<span>Verified</span><span>·</span><span class="stars" aria-label="4.6 of 5 stars">★★★★★</span><b style="color:var(--foreground)">4.6</b><span>(128)</span><span>· 2,340 saves ·</span><a>31 reviews</a><a>Leaderboard</a></div>`;
 const description = `<p class="desc">1.e4 e5 2.Nf3 Nc6 3.Bc4: the Giuoco Piano, the Two Knights Defense, the Evans Gambit and their sidelines.</p>`;
-const actions = () => `<div class="row"><button class="btn primary">Open in Explorer</button><button class="btn outline">Train this book</button><button class="btn ghost" aria-label="More for this book">${icon("dots")}</button></div>`;
-const diffColor = (d) => `var(--difficulty-${Math.min(4, Math.floor(d))})`;
-const difficulty = () => `<span class="dscale" aria-hidden="true">${[0, 1, 2, 3, 4].map((i) => `<i style="background:var(--difficulty-${i})"></i>`).join("")}<b class="m" style="left:${measured / 5 * 100}%;background:${diffColor(measured)}"></b><b class="p" style="left:${PUBLISHER_DIFFICULTY / 5 * 100}%;background:${diffColor(PUBLISHER_DIFFICULTY)}"></b></span><span><b>${PUBLISHER_DIFFICULTY.toFixed(1)}</b> publisher · ${measured.toFixed(1)} measured</span>`;
-const facts = () => `<dl class="facts">
-  <div class="wide"><dt>Difficulty</dt><dd class="diff">${difficulty()}<span class="soft">· ${n(ownMoves)} moves to remember</span></dd></div>
-  <div><dt>Positions</dt><dd>${n(nodes.length - 1)} <span class="soft">/ 1,000</span></dd></div>
-  <div><dt>Lines</dt><dd>${n(leaves.length)} <span class="soft">· longest ${depth} plies</span></dd></div>
-  <div><dt>Coverage</dt><dd>64% <span class="soft">of master games</span></dd></div></dl>`;
-const factLine = () => `<div class="factline"><span class="diff" style="display:inline-flex">Difficulty ${difficulty()}</span><span><b>${n(nodes.length - 1)}</b> positions</span><span><b>${n(leaves.length)}</b> lines</span><span><b>64%</b> coverage</span></div>`;
-function whichGames() {
-  const panel = state.open === "which" ? `<div class="panel" role="group" aria-label="Which games"><span class="sc ph">Time</span>${[["Bullet", 232], ["Blitz", 581], ["Rapid", 290], ["Classical", 5], ["Daily", 52]].map(([l, c]) => `<label><input type="checkbox" checked><span>${l}</span><span class="fig soft">${c}</span></label>`).join("")}<span class="sc ph">From</span>${[["Chess.com", "1,021"], ["Lichess", 134], ["Other", 5]].map(([l, c]) => `<label><input type="checkbox" checked><span>${l}</span><span class="fig soft">${c}</span></label>`).join("")}<span class="sc ph">Dates</span><span class="small" style="padding:0 6px">The last 12 months, on the history page's strip</span><div class="pfoot"><button class="linkbtn">All</button><button class="linkbtn" data-close>Done</button></div></div>` : "";
-  return `<div class="facet"><button class="btn outline" data-open="which" aria-expanded="${state.open === "which"}"><span class="k">Games</span> All 1,160 as White</button>${panel}</div>`;
+function actions() {
+  if (!STORE) return `<div class="row"><button class="btn primary">Open in Explorer</button><button class="btn outline">Train this book</button><button class="btn ghost" aria-label="More for this book">${icon("dots")}</button></div>`;
+  if (state.saved === "yes") return `<div class="row"><span class="saved">${icon("tick")} In your library</span><button class="btn outline">Open in Library <span class="jump">Jump to page</span></button><button class="btn ghost sm">Save another copy</button></div>`;
+  return `<div class="row"><button class="btn primary">Save to library</button><button class="btn outline">Open in Explorer</button><span class="small soft">Saving copies it into this browser's library.</span></div>`;
 }
-const showRow = () => `<div class="showrow"><span class="small soft">Show</span><div class="seg" data-key="show"><button data-value="plain" aria-pressed="${!games()}">Plain</button><button data-value="games" aria-pressed="${games()}">Your games</button><button disabled>Drills<em>soon</em></button></div>${games() ? whichGames() : ""}</div>`;
-const totals = () => games() ? `<div class="totals"><div class="line"><span class="big">${n(root.games)}</span><span class="soft">of your games as White</span><span class="grow"></span><span class="small soft">Score <b class="fig" style="color:var(--foreground)">${pct(root.score)}</b> · ${n(stayed)} reached a line's end</span></div>${wdlBar(root)}</div>` : "";
+const diffColor = (d) => `var(--difficulty-${Math.min(4, Math.floor(d))})`;
+/** The difficulty scale; its numbers show on hover or focus. */
+const difficulty = () => `<span class="tip" tabindex="0" aria-label="Difficulty ${PUBLISHER_DIFFICULTY.toFixed(1)} of 5 from the publisher, ${measured.toFixed(1)} measured from the book">
+  <span class="dscale" aria-hidden="true">${[0, 1, 2, 3, 4].map((i) => `<i style="background:var(--difficulty-${i})"></i>`).join("")}<b class="m" style="left:${measured / 5 * 100}%;background:${diffColor(measured)}"></b><b class="p" style="left:${PUBLISHER_DIFFICULTY / 5 * 100}%;background:${diffColor(PUBLISHER_DIFFICULTY)}"></b></span>
+  <span class="tipbox" role="tooltip">
+    <span class="trow"><span class="tdot" style="width:11px;height:11px;background:${diffColor(PUBLISHER_DIFFICULTY)}"></span><b>${PUBLISHER_DIFFICULTY.toFixed(1)}</b><span>The publisher's rating</span></span>
+    <span class="trow"><span class="tdot" style="width:7px;height:7px;background:${diffColor(measured)}"></span><b>${measured.toFixed(1)}</b><span>Measured from its ${n(ownMoves)} moves to remember and ${averageLine.toFixed(1)}-ply lines</span></span>
+    <span class="tscale"><span>0 · easy</span><span>5 · hard</span></span>
+  </span></span>`;
+function clashFact() {
+  if (STORE) return `<span class="tip dotted" tabindex="0">${n(CLASHES.length)}<span class="tipbox" role="tooltip">Positions where the book plays more than one White move. Once it's in your library you choose which of them to drill.</span></span>`;
+  const left = toResolve().length;
+  return `<button class="clashbtn${left ? " open" : ""}" data-clashes aria-haspopup="dialog">${n(CLASHES.length)}${left ? `<span class="flag">${n(left)} to resolve</span>` : `<span class="okflag">All resolved</span>`}</button>`;
+}
+const facts = () => `<dl class="facts">
+  <div class="wide"><dt>Difficulty</dt><dd class="diff">${difficulty()}<span><b>${n(ownMoves)}</b> moves to remember</span><span class="soft">·</span><span>average line <b>${averageLine.toFixed(1)}</b> plies</span></dd></div>
+  <div><dt>Positions</dt><dd>${n(nodes.length - 1)} <span class="soft">/ 1,000</span></dd></div>
+  <div><dt>Lines</dt><dd>${n(leaves.length)} <span class="soft">· longest ${depth}</span></dd></div>
+  <div><dt>Coverage</dt><dd>64% <span class="soft">of master games</span></dd></div>
+  <div><dt>Clashes</dt><dd>${clashFact()}</dd></div></dl>`;
+function whichGames() {
+  const share = root.games / GAMES.length;
+  const scaled = (c) => n(Math.round(c * share));
+  const panel = state.open === "which" ? `<div class="panel" role="group" aria-label="Which games">
+    <span class="sc ph">Dates</span><div class="seg" role="group" aria-label="Time span">${SPANS.map(([m, label]) => `<button data-span="${m}" aria-pressed="${state.span === m}">${label}</button>`).join("")}</div>
+    <span class="sc ph">Time</span>${[["Bullet", 232], ["Blitz", 581], ["Rapid", 290], ["Classical", 5], ["Daily", 52]].map(([l, c]) => `<label><input type="checkbox" checked><span>${l}</span><span class="fig soft">${scaled(c)}</span></label>`).join("")}
+    <span class="sc ph">From</span>${[["Chess.com", 1021], ["Lichess", 134], ["Other", 5]].map(([l, c]) => `<label><input type="checkbox" checked><span>${l}</span><span class="fig soft">${scaled(c)}</span></label>`).join("")}
+    <div class="pfoot"><button class="linkbtn" data-span="36">All games</button><button class="linkbtn" data-close>Done</button></div></div>` : "";
+  const label = state.span === 36 ? `All ${n(root.games)} as White` : `Last ${state.span} months · ${n(root.games)} as White`;
+  return `<div class="facet"><button class="btn outline" data-open="which" aria-expanded="${state.open === "which"}"><span class="k">Games</span> ${label}</button>${panel}</div>`;
+}
+const showRow = () => `<div class="showrow"><span class="small soft">Show</span><div class="seg" data-key="show"><button data-value="plain" aria-pressed="${!games()}">Plain</button><button data-value="games" aria-pressed="${games()}">Your games</button>${STORE ? "" : `<button disabled>Drills<em>soon</em></button>`}</div>${games() ? whichGames() : ""}</div>`;
+const totals = () => games() ? `<div class="totals"><div class="line"><span class="big">${n(root.games)}</span><span class="soft">of your games as White${STORE ? " meet this book" : ""}</span><span class="grow"></span><span class="small soft">Score <b class="fig" style="color:var(--foreground)">${pct(root.score)}</b> · ${n(stayed)} reached a line's end</span></div>${wdlBar(root)}</div>` : "";
+function contentsRows() {
+  return CONTENTS.map(({ node, level }) => `<div class="crow d${Math.min(level, 3)}${!STORE && !drilled(node) ? " dim" : ""}" data-id="${node.id}" ${pathOf(current).includes(node) ? 'aria-current="true"' : ""}><span class="cn"><span>${level ? node.name.replace(/^[^:]+: /, "") : node.name}</span><span class="fig" style="text-align:left">${moveText(node)}</span><span class="dots"></span></span><span class="fig">${node.size}</span><span class="fig">${node.positions}</span></div>`).join("");
+}
+function reviewsHtml() {
+  const total = RATING_SPLIT.reduce((s, v) => s + v, 0);
+  return `<div class="ratings"><div><div class="score">4.6</div><div class="small soft">128 ratings</div></div><div class="bars">${RATING_SPLIT.map((v, i) => `<div class="bar"><span>${5 - i}★</span><span><i style="width:${v / total * 100}%"></i></span><span>${v}</span></div>`).join("")}</div></div>
+    ${REVIEWS.map((r) => `<div class="review"><div class="rhead"><span class="stars" aria-label="${r.stars} of 5 stars">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</span><b>${r.who}</b><span class="soft">${r.when}</span></div><p>${r.text}</p></div>`).join("")}
+    <div class="review"><button class="linkbtn">All 31 reviews</button></div>`;
+}
+const aboutHtml = () => `<div class="about"><p>Made from the page titles of Wikibooks' Chess Opening Theory: the 349 pages under 1.e4 e5 2.Nf3 Nc6 3.Bc4, turned into a move tree. The pages' text isn't used, and 9 titles that don't name legal moves were left out.</p>
+  <p class="soft">Source: <a href="https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4/1...e5/2._Nf3/2...Nc6/3._Bc4" target="_blank" rel="noreferrer">Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nc6/3. Bc4</a>, by Wikibooks contributors (<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA 4.0</a>), retrieved 6 Oct 2026. A saved copy keeps this credit.</p>
+  <p class="soft">Ratings and reviews come from signed-in readers.</p></div>`;
 function listHtml() {
   if (games()) {
-    return `<section class="listbox" aria-label="Where you leave this book"><div class="lhead"><h3>Where you leave this book</h3><span class="sc">${n(EXITS.length)} places</span></div>
+    return `<section class="listbox" aria-label="Where you leave this book"><div class="lhead"><h3>${STORE ? "Where your games would leave it" : "Where you leave this book"}</h3><span class="sc">${n(EXITS.length)} places</span></div>
       <div class="lbody" id="lbody">${EXITS.map((e, i) => `<div class="lrow" data-exit="${i}" ${e.from === current ? 'aria-current="true"' : ""}><span class="who ${e.who === "you" ? "you" : ""}">${e.who === "you" ? "You" : "Opponent"}</span><b>${exitText(e)}</b><span class="what">${exitName(e) ? `<span class="on">${exitName(e)}</span>` : ""}<span class="soft">after ${e.from.san ? lineText(pathOf(e.from).slice(-3)) : "the start"}; the book has ${e.from.children.slice(0, 2).map((k) => k.san).join(", ")}</span></span><span class="fig">${n(e.games)}</span>${wdlBar(e)}<span class="fig pct">${pct(e.score)}</span></div>`).join("")}</div></section>`;
   }
+  if (STORE) {
+    const tabs = [["contents", `Contents<span class="fig">${CONTENTS.length}</span>`], ["reviews", `Reviews<span class="fig">31</span>`], ["about", "How it was made"]];
+    const body = state.tab === "reviews" ? reviewsHtml() : state.tab === "about" ? aboutHtml() : contentsRows();
+    return `<section class="listbox" aria-label="About this book"><div class="lhead"><div class="seg" role="tablist" aria-label="About this book">${tabs.map(([id, label]) => `<button role="tab" data-tab="${id}" aria-pressed="${state.tab === id}" aria-selected="${state.tab === id}">${label}</button>`).join("")}</div>${state.tab === "contents" ? `<span class="sc">lines · positions</span>` : ""}</div>
+      <div class="lbody" id="lbody">${body}</div></section>`;
+  }
   return `<section class="listbox" aria-label="Contents"><div class="lhead"><h3>Contents</h3><span class="sc">${n(CONTENTS.length)} openings · lines · positions</span></div>
-    <div class="lbody" id="lbody">${CONTENTS.map(({ node, level }) => `<div class="crow d${Math.min(level, 3)}" data-id="${node.id}" ${pathOf(current).includes(node) ? 'aria-current="true"' : ""}><span class="cn"><span>${level ? node.name.replace(/^[^:]+: /, "") : node.name}</span><span class="fig" style="text-align:left">${moveText(node)}</span><span class="dots"></span></span><span class="fig">${node.size}</span><span class="fig">${node.positions}</span></div>`).join("")}</div></section>`;
+    <div class="lbody" id="lbody">${contentsRows()}</div></section>`;
 }
 function positionHtml() {
   const path = pathOf(current);
   const kids = current.children;
   const target = hover ?? kids[hi] ?? null;
   const leftHere = EXITS.filter((e) => e.from === current);
+  const ticked = !STORE && picks.get(current.id);
+  const skip = (x) => (ticked && !ticked.has(x.id) ? `<span class="skip">not drilled</span>` : "");
   const nextRows = kids.map((x, i) => games()
-    ? `<div class="nrow" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="on">${newName(x)}</span><span class="fig soft">${n(x.games)}</span>${wdlBar(x)}<span class="fig">${x.games ? pct(x.score) : "–"}</span></div>`
-    : `<div class="nrow plain" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="on">${newName(x)}</span><span class="fig soft">${x.size} ${x.size === 1 ? "line" : "lines"}</span></div>`).join("");
+    ? `<div class="nrow" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="on">${skip(x)}${newName(x)}</span><span class="fig soft">${n(x.games)}</span>${wdlBar(x)}<span class="fig">${x.games ? pct(x.score) : "–"}</span></div>`
+    : `<div class="nrow plain" role="option" aria-selected="${i === hi}" data-id="${x.id}"><b>${moveText(x)}</b><span class="on">${skip(x)}${newName(x)}</span><span class="fig soft">${x.size} ${x.size === 1 ? "line" : "lines"}</span></div>`).join("");
   const leftRows = leftHere.map((e) => `<div class="nrow"><b>${exitText(e)}</b><span class="who ${e.who === "you" ? "you" : ""}">${e.who === "you" ? "You" : "Opponent"}</span><span class="fig soft">${n(e.games)}</span>${wdlBar(e)}<span class="fig">${pct(e.score)}</span></div>`).join("");
-  return `<div class="posbox"><div class="board" id="board" aria-label="Board">${boardHtml(path, target?.san)}</div><div class="details">
+  const clashNote = !STORE && isClash(current) ? `<button class="linkbtn" data-clashes data-at="${current.id}">${clashState(current) === "open" ? "Clash · choose moves to drill" : "Clash · change the moves to drill"}</button>` : "";
+  return `<div class="posbox"><div class="board" id="board" aria-label="Board">${boardHtml(path, [target?.san])}</div><div class="details">
     <div class="dhead"><div><span class="sc">${current.san ? "Current position" : "Starting position"}</span>
       <div class="mvline"><span class="mv">${current.san ? moveText(current) : "Start"}</span><span class="on">${current.name ?? ""}</span></div></div>
       <button class="btn outline sm">Open in Explorer</button></div>
     <div class="line" title="${lineText(path)}">${path.length ? (path.length > 10 ? "… " + lineText(path.slice(-10)) : lineText(path)) : "Before the first move"}</div>
     ${games() ? `<div class="stat"><div class="small">${current.games ? `<b class="fig">${n(current.games)}</b> of your games · <span class="fig">${current.w} · ${current.d} · ${current.l}</span> · score <b class="fig">${pct(current.score)}</b>` : "None of your games reached it"}</div>${wdlBar(current)}</div>` : ""}
-    <div class="boxes"><div class="box"><span class="sc">${kids.length ? `Next in the book · ${kids.length}` : "The line ends here"}</span><div class="next" id="next" role="listbox" aria-label="Next in the book">${nextRows || '<span class="empty">No moves after this one.</span>'}</div></div>
+    <div class="boxes"><div class="box"><span class="sc" style="display:flex;gap:8px;align-items:baseline">${kids.length ? `Next in the book · ${kids.length}` : "The line ends here"}<span class="grow"></span><span style="font:12px var(--body);letter-spacing:0;text-transform:none">${clashNote}</span></span><div class="next" id="next" role="listbox" aria-label="Next in the book">${nextRows || '<span class="empty">No moves after this one.</span>'}</div></div>
       ${games() ? `<div class="box"><span class="sc">Left the book here · ${leftHere.length}</span><div class="next">${leftRows || '<span class="empty">None of your games left the book here.</span>'}</div></div>` : ""}</div>
   </div></div>`;
 }
 const zoomCtl = () => `<span class="zoom" aria-label="Zoom"><button data-zoom="-1" aria-label="Zoom out">−</button><span id="zoom-label">${Math.round(state.zoom * 100)}%</span><button data-zoom="1" aria-label="Zoom in">+</button><button class="fit" data-fit>Fit</button></span>`;
 const drawing = () => `<div class="toolbar"><span class="selectish">Ply columns ${icon("chev")}</span><span class="grow"></span>${zoomCtl()}</div>
   <div class="viewbox"><div class="vscroll" id="vscroll" tabindex="0" aria-label="Italian Game: arrow keys walk the moves"></div></div>
-  <div class="hint"><span><kbd>↑</kbd> <kbd>↓</kbd> choose a move</span><span><kbd>→</kbd> play it</span><span><kbd>←</kbd> back</span><span>Drag to look around</span><span class="grow"></span>${games() ? `<span>Your score <span class="ramp"></span> 30% → 70%+ · thickness: games</span>` : ""}</div>`;
+  <div class="hint"><span><kbd>↑</kbd> <kbd>↓</kbd> choose a move</span><span><kbd>→</kbd> play it</span><span><kbd>←</kbd> back</span><span class="grow"></span>${games() ? `<span>Your score <span class="ramp"></span> 30% → 70%+ · thickness: games</span>` : STORE ? "" : `<span><span class="dashkey"></span>not drilled</span>`}</div>`;
+
+// ── The clashes dialog (the Library's book only) ───────────────────────────────────────────
+function openDialog(at) {
+  const draft = new Map([...picks].map(([id, s]) => [id, new Set(s)]));
+  const first = (at && all.get(at)) || toResolve(draft)[0] || CLASHES[0];
+  state.dialog = { draft, sel: first.id, filter: toResolve(draft).length ? "open" : "all" };
+  state.open = null;
+  renderShell();
+}
+function dialogHtml() {
+  const { draft, sel, filter } = state.dialog;
+  const open = toResolve(draft);
+  const rows = (filter === "open" ? open : CLASHES);
+  const c = all.get(sel);
+  const ticked = draft.get(c.id);
+  const st = clashState(c, draft);
+  const stText = st === "open" ? `${ticked.size} of ${c.children.length} moves ticked: tick one to resolve it` : st === "done" ? "Resolved: one move is drilled" : "Not drilled: a move above it is unticked";
+  const path = pathOf(c);
+  const clRow = (x) => { const s = clashState(x, draft); return `<button class="cl ${s}" data-sel="${x.id}" ${x.id === sel ? 'aria-current="true"' : ""}><span class="mk ${s}"></span><b>after ${x.san ? moveText(x) : "the start"}</b><span class="cnt">${draft.get(x.id).size}/${x.children.length}</span><span class="on">${x.name ?? ""}</span></button>`; };
+  return `<div class="dlgwrap"><div class="scrim" data-dlg="cancel"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="clash-title">
+    <header><h3 id="clash-title">Clashes in Italian Game</h3>
+      <p>At a clash the book plays more than one White move. Tick the moves you want to drill. A clash is resolved when one move is ticked. Unticked moves stay in the book and its drawing, but drills skip them and the lines after them.</p></header>
+    <div class="dbody">
+      <div class="clist"><div class="seg" role="group" aria-label="Which clashes"><button data-filter="open" aria-pressed="${filter === "open"}">To resolve<span class="fig">${open.length}</span></button><button data-filter="all" aria-pressed="${filter === "all"}">All<span class="fig">${CLASHES.length}</span></button></div>
+        <div class="rows">${rows.map(clRow).join("") || '<p class="empty" style="padding:10px 12px">Every clash is resolved.</p>'}</div></div>
+      <div class="cpane">
+        <div class="top"><div class="board" aria-label="Board">${boardHtml(path, c.children.filter((k) => ticked.has(k.id)).map((k) => k.san))}</div>
+          <div class="info"><span class="sc">Clash ${CLASHES.indexOf(c) + 1} of ${CLASHES.length}</span>
+            <div class="mvline"><span class="mv">After ${c.san ? moveText(c) : "the start"}</span></div>
+            <span class="soft" style="font:italic 13.5px var(--display)">${c.name ?? ""}</span>
+            <span class="fig soft" style="font-size:11.5px">${shortLine(path, 8)}</span>
+            <span class="state ${st}">${st === "done" ? icon("tick") : ""}${stText}</span>
+            <div class="row" style="margin-top:4px"><button class="btn outline sm" data-dlg="top">Keep only the most played</button><button class="btn ghost sm" data-dlg="tickall">Tick all</button></div>
+          </div></div>
+        <div class="picks"><div class="pick head"><span></span><span>Move</span><span>Opening</span><span>Lines</span><span>Games</span><span>Results</span><span>Score</span></div>
+          ${c.children.map((k) => { const on = ticked.has(k.id); const last = on && ticked.size === 1; return `<label class="pick${on ? "" : " unticked"}"><input type="checkbox" data-pick="${k.id}" ${on ? "checked" : ""} ${last ? 'disabled title="One move stays ticked"' : ""}><b>${moveText(k)}</b><span class="on">${newName(k) || (k.name ?? "")}</span><span class="fig soft">${n(k.size)}</span><span class="fig soft">${n(k.games)}</span>${wdlBar(k)}<span class="fig">${k.games ? pct(k.score) : "–"}</span></label>`; }).join("")}</div>
+        <p class="small soft">Games and score come from your games as White in the games filter: ${state.span === 36 ? "all time" : `the last ${state.span} months`}.</p>
+      </div>
+    </div>
+    <footer><button class="linkbtn" data-dlg="alltop">Keep the most played move at every clash</button><span class="grow"></span><span class="small soft">${open.length ? `${plural(open.length, "clash")} to resolve` : "All resolved"}</span><button class="btn outline" data-dlg="cancel">Cancel</button><button class="btn primary" data-dlg="save">Save choices</button></footer>
+  </div></div>`;
+}
+const mostPlayed = (c) => [...c.children].sort((a, b) => b.games - a.games || b.size - a.size)[0];
 
 function renderShell() {
   const mock = document.getElementById("mock");
   mock.dataset.mode = state.mode; mock.dataset.width = state.width;
-  const runningRight = `<div class="running"><span class="sc">White · saved from the Bookstore</span><i>Italian Game</i></div>`;
-  let left, right;
-  if (state.layout === "A") {
-    left = `${runningLeft()}<div class="front">${titleHtml()}${publisher()}${description}${actions()}</div>${facts()}${showRow()}${totals()}${listHtml()}`;
-    right = `${runningRight}<div id="pos">${positionHtml()}</div>${drawing()}`;
-  } else {
-    left = `${runningLeft()}<div class="front"><div class="title" style="justify-content:space-between">${titleHtml()}${actions()}</div>${factLine()}</div>${showRow()}${drawing()}`;
-    right = `${runningRight}<div id="pos">${positionHtml()}</div>${totals()}${listHtml()}`;
-  }
+  const runningRight = STORE ? `<div class="running"><span class="sc">White · ByTheBook</span><i>Italian Game</i></div>` : `<div class="running"><span class="sc">White · saved from the Bookstore</span><i>Italian Game</i></div>`;
+  const left = `${runningLeft()}<div class="front">${titleHtml()}${publisher()}${description}${actions()}</div>${facts()}${showRow()}${totals()}${listHtml()}`;
+  const right = `${runningRight}<div id="pos">${positionHtml()}</div>${drawing()}`;
   mock.innerHTML = `
-    <div class="topbar"><span class="brand">ByTheBook</span><nav class="tabs" aria-label="Pages"><span>Overview</span><span>Explorer</span><span>Visualizations</span><span aria-current="page">Library</span><span>Bookstore</span><span>Train</span><span>Puzzles</span><span>Settings</span></nav>
+    <div class="topbar"><span class="brand">ByTheBook</span><nav class="tabs" aria-label="Pages"><span>Overview</span><span>Explorer</span><span>Visualizations</span><span ${STORE ? "" : 'aria-current="page"'}>Library</span><span ${STORE ? 'aria-current="page"' : ""}>Bookstore</span><span>Train</span><span>Puzzles</span><span>Settings</span></nav>
       <span class="grow"></span><span class="guest">Browsing as a guest</span><button class="desk-btn">Create account</button></div>
     <div class="book"><span class="ribbon"></span><div class="spread">
       <section class="pg left" aria-label="Left page">${left}</section>
       <section class="pg right" aria-label="Right page">${right}</section>
-    </div></div>`;
+    </div></div>
+    ${state.dialog ? dialogHtml() : ""}`;
   for (const chip of document.querySelectorAll(".studio .chip")) chip.setAttribute("aria-pressed", String(state[chip.parentElement.dataset.key] === chip.dataset.value));
   bindShell();
   renderPosition(false);
+}
+function renderDialog() {
+  const old = document.querySelector("#mock .dlgwrap");
+  const list = old?.querySelector(".rows"), keep = list ? list.scrollTop : 0;
+  if (old) old.outerHTML = dialogHtml();
+  const rows = document.querySelector("#mock .dlgwrap .rows");
+  if (rows) rows.scrollTop = keep;
 }
 /** The parts that change with the position; `auto` lets the camera zoom, which it does only on a new position. */
 function renderPosition(smooth = true, auto = false) {
@@ -664,7 +874,7 @@ function goTo(node, from) {
   renderPosition(true, true);
 }
 /** Only the board's arrow changes on hover. */
-function showArrow() { const b = document.getElementById("board"); if (b) b.innerHTML = boardHtml(pathOf(current), (hover ?? current.children[hi])?.san); }
+function showArrow() { const b = document.getElementById("board"); if (b) b.innerHTML = boardHtml(pathOf(current), [(hover ?? current.children[hi])?.san]); }
 
 function bindShell() {
   const mock = document.getElementById("mock");
@@ -710,14 +920,46 @@ function bindShell() {
   });
 }
 
-// The arrow keys walk the drawing once the page has been clicked anywhere, unless a text field or an open panel has them.
+// Clicks that outlive a render: the games span, the store's tabs, and the clashes dialog.
+document.getElementById("mock").addEventListener("click", (event) => {
+  const t = event.target;
+  const span = t.closest("[data-span]");
+  if (span) { state.span = Number(span.dataset.span); tally(); renderShell(); return; }
+  const tab = t.closest("[data-tab]");
+  if (tab) { state.tab = tab.dataset.tab; renderShell(); return; }
+  const opener = t.closest("[data-clashes]");
+  if (opener) { openDialog(opener.dataset.at); return; }
+  const d = state.dialog;
+  if (!d) return;
+  const sel = t.closest("[data-sel]");
+  if (sel) { d.sel = sel.dataset.sel; renderDialog(); return; }
+  const filter = t.closest("[data-filter]");
+  if (filter) { d.filter = filter.dataset.filter; renderDialog(); return; }
+  const act = t.closest("[data-dlg]")?.dataset.dlg;
+  const c = all.get(d.sel);
+  if (act === "cancel") { state.dialog = null; renderShell(); }
+  else if (act === "save") { picks = d.draft; state.dialog = null; renderShell(); }
+  else if (act === "top") { d.draft.set(c.id, new Set([mostPlayed(c).id])); renderDialog(); }
+  else if (act === "tickall") { d.draft.set(c.id, new Set(c.children.map((k) => k.id))); renderDialog(); }
+  else if (act === "alltop") { for (const x of CLASHES) d.draft.set(x.id, new Set([mostPlayed(x).id])); renderDialog(); }
+});
+document.getElementById("mock").addEventListener("change", (event) => {
+  const box = event.target.closest("[data-pick]");
+  if (!box || !state.dialog) return;
+  const set = state.dialog.draft.get(state.dialog.sel);
+  if (box.checked) set.add(box.dataset.pick); else if (set.size > 1) set.delete(box.dataset.pick);
+  renderDialog();
+});
+
+// The arrow keys walk the drawing once the page has been clicked anywhere, unless a text field, a panel or the dialog has them.
 document.addEventListener("pointerdown", (event) => {
   active = Boolean(event.target.closest("#mock"));
   if (state.open && !event.target.closest(".facet")) { state.open = null; renderShell(); }
 });
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && state.dialog) { state.dialog = null; renderShell(); return; }
   if (event.key === "Escape" && state.open) { state.open = null; renderShell(); return; }
-  if (!active || state.open || event.target.closest?.("input, textarea, select")) return;
+  if (!active || state.open || state.dialog || event.target.closest?.("input, textarea, select")) return;
   const kids = current.children;
   if (event.key === "ArrowDown" && kids.length) hi = Math.min(kids.length - 1, hi + 1);
   else if (event.key === "ArrowUp" && kids.length) hi = Math.max(0, hi - 1);

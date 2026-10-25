@@ -58,6 +58,11 @@ type Props = {
   zoom?: ViewZoom;
   /** The user's score from each position, which ply columns paint (plans/game-history.md D35). */
   success?: ReadonlyMap<string, number | null>;
+  /**
+   * Games through each position, drawn as each edge's thickness in place of its lines or its
+   * `games` (D35), on a book whose layout stays as it is.
+   */
+  thickness?: ReadonlyMap<string, number>;
   /** The highlighted move, for a page that shows it elsewhere too; the view keeps its own without. */
   walk?: Walk | null;
   onWalkChange?: (walk: Walk) => void;
@@ -177,6 +182,7 @@ export function BookView({
   label,
   zoom: zoomControl,
   success,
+  thickness,
   walk: givenWalk,
   onWalkChange,
   keysAnywhere = false,
@@ -444,10 +450,13 @@ export function BookView({
   );
 
   const maxGames = useMemo(() => Math.max(1, ...tree.nodes.map((node) => node.games ?? 0)), [tree]);
+  const maxThickness = useMemo(() => (thickness ? Math.max(1, ...thickness.values()) : 1), [thickness]);
   const weightOf = (node: ViewNode) =>
-    weight === "games" && node.games !== null
-      ? Math.sqrt(node.games / maxGames)
-      : Math.sqrt(node.size / Math.max(tree.root.size, 1));
+    thickness
+      ? Math.sqrt((thickness.get(node.id) ?? 0) / maxThickness)
+      : weight === "games" && node.games !== null
+        ? Math.sqrt(node.games / maxGames)
+        : Math.sqrt(node.size / Math.max(tree.root.size, 1));
 
   const bind: Bind = (node, extra = "") => ({
     className: `bv-hit${extra ? ` ${extra}` : ""}`,

@@ -265,36 +265,88 @@ From the user's answers to Q21 and Q22, 2026-10-21.
     the row, in place of Reset: it ticks everything, both sides and every date, so every game is
     one click away.
   - The book page's "which games" uses the same panels in its dialog; its side is the book's.
+- D39. **The history tree folds rarely played moves into an "Other" node (Q23).** The user asked
+  for "some kind of top p and top k setup with an expandable 'other' option" so the page doesn't
+  draw too many nodes. On the last year of games the page drew 254 positions from the user's
+  3,264 games, against 5,436 for all of them, so this matters most when "All" is chosen.
+  - At each position, moves are kept, most played first, until they hold 90% of its games or
+    number 8, whichever comes first. The rest fold into one "Other · 5 moves, 23 games" node.
+  - Picking it (a click, or Right with it highlighted) opens it, for that position only, and the
+    whole tree is laid out again with the opened moves in it (answered in chat, 2026-10-24: "the
+    tree would be a much more managable size at the beginning. If the tree left room for
+    unexpanded nodes, the tree size would potentially be unwieldy"). The camera keeps the opened
+    position where it was on screen while the rest eases aside.
+  - Folding happens in `historyTree.ts`, pure and tested, from the tree and the set of opened
+    nodes, so the layout stays a pure function of both and every view draws fewer nodes without
+    knowing why.
+  - Books are drawn whole: their authors chose every move in them ("I agree with books being
+    drawn whole").
+
+
+From the user's answer to Q24, 2026-10-24 ("As for the library book pages and the clashes
+dialogue box, implement them, they looks great").
+
+- D40. **A book's own page in the Library is `book-spread.html`'s layout A, on a whole spread**
+  as D30 frames the history page: the camera doesn't zoom in on any of the Library's second
+  levels. It amends `book-ui.md` D8 for them. The user had liked layout A ("I really like the
+  look of the A style open fold library page") and asked for these changes, all drawn in the
+  mockup:
+  - The left page holds the front matter, then the facts:
+    - the difficulty scale, whose numbers show on hover, not as text;
+    - moves to remember and the average line beside it;
+    - positions, lines and clashes on the row below.
+  - Below the facts are Plain, Your games or Drills (soon), and the games filter, which picks
+    3 months, 12 months or all time at its top. A list fills the rest of the page: the book's
+    contents, or where the user's games leave the book.
+  - The right page holds the board with the current position, then the drawing.
+  - There is no Switch book. "Back to all books" returns to the Library, where another book is
+    chosen ("we will just allow the users to go back to the library to switch to other books
+    instead").
+  - **Clashes is clickable** ("allowing users to further select the lines they want to train").
+    It opens a dialog listing each clash with its board and its moves to tick, with lines,
+    games and score:
+    - A clash is resolved when one of its moves is ticked, and at least one always stays ticked.
+    - A clash below an unticked move doesn't count, since drills never reach it.
+    - Unticked moves stay in the book and its drawing, which dashes them, but drills skip them.
+  - **The count is flagged** while any clash is unresolved ("this would allow users to
+    understand that they may want to consider catering their opening").
+  - How leaderboards compare players who tick different moves is left to the leaderboard's
+    plan ("Ill figure that out when we get there").
+- D41. **An unticked move carries `skip: true` on its `MoveNode`,** in the book's trees
+  (`opening_books.trees`), so the choice is part of the user's copy of the book:
+  - It needs no migration, and it travels with every save, backup, duplicate and copy at
+    sign-in, since `validateTrees` keeps that one flag when it rebuilds the trees.
+  - It goes when its move is removed. A move added later starts ticked, so a clash it makes is
+    flagged again.
+  - A flag on a move that isn't one of the book side's moves at a clash is ignored. So is a
+    clash whose moves are all flagged, since one move always stays ticked.
 
 ## Open questions
 
-Q15–Q22 are settled by D29 and D33–D38.
+Q15–Q24 are settled by D29 and D33–D40.
 
-- Q23. **Should the history tree fold rarely played moves into an "Other" node?** The user asked
-  for "some kind of top p and top k setup with an expandable 'other' option" so the page doesn't
-  draw too many nodes. Since 2026-10-24 the page opens on the last year of games, which drew 254
-  positions from the user's 3,264 games against 5,436 for all of them, so this matters most
-  when "All" is chosen.
-  - **Rec:** at each position of the history tree, keep moves, most played first, until they
-    hold 90% of its games or number 8, whichever comes first, and fold the rest into one
-    "Other · 5 moves, 23 games" node. Picking it (a click, or Right with it highlighted) opens
-    it in place, showing its moves, for that position only. Folding happens in
-    `historyTree.ts`, pure and tested, so every view draws fewer nodes without knowing why.
-  - Books are left whole: their authors chose every move in them.
-  > ME:
-- Q24. **Should a book's own page be a whole spread, like the history page?** The user asked
-  for mockups after seeing the history page ("looks so damn good"); `book-spread.html` draws it
-  with the Italian Game example book. Both pages become this book, with no zoom (as D30's
-  framing), and the other books move under a "Switch book" button. The layouts it draws:
-  - **A, like the history page:** the front matter, the facts, the choice of Plain, Your games
-    or Drills, and a list that fills the rest of the left page; the board and the drawing on
-    the right. With "Your games" the list is "Where you leave this book"; with Plain it is the
-    book's contents, its openings nested in tree order, named from the catalog.
-  - **B, the drawing on the left:** a short title strip and the drawing at the left page's full
-    height; the board, the totals and the list on the right.
-  - **Rec:** A. It reads the same as the history page, so a user learns one layout, and it
-    keeps the drawing beside the board. D36's choices, facts and boxes stay; only where they sit
-    changes. It amends `book-ui.md` D8 for book pages, as D30's framing did for the history page.
+- Q25. **Should we help users get their game history from Chess.com and Lichess?** The user
+  pointed out that many people won't know how to download their games, and asked whether to
+  help directly, link to the sites' own download, or at least explain it, in the import dialog
+  or on a Settings page with a fuller tutorial, and whether people would trust what we tell
+  them.
+  - **Rec:** fetch the games by username, in the browser.
+    - Chess.com's monthly game files allow it: a request from another site gets
+      `Access-Control-Allow-Origin: *` (checked 2026-10-24).
+    - Lichess's API sends the same header. Its games export answered 404 to a request from the
+      agent's machine, so it needs a check from a browser.
+    - The games stream into the same import worker as a file, so nothing reaches our server
+      (D13 holds).
+    - There is no password, token or sign-in, only a public username, which is the easiest
+      thing to trust.
+    - Lichess sends 20 games a second to anonymous requests, so 3,000 games take about
+      2.5 minutes. Chess.com's come a month at a time.
+    - It amends D5, which reads only files. It touches D6, since anyone's username would fetch
+      their games. The username match (D22) limits what is kept, not what is fetched.
+  - **And** a short "Where do I get my games?" panel in the import dialog, for people who prefer
+    a file and for over-the-board games: steps for each site, links only to the sites' own
+    pages, and a plain "we never ask for a password". Settings holds appearance, so the help
+    belongs where the task is.
   > ME:
 
 ## Steps
@@ -469,17 +521,36 @@ deletes them.
 
 **Phase 5. Comparing games with a book**
 
-- [ ] 17. `compareWithBook.ts` (agent): for each game in the book's color, walks the book by
+- [x] 17. `compareWithBook.ts` (agent): for each game in the book's color, walks the book by
   UCI, rejoining it by position on a miss (D27), and records where the game left the book and
   who left it, or that it stayed in the book to the cutoff or ended inside it. At each book
   position it totals games, results, and exits by the user and by the opponent with their
   results (D10).
-- [ ] 18. The book's own page (agent, `src/components/library/LibraryBookPage.tsx`), laid out
+  Done 2026-10-24. A game off the book's move order is followed for `REJOIN_PLIES` (8) plies
+  for a position to rejoin, so 1.c4 Nf6 2.d4 rejoins a 1.d4 Nf6 2.c4 book; otherwise its first
+  move off the book is where it left. Games that reach a line's end, stay in the book to the
+  cutoff, or end inside it are counted apart.
+- [x] 18. The book's own page (agent, `src/components/library/LibraryBookPage.tsx`), laid out
   by D36: the choice of plain, your games (with which games, the panels of D38), or drills
   (disabled until the trainer exists) (D9); the book's facts, difficulty as `bookstore.md` D17
   and the rest as its Q6–Q8 settle them; a "where you leave this book" list, scrolling in its
   own box, that selects its position in the view; the selected position's games and results,
   in a panel that keeps its size.
+  Done 2026-10-24 as D40 lays it out, on a whole spread: every Library second level is one
+  (`WHOLE_SPREAD_CHAPTERS`, `src/lib/book/chapters.ts`).
+  - The facts are `BookFacts`. The measured difficulty (`measuredDifficulty`) is the scale
+    alone; no publisher's difficulty is stored yet, so it has one dot. Coverage stays off the
+    page until the browser has master numbers.
+  - Clashes opens `ClashesDialog`. The ticks live in the trees (D41, `src/lib/books/drills.ts`),
+    the views dash unticked lines, and a resolved clash loses its ring everywhere.
+  - Plain lists the contents (`bookContents`, `src/lib/books/contents.ts`). Your games is chosen
+    by `BookGamesFilter`'s span and the history page's check boxes, and the page opens on it
+    when the user has games.
+  - With games, the drawing is painted by score and drawn as thick as its games (`thickness`)
+    without changing its layout.
+  - The book opens down its main line, as it did. Remove move stays, beside "Open in Explorer".
+  - Not done: a publisher's difficulty, coverage, and the Library's first level showing
+    clashes to resolve.
 - [ ] 19. Success in color (agent), as `deployment.md` D21 lays out: `BookView` takes success per
   position and paints it, leaving layouts unchanged. First ply columns, as D35 says; then
   branch points and spine and ribs; then the metro map's red-to-green mark; then the icicle's

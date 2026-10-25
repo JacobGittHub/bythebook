@@ -63,6 +63,13 @@
   --warning: #b45309;
   /* Things that went right, such as a correct move in a drill. */
   --success: #15803d;
+  /* A book's difficulty, one per whole point from 0 to 5: green through gold to deep red
+     (plans/bookstore.md D17). The number is always written beside the color. */
+  --difficulty-0: #2f7d4f;
+  --difficulty-1: #6f8f2e;
+  --difficulty-2: #b0832a;
+  --difficulty-3: #c25a28;
+  --difficulty-4: #9e2f2f;
 
   /* The move bars (white, draw, black): light, middle and dark in every theme and vibe
      (plans/vibes.md D13). */
@@ -104,6 +111,11 @@
   --destructive-foreground: #12161d;
   --warning: #f0a64a;
   --success: #4ade80;
+  --difficulty-0: #4fb37a;
+  --difficulty-1: #a5bd4c;
+  --difficulty-2: #d8ab4a;
+  --difficulty-3: #e57f4d;
+  --difficulty-4: #dc5d57;
 
   --bar-white: #d6d2c6;
   --bar-draw: #8b8676;
@@ -915,6 +927,9 @@ body {
 /* A move played past the end of the Explorer's chosen book (plans/book-ui.md D17). */
 .bv-edge.out, .bv-seg.out, .bv-track.out, .bv-rib.out, .bv-spine.out { stroke-dasharray: 5 4; }
 .bv-cell.out { stroke-dasharray: 4 3; }
+/* A move drills skip, left unticked at a clash (plans/game-history.md D40). */
+.bv-edge.undrilled, .bv-seg.undrilled, .bv-track.undrilled, .bv-rib.undrilled, .bv-spine.undrilled { stroke-dasharray: 3 3; opacity: 0.45; }
+.bv-cell.undrilled, .bv-node.undrilled { opacity: 0.45; }
 .bv-cell.out:not(.on-path, .on-hover, .is-selected) { stroke: var(--view-edge); stroke-width: 1.4; }
 .bv-spine-num { font-size: 8.5px; fill: var(--muted-foreground); text-anchor: middle; pointer-events: none; }
 

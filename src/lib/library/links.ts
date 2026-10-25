@@ -58,9 +58,12 @@ export function replayUciLine(moves: readonly string[]): Move[] {
   return line;
 }
 
+/** The Library's own page. */
+export const LIBRARY_HREF = "/dashboard/library";
+
 /** The Library, with `bookId` picked on its right page if one is given (`?book=`). */
 export function libraryHref(bookId?: string | null): string {
-  return bookId ? `/dashboard/library?book=${encodeURIComponent(bookId)}` : "/dashboard/library";
+  return bookId ? `${LIBRARY_HREF}?book=${encodeURIComponent(bookId)}` : LIBRARY_HREF;
 }
 
 /** The game history page, a second level of the Library (plans/game-history.md D30). */

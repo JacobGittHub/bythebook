@@ -42,8 +42,8 @@ The dashboard is an open book on a desk (`plans/book-ui.md`), drawn first in
   (`explorer.md`). The one page that isn't a spread, the trainer's scaffold
   (`/dashboard/train/<id>`), is wrapped in `InterimSpread`, which lays it across both pages.
 - **A page below a chapter's own page is its second level** (`levelAt`,
-  `src/lib/book/chapters.ts`), such as a Library book's page. Unless it is listed in
-  `WHOLE_SPREAD_PAGES` (`zoomsAt`), in the spread a camera zooms in
+  `src/lib/book/chapters.ts`), such as a Bookstore book's page. Unless its chapter is listed in
+  `WHOLE_SPREAD_CHAPTERS` (`zoomsAt`), in the spread a camera zooms in
   on it (`zoomCamera`, `src/lib/book/camera.ts`): the right page fills the window but for
   `ZOOM_SHOWN` of the left page at its left edge, and the book runs on past its bottom. The
   frame sets the camera as the book's transform; the book itself keeps its layout. The camera
@@ -67,10 +67,11 @@ The dashboard is an open book on a desk (`plans/book-ui.md`), drawn first in
 - **An interim second level,** the trainer's scaffold, puts its content on the right page and a
   way back on the left. The one-page form has no camera: a second level shows only its right page, with the way back
   in its running head and what it holds below after its body.
-- **A whole spread's second level** (`WHOLE_SPREAD_PAGES`), the game history, turns down from
-  its chapter as any second level does but isn't zoomed in on: its pages are laid out as a
-  first level's, with its own way back in the left page's running head, and the one-page form
-  stacks both halves (an exception to `plans/book-ui.md` D8, from `plans/game-history.md` D30).
+- **A whole spread's second level** (`WHOLE_SPREAD_CHAPTERS`), every second level of the
+  Library (the game history and the books' pages), turns down from its chapter as any second
+  level does but isn't zoomed in on: its pages are laid out as a first level's, with its own way
+  back in the left page's running head, and the one-page form stacks both halves (an exception
+  to `plans/book-ui.md` D8, from `plans/game-history.md` D30 and D40).
 - **Where everything sits comes from `layoutBook`** (`src/lib/book/layout.ts`), whose property
   tests hold its invariants. The frame draws it with CSS: `bookFrameCss`
   (`src/lib/book/frameCss.ts`) turns the layout's constants into custom properties, so the
@@ -223,15 +224,34 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   server, since a Suspense boundary around the page would start the turn without it. The first
   book shows when none is named. Where the one-page form stacks the halves, on a phone, the
   picked book doesn't show and a row is a link to the book's own page.
-- **Level 2** (`LibraryBookPage.tsx`, `/dashboard/library/<id>`) is a book's own page, which
-  the camera zooms in on. The part of the left page in view lists the books under "Back to all
-  books", which returns with the book it is on picked (`libraryHref`), and another book
-  re-inks the right page without a turn. The right page's first
-  screen is the book, the five views as buttons, and the board; below it, "About this book"
-  has its measures and its credit (and, for a store book, a link back to its Bookstore page).
-  Its folio gives the credit in short (`originFolio`) and the positions against the limit.
-  Success rates, difficulty and leaderboards join "About this book" with the trainer and game
-  history.
+- **Level 2** (`LibraryBookPage.tsx`, `/dashboard/library/<id>`) is a book's own page on a whole
+  spread (`plans/game-history.md` D40, `plans/mockups/book-spread.html`'s layout A). The left
+  page's head has "Back to all books", which returns with the book picked (`libraryHref`);
+  another book is chosen there. Below the title come its tags, its origin and credit
+  (`OriginLine`, with the way to a store book's page), Open in Explorer, Train and the "⋯" menu,
+  then the facts (`BookFacts`): the measured difficulty (`measuredDifficulty`) as a dot on a
+  scale of `--difficulty-*` steps whose number shows on hover, the moves to remember
+  (`countOwnMoves`) and the average line, then positions, lines and Clashes. Clashes opens
+  `ClashesDialog` and is flagged while any clash is left to resolve. Then Plain, Your games or
+  Drills (soon), and a list that fills the rest of the page: the book's contents
+  (`bookContents`, each opening it names in tree order), or with Your games the totals and
+  where the user's games leave the book (`compareWithBook`), chosen by `BookGamesFilter`'s span
+  (3 months, 12 months or all time, `recentGames`) and the history page's time and source boxes.
+  The page opens on Your games when the user has games. The right page is the current position
+  (`BookPosition`: the board with the highlighted or hovered move's arrow, Remove move, Open in
+  Explorer, the user's results, and boxes of fixed height for the next moves, unticked ones
+  tagged "not drilled", and where games left the book there), then the view picker, zoom and
+  the book in its view, walked with the arrow keys from anywhere on the page and, with Your
+  games, painted by score (`success`) and as thick as its games (`thickness`). The folios give
+  the book's place in the Library, the credit in short (`originFolio`) and the positions
+  against the limit.
+- **The clashes dialog** (`ClashesDialog.tsx`, D40) lists the book's clashes, to resolve or
+  all, each with its state (`clashesOf`, `src/lib/books/drills.ts`). For the chosen one it shows
+  the board with an arrow for each ticked move, "Keep only the most played" and "Tick all", and a
+  box per move with its lines and, with games, the user's games, results and score. One move
+  always stays ticked. "Keep the most played move at every clash" picks by the user's games,
+  then by lines (`mostPlayed`). Changes are a draft until Save choices, which writes the
+  unticked moves' `skip` flags into the book (`withPicks`) and saves it like any edit.
 - **The game history page** (`GameHistoryPage.tsx`, `/dashboard/library/history`,
   `plans/game-history.md` D30, D38) is a whole spread, reached by Open game history. The left
   page is "Your games": the side (Both, White or Black), the time controls and the sources with

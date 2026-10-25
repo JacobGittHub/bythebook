@@ -47,7 +47,8 @@ test.describe("Library, as a guest", () => {
     await page.getByRole("link", { name: "Open book page" }).click();
     await expect(page).toHaveURL(/\/dashboard\/library\/[^/?]+$/);
     await expect(page.getByRole("heading", { name: "Queen's pawn", level: 1 })).toBeVisible();
-    await page.getByRole("radio", { name: "Metro map" }).click();
+    await page.getByRole("combobox", { name: "Book view" }).click();
+    await page.getByRole("option", { name: "Metro map" }).click();
     await expect(page.getByRole("img", { name: "Metro map of Queen's pawn" })).toBeVisible();
     await page.getByRole("button", { name: "Zoom in" }).click();
     await expect(page.getByLabel("Zoom level")).toHaveText("125%");
@@ -128,17 +129,16 @@ test.describe("Library as a spread, as a guest", () => {
     expect(sideways).toBe(0);
   });
 
-  test("a book's page lists the books, to switch between them and go back", async ({ page }) => {
+  test("a book's page goes back to the Library with the book picked, where another is chosen (plans/game-history.md D40)", async ({ page }) => {
     await openLibrary(page);
     await createPastedBook(page, "First book");
     await createPastedBook(page, "Second book", "1. e4 e5");
-    await page.getByRole("link", { name: "Open book page" }).click();
-    await expect(page.getByRole("heading", { name: "Second book", level: 1 })).toBeVisible();
-    await expect(page.locator(".book-folio", { hasText: /^Book \d/ })).toHaveText("Book 1 of 2");
-
     await bookList(page).getByRole("link", { name: /First book/ }).click();
+    await page.getByRole("link", { name: "Open book page" }).click();
     await expect(page.getByRole("heading", { name: "First book", level: 1 })).toBeVisible();
     await expect(page.locator(".book-folio", { hasText: /^Book \d/ })).toHaveText("Book 2 of 2");
+    // The page holds this book alone, with no list of the others.
+    await expect(bookList(page)).toHaveCount(0);
 
     await page.getByRole("link", { name: "Back to all books" }).click();
     await expect(page).toHaveURL(/\/dashboard\/library\?book=/);
@@ -147,25 +147,41 @@ test.describe("Library as a spread, as a guest", () => {
     await expect(bookList(page).locator('[aria-current="true"]')).toContainText("First book");
   });
 
-  test("a book's page fits its first screen at every spread window size, with what lies below in sight", async ({ page }) => {
+  test("a book's page fits its spread at every spread window size, on both pages", async ({ page }) => {
     await openLibrary(page);
     await createPastedBook(page, "Fitted book");
     await page.getByRole("link", { name: "Open book page" }).click();
     await expect(page.getByRole("heading", { name: "Fitted book", level: 1 })).toBeVisible();
-    const right = page.locator('[data-slot="page"][data-side="right"]');
     for (const size of BOOK_WINDOW_SIZES.filter((size) => size.width >= SPREAD_MIN_WIDTH)) {
       await page.setViewportSize(size);
       await expect(page.locator(".book-frame")).toHaveAttribute("data-form", "spread");
-      for (const part of [".book-fold", ".book-page-body"]) {
-        const overflow = await right.locator(part).evaluate((el) => el.scrollHeight - el.clientHeight);
-        expect(overflow, `${size.name}: ${part}`).toBeLessThanOrEqual(0);
+      for (const side of ["left", "right"]) {
+        const body = page.locator(`[data-slot="page"][data-side="${side}"] .book-page-body`);
+        const overflow = await body.evaluate((el) => el.scrollHeight - el.clientHeight);
+        expect(overflow, `${size.name}: ${side}`).toBeLessThanOrEqual(0);
       }
-      // The first screen ends above the window's bottom, and the top of what lies below shows.
-      const fold = await right.locator(".book-fold").evaluate((el) => el.getBoundingClientRect().bottom);
-      const below = await page.getByRole("heading", { name: "About this book" }).evaluate((el) => el.getBoundingClientRect().top);
-      expect(fold, size.name).toBeLessThan(size.height);
-      expect(below, size.name).toBeLessThan(size.height);
     }
+  });
+
+  test("Clashes opens a dialog whose ticked moves are kept, and the flag counts what is left (plans/game-history.md D40, D41)", async ({ page }) => {
+    await openLibrary(page);
+    // White chooses at the start (1.d4 or 1.e4) and after 1.d4 d5 (2.c4 or 2.Nf3): two clashes.
+    await createPastedBook(page, "Choices", "1. d4 (1. e4 e5 2. Nf3) 1... d5 2. c4 (2. Nf3 Nf6)");
+    await page.getByRole("link", { name: "Open book page" }).click();
+    const clashes = page.getByRole("button", { name: /to resolve/ });
+    await expect(clashes).toHaveText("22 to resolve");
+
+    await clashes.click();
+    const dialog = page.getByRole("dialog", { name: "Clashes in Choices" });
+    await dialog.getByRole("button", { name: "Keep the most played move at every clash" }).click();
+    await expect(dialog.getByText("All resolved")).toBeVisible();
+    await dialog.getByRole("button", { name: "Save choices" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole("button", { name: /All resolved/ })).toBeVisible();
+
+    // The choice is kept with the book, through a reload.
+    await page.reload();
+    await expect(page.getByRole("button", { name: /All resolved/ })).toBeVisible();
   });
 
   test("on a phone, where the halves stack, a book's row opens its page", async ({ page }) => {

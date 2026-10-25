@@ -10,6 +10,11 @@ export type MoveNode = {
   uci: string | null;
   fen: string;
   children: MoveNode[];
+  /**
+   * A move the book's owner left unticked at a clash, which drills skip with the lines after it
+   * (plans/game-history.md D41). It stays in the book and its drawing.
+   */
+  skip?: true;
 };
 
 export type MoveNodeState = "default" | "highlighted" | "active" | "transient";

@@ -14,7 +14,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/shadcn/toggle-group";
 import { useGameImport } from "@/context/GameImport";
 import { useHistoryGames } from "@/hooks/useHistoryGames";
 import { highlightIndex, type Walk } from "@/lib/books/views/camera";
-import { buildViewTree, moveLabel, pathTo, type ViewNode, type ViewTree } from "@/lib/books/viewTree";
+import { buildViewTree, deepestOf, moveLabel, pathTo, type ViewNode } from "@/lib/books/viewTree";
 import { applyUci, uciToSan } from "@/lib/chess/applyUci";
 import { ALL_GAMES, chooseGames, controlName, recentGames, type HistoryFilter, type HistorySide } from "@/lib/history/historyFilter";
 import { buildHistoryTree, gamesThrough, scoreOf, type PositionNames } from "@/lib/history/historyTree";
@@ -34,15 +34,6 @@ const MOVES_SHOWN = 6;
 const count = (n: number) => n.toLocaleString("en-US");
 const games = (n: number) => `${count(n)} game${n === 1 ? "" : "s"}`;
 const percent = (score: number | null) => (score === null ? "–" : `${Math.round(score * 100)}%`);
-
-/** The position `id` names, or the deepest position on its line that the tree still has. */
-function deepestOf(tree: ViewTree, id: string): ViewNode {
-  for (let at = id; ; at = at.slice(0, at.lastIndexOf(":"))) {
-    const node = tree.byId.get(at);
-    if (node) return node;
-    if (!at.includes(":")) return tree.root;
-  }
-}
 
 /**
  * The game history page, a second level of the Library (plans/game-history.md D30, D38): on the
@@ -298,7 +289,8 @@ export function GameHistoryPage() {
   );
 }
 
-function Key({ children }: { children: string }) {
+/** A key on the keyboard, in the hints under a drawing. */
+export function Key({ children }: { children: string }) {
   return <kbd className="rounded-sm border border-b-2 bg-card px-1 text-[11px] text-foreground">{children}</kbd>;
 }
 

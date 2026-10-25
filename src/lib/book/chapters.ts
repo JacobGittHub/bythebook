@@ -2,7 +2,7 @@
 // book's pages in `NAV_ITEMS` order, and a page below one, such as a Library book's page, is
 // in its chapter, as its second level (D8).
 
-import { GAME_HISTORY_HREF } from "@/lib/library/links";
+import { LIBRARY_HREF } from "@/lib/library/links";
 
 /**
  * The index of the chapter `pathname` is in: the one whose address is the path, or the
@@ -26,14 +26,15 @@ export function levelAt(pathname: string, href: string): Level {
 }
 
 /**
- * Second levels shown as a whole spread, which the camera doesn't zoom in on (an exception to D8):
- * the game history, whose left page holds the games (plans/game-history.md D30).
+ * Chapters whose second levels are shown as a whole spread, which the camera doesn't zoom in on
+ * (an exception to D8): the Library, whose game history and books' pages use both pages
+ * (plans/game-history.md D30, D40).
  */
-export const WHOLE_SPREAD_PAGES: readonly string[] = [GAME_HISTORY_HREF];
+export const WHOLE_SPREAD_CHAPTERS: readonly string[] = [LIBRARY_HREF];
 
 /** Whether the camera zooms in on the right page at `pathname` (D8): a second level, unless it is a whole spread. */
 export function zoomsAt(pathname: string, level: Level): boolean {
-  return level === 2 && !WHOLE_SPREAD_PAGES.includes(pathname);
+  return level === 2 && !WHOLE_SPREAD_CHAPTERS.some((href) => pathname.startsWith(`${href}/`));
 }
 
 /** How far into the book chapter `at` of `pages` is, from 0 at the first to 1 at the last. */

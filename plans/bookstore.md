@@ -1,6 +1,6 @@
 # Bookstore, repertoires and library files
 
-Status: deciding · Updated: 2026-10-21 · Depends on: deployment.md
+Status: deciding · Updated: 2026-10-24 · Depends on: deployment.md
 
 **Goal:** give users default books to pick from, repertoires that combine books, and files
 that move a library in and out of the app.
@@ -287,6 +287,37 @@ user's own books too, so the field is the same everywhere. Then:
 | A book's own page (Library) | everything: the description, difficulty and the publisher's, positions / limit, lines, the average and longest line, clashes, coverage, unconnected; for a store copy also the rating, saves, publisher and the link to reviews |
 | Bookstore card (D8) | as D8: title, publisher, rating, saves, positions / limit, difficulty, coverage beside the depth, unconnected |
 | A store book's page | as a book's own page, with the reviews below |
+
+> ME:
+
+### Q9. How is a store book's page laid out?
+
+The user wasn't sure about a store book's page reading almost the same as its Library copy's
+(`game-history.md` D40), and asked for layouts that put the book and its publisher before the
+reader's own numbers, with reviews and the leaderboard on the left in at least one
+(2026-10-24). `plans/mockups/bookstore-spread.html` draws them on a whole spread. Each keeps the
+board and the drawing on the right page:
+
+- **A, the book first:** a title page with what the book covers, a subtitle, the rating and
+  Save to library; a short blurb; the chapters, each opening the book names; and the
+  publisher, with a line about them and three more of their books. Publishers would need a
+  short bio, which this plan doesn't have yet.
+- **B, readers:** a short title block and the facts, then the reviews and the leaderboard
+  (D18), each scrolling in its own box. The leaderboard ranks players who chose to show their
+  drill stats (D10) by lines known, accuracy and drills, this month or all time.
+- **C, played by masters:** a list of masters, each with how many of their moves as White,
+  while still in the book's lines, the book has, and how far they stay in it. Picking one
+  paints the drawing with their games.
+  - The user wants this section later ("it would be cool to see if a book is similar to what
+    someone like spassky or capablanca or hikaru played/plays").
+  - It needs games tagged by player, which `position_cache` doesn't have; Lichess's masters
+    explorer can't filter by player. A script would read collections of master games once,
+    like the example books, after their licences are checked. It would get a plan of its own.
+- **Like the Library:** the earlier layout, for comparison.
+
+**Rec:** A, with C's masters section added below the chapters once its data exists. A is the
+one that sells the book, and a reader who wants the reviews reaches them from the rating, as
+today. B fits better once the leaderboard has real players in it.
 
 > ME:
 

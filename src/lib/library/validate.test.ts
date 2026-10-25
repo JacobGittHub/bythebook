@@ -35,6 +35,14 @@ describe("validateTrees", () => {
     expect(tree.children[0].fen).toBe(AFTER_E4);
   });
 
+  it("keeps a move's skip flag, and nothing else that isn't a move (plans/game-history.md D41)", () => {
+    const input = [{ fen: START_FEN, children: [{ uci: "e2e4", skip: true }, { uci: "d2d4", skip: "yes", note: "x" }] }];
+    const [tree] = expectTrees(input).trees;
+    expect(tree.children[0].skip).toBe(true);
+    expect(tree.children[1]).not.toHaveProperty("skip");
+    expect(tree.children[1]).not.toHaveProperty("note");
+  });
+
   it("refuses an illegal move and says where it is", () => {
     const result = validateTrees([{ fen: START_FEN, children: [{ uci: "e2e4", children: [{ uci: "e2e4" }] }] }]);
     expect(result).toEqual({ ok: false, reason: "invalid", detail: "e2e4 isn't legal after e4." });

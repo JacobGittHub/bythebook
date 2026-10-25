@@ -20,6 +20,7 @@ type MoveNode = {
   uci: string | null;  // null at the root
   fen: string;
   children: MoveNode[];
+  skip?: true;         // unticked at a clash: drills skip it and the lines after it
 };
 ```
 
@@ -36,7 +37,14 @@ type MoveNode = {
   list of trees: positions against the limit, the unconnected-lines flag, leaf depths,
   clashes, and coverage of master games. A book is still one tree today; the list is the
   shape `plans/bookstore.md` (D16) moves books to. The small visualization pages show the
-  first four; coverage needs master numbers and is called only by tests so far.
+  first four; coverage needs master numbers and is called only by tests so far. The measured
+  difficulty (`measuredDifficulty`, `plans/bookstore.md` D17) comes from the book's own moves
+  and its average line.
+- **The moves to drill live in the tree.** At a clash, where the book's side has more than one
+  move, the owner ticks the moves to drill, and each unticked one carries `skip: true`
+  (`src/lib/books/drills.ts`, `plans/game-history.md` D41). The flag is the one field
+  `validateTrees` keeps besides the moves, so it travels with every save, backup and copy, and
+  goes with its move when the move is removed. A flag anywhere but at a clash is ignored.
 - **Stats are transposition-aware anyway.** `user_position_stats` is keyed by
   `toPositionKey(fen)`, which is the FEN without the clock fields. The same position reached
   by different move orders therefore aggregates into one row.

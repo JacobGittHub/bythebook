@@ -52,9 +52,12 @@ export function markClasses(marks: ViewMarks, id: string): string {
   }${marks.next.has(id) ? " is-next" : ""}${marks.highlightId === id ? " is-highlighted" : ""}`;
 }
 
-/** " out" for a move played past the end of the Explorer's chosen book, whose edge is dashed. */
+/**
+ * " out" for a move played past the end of the Explorer's chosen book, whose edge is dashed, and
+ * " undrilled" for a move drills skip (plans/game-history.md D40), dashed and faded.
+ */
 export function outClass(node: ViewNode): string {
-  return node.out ? " out" : "";
+  return `${node.out ? " out" : ""}${node.undrilled ? " undrilled" : ""}`;
 }
 
 /** The fill class for whose move a node is. */

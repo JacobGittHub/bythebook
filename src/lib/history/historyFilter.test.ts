@@ -71,6 +71,8 @@ describe("choosing games", () => {
     expect(recentGames(older)).toEqual({ ...ALL_GAMES, from: "2025-02" });
     expect(chooseGames(older, recentGames(older)).map((g) => g.record.playedAt)).toEqual(["2025-03-10", "2025-05-01", "2025-07-20", "2025-04-02", "2026-01-05"]);
     expect(recentGames([game({ playedAt: null })])).toEqual(ALL_GAMES);
+    // A book's page also picks 3 months.
+    expect(recentGames(older, 3)).toEqual({ ...ALL_GAMES, from: "2025-11" });
   });
 
   it("puts keys back in and leaves them out", () => {

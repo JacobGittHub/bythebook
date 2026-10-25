@@ -65,11 +65,11 @@ function addMonths(month: string, by: number): string {
 }
 
 /**
- * The filter the history page opens on: the last `RECENT_MONTHS` months of games, counted back
- * from the newest game rather than today, so an old history still opens full; every game when
- * they span no more than that.
+ * The last `months` months of games, counted back from the newest game rather than today, so an
+ * old history still opens full; every game when they span no more than that. With
+ * `RECENT_MONTHS` it is the filter the history page opens on.
  */
-export function recentGames(games: readonly HistoryGame[]): HistoryFilter {
+export function recentGames(games: readonly HistoryGame[], months: number = RECENT_MONTHS): HistoryFilter {
   let first: string | null = null;
   let last: string | null = null;
   for (const game of games) {
@@ -79,7 +79,7 @@ export function recentGames(games: readonly HistoryGame[]): HistoryFilter {
     if (!last || month > last) last = month;
   }
   if (!first || !last) return ALL_GAMES;
-  const from = addMonths(last, 1 - RECENT_MONTHS);
+  const from = addMonths(last, 1 - months);
   return from > first ? { ...ALL_GAMES, from } : ALL_GAMES;
 }
 
