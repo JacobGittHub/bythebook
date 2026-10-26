@@ -1,6 +1,6 @@
 # Bookstore, repertoires and library files
 
-Status: deciding · Updated: 2026-10-25 · Depends on: deployment.md
+Status: deciding · Updated: 2026-10-26 · Depends on: deployment.md
 
 **Goal:** give users default books to pick from, repertoires that combine books, and files
 that move a library in and out of the app.
@@ -190,7 +190,7 @@ From the user's answers on 2026-10-06.
   - The right page keeps the board and the drawing.
   - Until there are reviews and a leaderboard, the section says so in place of them. It has no
     box for writing a review (D22, as amended).
-  - "Played by masters" (layout C) is later work, with a plan of its own: it needs games tagged
+  - "Played by masters" (layout C) is later work, with a plan of its own (`master-books.md`): it needs games tagged
     by player, which `position_cache` doesn't have.
 - D25. **Names, titles, descriptions and reviews are checked by their shape and a word list**
   (Q10, the user's answer of 2026-10-25: "Start with 1 and 2 for now").
@@ -205,10 +205,46 @@ From the user's answers on 2026-10-06.
     reviews on save. A text that fails is refused with a plain message, not cleaned.
   - A model and a report button, the third and fourth layers Q10 described, wait. Notes keep
     what was found about models for when they're needed.
+- D26. **A username can't contain the word "verified"** (Q3, the user's answer of
+  2026-10-25: "Yes"). `USERNAME_PATTERN` already keeps check marks out, so the word is what
+  remains; it is refused at sign-up, and at rename when there is one. Done 2026-10-25
+  (`claimsVerified`, `src/lib/validators/schemas.ts`).
 
 ## Open questions
 
 ### Q1. Which outside source do default books come from?
+> ME: 10/26 I want to find good book recommendations that involve few clashes. This would be similar to something like chessable opening recommendations, where users are given few/one choice for their moves while blacks responses are still explored. This kind of opening would be much more relevant to practice. One way that I want to try and obtain these openings is by potentially searching the lichess masters db with a filter set to some master player, for example, say daniel naroditsky, with black pieces, against the english opening. Then we collect the relevant lines he plays, probably with clashes becasue real chess players like to have a diverse repetoire, and I prune the branches I want to prune. Then i would publish the book from the bythebook official account as an opening like "Naroditzky: black against the english"  or something like that.
+
+**Player books, tried (2026-10-26)** after the 10/26 note. The masters database can't be
+filtered by player, so `npm run books:players` grows books from players' public online games
+instead (Chess.com months, a Lichess export), with `growBook`. The player's side keeps its
+most played moves up to a share (top p), the other side every reply above a share. Each book
+has a position budget, and the fewest games a move needs is the lowest that fits it, so lines
+end where the games thin out. Ten drafts are in the publishing account's library. Each name
+says whose games it was grown from, and each description says the player had no part in it.
+The pipeline these lead to is `master-books.md`. Speed Chess Championship games aren't tagged in Chess.com's archives, so Hikaru's White book
+uses his games against players rated 3000 or more.
+
+| Draft | Games | Positions | Average line | Clashes | Player's games to a line's end | Master games covered |
+|---|---|---|---|---|---|---|
+| Hikaru vs 1.e4, tight (top p 0.5) | 6,078 | 297 | 10.7 | 10 | 12% | 5% |
+| Hikaru vs 1.e4, mid (0.8) | 6,078 | 583 | 9.6 | 36 | 35% | 23% |
+| Hikaru vs 1.e4, wide (0.95) | 6,078 | 931 | 9.4 | 57 | 45% | 26% |
+| Hikaru White, tight (0.5) | 4,614 | 270 | 12.8 | 5 | 6% | 22% |
+| Hikaru White, wide (0.9) | 4,614 | 966 | 8.5 | 74 | 40% | 50% |
+| Rozman Caro-Kann (0.7) | 1,986 | 454 | 11.7 | 19 | 28% | 8% |
+| Naroditsky KID, tight (0.5) | 7,422 | 295 | 15.3 | 0 | 15% | 5% |
+| Naroditsky KID, wide (0.9) | 7,422 | 991 | 14.7 | 60 | 37% | 10% |
+| Rosen gambits, White (0.85) | 502 | 414 | 11.0 | 22 | 44% | 38% |
+| Rosen gambits, Black (0.85) | 933 | 477 | 13.8 | 19 | 38% | 11% |
+
+- A wider top p catches more of the player's games but spends the budget on breadth, so lines
+  shorten (Hikaru's White book: 12.8 plies at 0.5, 8.5 at 0.9).
+- Master coverage stays low for a narrow repertoire: online blitz opponents and masters reply
+  differently, and `position_cache` stops short of many deep positions.
+- A game's opening is its deepest catalog name (`openingOf`), since "King's Indian Defense" is
+  named at 3.Nc3, before Black's choice. A gambit is the first position named one, offered by
+  the side whose move reached it (`gambitOf`).
 
 Was "Where do the default books come from?". D7 holds what is settled.
 
@@ -286,22 +322,7 @@ lines on a few plies from master statistics where wanted. Wikibooks fills gaps, 
 
 The Bookstore is drawn in `docs/design/mockups/bookstore.html` (2026-10-07): cards to browse, a page
 per book, and the example books as ByTheBook's store books. Drawing it raised Q2–Q4. Q2 and
-Q4 are settled by D19 and D20, and Q10 by D25.
-
-### Q3. Should display names that imitate the verified mark be refused?
-
-The mark sits outside the name's highlight (D8, as amended), so "ByTheBook ✓" already reads
-as a different publisher from ByTheBook, and its label says Unverified. The mockup draws such
-a card.
-
-**Recommendation:** yes. Refuse check-like symbols (✓ ✔ ☑) and the word "verified" in
-display names, checked at sign-up and rename together with the profanity check (Notes), once
-other people can publish (D3).
-> ME: I want to know what checks we should use to determine if an account name, book title, book description, or book review should be allowed or not. Should we use a machine learning model, or maybe JEV? how do these profanity checks work at scale?
-
-Usernames already allow only letters, digits, `_` and `-` (`USERNAME_PATTERN`, Notes), so no
-name can hold a check mark today; what remains is the word "verified", which D25's word list
-could refuse in names. The user's question about checks was Q10, now D25.
+Q4 are settled by D19 and D20, Q10 by D25 and Q3 by D26.
 
 ### Book statistics (raised 2026-10-21)
 
@@ -351,7 +372,7 @@ limit (D15) checked on save, restore and the copy at sign-in, all in `src/lib/li
       `review_book`, `delete_review` and `count_book_save`. `review_book` refuses an account
       without a saved copy (D22, as amended). The description and the publisher's difficulty
       are columns on `opening_books`. The limit change is in the code.
-- [ ] (user) Run it, then `npm run db:types`. It marks the publishing account verified by its
+- [x] (user) Run it, then `npm run db:types`. It marks the publishing account verified by its
       username, "ByTheBook", so no email is needed.
 - [x] (agent) The text checks (D25): one module that folds a text and matches it against the
       word list, tested in Node, used by the Zod schemas for usernames, book titles,
@@ -362,6 +383,8 @@ limit (D15) checked on save, restore and the copy at sign-in, all in `src/lib/li
       they have fields.
 - [ ] (agent) The publishing script (waits on Q1): builds a draft on the publishing account
       from its source and rules, and publishes it when the user says so.
+      Drafts can be written now (2026-10-26): `npm run books:players -- --save` saves player
+      books there (`src/lib/db/publishing.ts`). Publishing waits on Q1 and the store's back end.
 - [ ] (user) Approve the first drafts.
 
 ### Phase 4. Bookstore page

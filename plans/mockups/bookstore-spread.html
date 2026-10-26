@@ -1002,7 +1002,7 @@ function readersSect() {
   const none = state.readers === "none", rev = state.rtab !== "leaders", month = state.board === "month";
   const tabs = `<div class="seg" role="tablist" aria-label="Readers"><button role="tab" data-rtab="reviews" aria-selected="${rev}" aria-pressed="${rev}">Reviews<span class="fig">${none ? 0 : 31}</span></button><button role="tab" data-rtab="leaders" aria-selected="${!rev}" aria-pressed="${!rev}">Leaderboard</button></div>`;
   const tools = rev
-    ? `<span class="rlimit">${none ? "No ratings yet" : "128 ratings"}</span><span class="grow"></span><span class="rlimit">Readers review it from their library</span>`
+    ? `<span class="rlimit">${none ? "No ratings yet" : "128 ratings"}</span>`
     : `<span class="soon">Comes with the trainer</span><span class="grow"></span>${none ? "" : `<div class="seg" role="group" aria-label="Leaderboard span"><button data-board="month" aria-pressed="${month}">This month</button><button data-board="all" aria-pressed="${!month}">All time</button></div>`}`;
   const body = rev
     ? none ? `<p class="empty">No reviews yet. Readers who save this book can rate it and write one review each, up to 200 characters, from its page in their library.</p>` : reviewsHtml()

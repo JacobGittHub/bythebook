@@ -87,7 +87,6 @@ test.describe("Bookstore, as a guest", () => {
 
     const readers = page.getByRole("region", { name: "Reviews and leaderboard" });
     await expect(readers.getByText(/^No reviews yet\./)).toBeVisible();
-    await expect(readers.getByText("Readers review it from their library")).toBeVisible();
     await expect(page.getByRole("button", { name: /review/i })).toHaveCount(0);
     await readers.getByRole("radio", { name: "Leaderboard" }).click();
     await expect(readers.getByText(/^No one is on the leaderboard yet\./)).toBeVisible();

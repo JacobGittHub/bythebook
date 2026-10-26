@@ -57,6 +57,24 @@ describe("growBook", () => {
     expect(result.unknown).toBe(4);
   });
 
+  it("with top p, keeps the book's most played moves until they make up that share", async () => {
+    const narrow = await growBook({ ...rules, topP: 0.75 }, masters);
+    // 3.Nc3 alone is 80% after 2...e6; after 2...c6 and 2...dxc4 the most played is under 75%.
+    expect([...narrow.lines].sort()).toEqual([
+      "d4 d5 c4 c6 Nc3",
+      "d4 d5 c4 c6 Nf3",
+      "d4 d5 c4 dxc4 Nf3",
+      "d4 d5 c4 dxc4 e4",
+      "d4 d5 c4 e6 Nc3 Be7",
+      "d4 d5 c4 e6 Nc3 Nf6",
+    ]);
+    const wide = await growBook({ ...rules, topP: 0.9 }, masters);
+    expect(wide.lines).toContain("d4 d5 c4 e6 Nf3");
+    // A move played fewer than `minGames` times stays out, however wide the share.
+    const strict = await growBook({ ...rules, topP: 1, minGames: 90 }, masters);
+    expect(strict.lines).not.toContain("d4 d5 c4 dxc4 Nf3");
+  });
+
   it("stops at the depth and the position limit", async () => {
     expect((await growBook({ ...rules, maxPly: 4 }, masters)).lines).toEqual([
       "d4 d5 c4 e6",

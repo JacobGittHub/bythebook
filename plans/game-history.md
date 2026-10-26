@@ -1,6 +1,6 @@
 # Game history import
 
-Status: active · Updated: 2026-10-25 · Depends on: deployment.md
+Status: active · Updated: 2026-10-26 · Depends on: deployment.md
 
 **Goal:** let a user import their own games and see how they have done in their openings.
 **Done when:** a user can import a PGN file of their games in the browser, see their games and
@@ -590,6 +590,9 @@ deletes them.
   (the month and export addresses, pacing, waiting after a 429), and the browser part that
   streams each response into the import worker as text. Then the dialog, as the mockup is
   approved.
+  The addresses are done (2026-10-26, tested), for `npm run books:players` (`bookstore.md`
+  Q1), which downloads Chess.com months and a Lichess export with them from Node. Pacing and
+  the browser part are still to do.
 - [ ] 25. Settings' tutorial (agent): the steps for each site's download, linking to the
   sites' own pages.
 

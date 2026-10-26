@@ -1,8 +1,10 @@
-// Grows a book from master statistics (plans/bookstore.md, Q1): from a root line, the book's
-// own side plays its most played move and the other side gets every reply masters played
-// often enough, breadth first, until a depth or the position limit. The numbers come from a
-// lookup, which `npm run books:examples` answers from `position_cache` without calling
-// Lichess, so where the cache stops the book stops. Pure apart from the lookup.
+// Grows a book from game statistics (plans/bookstore.md, Q1): from a root line, the book's
+// own side plays its most played move (or, with `topP`, its most played moves up to a share of
+// the games) and the other side gets every reply played often enough, breadth first, until a
+// depth or the position limit. The numbers come from a lookup: `npm run books:examples`
+// answers it from `position_cache` without calling Lichess, so where the cache stops the book
+// stops, and `npm run books:players` from one player's games (`playerGames.ts`). Pure apart
+// from the lookup.
 
 import { Chess } from "chess.js";
 import { START_FEN } from "@/lib/chess/fen";
@@ -19,6 +21,12 @@ export type GrowRules = {
   /** No position deeper than this ply is added. */
   maxPly: number;
   maxPositions: number;
+  /**
+   * Where the book's own side moves, keep its most played moves until they make up this share
+   * of the position's games (top p), each played at least `minGames` times. Without it, only
+   * the most played move is kept, so the book has no clashes.
+   */
+  topP?: number;
   /**
    * Lines that start the book before it grows, as SAN from the start, such as the catalog's
    * named lines ("catalog+masters"). Each of their leaves is grown from.
@@ -55,6 +63,22 @@ function play(fen: string, uci: string): { san: string; fen: string } | null {
   } catch {
     return null;
   }
+}
+
+type Counted = { uci: string; games: number };
+
+/** The book's own moves at a position, most played first (`GrowRules.topP`). */
+function ownMoves(sorted: readonly Counted[], total: number, rules: GrowRules): Counted[] {
+  const playable = sorted.filter((move) => move.games >= rules.minGames);
+  if (rules.topP === undefined) return playable.slice(0, 1);
+  const kept: Counted[] = [];
+  let share = 0;
+  for (const move of playable) {
+    if (kept.length && share >= rules.topP) break;
+    kept.push(move);
+    share += move.games / total;
+  }
+  return kept;
 }
 
 function replay(sans: readonly string[]): Item | null {
@@ -113,7 +137,7 @@ export async function growBook(rules: GrowRules, lookup: GrowLookup): Promise<Gr
         const chosen = own
           ? known.size
             ? []
-            : sorted.slice(0, 1).filter((move) => move.games >= rules.minGames)
+            : ownMoves(sorted, data.total, rules)
           : sorted.filter((move) => move.games >= rules.minGames && move.games / data.total >= rules.minShare);
         for (const move of chosen) {
           const next = play(item.fen, move.uci);

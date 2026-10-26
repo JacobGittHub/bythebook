@@ -2,7 +2,9 @@
 // has something to look at before they build their own. They are static files under
 // `public/books/examples/`, written by `npm run books:examples` (`scripts/buildExampleBooks.ts`)
 // and served by the CDN, so showing one costs no function call. Each file says how it was
-// made and, when its source needs it, whom to credit and under which licence.
+// made and, when its source needs it, whom to credit and under which licence. Player books
+// published to the Bookstore use the same format in `public/books/players/`, written by
+// `npm run books:players -- --store` from the publishing account's drafts.
 
 import { Chess } from "chess.js";
 import { z } from "zod";
@@ -16,15 +18,19 @@ import type { Move, MoveNode } from "@/types/chess";
 /** Where the example books are served from. */
 export const EXAMPLE_BOOKS_PATH = "/books/examples";
 
+/** Where the player books published to the Bookstore are served from, in the same format. */
+export const PLAYER_BOOKS_PATH = "/books/players";
+
 /** Example book ids carry this prefix, so they never collide with an account's book ids. */
 export const EXAMPLE_ID_PREFIX = "example:";
 
 /**
  * How a book was made: from the page titles of Wikibooks' Chess Opening Theory, from the
  * opening catalog's named lines (public domain), or grown from master statistics
- * (`grow.ts`), optionally starting from the catalog's lines.
+ * (`grow.ts`), optionally starting from the catalog's lines, or grown from one player's public
+ * online games (`scripts/buildPlayerBooks.ts`).
  */
-export const EXAMPLE_METHODS = ["wikibooks", "catalog", "masters", "catalog+masters"] as const;
+export const EXAMPLE_METHODS = ["wikibooks", "catalog", "masters", "catalog+masters", "player-games"] as const;
 export type ExampleMethod = (typeof EXAMPLE_METHODS)[number];
 
 export const attributionSchema = z.object({
@@ -90,6 +96,7 @@ export const EXAMPLE_METHOD_NOTES: Record<ExampleMethod, string> = {
   catalog: "Made from the opening catalog's named lines (lichess-org/chess-openings, public domain).",
   masters: "Grown from Lichess's master game statistics, as saved by ByTheBook.",
   "catalog+masters": "The opening catalog's named lines, carried on from Lichess's master game statistics.",
+  "player-games": "Grown by ByTheBook from one player's public online games. The player had no part in making it.",
 };
 
 /** The publisher example books are credited to when saved (deployment.md D24). */

@@ -1,0 +1,37 @@
+{
+ "version": 1,
+ "books": [
+  {
+   "id": "example:hikaru-vs-e4-tight",
+   "name": "Hikaru games · vs 1.e4 · tight",
+   "color": "black",
+   "method": "player-games",
+   "positions": 297,
+   "file": "hikaru-vs-e4-tight.json"
+  },
+  {
+   "id": "example:hikaru-white-tight",
+   "name": "Hikaru games · White · tight",
+   "color": "white",
+   "method": "player-games",
+   "positions": 270,
+   "file": "hikaru-white-tight.json"
+  },
+  {
+   "id": "example:naroditsky-kid-tight",
+   "name": "Naroditsky games · KID · tight",
+   "color": "black",
+   "method": "player-games",
+   "positions": 295,
+   "file": "naroditsky-kid-tight.json"
+  },
+  {
+   "id": "example:rosen-gambits-black",
+   "name": "Rosen games · gambits · Black",
+   "color": "black",
+   "method": "player-games",
+   "positions": 477,
+   "file": "rosen-gambits-black.json"
+  }
+ ]
+}

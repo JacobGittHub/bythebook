@@ -22,6 +22,7 @@ agents work on the focus plan unless told otherwise)
 | [testing.md](testing.md) | active | — | CI on GitHub, with Vitest and Playwright each doing one job |
 | [atlas.md](atlas.md) | deciding | region-map.md | A static, pre-generated region map built in reproducible editions |
 | [bookstore.md](bookstore.md) | deciding | deployment.md | Default books, repertoires, and library export and import |
+| [master-books.md](master-books.md) | deciding | bookstore.md, game-history.md | Books grown from masters' and influencers' public games, built and measured in batches |
 | [game-history.md](game-history.md) | active | deployment.md | Import a user's own games and see how they have done in their openings |
 | [load-testing.md](load-testing.md) | deciding | deployment.md | Find how many visitors and members the app serves at once, with telemetry |
 | [book-ui.md](book-ui.md) | active | — | The dashboard rebuilt as an open book, with page turns, bookmarks that turn with their pages and a one-page form |

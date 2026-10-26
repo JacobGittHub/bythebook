@@ -56,13 +56,19 @@ const accessCodeSchema = z.string().trim().min(1).max(100);
 /** What a new username may be: 3 to 24 letters, digits, "_" or "-". */
 export const USERNAME_PATTERN = /^[A-Za-z0-9_-]{3,24}$/;
 
-// Letters, digits, "_" and "-" only, so a name can't hold an email or imitate the verified
-// mark (plans/bookstore.md, D8 and Q3), and no word the word list refuses (D25). Unique without
-// regard to case, in the database.
+/** Whether a name holds the word "verified", which would pass for the verified mark (plans/bookstore.md D26). */
+export function claimsVerified(name: string): boolean {
+  return /verified/i.test(name);
+}
+
+// Letters, digits, "_" and "-" only, so a name can't hold an email or a check mark, no
+// "verified" (plans/bookstore.md D8, D26), and no word the word list refuses (D25). Unique
+// without regard to case, in the database.
 export const usernameSchema = z
   .string()
   .trim()
   .regex(USERNAME_PATTERN)
+  .refine((name) => !claimsVerified(name), "A username can't contain the word \"verified\".")
   .refine((name) => !hasBannedWords(name), BANNED_WORDS_MESSAGE);
 
 export const registerInputSchema = z.object({

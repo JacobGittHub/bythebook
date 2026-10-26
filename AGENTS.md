@@ -54,6 +54,7 @@ which is not in development.
 | Production build | `npm run build` |
 | Rebuild the opening catalog | `npm run catalog:download`, then `npm run catalog:index` |
 | Rebuild the example books | `npm run books:examples` (reads Wikibooks, the catalog and `position_cache`, never Lichess; `-- --skip-masters` keeps the books made from the cache) |
+| Grow draft books from players' games | `npm run books:players` (downloads public games from Chess.com and Lichess and reports each book; `-- --save` writes them as drafts to the publishing account, which only the user asks for; `-- --store <slug>` publishes a draft to the Bookstore as a file in `public/books/players/`) |
 | Fill `position_cache` for the catalog | `npm run cache:prefill` (calls Lichess for hours; the user runs it, agents use `-- --dry-run`) |
 | Make beta invite or reset codes | `npm run invites:create` (writes to the live database; the user runs it) |
 | Record the Overview's demo GIFs | `npm run demos:record` (with the dev server running; `-- <name>` for one demo) |
@@ -102,9 +103,9 @@ failure in its report like any failing test.
   `NEXT_PUBLIC_BETA_CONTACT_EMAIL` (the address behind the beta key and reset code links),
   `DEBUG_MODE` and `DEBUG_EMAILS` (debug mode, `docs/design/dashboard.md`), `E2E_EMAIL` and
   `E2E_PASSWORD` (the browser tests' account), and `PUBLISHER_EMAIL` and `PUBLISHER_PASSWORD`
-  (the account that publishes the Bookstore's books, for the planned publishing script in
-  `plans/bookstore.md`). Agents never
-  read the file; scripts load it. Only `NEXT_PUBLIC_*` values may reach client code.
+  (the account that publishes the Bookstore's books: `npm run books:players -- --save` finds it
+  by the email, and the password is for the planned publishing script in `plans/bookstore.md`).
+  Agents never read the file; scripts load it. Only `NEXT_PUBLIC_*` values may reach client code.
 
 ## Where things live
 
@@ -121,8 +122,8 @@ failure in its report like any failing test.
   holds the library: validation, summaries, backups, the two stores and their write rules.
   `src/lib/db/` holds
   all Supabase access. `src/lib/validators/schemas.ts` holds the Zod schemas.
-- `scripts/` holds the catalog build scripts, the cache pre-fill script and the example book
-  builder, and `supabase/migrations/` holds migrations.
+- `scripts/` holds the catalog build scripts, the cache pre-fill script, and the example and
+  player book builders, and `supabase/migrations/` holds migrations.
 
 ## How to work
 
@@ -229,6 +230,7 @@ edit these files.
 
 - `src/types/database.ts`, which the Supabase CLI generates.
 - `public/books/examples/`, which `npm run books:examples` writes.
+- `public/books/players/`, which `npm run books:players -- --store` writes.
 - `src/lib/chess/generated/openingCatalogIndex.json`, which `npm run catalog:index`
   generates.
 

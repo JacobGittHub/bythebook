@@ -212,6 +212,15 @@ one costs no function call. Each file names its method (Wikibooks page titles, t
 named lines, master statistics from `position_cache`, or the catalog grown from master
 statistics) and, for Wikibooks, its CC BY-SA credit, which the page shows.
 
+**Player books** are drafts grown from one player's public games by `npm run books:players`
+(`scripts/buildPlayerBooks.ts`): the same `growBook` as the master books, answered from the
+player's move counts (`src/lib/books/playerGames.ts`), with the player's side keeping its
+most played moves up to a share (`GrowRules.topP`). They are saved privately to the
+publishing account (`src/lib/db/publishing.ts`) for the user to review, and each description
+says the player had no part in making it (`plans/bookstore.md` Q1). `-- --store <slug>` publishes
+a draft, with the user's edits, as a store file in `public/books/players/` (the example books'
+format, method `player-games`); the Bookstore lists those beside the example books.
+
 ## Library page
 
 The viewer's books, from the library (`useLibrary`, `src/context/Library.tsx`): a guest's
@@ -335,9 +344,9 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
 ## Bookstore
 
 Ready-made books (`plans/bookstore.md`), drawn first in `docs/design/mockups/bookstore.html`.
-Until the store has its own tables (bookstore Phases 3–4), its books are the example books,
-ByTheBook's store books (`plans/deployment.md` D24), which `useStoreBooks` reads once from
-their static files and summarizes in the browser. There are no ratings or saves yet, so none
+Until the store has its own tables (bookstore Phases 3–4), its books are the example books and
+the published player books, ByTheBook's store books (`plans/deployment.md` D24), which
+`useStoreBooks` reads once from their static files and summarizes in the browser. There are no ratings or saves yet, so none
 are shown, and the cards sort by name. Guests use both levels (bookstore D14).
 
 - **Level 1** (`BookstorePage.tsx`, `/dashboard/bookstore`) is a spread

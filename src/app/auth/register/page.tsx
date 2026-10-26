@@ -7,7 +7,7 @@ import { registerWithInvite } from "@/lib/auth/accounts";
 import { betaContactEmail, betaKeyMailto } from "@/lib/auth/contact";
 import { getViewer } from "@/lib/auth/viewer";
 import { createServerSupabaseClient } from "@/lib/supabase";
-import { registerInputSchema } from "@/lib/validators/schemas";
+import { claimsVerified, registerInputSchema } from "@/lib/validators/schemas";
 import { hasBannedWords } from "@/lib/validators/words";
 
 const errorMessages: Record<string, string> = {
@@ -15,6 +15,7 @@ const errorMessages: Record<string, string> = {
     "Enter an invite code, a username of 3 to 24 letters, digits, \"_\" or \"-\", a valid email, and a password with at least 8 characters.",
   username_taken: "That username is taken. Usernames ignore case, so try another one.",
   username_refused: "That username has a word we don't allow. Try another one.",
+  username_verified: "A username can't contain the word \"verified\". Try another one.",
   invalid_code: "That invite code isn't valid, or it has already been used.",
   password_mismatch: "The two passwords don't match.",
 };
@@ -47,8 +48,13 @@ export default async function RegisterPage({
     });
 
     if (!parsedRegistration.success) {
-      const refused = hasBannedWords(String(formData.get("username") ?? ""));
-      redirect(`/auth/register?error=${refused ? "username_refused" : "invalid_registration"}`);
+      const username = String(formData.get("username") ?? "");
+      const error = claimsVerified(username)
+        ? "username_verified"
+        : hasBannedWords(username)
+          ? "username_refused"
+          : "invalid_registration";
+      redirect(`/auth/register?error=${error}`);
     }
 
     const outcome = await registerWithInvite(parsedRegistration.data);

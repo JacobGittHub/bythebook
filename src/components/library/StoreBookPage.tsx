@@ -341,9 +341,7 @@ function Readers() {
           </ToggleGroupItem>
         </ToggleGroup>
         <span className="grow" />
-        <span className="text-xs text-muted-foreground">
-          {tab === "reviews" ? "Readers review it from their library" : "Comes with the trainer"}
-        </span>
+        {tab === "leaders" && <span className="text-xs text-muted-foreground">Comes with the trainer</span>}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto border-t border-rule [scrollbar-width:thin]">
         <p className="max-w-prose px-1 py-3 text-sm text-muted-foreground">
