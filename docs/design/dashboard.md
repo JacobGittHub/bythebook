@@ -42,7 +42,7 @@ The dashboard is an open book on a desk (`plans/book-ui.md`), drawn first in
   (`explorer.md`). The one page that isn't a spread, the trainer's scaffold
   (`/dashboard/train/<id>`), is wrapped in `InterimSpread`, which lays it across both pages.
 - **A page below a chapter's own page is its second level** (`levelAt`,
-  `src/lib/book/chapters.ts`), such as a Bookstore book's page. Unless its chapter is listed in
+  `src/lib/book/chapters.ts`), such as a visualization's page. Unless its chapter is listed in
   `WHOLE_SPREAD_CHAPTERS` (`zoomsAt`), in the spread a camera zooms in
   on it (`zoomCamera`, `src/lib/book/camera.ts`): the right page fills the window but for
   `ZOOM_SHOWN` of the left page at its left edge, and the book runs on past its bottom. The
@@ -68,10 +68,19 @@ The dashboard is an open book on a desk (`plans/book-ui.md`), drawn first in
   way back on the left. The one-page form has no camera: a second level shows only its right page, with the way back
   in its running head and what it holds below after its body.
 - **A whole spread's second level** (`WHOLE_SPREAD_CHAPTERS`), every second level of the
-  Library (the game history and the books' pages), turns down from its chapter as any second
-  level does but isn't zoomed in on: its pages are laid out as a first level's, with its own way
-  back in the left page's running head, and the one-page form stacks both halves (an exception
-  to `plans/book-ui.md` D8, from `plans/game-history.md` D30 and D40).
+  Library (the game history and the books' pages) and of the Bookstore (its books' pages), turns
+  down from its chapter as any second level does but isn't zoomed in on: its pages are laid out
+  as a first level's, and the one-page form stacks both halves (an exception to
+  `plans/book-ui.md` D8, from `plans/game-history.md` D30 and D40 and `plans/bookstore.md` D24).
+  Its way back is the left page's ear.
+- **A page ear** (`PageEar`, `plans/book-ui.md` D21, D22) is a page's top corner turned down,
+  a link to the level it leads to. A page passes it as its page's `ear`, and `Spread` lays it on
+  that page's corner (`.book-ear` in `globals.css`); in the one-page form the left page's ear
+  lies on the page's corner. The flap carries a short word ("Books", "Library", "Shelf"), its
+  accessible name is the whole destination, the corner shows the next leaf's paper, and it
+  grows a little on hover. The Library's books' pages and game history page and the Bookstore's
+  books' pages have the top-left ear back; a book's reviews ear and the two-fold ear come with
+  the Library's third level (`plans/bookstore.md` D22).
 - **Where everything sits comes from `layoutBook`** (`src/lib/book/layout.ts`), whose property
   tests hold its invariants. The frame draws it with CSS: `bookFrameCss`
   (`src/lib/book/frameCss.ts`) turns the layout's constants into custom properties, so the
@@ -226,8 +235,8 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   picked book doesn't show and a row is a link to the book's own page.
 - **Level 2** (`LibraryBookPage.tsx`, `/dashboard/library/<id>`) is a book's own page on a whole
   spread (`plans/game-history.md` D40, `plans/mockups/book-spread.html`'s layout A). The left
-  page's head has "Back to all books", which returns with the book picked (`libraryHref`);
-  another book is chosen there. Below the title come its tags, its origin and credit
+  page's ear, "Books", goes back to all books with this one picked (`libraryHref`); another
+  book is chosen there. Below the title come its tags, its origin and credit
   (`OriginLine`, with the way to a store book's page), Open in Explorer, Train and the "⋯" menu,
   then the facts (`BookFacts`): the measured difficulty (`measuredDifficulty`) as a dot on a
   scale of `--difficulty-*` steps whose number shows on hover, the moves to remember
@@ -271,7 +280,7 @@ levels (D21), drawn first in `docs/design/mockups/library.html` (mockup A); the 
   board for the selected or hovered position (`SelectedPosition`, `useBookSelection`), or
   without it. On a page of the book it takes the height it is given (`fill`), and the board's
   column scrolls on its own. It opens down the main line in `DEFAULT_READER_VIEW`, the icicle
-  where a book is previewed small and ply columns on a book's own page
+  where a book is previewed small and ply columns where it is large
   (`plans/game-history.md` D31), and on a phone puts the board first. Until the views draw several trees, it shows the tree from the starting
   position (`startTree`).
 - **Editing** (D25): the "⋯" menu (`BookMenu.tsx`) renames, changes side, duplicates
@@ -340,13 +349,18 @@ are shown, and the cards sort by name. Guests use both levels (bookstore D14).
   `src/lib/library/search.ts`), written with `history.replaceState` and read by the route on
   the server, as the Library's picked book is.
 - **Level 2** (`StoreBookPage.tsx`, `/dashboard/bookstore/<slug>`, the example id without
-  its prefix, `storeBookHref`) is zoomed in on as the Library's is. A card's address carries
-  the filters, so the part of the left page in view lists the shelf as they left it
-  (`BookRows`), under "Back to the shelf" (`bookstoreHref`), which keeps them; another book
-  re-inks the right page. The right page's first screen has the name, the publisher, the full
+  its prefix, `storeBookHref`) is a store book's page on a whole spread (bookstore D24,
+  `plans/mockups/bookstore-spread.html`'s layout B). A card's address carries the filters, and
+  the left page's ear, "Shelf", goes back to the shelf with them (`bookstoreHref`); the folio
+  says which book of the shelf it is. The left page has the name, the publisher, the full
   description, Save to library, which becomes "In your library" with a link once the library
-  has a copy (`origin.sourceId`), and `BookReader`; below it, "About this book" has the
-  measures, how the book was made and its credit.
+  has a copy (`origin.sourceId`), how the book was made and its credit; the facts
+  (`BookFacts`, its clashes a number only); "In this book", the chapters (the openings named
+  under the one that heads the book, from `bookContents`), which pick their position; and one
+  section switched between Reviews and Leaderboard, each saying how it fills until the store
+  has its back end. It has no box for writing a review, which is written from a saved copy
+  (bookstore D22, as amended). The right page is the position (`BookPosition`, whose "Open
+  in Explorer" opens the position alone) and the drawing (`BookDrawing`), as on a Library book's page.
 - **The publisher label** (`PublisherLabel`) puts Verified or Unverified beside the name's
   highlight, never inside it (bookstore D8). Until publishers have accounts, a store book is
   verified when it is an example book (`storeVerified`).

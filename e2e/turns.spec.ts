@@ -2,7 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import { MOTION_STORAGE_KEY, type Motion } from "@/lib/appearance";
 import { ZOOM_SHOWN } from "@/lib/book/camera";
 import { SPREAD, SPREAD_MIN_WIDTH } from "@/lib/book/layout";
-import { LIBRARY, bookList, createPastedBook } from "./fixtures/library";
+import { LIBRARY, createPastedBook } from "./fixtures/library";
 import { expect, test } from "./fixtures/test";
 
 // The book's moves between pages (plans/book-ui.md D8, D13, D14): page turns, or none, and a
@@ -59,7 +59,8 @@ const MOVE_WAIT_MS = 3_000;
 async function follow(page: Page, link: Locator, href: string): Promise<string[]> {
   const before = await page.evaluate(() => window.__moves.length);
   await link.click();
-  await expect(page).toHaveURL(new RegExp(`${href}$`));
+  // The address ends with `href`, whose "?" and "." are taken as they are.
+  await expect(page).toHaveURL(new RegExp(`${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`));
   // The move is recorded once the browser has its pictures, which a slow browser takes a while
   // over. Under None no transition starts, so the wait runs out.
   await page.waitForFunction((n) => window.__moves.length > n, before, { timeout: MOVE_WAIT_MS }).catch(() => {});
@@ -75,6 +76,17 @@ const route = (href: string) => href.replace(/[^a-z0-9]+/gi, "-");
 /** Whether the window gets the spread; read from its width, since the server renders the last visit's form until the page starts. */
 const spreadWindow = (page: Page) => page.viewportSize()!.width >= SPREAD_MIN_WIDTH;
 const supportsTurns = (page: Page) => page.evaluate(() => "startViewTransition" in document);
+
+/** The Visualizations chapter's own page, with a book view picked. */
+const VISUALIZATIONS = "/dashboard/visualizations";
+/**
+ * The way into a book view's page, a second level the camera zooms in on (the Library's and the
+ * Bookstore's are whole spreads): the picked view's "Jump to page".
+ */
+async function openViewLink(page: Page): Promise<Locator> {
+  await page.goto(`${VISUALIZATIONS}?show=icicle`);
+  return page.getByRole("link", { name: "Jump to page", exact: true });
+}
 
 /**
  * The animation that says a move from `from` to `to` (routes as the pages name their pictures)
@@ -125,25 +137,42 @@ test("Page turn: a jump of several chapters riffles the leaves between, up to th
 
 test("Page turn: a second level turns, then zooms in, and zooms out, then turns back (D8)", async ({ page }) => {
   await recordMoves(page, "turn");
-  await page.goto("/dashboard/bookstore");
+  const link = await openViewLink(page);
   test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
   test.skip(!spreadWindow(page), "Only the spread zooms; the one-page form turns as between chapters.");
   const spine = await rightPageAt(page);
 
-  const link = page.locator('a[href^="/dashboard/bookstore/"]').first();
   const href = (await link.getAttribute("href"))!;
   const into = await follow(page, link, href);
-  expect(into).toContain(`turn-fold-right ::view-transition-old(page-r-dashboard-bookstore)`);
-  expect(into).toContain(`camera ::view-transition-image-pair(page-r-dashboard-bookstore)`);
+  expect(into).toContain(`turn-fold-right ::view-transition-old(page-r-dashboard-visualizations)`);
+  expect(into).toContain(`camera ::view-transition-image-pair(page-r-dashboard-visualizations)`);
   expect(into).toContain(`camera ::view-transition-image-pair(page-l${route(href)})`);
   expect(into).toContain("camera ::view-transition-image-pair(book)");
   // Zoomed in, the left page shows ZOOM_SHOWN at the window's edge.
   await expect.poll(() => rightPageAt(page)).toBe(ZOOM_SHOWN);
 
+  const out = await follow(page, page.getByRole("link", { name: "Back to all visualizations" }), `${VISUALIZATIONS}?show=icicle`);
+  expect(out).toContain(`turn-fold-left ::view-transition-old(page-l${route(href)})`);
+  expect(out).toContain(`camera ::view-transition-image-pair(page-r-dashboard-visualizations)`);
+  await expect.poll(() => rightPageAt(page)).toBe(spine);
+});
+
+test("Page turn: a store book's page is a whole spread, which turns but isn't zoomed in on (plans/bookstore.md D24)", async ({ page }) => {
+  await recordMoves(page, "turn");
+  await page.goto("/dashboard/bookstore");
+  test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
+  test.skip(!spreadWindow(page), "Only the spread zooms; the one-page form turns as between chapters.");
+  const spine = await rightPageAt(page);
+  const link = page.locator('a[href^="/dashboard/bookstore/"]').first();
+  const href = (await link.getAttribute("href"))!;
+  const into = await follow(page, link, href);
+  expect(into).toContain(`turn-fold-right ::view-transition-old(page-r-dashboard-bookstore)`);
+  expect(into.some((move) => move.startsWith("camera"))).toBe(false);
+  expect(await rightPageAt(page)).toBe(spine);
+
+  // Back by the left page's ear.
   const out = await follow(page, page.getByRole("link", { name: "Back to the shelf" }), "/dashboard/bookstore");
   expect(out).toContain(`turn-fold-left ::view-transition-old(page-l${route(href)})`);
-  expect(out).toContain(`camera ::view-transition-image-pair(page-r-dashboard-bookstore)`);
-  await expect.poll(() => rightPageAt(page)).toBe(spine);
 });
 
 test("Page turn: a Library book's page is a whole spread, which turns but isn't zoomed in on (plans/game-history.md D40)", async ({ page }) => {
@@ -165,19 +194,18 @@ test("Page turn: a Library book's page is a whole spread, which turns but isn't 
   expect(await rightPageAt(page)).toBe(spine);
 });
 
-test("Page turn: another book on a second level neither turns nor zooms; its page re-inks (D8, D13)", async ({ page }) => {
+test("Page turn: another page on a second level neither turns nor zooms; its page re-inks (D8, D13)", async ({ page }) => {
   await recordMoves(page, "turn");
-  await page.goto("/dashboard/bookstore");
+  const open = await openViewLink(page);
   test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
   test.skip(!spreadWindow(page), "Only the spread zooms; the one-page form shows a second level's own page alone.");
   // The way in turns and zooms; it is waited for until recorded, so a slow browser's late record
   // of it isn't taken for the next move's.
-  const open = page.locator('a[href^="/dashboard/bookstore/"]').first();
   await follow(page, open, (await open.getAttribute("href"))!);
   await expect.poll(() => rightPageAt(page)).toBe(ZOOM_SHOWN);
 
   const before = page.url();
-  const link = bookList(page).getByRole("link").nth(1);
+  const link = page.locator('[data-slot="page"][data-side="left"] a[href^="/dashboard/visualizations/books/spine"]');
   const moves = await follow(page, link, (await link.getAttribute("href"))!);
   expect(moves.filter((move) => move.startsWith("turn-") || move.startsWith("camera"))).toEqual([]);
   await expect(page).not.toHaveURL(before);
@@ -189,11 +217,10 @@ test("Page turn: another book on a second level neither turns nor zooms; its pag
 
 test("Page turn: a second level's view scrolls down the book, the strip going up with the desk, and goes back from there (D8)", async ({ page }) => {
   await recordMoves(page, "turn");
-  await page.goto("/dashboard/bookstore");
+  const open = await openViewLink(page);
   test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
   test.skip(!spreadWindow(page), "Only the spread zooms; the one-page form's page scrolls as any other.");
   const spine = await rightPageAt(page);
-  const open = page.locator('a[href^="/dashboard/bookstore/"]').first();
   const href = (await open.getAttribute("href"))!;
   await open.click();
   await expect.poll(() => rightPageAt(page)).toBe(ZOOM_SHOWN);
@@ -212,7 +239,7 @@ test("Page turn: a second level's view scrolls down the book, the strip going up
   // wheel is over the book's title, since the drawing scrolls itself.
   await page.mouse.move(700, 150);
   await page.mouse.wheel(0, 2000);
-  await expect(page.getByRole("heading", { name: "About this book" })).toBeInViewport();
+  await expect(page.getByRole("heading", { name: /^About / })).toBeInViewport();
   await expect.poll(stripBottom).toBeLessThanOrEqual(0);
   // The mouse at the window's top brings it back, and it goes once the mouse leaves it.
   await page.mouse.move(600, 2);
@@ -223,7 +250,7 @@ test("Page turn: a second level's view scrolls down the book, the strip going up
   // Back from the scrolled view: the camera zooms out from where the view was, and the leaf turns back.
   await page.mouse.move(600, 2);
   await expect.poll(stripBottom).toBe(SPREAD.strip);
-  const out = await moveTo(page, "Bookstore", "/dashboard/bookstore");
+  const out = await moveTo(page, "Visualizations", VISUALIZATIONS);
   expect(out).toContain(`turn-fold-left ::view-transition-old(page-l${route(href)})`);
   expect(out).toContain("camera ::view-transition-image-pair(book)");
   await expect.poll(() => rightPageAt(page)).toBe(spine);
@@ -233,18 +260,17 @@ test("Page turn: a second level's view scrolls down the book, the strip going up
 test("Page turn: in the one-page form a second level turns forward, and back by its back link (D15)", async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 768 });
   await recordMoves(page, "turn");
-  await page.goto("/dashboard/bookstore");
+  const link = await openViewLink(page);
   test.skip(!(await supportsTurns(page)), "This browser has no view transitions; pages change at once.");
   await expect(page.locator(".book-frame")).toHaveAttribute("data-form", "single");
 
-  const link = page.locator('a[href^="/dashboard/bookstore/"]').first();
   const href = (await link.getAttribute("href"))!;
   const into = await follow(page, link, href);
-  expect(into).toContain(expected("forward", false, "-dashboard-bookstore", route(href)));
+  expect(into).toContain(expected("forward", false, "-dashboard-visualizations", route(href)));
   expect(into.some((a) => a.startsWith("camera"))).toBe(false);
 
-  const out = await follow(page, page.getByRole("link", { name: "Back to Bookstore" }), "/dashboard/bookstore");
-  expect(out).toContain(expected("back", false, route(href), "-dashboard-bookstore"));
+  const out = await follow(page, page.getByRole("link", { name: "Back to Visualizations" }), VISUALIZATIONS);
+  expect(out).toContain(expected("back", false, route(href), "-dashboard-visualizations"));
 });
 
 test("None: pages change at once", async ({ page }) => {
@@ -255,9 +281,8 @@ test("None: pages change at once", async ({ page }) => {
 
 test("None: a second level zooms at once", async ({ page }) => {
   await recordMoves(page, "none");
-  await page.goto("/dashboard/bookstore");
+  const link = await openViewLink(page);
   test.skip(!spreadWindow(page), "Only the spread zooms.");
-  const link = page.locator('a[href^="/dashboard/bookstore/"]').first();
   expect(await follow(page, link, (await link.getAttribute("href"))!)).toEqual([]);
   await expect.poll(() => rightPageAt(page)).toBe(ZOOM_SHOWN);
 });

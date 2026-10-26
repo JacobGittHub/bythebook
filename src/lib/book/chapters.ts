@@ -2,7 +2,7 @@
 // book's pages in `NAV_ITEMS` order, and a page below one, such as a Library book's page, is
 // in its chapter, as its second level (D8).
 
-import { LIBRARY_HREF } from "@/lib/library/links";
+import { BOOKSTORE_HREF, LIBRARY_HREF } from "@/lib/library/links";
 
 /**
  * The index of the chapter `pathname` is in: the one whose address is the path, or the
@@ -28,9 +28,10 @@ export function levelAt(pathname: string, href: string): Level {
 /**
  * Chapters whose second levels are shown as a whole spread, which the camera doesn't zoom in on
  * (an exception to D8): the Library, whose game history and books' pages use both pages
- * (plans/game-history.md D30, D40).
+ * (plans/game-history.md D30, D40), and the Bookstore, whose books' pages do too
+ * (plans/bookstore.md D24).
  */
-export const WHOLE_SPREAD_CHAPTERS: readonly string[] = [LIBRARY_HREF];
+export const WHOLE_SPREAD_CHAPTERS: readonly string[] = [LIBRARY_HREF, BOOKSTORE_HREF];
 
 /** Whether the camera zooms in on the right page at `pathname` (D8): a second level, unless it is a whole spread. */
 export function zoomsAt(pathname: string, level: Level): boolean {

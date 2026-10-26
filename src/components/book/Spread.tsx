@@ -31,9 +31,10 @@ export function chapterFolio(number: number | null, count: number): string | nul
 /**
  * One page's content: its running head, its folio and its body. A second level's right page
  * may hold more `below` its first screen, which the view scrolls down to (D8); in the one-page
- * form it follows the body.
+ * form it follows the body. Its `ear` (`PageEar`, D21, D22) lies on the page's top corner; in
+ * the one-page form the left page's ear lies on the page's.
  */
-export type PageContent = { head?: ReactNode; folio?: ReactNode; body: ReactNode; below?: ReactNode };
+export type PageContent = { head?: ReactNode; folio?: ReactNode; body: ReactNode; below?: ReactNode; ear?: ReactNode };
 
 /** The book's layout for the current chapter, once the browser has the window. */
 function useLayout(): BookLayout | null {
@@ -168,7 +169,17 @@ export function Spread({
       <>
         <RiffledLeaves layout={layout} />
         <PagePicture part="s">
-          <BookPage side="single" head={head} folio={zoomed ? (right.folio ?? left.folio) : (left.folio ?? right.folio)} marks={tab}>
+          <BookPage
+            side="single"
+            head={head}
+            folio={zoomed ? (right.folio ?? left.folio) : (left.folio ?? right.folio)}
+            marks={
+              <>
+                {tab}
+                {!zoomed && left.ear}
+              </>
+            }
+          >
             {!zoomed && single ? (
               single
             ) : !zoomed ? (
@@ -198,7 +209,12 @@ export function Spread({
           zoomed={zoomed}
           head={left.head}
           folio={left.folio}
-          marks={bookmark?.side === "left" && <Bookmark x={bookmark.x} />}
+          marks={
+            <>
+              {bookmark?.side === "left" && <Bookmark x={bookmark.x} />}
+              {left.ear}
+            </>
+          }
         >
           {zoomed ? <div className="book-shown">{left.body}</div> : left.body}
         </BookPage>
@@ -209,7 +225,12 @@ export function Spread({
           zoomed={zoomed}
           head={right.head}
           folio={right.folio}
-          marks={bookmark?.side === "right" && <Bookmark x={bookmark.x} />}
+          marks={
+            <>
+              {bookmark?.side === "right" && <Bookmark x={bookmark.x} />}
+              {right.ear}
+            </>
+          }
         >
           {zoomed ? (
             <>

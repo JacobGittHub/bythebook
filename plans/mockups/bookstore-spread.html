@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Mockup for plans/bookstore.md (D8, D14, D18: a store book's page) and plans/book-ui.md D9, after plans/game-history.md Q24: the Bookstore's second level on a whole spread, in three layouts that put the book, its readers or the masters who play it before the reader's own numbers, and the earlier layout like the Library's book page. Published as the "Bookstore Book Spread" artifact. -->
+<!-- Mockup for plans/bookstore.md (D24: a store book's page is layout B, changed; D8, D14, D18, D22) and plans/book-ui.md (D9; D21 and D22, the page ears): the Bookstore's second level on a whole spread. B is the user's pick of 2026-10-25, with "In this book" above one section that switches between Reviews and Leaderboard. A, C and the earlier layout like the Library's book page stay for comparison. Published as the "Bookstore Book Spread" artifact. -->
 <title>Bookstore Book Spread</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -383,6 +383,40 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 .madeup { font: 600 9.5px/1 var(--figures); letter-spacing: 0.08em; text-transform: uppercase; color: var(--warning); border: 1px solid var(--warning); border-radius: 3px; padding: 2px 4px; }
 .bv-edge.master { stroke: var(--primary); }
 .masterkey { display: inline-block; width: 22px; border-top: 3px solid var(--primary); vertical-align: 3px; margin-right: 4px; }
+.sect.cap .sbody { max-height: 140px; }
+.sect .seg .fig { margin-left: 6px; font-size: 11px; color: var(--muted-foreground); }
+.empty { font-size: 13px; color: var(--muted-foreground); padding: 14px 4px; max-width: 52ch; }
+.rlimit { font-size: 11.5px; color: var(--muted-foreground); }
+/* Page ears (plans/book-ui.md D21 and Q11): a top corner turned down, with a word on the fold */
+.ear { position: absolute; top: 0; width: 50px; height: 50px; z-index: 3; border: 0; padding: 0; background: none; cursor: pointer; transition: width 120ms ease, height 120ms ease; }
+.ear.l { left: 0; } .ear.r { right: 0; }
+.ear:hover, .ear:focus-visible { width: 55px; height: 55px; outline: none; }
+.pg:has(> .ear) > .running { min-height: 34px; padding-left: 34px; }
+.notes > div:has(.earsdemo) { grid-column: 1 / -1; }
+.ear .hole { position: absolute; inset: 0; }
+.ear.l .hole { background: linear-gradient(135deg, var(--page) 20%, color-mix(in oklab, var(--page) 80%, var(--gutter)) 50%); }
+.ear.r .hole { background: linear-gradient(225deg, var(--page) 20%, color-mix(in oklab, var(--page) 80%, var(--gutter)) 50%); }
+.ear.l .hole { clip-path: polygon(0 0, 100% 0, 0 100%); }
+.ear.r .hole { clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.ear .fw { position: absolute; inset: 0; filter: drop-shadow(1px 1px 1.5px var(--gutter)); }
+.ear .flap { position: absolute; inset: 0; }
+.ear.l .flap { clip-path: polygon(100% 0, 100% 100%, 0 100%); background: linear-gradient(315deg, var(--page-alt) 40%, var(--page-edge)); }
+.ear.r .flap { clip-path: polygon(0 0, 100% 100%, 0 100%); background: linear-gradient(45deg, var(--page-alt) 40%, var(--page-edge)); }
+.ear .word { position: absolute; top: 67%; font: 600 8.5px/1 var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); white-space: nowrap; }
+.ear.l .word { left: 67%; transform: translate(-50%, -50%) rotate(-45deg); }
+.ear.r .word { left: 33%; transform: translate(-50%, -50%) rotate(45deg); }
+.ear:hover .word, .ear:focus-visible .word { color: var(--foreground); }
+.ear.in { width: 36px; height: 36px; z-index: 4; }
+.ear.in:hover, .ear.in:focus-visible { width: 42px; height: 42px; }
+.ear.in .word { font-size: 7px; }
+.ear.out { width: 72px; height: 72px; }
+.ear.out:hover, .ear.out:focus-visible { width: 78px; height: 78px; }
+.earsdemo { display: flex; flex-wrap: wrap; gap: 14px 18px; padding: 14px; margin-top: 12px; }
+.earsdemo figure { margin: 0; display: grid; gap: 6px; }
+.earsdemo figcaption { font-size: 12px; color: var(--desk-foreground); }
+.mini { display: grid; grid-template-columns: 1fr 1fr; width: 230px; height: 124px; padding: 4px; border-radius: 6px; background: var(--cover); }
+.mpg { position: relative; overflow: hidden; background: repeating-linear-gradient(to bottom, transparent 0 13px, var(--rule) 13px 14px) 14px 34px / calc(100% - 28px) calc(100% - 46px) no-repeat, var(--page); }
+.mpg + .mpg { box-shadow: inset 10px 0 12px -10px var(--gutter); }
 
 @container (max-width: 760px) {
   .chapters, .morebooks { grid-template-columns: 1fr; }
@@ -417,12 +451,14 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
 <body>
 <div class="wrap">
   <header class="intro">
-    <p class="eyebrow">Mockup · plans/bookstore.md D8, D14, D18 · plans/book-ui.md D9</p>
-    <h1>The Bookstore's book page, three ways</h1>
-    <p>A store book's page is where someone decides whether to take a book home, so these layouts lead with the book rather than with the reader's own games. A puts the book and its publisher first, like a jacket. B puts the reviews and the leaderboard on the left page. C adds "Played by masters": pick a master and the drawing shows their games through the book. "Like the Library" is the earlier layout, for comparison. The right page keeps the board and the drawing in every layout, and the arrow keys walk the drawing after a click anywhere on the mock. The book is the real Italian Game example book. The ratings, reviews, players and every master's number are made up.</p>
+    <p class="eyebrow">Mockup · plans/bookstore.md D24 · plans/book-ui.md D21, D22</p>
+    <h1>The Bookstore's book page: layout B, with your changes</h1>
+    <p>B now has "In this book" on the left page, above one section that switches between Reviews and Leaderboard. "None yet" shows that section before anyone has reviewed the book or joined the leaderboard, which is how it starts. The way back to the shelf is a page ear in the top-left corner, with a word on the fold and paper under it; reviews are listed here but written from the book's page in your library; "Link" shows the old text link instead. The right page keeps the board and the drawing, and the arrow keys walk the drawing after a click anywhere on the mock. A, C and "Like the Library" stay for comparison. The book is the real Italian Game example book. The ratings, reviews, players and every master's number are made up.</p>
   </header>
   <div class="studio" role="group" aria-label="Mockup options">
-    <fieldset><legend>Layout</legend><div class="chips" data-key="layout"><button class="chip" data-value="jacket">A · The book first</button><button class="chip" data-value="readers">B · Readers</button><button class="chip" data-value="masters">C · Masters</button><button class="chip" data-value="library">Like the Library</button></div></fieldset>
+    <fieldset><legend>Layout</legend><div class="chips" data-key="layout"><button class="chip" data-value="jacket">A · The book first</button><button class="chip" data-value="readers">B · Readers, your pick</button><button class="chip" data-value="masters">C · Masters</button><button class="chip" data-value="library">Like the Library</button></div></fieldset>
+    <fieldset><legend>Reviews and leaderboard (B)</legend><div class="chips" data-key="readers"><button class="chip" data-value="some">Some</button><button class="chip" data-value="none">None yet</button></div></fieldset>
+    <fieldset><legend>Way back</legend><div class="chips" data-key="back"><button class="chip" data-value="ear">Page ear</button><button class="chip" data-value="link">Link</button></div></fieldset>
     <fieldset><legend>In your library</legend><div class="chips" data-key="saved"><button class="chip" data-value="no">Not yet</button><button class="chip" data-value="yes">Saved</button></div></fieldset>
     <fieldset><legend>Show (Like the Library)</legend><div class="chips" data-key="show"><button class="chip" data-value="plain">Plain</button><button class="chip" data-value="games">Your games</button></div></fieldset>
     <fieldset><legend>Color</legend><div class="chips" data-key="mode"><button class="chip" data-value="light">Light</button><button class="chip" data-value="dark">Dark</button></div></fieldset>
@@ -431,19 +467,32 @@ kbd { font: 12px var(--figures); border: 1px solid var(--c-line); border-bottom-
   <div class="stage"><div class="mock" id="mock"></div></div>
   <section class="notes" aria-label="Notes">
     <div>
-      <h2>A · The book first</h2>
+      <h2>B · Readers, your pick</h2>
       <ul>
-        <li><strong>A title page:</strong> what the book covers, its title, a subtitle, the publisher and rating, and Save to library, then a short blurb within D8's 200 characters.</li>
-        <li><strong>In this book</strong> lists the chapters: each opening the book names, in tree order. Clicking one takes the board and the drawing there.</li>
-        <li><strong>About the publisher</strong> has the publisher's mark, verification, a line about them and three more of their books. Publishers would need a short bio, which <code>bookstore.md</code> doesn't have yet.</li>
+        <li><strong>In this book</strong> sits under the title block and the facts line: each opening the book names, in tree order, in a short box that scrolls. Clicking one takes the board and the drawing there.</li>
+        <li><strong>Reviews and Leaderboard</strong> share one section below it, switched with the tabs in its head, and it takes the rest of the page. A review is up to 200 characters, one per signed-in reader, and is written from the book's page in their library, not here (D22, as amended).</li>
+        <li><strong>The leaderboard</strong> ranks players who chose to show their drill stats (D10, D18): lines known, accuracy and drills, this month or all time. It stays marked "Comes with the trainer" until drills exist.</li>
+        <li><strong>None yet</strong> is what every book shows at first: no rating, and a line in place of each list saying how it fills.</li>
       </ul>
     </div>
     <div>
-      <h2>B · Readers</h2>
+      <h2>Page ears</h2>
       <ul>
-        <li><strong>Reviews and the leaderboard</strong> share the left page, each scrolling in its own box, under a short title block and the facts line.</li>
-        <li><strong>The leaderboard</strong> ranks players who chose to show their drill stats (D10, D18): lines known, accuracy and drills, this month or all time. It stays marked "comes with the trainer" until drills exist.</li>
-        <li>The contents leave this layout; the drawing names the openings. Picking moves at clashes changes which lines a player drills, so "lines known" would count only the lines each player ticked. That belongs to the leaderboard's plan.</li>
+        <li><strong>Under the fold is paper</strong>, the next leaf, shaded toward the crease.</li>
+        <li><strong>A first level has none.</strong> A Library book's page has one at the top left (back to the Library) and one at the top right (on to its reviews and leaderboard). A store book's page has only the top-left one. The Library's third level has a two-fold ear (<code>book-ui.md</code> D21).</li>
+        <li><strong>A word on every fold</strong>, since a control that routes says so in words, and the corner lifts a little on hover. The two-fold ear's outer fold goes back one level and its inner fold two (<code>book-ui.md</code> D22).</li>
+      </ul>
+      <div class="mock earsdemo" data-mode="light" aria-label="The ears on each level">
+        <figure><div class="mini"><div class="mpg"><span class="ear l " aria-hidden="true"><span class="hole"></span><span class="fw"><span class="flap"></span></span><span class="word">Books</span></span></div><div class="mpg"><span class="ear r " aria-hidden="true"><span class="hole"></span><span class="fw"><span class="flap"></span></span><span class="word">Reviews</span></span></div></div><figcaption>Library book page</figcaption></figure>
+        <figure><div class="mini"><div class="mpg"><span class="ear l " aria-hidden="true"><span class="hole"></span><span class="fw"><span class="flap"></span></span><span class="word">Shelf</span></span></div><div class="mpg"></div></div><figcaption>Store book page</figcaption></figure>
+        <figure><div class="mini"><div class="mpg"><span class="ear l out" aria-hidden="true"><span class="hole"></span><span class="fw"><span class="flap"></span></span><span class="word">Book</span></span><span class="ear l in" aria-hidden="true"><span class="hole"></span><span class="fw"><span class="flap"></span></span><span class="word">Books</span></span></div><div class="mpg"></div></div><figcaption>Reviews and leaderboard (third level)</figcaption></figure>
+      </div>
+    </div>
+    <div>
+      <h2>A · The book first</h2>
+      <ul>
+        <li><strong>A title page:</strong> what the book covers, its title, a subtitle, the publisher and rating, and Save to library, then a short blurb within D8's 200 characters.</li>
+        <li><strong>About the publisher</strong> has the publisher's mark, verification, a line about them and three more of their books. Publishers would need a short bio, which <code>bookstore.md</code> doesn't have yet.</li>
       </ul>
     </div>
     <div>
@@ -642,7 +691,7 @@ const MASTER_COUNTS = new Map(MASTERS.map((m) => [m.id, masterTally(m)]));
 const lastName = (m) => m.name.split(" ").pop();
 
 // ── State ──────────────────────────────────────────────────────────────────────────────────
-const state = { layout: "jacket", master: "spassky", board: "month", show: STORE ? "plain" : "games", mode: "light", width: "desktop", zoom: 1, open: null, span: 12, saved: "no", tab: "contents", dialog: null };
+const state = { layout: "readers", rtab: "reviews", readers: "some", back: "ear", master: "spassky", board: "month", show: STORE ? "plain" : "games", mode: "light", width: "desktop", zoom: 1, open: null, span: 12, saved: "no", tab: "contents", dialog: null };
 try { const dark = document.documentElement.dataset.theme === "dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches); if (dark) state.mode = "dark"; } catch {}
 if (window.innerWidth < 760) state.width = "phone";
 tally();
@@ -786,7 +835,7 @@ function boardHtml(list, arrows = []) {
 
 // ── The page's parts ───────────────────────────────────────────────────────────────────────
 const runningLeft = () => STORE
-  ? `<div class="running"><button class="backlink">Back to the shelf</button><span class="grow"></span><span class="sc">Bookstore · Book 3 of 24</span></div>`
+  ? `<div class="running">${state.back === "link" ? `<button class="backlink">Back to the shelf</button>` : ""}<span class="grow"></span><span class="sc">Bookstore · Book 3 of 24</span></div>`
   : `<div class="running"><button class="backlink">Back to all books</button><span class="grow"></span><span class="sc">Library · Book 1 of 9</span></div>`;
 const titleHtml = () => `<div class="title"><h2>Italian Game</h2><span class="small soft"><span class="side w"></span>White</span></div>`;
 const publisher = () => `<div class="pub"><span class="tag" style="color:var(--foreground)">ByTheBook</span>${icon("check")}<span>Verified</span><span>·</span><span class="stars" aria-label="4.6 of 5 stars">★★★★★</span><b style="color:var(--foreground)">4.6</b><span>(128)</span><span>· 2,340 saves ·</span><a>31 reviews</a><a>Leaderboard</a></div>`;
@@ -927,11 +976,13 @@ function dialogHtml() {
   </div></div>`;
 }
 const factline = () => `<div class="factline">${difficulty()}<span><b>${n(ownMoves)}</b> <span class="k">moves to remember</span></span><span><b>${averageLine.toFixed(1)}</b> <span class="k">plies a line</span></span><span><b>${n(nodes.length - 1)}</b> <span class="k">positions</span></span><span><b>${n(leaves.length)}</b> <span class="k">lines</span></span><span><b>64%</b> <span class="k">coverage</span></span><span><span class="k">clashes</span> ${clashFact()}</span></div>`;
-const rateline = () => `<div class="pub"><span class="tag" style="color:var(--foreground)">ByTheBook</span>${icon("check")}<span>Verified</span><span>·</span><span class="stars" aria-label="4.6 of 5 stars">★★★★★</span><b style="color:var(--foreground)">4.6</b><span>128 ratings · 2,340 saves</span></div>`;
+const rateline = () => `<div class="pub"><span class="tag" style="color:var(--foreground)">ByTheBook</span>${icon("check")}<span>Verified</span><span>·</span>${state.readers === "none" ? `<span>No ratings yet · 0 saves</span>` : `<span class="stars" aria-label="4.6 of 5 stars">★★★★★</span><b style="color:var(--foreground)">4.6</b><span>128 ratings · 2,340 saves</span>`}</div>`;
+/** A page ear (book-ui.md D21): a top corner turned down, with a word on the fold. */
+const earHtml = (side, word, label, size = "") => `<button class="ear ${side} ${size}" aria-label="${label}" title="${label}"><span class="hole"></span><span class="fw"><span class="flap"></span></span><span class="word">${word}</span></button>`;
 const credit = () => `<p class="credit">Made from the page titles of Wikibooks' <a href="https://en.wikibooks.org/wiki/Chess_Opening_Theory" target="_blank" rel="noreferrer">Chess Opening Theory</a>, by Wikibooks contributors, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA 4.0</a>. A saved copy keeps this credit.</p>`;
-function chaptersHtml() {
+function chaptersHtml(cap) {
   const top = CONTENTS.filter((c) => c.level === 1);
-  return `<section class="sect fill" aria-labelledby="ch-h"><div class="shead"><h3 id="ch-h">In this book</h3><span class="sc">${top.length} chapters · ${n(leaves.length)} lines</span></div>
+  return `<section class="sect ${cap ? "cap" : "fill"}" aria-labelledby="ch-h"><div class="shead"><h3 id="ch-h">In this book</h3><span class="sc">${top.length} chapters · ${n(leaves.length)} lines</span></div>
     <div class="sbody"><div class="chapters">${top.map((c, i) => `<button class="chap" data-goto="${c.node.id}"><span class="no">${i + 1}</span><span class="nm">${c.node.name.replace(/^Italian Game: /, "")}</span><span class="fig">${c.node.size}</span></button>`).join("")}</div></div></section>`;
 }
 function authorHtml(more) {
@@ -940,17 +991,23 @@ function authorHtml(more) {
     <div class="author"><span class="mark" aria-hidden="true">BT</span><div class="who2"><b>ByTheBook</b>${icon("check")}<span>Verified</span><span class="soft">· 9 books · 11,200 saves · on the shelf since Oct 2026</span></div>
     <p>The app's own books, built from open sources and checked by hand before they go on the shelf. Each one names its source.</p>${books}</div></section>`;
 }
-function reviewsSect() {
-  return `<section class="sect fill" aria-labelledby="rv-h"><div class="shead"><h3 id="rv-h">Reviews</h3><span class="sc">31 written · 128 ratings</span><span class="grow"></span><button class="btn outline sm">Write a review</button></div>
-    <div class="sbody">${reviewsHtml()}</div></section>`;
-}
-function leaderSect() {
-  const month = state.board === "month";
+function leaderBody(month) {
   const rows = month ? [...LEADERS].sort((a, b) => b[1] * b[2] + 0.12 * hash(b[0]) - (a[1] * a[2] + 0.12 * hash(a[0]))) : LEADERS;
-  return `<section class="sect fill" aria-labelledby="lb-h"><div class="shead"><h3 id="lb-h">Leaderboard</h3><span class="soon">Comes with the trainer</span><span class="grow"></span><div class="seg" role="group" aria-label="Leaderboard span"><button data-board="month" aria-pressed="${month}">This month</button><button data-board="all" aria-pressed="${!month}">All time</button></div></div>
-    <div class="sbody"><div class="lbrow head"><span>#</span><span>Player</span><span>Lines known</span><span>Accuracy</span><span>Drills</span></div>
+  return `<div class="lbrow head"><span>#</span><span>Player</span><span>Lines known</span><span>Accuracy</span><span>Drills</span></div>
     ${rows.map(([who, known, acc, drills], i) => `<div class="lbrow${i < 3 ? " top3" : ""}"><span class="rk">${i + 1}</span><span class="nm">${who}</span><span class="known"><span class="meter"><i style="width:${known * 100}%"></i></span><span class="fig">${pct(known)}</span></span><span class="fig">${pct(acc)}</span><span class="fig soft">${n(month ? Math.round(drills / 9) : drills)}</span></div>`).join("")}
-    <p class="lbnote">Players choose to show their drill stats here. Save the book and drill it to join.</p></div></section>`;
+    <p class="lbnote">Players choose to show their drill stats here. Save the book and drill it to join.</p>`;
+}
+/** Reviews and the leaderboard in one section, switched between (bookstore.md D24). */
+function readersSect() {
+  const none = state.readers === "none", rev = state.rtab !== "leaders", month = state.board === "month";
+  const tabs = `<div class="seg" role="tablist" aria-label="Readers"><button role="tab" data-rtab="reviews" aria-selected="${rev}" aria-pressed="${rev}">Reviews<span class="fig">${none ? 0 : 31}</span></button><button role="tab" data-rtab="leaders" aria-selected="${!rev}" aria-pressed="${!rev}">Leaderboard</button></div>`;
+  const tools = rev
+    ? `<span class="rlimit">${none ? "No ratings yet" : "128 ratings"}</span><span class="grow"></span><span class="rlimit">Readers review it from their library</span>`
+    : `<span class="soon">Comes with the trainer</span><span class="grow"></span>${none ? "" : `<div class="seg" role="group" aria-label="Leaderboard span"><button data-board="month" aria-pressed="${month}">This month</button><button data-board="all" aria-pressed="${!month}">All time</button></div>`}`;
+  const body = rev
+    ? none ? `<p class="empty">No reviews yet. Readers who save this book can rate it and write one review each, up to 200 characters, from its page in their library.</p>` : reviewsHtml()
+    : none ? `<p class="empty">No one is on the leaderboard yet. It comes with the trainer: players who drill this book can choose to show their drill stats here.</p>` : leaderBody(month);
+  return `<section class="sect fill" aria-label="Reviews and leaderboard"><div class="shead">${tabs}${tools}</div><div class="sbody">${body}</div></section>`;
 }
 function mastersSect() {
   const best = MASTERS[0];
@@ -964,7 +1021,7 @@ function storeLeft() {
   switch (state.layout) {
     case "jacket": return `${runningLeft()}<div class="front"><span class="kicker">Opening book · White · 1.e4 e5 2.Nf3 Nc6 3.Bc4</span><div class="title big"><h2>Italian Game</h2></div><p class="subtitle">The Giuoco Piano, the Two Knights Defense and the Evans Gambit, with their sidelines</p>${rateline()}${actions()}</div>
       <p class="blurb">The quiet Giuoco Piano and Pianissimo, the sharp Two Knights with the Fried Liver and the Traxler, and the Evans Gambit, accepted and declined.</p>${factline()}${chaptersHtml()}${authorHtml(true)}${credit()}`;
-    case "readers": return `${runningLeft()}<div class="front">${titleHtml()}${rateline()}${description}${actions()}</div>${factline()}${reviewsSect()}${leaderSect()}`;
+    case "readers": return `${runningLeft()}<div class="front">${titleHtml()}${rateline()}${description}${actions()}</div>${factline()}${chaptersHtml(true)}${readersSect()}`;
     case "masters": return `${runningLeft()}<div class="front">${titleHtml()}${rateline()}${description}${actions()}</div>${factline()}${mastersSect()}${authorHtml(false)}`;
     default: return `${runningLeft()}<div class="front">${titleHtml()}${publisher()}${description}${actions()}</div>${facts()}${showRow()}${totals()}${listHtml()}`;
   }
@@ -973,7 +1030,7 @@ const mostPlayed = (c) => [...c.children].sort((a, b) => b.games - a.games || b.
 
 function renderShell() {
   const mock = document.getElementById("mock");
-  mock.dataset.mode = state.mode; mock.dataset.width = state.width;
+  mock.dataset.mode = state.mode; for (const demo of document.querySelectorAll(".earsdemo")) demo.dataset.mode = state.mode; mock.dataset.width = state.width;
   const runningRight = STORE ? `<div class="running"><span class="sc">White · ByTheBook</span><i>Italian Game</i></div>` : `<div class="running"><span class="sc">White · saved from the Bookstore</span><i>Italian Game</i></div>`;
   const left = STORE ? storeLeft() : `${runningLeft()}<div class="front">${titleHtml()}${publisher()}${description}${actions()}</div>${facts()}${showRow()}${totals()}${listHtml()}`;
   const right = `${runningRight}<div id="pos">${positionHtml()}</div>${drawing()}`;
@@ -981,7 +1038,7 @@ function renderShell() {
     <div class="topbar"><span class="brand">ByTheBook</span><nav class="tabs" aria-label="Pages"><span>Overview</span><span>Explorer</span><span>Visualizations</span><span ${STORE ? "" : 'aria-current="page"'}>Library</span><span ${STORE ? 'aria-current="page"' : ""}>Bookstore</span><span>Train</span><span>Puzzles</span><span>Settings</span></nav>
       <span class="grow"></span><span class="guest">Browsing as a guest</span><button class="desk-btn">Create account</button></div>
     <div class="book"><span class="ribbon"></span><div class="spread">
-      <section class="pg left" aria-label="Left page">${left}</section>
+      <section class="pg left" aria-label="Left page">${STORE && state.back !== "link" ? earHtml("l", "Shelf", "Back to the shelf") : ""}${left}</section>
       <section class="pg right" aria-label="Right page">${right}</section>
     </div></div>
     ${state.dialog ? dialogHtml() : ""}`;
@@ -1074,6 +1131,8 @@ document.getElementById("mock").addEventListener("click", (event) => {
   if (goto) { goTo(all.get(goto.dataset.goto)); return; }
   const master = t.closest("[data-master]");
   if (master) { state.master = master.dataset.master && state.master !== master.dataset.master ? master.dataset.master : null; renderShell(); return; }
+  const rtab = t.closest("[data-rtab]");
+  if (rtab) { state.rtab = rtab.dataset.rtab; renderShell(); return; }
   const board = t.closest("[data-board]");
   if (board) { state.board = board.dataset.board; renderShell(); return; }
   const tab = t.closest("[data-tab]");

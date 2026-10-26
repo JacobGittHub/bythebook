@@ -74,16 +74,16 @@ test("on a phone the chapter column hides, giving the page its width, and the pa
 
 test("a second level in the one-page form shows its own page, with the way back in its running head", async ({ page }) => {
   await page.setViewportSize(TABLET);
-  await page.goto("/dashboard/bookstore");
-  const link = page.locator('a[href^="/dashboard/bookstore/"]').first();
+  await page.goto("/dashboard/visualizations?show=icicle");
+  const link = page.getByRole("link", { name: "Jump to page", exact: true });
   const href = (await link.getAttribute("href"))!;
   await link.click();
   await expect(page).toHaveURL(new RegExp(`${href}$`));
 
-  const back = page.locator(".book-running-head").getByRole("link", { name: "Back to Bookstore" });
+  const back = page.locator(".book-running-head").getByRole("link", { name: "Back to Visualizations" });
   await expect(back).toBeVisible();
-  // The Bookstore's tab stays lit.
-  await expect(chapters(page).getByRole("link", { name: "Bookstore", exact: true })).toHaveAttribute("aria-current", "page");
+  // The Visualizations tab stays lit.
+  await expect(chapters(page).getByRole("link", { name: "Visualizations", exact: true })).toHaveAttribute("aria-current", "page");
   await back.click();
-  await expect(page).toHaveURL(/\/dashboard\/bookstore$/);
+  await expect(page).toHaveURL(/\/dashboard\/visualizations$/);
 });

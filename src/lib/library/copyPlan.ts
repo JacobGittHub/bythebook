@@ -5,7 +5,7 @@
 
 import { z } from "zod";
 import { colorSchema } from "@/lib/validators/schemas";
-import { checkBookName, copyName, nameTaken } from "./names";
+import { bookNameProblem, checkBookName, copyName, nameTaken } from "./names";
 import { bookOriginSchema, MAX_LIBRARY_BOOKS, type BookDraft } from "./types";
 import { validateTrees } from "./validate";
 
@@ -36,7 +36,8 @@ export function toCandidate(raw: unknown): Candidate {
   }
   const name = checkBookName(parsed.data.name);
   if (!name) {
-    return { ok: false, name: rawName, problem: "invalid", detail: "Its name is empty or too long." };
+    const detail = `Its name can't be used. ${bookNameProblem(parsed.data.name)}`;
+    return { ok: false, name: rawName, problem: "invalid", detail };
   }
   const result = validateTrees(parsed.data.trees);
   if (!result.ok) {

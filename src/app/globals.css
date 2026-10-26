@@ -618,6 +618,60 @@ body {
   color: var(--muted-foreground);
 }
 .book-back:hover { color: var(--foreground); }
+/* A page ear (plans/book-ui.md D21, D22, PageEar.tsx): the page's top corner turned down. The
+   corner's triangle shows the next leaf's paper, shaded toward the crease, and the flap lies on
+   the page with a word along it. It grows a little on hover, as a corner lifts. */
+.book-ear {
+  --ear: 50px;
+  position: absolute;
+  top: -1px;
+  z-index: 8;
+  width: var(--ear);
+  height: var(--ear);
+  transition: width 120ms ease, height 120ms ease;
+}
+.book-ear[data-side="left"] { left: -1px; }
+.book-ear[data-side="right"] { right: -1px; }
+.book-ear[data-size="outer"] { --ear: 72px; }
+.book-ear[data-size="inner"] { --ear: 36px; z-index: 9; }
+.book-ear:hover,
+.book-ear:focus-visible { width: calc(var(--ear) + 5px); height: calc(var(--ear) + 5px); }
+.book-ear:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.book-ear-under,
+.book-ear-shade,
+.book-ear-flap { position: absolute; inset: 0; }
+.book-ear[data-side="left"] .book-ear-under {
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  border-top-left-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--page) 20%, color-mix(in oklab, var(--page) 80%, var(--gutter)) 50%);
+}
+.book-ear[data-side="right"] .book-ear-under {
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  border-top-right-radius: var(--radius-lg);
+  background: linear-gradient(225deg, var(--page) 20%, color-mix(in oklab, var(--page) 80%, var(--gutter)) 50%);
+}
+.book-ear-shade { filter: drop-shadow(1px 1px 1.5px var(--gutter)); }
+.book-ear[data-side="left"] .book-ear-flap {
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  background: linear-gradient(315deg, var(--page-alt) 40%, var(--page-edge));
+}
+.book-ear[data-side="right"] .book-ear-flap {
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+  background: linear-gradient(45deg, var(--page-alt) 40%, var(--page-edge));
+}
+.book-ear-word {
+  position: absolute;
+  top: 67%;
+  font: 600 8.5px/1 var(--font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+}
+.book-ear[data-side="left"] .book-ear-word { left: 67%; transform: translate(-50%, -50%) rotate(-45deg); }
+.book-ear[data-side="right"] .book-ear-word { left: 33%; transform: translate(-50%, -50%) rotate(45deg); }
+.book-ear[data-size="inner"] .book-ear-word { font-size: 7px; }
+.book-ear:is(:hover, :focus-visible) .book-ear-word { color: var(--foreground); }
 .book-page-body {
   position: relative;
   z-index: 1;

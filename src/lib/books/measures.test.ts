@@ -6,7 +6,6 @@ import { expectNoViolations } from "@/lib/regions/testShapes";
 import type { Move, MoveNode } from "@/types/chess";
 import {
   MAX_BOOK_POSITIONS,
-  MAX_VERIFIED_BOOK_POSITIONS,
   averageLeafDepth,
   checkPositionLimit,
   countPositions,
@@ -58,20 +57,21 @@ describe("positions and the limit", () => {
     expect(countPositions([])).toBe(0);
   });
 
-  it("allows a verified publisher more positions than anyone else", () => {
+  it("holds every book to the same limit", () => {
     const root: MoveNode = { id: "root", san: null, uci: null, fen: START_FEN, children: [] };
-    for (let i = 0; i < MAX_BOOK_POSITIONS + 1; i++) {
+    for (let i = 0; i < MAX_BOOK_POSITIONS; i++) {
       root.children.push({ id: `n${i}`, san: "x", uci: `x${i}`, fen: START_FEN, children: [] });
     }
-    expect(checkPositionLimit([root], false)).toEqual({
+    expect(checkPositionLimit([root])).toEqual({
+      count: MAX_BOOK_POSITIONS,
+      limit: MAX_BOOK_POSITIONS,
+      over: false,
+    });
+    root.children.push({ id: "over", san: "x", uci: "xover", fen: START_FEN, children: [] });
+    expect(checkPositionLimit([root])).toEqual({
       count: MAX_BOOK_POSITIONS + 1,
       limit: MAX_BOOK_POSITIONS,
       over: true,
-    });
-    expect(checkPositionLimit([root], true)).toEqual({
-      count: MAX_BOOK_POSITIONS + 1,
-      limit: MAX_VERIFIED_BOOK_POSITIONS,
-      over: false,
     });
   });
 });

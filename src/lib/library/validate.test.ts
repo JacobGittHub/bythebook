@@ -102,7 +102,6 @@ describe("validateTrees", () => {
     const result = validateTrees(input.slice(0, 4));
     expect(result.ok).toBe(true);
     expect(validateTrees(input)).toEqual({ ok: false, reason: "over_limit", count: 1_250, limit: MAX_BOOK_POSITIONS });
-    expect(validateTrees(input, { verifiedPublisher: true }).ok).toBe(true);
     expect(validateTrees([line(MAX_LINE_MOVES + 1)])).toMatchObject({ ok: false, reason: "invalid" });
   });
 });

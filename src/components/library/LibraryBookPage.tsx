@@ -5,15 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { useBookFrame } from "@/components/book/BookFrame";
+import { PageEar } from "@/components/book/PageEar";
 import { Spread } from "@/components/book/Spread";
-import { BookView } from "@/components/books/BookView";
-import { BookViewIcon } from "@/components/books/BookViewRail";
 import { useBookSelection } from "@/components/books/useBookSelection";
-import { useViewZoom } from "@/components/books/useViewZoom";
-import { ZoomControls } from "@/components/books/ZoomControls";
 import { Button } from "@/components/shadcn/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Skeleton } from "@/components/shadcn/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/shadcn/toggle-group";
 import { useGameImport } from "@/context/GameImport";
@@ -22,7 +17,7 @@ import { useHistoryGames } from "@/hooks/useHistoryGames";
 import { bookContents, type ContentsEntry } from "@/lib/books/contents";
 import { clashesOf, openClashes, picksOf, withPicks, type Clash, type Picks } from "@/lib/books/drills";
 import { countOwnMoves, measuredDifficulty, type BookSide } from "@/lib/books/measures";
-import { BOOK_VIEWS, isBookViewId, type BookViewId } from "@/lib/books/views";
+import type { BookViewId } from "@/lib/books/views";
 import { highlightIndex, type Walk } from "@/lib/books/views/camera";
 import { buildViewTree, lineText, moveLabel, pathTo, type ViewNode, type ViewTree } from "@/lib/books/viewTree";
 import { getOpeningEndingAt } from "@/lib/chess/openingCatalog";
@@ -34,6 +29,7 @@ import { explorerHref, libraryBookHref, libraryHref, storeBookHref } from "@/lib
 import { STALE_BOOK_MESSAGE, startTree, withStartTree } from "@/lib/library/trees";
 import { libraryErrorMessage, type BookPatch, type LibraryBook, type LibraryEntry } from "@/lib/library/types";
 import { cn } from "@/lib/utils";
+import { BookDrawing, BookPageHead } from "./BookDrawing";
 import { BookFacts } from "./BookFacts";
 import { BookGamesFilter, type BookSpan } from "./BookGamesFilter";
 import { BookMenu } from "./BookMenu";
@@ -41,7 +37,6 @@ import { BookTags, OriginLine, SideTag, countOf, originFolio, originShort, posit
 import { BookPosition, WhoTag, exitLabel } from "./BookPosition";
 import { DEFAULT_READER_VIEW } from "./BookReader";
 import { ClashesDialog } from "./ClashesDialog";
-import { Key } from "./GameHistoryPage";
 import { ResultsBar } from "./GameHistorySection";
 import { RemoveMoveButton } from "./RemoveMoveButton";
 
@@ -74,12 +69,11 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
     <>
       <Spread
         left={{
+          // Back to the Library with this book picked, where another book is chosen (D40), by
+          // the page's ear (plans/book-ui.md D21, D22).
+          ear: <PageEar side="left" word="Books" label="Back to all books" href={libraryHref(bookId)} />,
           head: (
             <>
-              {/* Back to the Library with this book picked, where another book is chosen (D40). */}
-              <Link href={libraryHref(bookId)} className="book-back">
-                Back to all books
-              </Link>
               <span className="grow" />
               <span className="book-sc">Library{books ? ` · ${countOf(books.length, "book")}` : ""}</span>
             </>
@@ -103,7 +97,7 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
           ),
         }}
         right={{
-          head: entry && <RightHead name={entry.name} side={entry.color} whose={originShort(entry.origin)} />,
+          head: entry && <BookPageHead name={entry.name} side={entry.color} whose={originShort(entry.origin)} />,
           body: missing ? null : model ? <RightPage page={model.page} /> : <Skeleton className="min-h-64 w-full flex-1" />,
           folio: entry && (
             <>
@@ -115,24 +109,6 @@ export function LibraryBookPage({ bookId }: { bookId: string }) {
         }}
       />
       {model?.dialog}
-    </>
-  );
-}
-
-function RightHead({ name, side, whose }: { name: string; side: BookSide; whose: string }) {
-  const { form } = useBookFrame();
-  return (
-    <>
-      <span className="book-sc">
-        {sideName(side)} · {whose}
-      </span>
-      {/* On one page the title is far up the page, so the head names the book. */}
-      {form === "spread" && (
-        <>
-          <span className="grow" />
-          <span className="truncate">{name}</span>
-        </>
-      )}
     </>
   );
 }
@@ -469,7 +445,6 @@ function ExitsList({ exits, selected, onSelect }: { exits: BookExit[]; selected:
 
 function RightPage({ page }: { page: PageModel }) {
   const { book, save, side, tree, clashes, selected, spineEndId, select, comparison, hoveredId, setHoveredId, walk, setWalk, view, setView } = page;
-  const zoom = useViewZoom();
   const highlight = highlightIndex(selected, walk);
   const highlightId = highlight >= 0 ? selected.children[highlight].id : null;
   // The board draws the hovered move of this position, else the one the arrow keys would play.
@@ -488,7 +463,6 @@ function RightPage({ page }: { page: PageModel }) {
   const thickness = useMemo(() => (comparison ? new Map([...comparison.totals].map(([id, at]) => [id, at.games])) : undefined), [comparison]);
   const exitsHere = comparison ? comparison.exits.filter((exit) => exit.from === selected) : [];
   const anyUndrilled = tree.nodes.some((node) => node.undrilled);
-  const viewInfo = BOOK_VIEWS.find((option) => option.id === view)!;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
@@ -506,75 +480,37 @@ function RightPage({ page }: { page: PageModel }) {
         onHover={(node) => setHoveredId(node?.id ?? null)}
         actions={<RemoveMoveButton book={book} node={selected} save={save} />}
       />
-      <div className="flex flex-wrap items-center gap-2">
-        <Select
-          value={view}
-          onValueChange={(next) => {
-            if (!isBookViewId(next)) return;
-            setView(next);
-            setHoveredId(null);
-          }}
-        >
-          <SelectTrigger size="sm" aria-label="Book view" className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {BOOK_VIEWS.map((option) => (
-              <SelectItem key={option.id} value={option.id}>
-                <BookViewIcon view={option.id} />
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <span className="grow" />
-        <ZoomControls zoom={zoom} />
-      </div>
-      <div data-slot="panel" className="relative flex h-[28rem] min-h-64 rounded-md border bg-muted p-1 [--bv-label-halo:var(--muted)] md:h-auto md:min-h-40 md:flex-1">
-        <BookView
-          tree={tree}
-          view={view}
-          selectedId={selected.id}
-          spineEndId={spineEndId}
-          side={side}
-          onSelect={select}
-          onHover={(node) => setHoveredId(node?.id ?? null)}
-          label={`${viewInfo.label} of ${book.name}`}
-          zoom={zoom}
-          success={success}
-          thickness={thickness}
-          walk={walk}
-          onWalkChange={setWalk}
-          keysAnywhere
-          className="flex-1"
-        />
-      </div>
-      <p className="flex flex-wrap gap-x-3.5 gap-y-1 text-xs text-muted-foreground">
-        <span>
-          <Key>↑</Key> <Key>↓</Key> choose a move
-        </span>
-        <span>
-          <Key>→</Key> play it
-        </span>
-        <span>
-          <Key>←</Key> back
-        </span>
-        <span className="grow" />
-        {comparison ? (
-          <span className="flex items-center gap-1.5">
-            Your score
-            <span className="inline-block h-[7px] w-16 rounded-sm bg-[linear-gradient(90deg,var(--destructive),var(--bar-draw),var(--success))]" />
-            30% → 70%+ · thickness: games
-          </span>
-        ) : (
-          anyUndrilled && (
+      <BookDrawing
+        tree={tree}
+        side={side}
+        name={book.name}
+        selected={selected}
+        spineEndId={spineEndId}
+        onSelect={select}
+        onHover={(node) => setHoveredId(node?.id ?? null)}
+        walk={walk}
+        onWalkChange={setWalk}
+        view={view}
+        onView={setView}
+        success={success}
+        thickness={thickness}
+        legend={
+          comparison ? (
             <span className="flex items-center gap-1.5">
-              <span aria-hidden="true" className="inline-block w-5 border-t-[1.5px] border-dashed border-muted-foreground" />
-              not drilled
+              Your score
+              <span className="inline-block h-[7px] w-16 rounded-sm bg-[linear-gradient(90deg,var(--destructive),var(--bar-draw),var(--success))]" />
+              30% → 70%+ · thickness: games
             </span>
+          ) : (
+            anyUndrilled && (
+              <span className="flex items-center gap-1.5">
+                <span aria-hidden="true" className="inline-block w-5 border-t-[1.5px] border-dashed border-muted-foreground" />
+                not drilled
+              </span>
+            )
           )
-        )}
-      </p>
+        }
+      />
     </div>
   );
 }

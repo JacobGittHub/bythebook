@@ -1,4 +1,4 @@
-// What a book's cards and limits say about it (plans/bookstore.md, D6, D9, D11, D15, D16).
+// What a book's cards and limits say about it (plans/bookstore.md, D6, D9, D11, D15, D16, D19).
 // A book is a list of trees, each starting from a position (D16); an ordinary book is one
 // tree from the starting position. Everything here is pure, so it runs in the browser, in
 // the publishing script and in tests alike.
@@ -9,14 +9,15 @@ import type { MoveNode } from "@/types/chess";
 /** The side a book is played from, as `opening_books.color` stores it. */
 export type BookSide = "white" | "black";
 
-/** The most positions a book may hold (D15). */
+/** The most positions a book may hold, a publisher's too (D15, D19). */
 export const MAX_BOOK_POSITIONS = 1_000;
 
-/** The most positions a verified publisher's book may hold (D15). */
-export const MAX_VERIFIED_BOOK_POSITIONS = 5_000;
-
-export function positionLimit(verifiedPublisher: boolean): number {
-  return verifiedPublisher ? MAX_VERIFIED_BOOK_POSITIONS : MAX_BOOK_POSITIONS;
+/**
+ * A book's position limit. It is the same for every book today; raising it for books by
+ * specific accounts (D19) would look the account up here.
+ */
+export function positionLimit(): number {
+  return MAX_BOOK_POSITIONS;
 }
 
 /** Whose move it is in a FEN. */
@@ -37,12 +38,9 @@ export function countPositions(trees: readonly MoveNode[]): number {
 export type PositionCount = { count: number; limit: number; over: boolean };
 
 /** The count shown against the limit ("198 / 1,000"), and whether it is over. */
-export function checkPositionLimit(
-  trees: readonly MoveNode[],
-  verifiedPublisher: boolean,
-): PositionCount {
+export function checkPositionLimit(trees: readonly MoveNode[]): PositionCount {
   const count = countPositions(trees);
-  const limit = positionLimit(verifiedPublisher);
+  const limit = positionLimit();
   return { count, limit, over: count > limit };
 }
 

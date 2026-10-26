@@ -372,6 +372,12 @@ uninstall the package. Its toaster used `next-themes`, which the app doesn't use
 `useAppearance` instead. A file changed from shadcn/ui's says so in a comment at the change,
 so a later `add` that overwrites it doesn't lose the change unnoticed.
 
+**Text checks.** `obscenity` holds the word list that usernames and book names are checked
+against (`src/lib/validators/words.ts`, `plans/bookstore.md` D25). It folds the text before
+matching (look-alike letters, "sh1t", repeated letters) and keeps words such as "Scunthorpe"
+passing; `words.ts` also joins spaced-out letters, which it misses. It is pure, so the
+browser and the server check alike, and a test runs every catalog opening name through it.
+
 **Tooling.** `vitest` (dev only) runs the unit and property tests and the docs test
 (`docs/docs.test.ts`); its config resolves the `@/*` alias
 from `tsconfig.json`. It needs `@types/node` 22 or newer. The project uses 22, the oldest Node

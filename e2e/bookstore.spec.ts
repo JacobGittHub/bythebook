@@ -31,7 +31,7 @@ test.describe("Bookstore, as a guest", () => {
     await expect(bookList(page).getByRole("link", { name: /Caro-Kann Defense/ })).toBeVisible();
   });
 
-  test("a book's page lists the shelf as the filters left it, and the way back keeps them", async ({ page }) => {
+  test("a book's page says which book of the filtered shelf it is, and its ear goes back with the filters", async ({ page }) => {
     await page.goto("/dashboard/bookstore");
     const cards = page.getByRole("list", { name: "Store books" });
     await expect(cards.getByRole("link")).not.toHaveCount(0);
@@ -40,16 +40,14 @@ test.describe("Bookstore, as a guest", () => {
     await expect(page).toHaveURL(/\/dashboard\/bookstore\?q=defense&side=black$/);
     await cards.getByRole("link", { name: /French Defense/ }).click();
     await expect(page.getByRole("heading", { name: "French Defense", level: 1 })).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard\/bookstore\/french-defense\?q=defense&side=black$/);
+    // The shelf holds only the Black books with "defense" in their names.
+    await expect(page.locator(".book-folio").first()).toContainText("Book 2 of 3");
 
-    // Beside it, only the Black books with "defense" in their names, this one picked.
-    const shelf = page.getByRole("list", { name: "Books" });
-    await expect(shelf.getByRole("link")).toHaveText([/Caro-Kann Defense/, /French Defense/, /Sicilian Defense/]);
-    await expect(shelf.locator('[aria-current="true"]')).toContainText("French Defense");
-    await shelf.getByRole("link", { name: /Sicilian Defense/ }).click();
-    await expect(page.getByRole("heading", { name: "Sicilian Defense", level: 1 })).toBeVisible();
-    await expect(page).toHaveURL(/\/dashboard\/bookstore\/sicilian-defense\?q=defense&side=black$/);
-
-    await page.getByRole("link", { name: "Back to the shelf" }).click();
+    // The left page's ear, a link that says where it goes.
+    const ear = page.getByRole("link", { name: "Back to the shelf" });
+    await expect(ear).toContainText("Shelf");
+    await ear.click();
     await expect(page.getByRole("heading", { name: "Bookstore", level: 1 })).toBeVisible();
     await expect(page.getByLabel("Search the Bookstore")).toHaveValue("defense");
     await expect(page.getByRole("radio", { name: "Black" })).toHaveAttribute("aria-checked", "true");
@@ -65,22 +63,34 @@ test.describe("Bookstore, as a guest", () => {
     expect(sideways).toBe(0);
   });
 
-  test("a book's page fits its first screen at every spread window size, with what lies below in sight", async ({ page }) => {
+  test("a book's page fits its spread at every spread window size (D24)", async ({ page }) => {
     await page.goto("/dashboard/bookstore/queens-gambit");
     await expect(page.getByRole("heading", { name: "Queen's Gambit", level: 1 })).toBeVisible();
-    const right = page.locator('[data-slot="page"][data-side="right"]');
     for (const size of BOOK_WINDOW_SIZES.filter((size) => size.width >= SPREAD_MIN_WIDTH)) {
       await page.setViewportSize(size);
       await expect(page.locator(".book-frame")).toHaveAttribute("data-form", "spread");
-      for (const part of [".book-fold", ".book-page-body"]) {
-        const overflow = await right.locator(part).evaluate((el) => el.scrollHeight - el.clientHeight);
-        expect(overflow, `${size.name}: ${part}`).toBeLessThanOrEqual(0);
+      for (const side of ["left", "right"]) {
+        const body = page.locator(`[data-slot="page"][data-side="${side}"] .book-page-body`);
+        const overflow = await body.evaluate((el) => el.scrollHeight - el.clientHeight);
+        expect(overflow, `${size.name}: the ${side} page`).toBeLessThanOrEqual(0);
       }
-      const fold = await right.locator(".book-fold").evaluate((el) => el.getBoundingClientRect().bottom);
-      const below = await page.getByRole("heading", { name: "About this book" }).evaluate((el) => el.getBoundingClientRect().top);
-      expect(fold, size.name).toBeLessThan(size.height);
-      expect(below, size.name).toBeLessThan(size.height);
     }
+  });
+
+  test("a book's page lists its chapters, and its reviews and leaderboard say how they fill, with no box to write a review (D22, D24)", async ({ page }) => {
+    await page.goto("/dashboard/bookstore/italian-game");
+    const chapters = page.getByRole("region", { name: "In this book" });
+    await chapters.getByRole("button", { name: /Giuoco Piano/ }).click();
+    await expect(page.getByText("Current position")).toBeVisible();
+    // The Explorer opens the position alone, since the book isn't in the library.
+    await expect(page.getByRole("link", { name: "Open in Explorer" })).toHaveAttribute("href", /^\/dashboard\/explorer\?line=[a-h1-8]{4}(%2C[a-h1-8]{4})*$/);
+
+    const readers = page.getByRole("region", { name: "Reviews and leaderboard" });
+    await expect(readers.getByText(/^No reviews yet\./)).toBeVisible();
+    await expect(readers.getByText("Readers review it from their library")).toBeVisible();
+    await expect(page.getByRole("button", { name: /review/i })).toHaveCount(0);
+    await readers.getByRole("radio", { name: "Leaderboard" }).click();
+    await expect(readers.getByText(/^No one is on the leaderboard yet\./)).toBeVisible();
   });
 
   test("an address that names no store book says so", async ({ page }) => {

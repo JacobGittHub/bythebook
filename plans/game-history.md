@@ -1,6 +1,6 @@
 # Game history import
 
-Status: active · Updated: 2026-10-24 · Depends on: deployment.md
+Status: active · Updated: 2026-10-25 · Depends on: deployment.md
 
 **Goal:** let a user import their own games and see how they have done in their openings.
 **Done when:** a user can import a PGN file of their games in the browser, see their games and
@@ -320,34 +320,47 @@ dialogue box, implement them, they looks great").
     flagged again.
   - A flag on a move that isn't one of the book side's moves at a clash is ignored. So is a
     clash whose moves are all flagged, since one move always stays ticked.
+- D42. **Games can be fetched by username and platform** (Q25, the user's answer of
+  2026-10-25: "I agree, fetch games by username and platform"). It amends D5, which read only
+  files.
+  - The import dialog offers two ways first, side by side: fetch from Chess.com or Lichess by
+    username, or choose a PGN file. Pasting PGN (D34) is the second way, below them (the
+    user's message of 2026-10-25).
+  - The fetch runs in the browser and streams into the same import worker as a file, so
+    nothing passes through our server (D13 holds) and guests can use it (D14). It asks only
+    for a public username: no password, token or sign-in, which is the easiest thing to trust.
+  - The user asked whether Chess.com needs an API key, and wants to "make sure that one
+    persons api calls don't drown out everyone elses". As far as the agent knows (to be
+    checked against both sites' docs in step 22):
+    - Neither site asks for a key to read public games.
+    - Both limit requests by the address they come from. Every user's browser makes its own
+      requests, so one person's import uses only their own share, not the app's. People
+      behind one shared address, such as a school's network, share its limit.
+    - Requests go one at a time, and an answer of 429 (too many requests) waits a minute
+      before trying again.
+    - Lichess sends 20 games a second to anonymous requests, so 3,000 games take about
+      2.5 minutes. Chess.com's come a month at a time. Chess.com's monthly files send
+      `Access-Control-Allow-Origin: *` (checked 2026-10-24). Lichess's export answered 404 to
+      a request from the agent's machine, so it needs a check from a browser.
+  - Settings gets a short tutorial on downloading games from each site by hand, linking only
+    to the sites' own pages, for people who prefer a file (the user's message of 2026-10-25).
+    The import dialog's file option links to it, saying in words that it goes to Settings.
+  - Anyone's username fetches their games, so this touches D6. The player question (D22)
+    limits what is kept, not what is fetched. Catching a wrong username is D43.
+- D43. **The import dialog shows whose username it is before fetching** (Q26, the user's answer
+  of 2026-10-25: "Sounds like a great idea").
+  - It reads the player's public profile and shows it as a card, "Is this you?", with their
+    picture, title, ratings, country, join date and how many games the account has. It fetches
+    only after "Yes, fetch my games". A name with no account says so at once.
+  - The player question (D22) then asks which side of each game is the user, as for a file.
+  - Game history never feeds the leaderboard: "Game history statistics will not feed into the
+    leaderboard, only drills from our site will." So fetching another player's games on
+    purpose harms no one, and no account needs verifying; Lichess's sign-in (OAuth) is not
+    needed.
 
 ## Open questions
 
-Q15–Q24 are settled by D29 and D33–D40.
-
-- Q25. **Should we help users get their game history from Chess.com and Lichess?** The user
-  pointed out that many people won't know how to download their games, and asked whether to
-  help directly, link to the sites' own download, or at least explain it, in the import dialog
-  or on a Settings page with a fuller tutorial, and whether people would trust what we tell
-  them.
-  - **Rec:** fetch the games by username, in the browser.
-    - Chess.com's monthly game files allow it: a request from another site gets
-      `Access-Control-Allow-Origin: *` (checked 2026-10-24).
-    - Lichess's API sends the same header. Its games export answered 404 to a request from the
-      agent's machine, so it needs a check from a browser.
-    - The games stream into the same import worker as a file, so nothing reaches our server
-      (D13 holds).
-    - There is no password, token or sign-in, only a public username, which is the easiest
-      thing to trust.
-    - Lichess sends 20 games a second to anonymous requests, so 3,000 games take about
-      2.5 minutes. Chess.com's come a month at a time.
-    - It amends D5, which reads only files. It touches D6, since anyone's username would fetch
-      their games. The username match (D22) limits what is kept, not what is fetched.
-  - **And** a short "Where do I get my games?" panel in the import dialog, for people who prefer
-    a file and for over-the-board games: steps for each site, links only to the sites' own
-    pages, and a plain "we never ask for a password". Settings holds appearance, so the help
-    belongs where the task is.
-  > ME:
+Q15–Q26 are settled by D29, D33–D40, D42 and D43. No question is open.
 
 ## Steps
 
@@ -565,6 +578,20 @@ deletes them.
   imports a fixture, moves to another page while it runs and sees the toast, and checks the
   report, the history page, the arrow keys and a book page's games view; the same for an
   account. Chromium while working, every browser in a review.
+
+**Phase 7. Fetching by username (D42)**
+
+- [ ] 22. Check both sites (agent): their docs on keys and rate limits, the profile and games
+  endpoints, whether the profile requests allow other sites (CORS), and Lichess's export from
+  a browser. Findings go in Notes, and D42 is corrected where it was wrong.
+- [ ] 23. Mockup (agent, then user): the import dialog with fetch and file first, paste
+  second, the profile card (D43) and the link to Settings' tutorial.
+- [ ] 24. The fetcher (agent), `src/lib/history/fetchGames.ts`: the pure parts tested in Node
+  (the month and export addresses, pacing, waiting after a 429), and the browser part that
+  streams each response into the import worker as text. Then the dialog, as the mockup is
+  approved.
+- [ ] 25. Settings' tutorial (agent): the steps for each site's download, linking to the
+  sites' own pages.
 
 **Later, not in these steps:** the Explorer's "your games" mode (D12), other players' games
 (D6), comments per position (D17), and copying a guest's history into an account at sign-in.

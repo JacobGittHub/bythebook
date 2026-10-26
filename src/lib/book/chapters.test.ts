@@ -31,8 +31,9 @@ describe("levelAt", () => {
 });
 
 describe("zoomsAt", () => {
-  it("zooms in on a second level, but not on the Library's, which are whole spreads", () => {
-    expect(zoomsAt("/dashboard/bookstore/abc", 2)).toBe(true);
+  it("zooms in on a second level, but not on the Library's or the Bookstore's, which are whole spreads", () => {
+    expect(zoomsAt("/dashboard/visualizations/treemap", 2)).toBe(true);
+    expect(zoomsAt("/dashboard/bookstore/abc", 2)).toBe(false);
     expect(zoomsAt("/dashboard/library/abc", 2)).toBe(false);
     expect(zoomsAt("/dashboard/library/history", 2)).toBe(false);
     expect(zoomsAt("/dashboard/library", 1)).toBe(false);

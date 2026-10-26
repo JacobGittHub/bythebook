@@ -74,18 +74,21 @@ export function libraryBookHref(bookId: string): string {
   return `/dashboard/library/${encodeURIComponent(bookId)}`;
 }
 
+/** The Bookstore's own page, its shelf. */
+export const BOOKSTORE_HREF = "/dashboard/bookstore";
+
 /** The Bookstore's shelf, searched and filtered as `shelf` says (plans/book-ui.md D9). */
 export function bookstoreHref(shelf?: ShelfFilters): string {
-  return `/dashboard/bookstore${shelf ? shelfQuery(shelf) : ""}`;
+  return `${BOOKSTORE_HREF}${shelf ? shelfQuery(shelf) : ""}`;
 }
 
 /**
- * A store book's page, carrying the shelf's search and filters if given, for the list beside it.
+ * A store book's page, carrying the shelf's search and filters if given, for its way back.
  * Its address drops the example books' id prefix.
  */
 export function storeBookHref(storeId: string, shelf?: ShelfFilters): string {
   const slug = storeId.startsWith(EXAMPLE_ID_PREFIX) ? storeId.slice(EXAMPLE_ID_PREFIX.length) : storeId;
-  return `/dashboard/bookstore/${encodeURIComponent(slug)}${shelf ? shelfQuery(shelf) : ""}`;
+  return `${BOOKSTORE_HREF}/${encodeURIComponent(slug)}${shelf ? shelfQuery(shelf) : ""}`;
 }
 
 /** The store book id a Bookstore address names. */

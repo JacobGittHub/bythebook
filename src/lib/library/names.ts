@@ -1,5 +1,8 @@
-// Book names (plans/bookstore.md D8: at most 30 characters). Names needn't be unique in a
-// library; a duplicate, or a copy kept beside a book of the same name, gets "(copy)".
+// Book names (plans/bookstore.md D8: at most 30 characters; D25: no word the word list
+// refuses). Names needn't be unique in a library; a duplicate, or a copy kept beside a book of
+// the same name, gets "(copy)".
+
+import { BANNED_WORDS_MESSAGE, hasBannedWords } from "@/lib/validators/words";
 
 /** The longest a book's name may be. */
 export const MAX_BOOK_NAME = 30;
@@ -9,10 +12,16 @@ export function cleanBookName(raw: string): string {
   return raw.replace(/\s+/g, " ").trim();
 }
 
-/** The cleaned name, or null when it is empty or too long. */
-export function checkBookName(raw: string): string | null {
+/** Why a name can't be used, or null when it can. */
+export function bookNameProblem(raw: string): string | null {
   const name = cleanBookName(raw);
-  return name.length >= 1 && name.length <= MAX_BOOK_NAME ? name : null;
+  if (name.length < 1 || name.length > MAX_BOOK_NAME) return `A name needs 1 to ${MAX_BOOK_NAME} characters.`;
+  return hasBannedWords(name) ? BANNED_WORDS_MESSAGE : null;
+}
+
+/** The cleaned name, or null when it can't be used (`bookNameProblem` says why). */
+export function checkBookName(raw: string): string | null {
+  return bookNameProblem(raw) === null ? cleanBookName(raw) : null;
 }
 
 /** A name from elsewhere, such as an example book's, cut to fit with an ellipsis if it is too long. */

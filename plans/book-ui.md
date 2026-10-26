@@ -1,6 +1,6 @@
 # Book UI
 
-Status: active · Updated: 2026-10-21 · Depends on: —
+Status: active · Updated: 2026-10-25 · Depends on: —
 
 **Goal:** rebuild the dashboard as an open book: every page a spread of two pages on a desk,
 with page turns, bookmarks that turn with their pages, a one-page form for narrow windows and
@@ -199,6 +199,26 @@ it, replacing the book slide. On 2026-10-16 the user changed D8's order to that 
   strip's tabs are words that happen to lie over the desk, so the wood behind them is the
   desk's own. The strip has no wood of its own, the desk's zoom shows through it, and a leaf
   that rises past the desk's top passes over it, not under it.
+- D21. **Page ears turn between levels** (the user's message of 2026-10-25: "the 1/2/3 page
+  turning could be done by an ear in the top corner of the page"). An ear is a top corner of a
+  page turned down, like a dog-ear, and pressing it turns to the level it leads to:
+  - A first level, the Library's or the Bookstore's, has no ears.
+  - A Library book's page (the second level) has an ear at its top left, back to the Library,
+    and one at its top right, on to the book's reviews and leaderboard (`bookstore.md` D22).
+  - A store book's page has only the top-left ear, back to the Bookstore.
+  - The Library's third level, the reviews and leaderboard, has a two-fold ear at its top left.
+- D22. **How the ears behave** (Q11, the user's answer of 2026-10-25: "Looks good").
+  - **A word on every ear.** The turned-down paper carries a short word, "Books" or "Shelf"
+    going back and "Reviews" going on, with the full destination as its accessible name, and
+    the corner lifts a little on hover. The fold shows paper underneath, the next leaf, not the
+    cover (the user's note on the mockup). The head's "Back to all books" link goes.
+  - **The two-fold ear.** Two folds stacked in the corner: the outer, larger one goes back one
+    level, to the book's page, and the inner one back two, to the Library.
+  - **Other second levels.** The game history page and a visualization's page get the top-left
+    ear back, so every level below a chapter's page goes back the same way. Neither has a third
+    level, so neither has a top-right ear.
+  - **The one-page form** (D15). Each ear stays on its own page's corner, so a book's page shows
+    the back ear on its first half and the reviews ear on its second.
 
 ## Steps
 
@@ -399,6 +419,14 @@ and get to the test of turns").
       Then, from the user's next notes: the strip lost its own wood, so the desk shows through
       it, and leaves turn over it; only dropped down over the book is it a board, cut from the
       desk's grain where the camera would show it.
+- [ ] (agent) The page ears (D21, D22): one `PageEar` part for the spread, then the top-left
+      ear on the Library's and the Bookstore's book pages, the game history page and a
+      visualization's page; the Library book page's top-right ear and the third level's
+      two-fold ear come with `bookstore.md` Phase 4.
+      `PageEar` and the top-left ear on the Library's and the Bookstore's book pages and the
+      game history page are done (2026-10-25), replacing their "Back to …" links. A
+      visualization's page is still zoomed in on, so its left page's corner is off the window;
+      its ear waits on whether it becomes a whole spread too.
 
 ### Phase 4. Checks and docs
 

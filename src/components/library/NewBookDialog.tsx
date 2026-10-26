@@ -23,7 +23,7 @@ import { MAX_BOOK_POSITIONS, countPositions, type BookSide } from "@/lib/books/m
 import { START_FEN } from "@/lib/chess/fen";
 import { createRootMoveNode } from "@/lib/chess/moveTree";
 import { explorerHref } from "@/lib/library/links";
-import { MAX_BOOK_NAME, checkBookName } from "@/lib/library/names";
+import { MAX_BOOK_NAME, bookNameProblem, checkBookName } from "@/lib/library/names";
 import { pgnTrees, readPgn } from "@/lib/library/pgn";
 import { libraryErrorMessage, type LibraryEntry } from "@/lib/library/types";
 import type { MoveNode } from "@/types/chess";
@@ -80,7 +80,7 @@ export function NewBookDialog({ open, onOpenChange, onCreated }: Props) {
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     const cleanName = checkBookName(name);
-    if (!cleanName) return setError(`A name needs 1 to ${MAX_BOOK_NAME} characters.`);
+    if (!cleanName) return setError(bookNameProblem(name));
     if (start === "paste" && !pasted?.ok) {
       return setError(pasted ? pasted.error : "Paste some moves first, or start in the Explorer.");
     }

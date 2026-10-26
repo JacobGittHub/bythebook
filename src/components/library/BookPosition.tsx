@@ -16,8 +16,8 @@ import { cn } from "@/lib/utils";
 import { ResultsBar } from "./GameHistorySection";
 
 type Props = {
-  /** The book, which the Explorer opens with the position. */
-  bookId: string;
+  /** The library's book, which the Explorer opens with the position; null for a store book, whose position opens alone. */
+  bookId: string | null;
   node: ViewNode;
   side: BookSide;
   /** The user's games at each book position, in Your games; null in Plain. */
@@ -30,7 +30,7 @@ type Props = {
   arrow: ViewNode | null;
   /** This position's state as a clash, or null when it isn't one. */
   clash: ClashState | null;
-  onClash: () => void;
+  onClash?: () => void;
   onSelect: (node: ViewNode) => void;
   onHover: (node: ViewNode | null) => void;
   /** Buttons for the position, such as Remove move. */
@@ -120,7 +120,7 @@ export function BookPosition({ bookId, node, side, totals, exits, highlightId, a
             <p className="flex items-baseline gap-2 book-sc">
               {node.children.length ? `Next in the book · ${node.children.length}` : "The line ends here"}
               <span className="grow" />
-              {clash && clash !== "off" && (
+              {clash && clash !== "off" && onClash && (
                 <Button variant="link" size="xs" className="h-auto p-0 font-sans text-xs tracking-normal normal-case" onClick={onClash}>
                   {clash === "open" ? "Clash · choose moves to drill" : "Clash · change the moves to drill"}
                 </Button>

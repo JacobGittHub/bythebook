@@ -33,7 +33,7 @@ import { Input } from "@/components/shadcn/input";
 import { Label } from "@/components/shadcn/label";
 import { useLibrary, useLibraryBooks } from "@/context/Library";
 import { duplicateBook } from "@/lib/library/edit";
-import { MAX_BOOK_NAME, checkBookName } from "@/lib/library/names";
+import { MAX_BOOK_NAME, bookNameProblem, checkBookName } from "@/lib/library/names";
 import { STALE_BOOK_MESSAGE } from "@/lib/library/trees";
 import { LibraryError, libraryErrorMessage, type BookPatch, type LibraryEntry } from "@/lib/library/types";
 
@@ -75,7 +75,7 @@ export function BookMenu({ book, onDeleted, onDuplicated }: Props) {
   const rename = async (event: React.FormEvent) => {
     event.preventDefault();
     const clean = checkBookName(name);
-    if (!clean) return toast.error(`A name needs 1 to ${MAX_BOOK_NAME} characters.`);
+    if (!clean) return toast.error(bookNameProblem(name));
     if (clean === book.name || (await save({ name: clean }, `Renamed to ${clean}.`))) setRenaming(false);
   };
 

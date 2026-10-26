@@ -8,11 +8,13 @@ import { betaContactEmail, betaKeyMailto } from "@/lib/auth/contact";
 import { getViewer } from "@/lib/auth/viewer";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { registerInputSchema } from "@/lib/validators/schemas";
+import { hasBannedWords } from "@/lib/validators/words";
 
 const errorMessages: Record<string, string> = {
   invalid_registration:
     "Enter an invite code, a username of 3 to 24 letters, digits, \"_\" or \"-\", a valid email, and a password with at least 8 characters.",
   username_taken: "That username is taken. Usernames ignore case, so try another one.",
+  username_refused: "That username has a word we don't allow. Try another one.",
   invalid_code: "That invite code isn't valid, or it has already been used.",
   password_mismatch: "The two passwords don't match.",
 };
@@ -45,7 +47,8 @@ export default async function RegisterPage({
     });
 
     if (!parsedRegistration.success) {
-      redirect("/auth/register?error=invalid_registration");
+      const refused = hasBannedWords(String(formData.get("username") ?? ""));
+      redirect(`/auth/register?error=${refused ? "username_refused" : "invalid_registration"}`);
     }
 
     const outcome = await registerWithInvite(parsedRegistration.data);

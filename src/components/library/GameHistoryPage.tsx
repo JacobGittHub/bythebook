@@ -1,8 +1,8 @@
 "use client";
 
 import { ExternalLink, Upload } from "lucide-react";
-import Link from "next/link";
 import { useMemo, useState } from "react";
+import { PageEar } from "@/components/book/PageEar";
 import { Spread } from "@/components/book/Spread";
 import { BookView } from "@/components/books/BookView";
 import { useViewZoom } from "@/components/books/useViewZoom";
@@ -251,11 +251,10 @@ export function GameHistoryPage() {
   return (
     <Spread
       left={{
+        // Back to the Library by the page's ear (plans/book-ui.md D21, D22).
+        ear: <PageEar side="left" word="Library" label="Back to the Library" href={libraryHref()} />,
         head: (
           <>
-            <Link href={libraryHref()} className="book-back">
-              Back to the Library
-            </Link>
             <span className="grow" />
             <span className="book-sc">{kept}</span>
           </>

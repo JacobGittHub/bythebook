@@ -16,9 +16,10 @@ type Props = {
   difficulty: number | null;
   /** The book's own moves (`countOwnMoves`). */
   ownMoves: number;
-  /** Clashes still to resolve (`openClashes`). */
-  toResolve: number;
-  onClashes: () => void;
+  /** Clashes still to resolve (`openClashes`); left out where clashes aren't the reader's to resolve, as in the Bookstore. */
+  toResolve?: number;
+  /** Opens the clashes dialog; without it the count is only a number. */
+  onClashes?: () => void;
   className?: string;
 };
 
@@ -26,9 +27,9 @@ type Props = {
  * A book's facts on its own page (plans/game-history.md D40): the difficulty scale, whose numbers
  * show on hover, beside the moves to remember and the average line it is measured from; then the
  * positions, the lines and the clashes, which open their dialog and are flagged while any is left
- * to resolve.
+ * to resolve. A store book's page shows the same facts, its clashes as a number only.
  */
-export function BookFacts({ summary, difficulty, ownMoves, toResolve, onClashes, className }: Props) {
+export function BookFacts({ summary, difficulty, ownMoves, toResolve = 0, onClashes, className }: Props) {
   return (
     <dl className={cn("flex shrink-0 flex-wrap gap-x-6 gap-y-1.5 border-y border-rule py-2.5", className)}>
       <div className="flex basis-full flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px]">
@@ -51,27 +52,31 @@ export function BookFacts({ summary, difficulty, ownMoves, toResolve, onClashes,
         {count(summary.lines)} <span className="text-xs font-normal text-muted-foreground">· longest {summary.maxDepth}</span>
       </Fact>
       <Fact label="Clashes">
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          onClick={onClashes}
-          disabled={summary.clashes === 0}
-          className={cn(
-            "mt-px inline-flex items-center gap-1.5 rounded-md border bg-card px-2 py-0.5 text-sm font-medium tabular-nums hover:bg-accent disabled:pointer-events-none",
-            toResolve > 0 && "border-[var(--view-clash)]",
-          )}
-        >
-          {count(summary.clashes)}
-          {summary.clashes > 0 &&
-            (toResolve > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-sm bg-warning/10 px-1.5 py-px text-[11.5px] font-semibold text-warning">
-                <span aria-hidden="true" className="size-1.5 rounded-full bg-[var(--view-clash)]" />
-                {count(toResolve)} to resolve
-              </span>
-            ) : (
-              <span className="text-[11.5px] font-medium text-success">All resolved</span>
-            ))}
-        </button>
+        {onClashes ? (
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={onClashes}
+            disabled={summary.clashes === 0}
+            className={cn(
+              "mt-px inline-flex items-center gap-1.5 rounded-md border bg-card px-2 py-0.5 text-sm font-medium tabular-nums hover:bg-accent disabled:pointer-events-none",
+              toResolve > 0 && "border-[var(--view-clash)]",
+            )}
+          >
+            {count(summary.clashes)}
+            {summary.clashes > 0 &&
+              (toResolve > 0 ? (
+                <span className="inline-flex items-center gap-1 rounded-sm bg-warning/10 px-1.5 py-px text-[11.5px] font-semibold text-warning">
+                  <span aria-hidden="true" className="size-1.5 rounded-full bg-[var(--view-clash)]" />
+                  {count(toResolve)} to resolve
+                </span>
+              ) : (
+                <span className="text-[11.5px] font-medium text-success">All resolved</span>
+              ))}
+          </button>
+        ) : (
+          count(summary.clashes)
+        )}
       </Fact>
     </dl>
   );

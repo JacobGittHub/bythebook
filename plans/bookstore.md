@@ -1,6 +1,6 @@
 # Bookstore, repertoires and library files
 
-Status: deciding · Updated: 2026-10-24 · Depends on: deployment.md
+Status: deciding · Updated: 2026-10-25 · Depends on: deployment.md
 
 **Goal:** give users default books to pick from, repertoires that combine books, and files
 that move a library in and out of the app.
@@ -134,7 +134,77 @@ From the user's answers on 2026-10-06.
   2026-10-21). Later, users will choose whether to make their success with a book public
   (probably only their drill stats), and see other users' public stats for that book, which is
   where the link goes; until then it is marked as coming. This extends D10, and like D10 it
-  belongs to a trainer plan.
+  belongs to a trainer plan. D22 says where the two links lead.
+- D19. **Every book holds at most 1,000 positions, a publisher's too** (Q2, the user's answer of
+  2026-10-25: "1000 positions should be enough for most books, publisher or not"). It amends
+  D15, whose 5,000 for a verified publisher goes, so a saved copy of a store book is held to
+  the same limit as any book. "In the future I may increase this limit for books by specific
+  accounts", so the limit stays a lookup by account (`positionLimit`), returning 1,000 for
+  everyone until then.
+- D20. **A guest tries a store book by saving it** (Q4, "Agreed"). Saving is one press and
+  costs nothing, since a guest's copy stays in the browser (D14), and the Explorer and the
+  trainer open books only from the library. A store book's page offers "Open position in
+  Explorer" for a single position.
+- D21. **A saved copy keeps its store book's id and shows the lines its owner customized**
+  (Q6, the user's answer of 2026-10-25). How the copy's page marks the moves added or removed
+  since saving is worked out with the store's back end (Phase 4). The rest of Q6's
+  recommendation, which the answer didn't question, goes with it: the copy's page shows the
+  store book's current rating and save count and the publisher with their mark, read from the
+  store's cached routes (D14); the description and the publisher's difficulty are copied with
+  the book; once the moves are edited the page says "Edited from" the store book and drops the
+  publisher's difficulty; a signed-in user can rate the store book from their copy's page.
+- D22. **Books get written reviews, and a Library copy shows them on a third level** (Q7, the
+  user's answer of 2026-10-25).
+  - A review is an optional text with a rating, at most 200 characters, one per account and
+    book, editable and deletable by its writer, checked as D25 says, and hidden by the user
+    from the SQL editor if needed. Only signed-in users write them; guests read them. Reviews
+    belong to the store book, not to copies, so editing a copy doesn't carry them.
+  - A store book's page lists them (D24), newest first, a capped page at a time.
+  - A Library copy's reviews and leaderboard links don't go to the Bookstore. They open a third
+    level of the Library: one whole spread holding both the reviews and the leaderboard ("a
+    single openfold view of both, kind of like a third level to the library"). The Bookstore
+    has no third level. The page ears that move between the levels are `book-ui.md` D21.
+
+  *Amended 2026-10-25 (the user's note on the mockup: "I don't think people should be able to
+  review a book from the bookstore page"):* a store book's page only lists reviews. A review,
+  with its rating, is written from a saved copy, on the Library's third level, so only someone
+  who has the book in their library can review it.
+- D23. **Every book may have a description, and each screen shows these statistics** (Q8, the
+  user's answer of 2026-10-25). The description is at most 200 characters (D8), on the user's
+  own books too, so the field is the same everywhere.
+
+  | Where | Shows |
+  |---|---|
+  | Library, first level (the picked book) | positions / limit, difficulty, lines, the longest line, clashes, unconnected; the rating for a store copy |
+  | A book's own page (Library) | everything: the description, difficulty and the publisher's, positions / limit, lines, the average and longest line, clashes, coverage, unconnected; for a store copy also the rating, saves, publisher and the links to its reviews and leaderboard (D22) |
+  | Bookstore card (D8) | as D8: title, publisher, rating, saves, positions / limit, difficulty, coverage beside the depth, unconnected |
+  | A store book's page | as D24 lays it out |
+
+- D24. **A store book's page is `bookstore-spread.html`'s layout B, changed** (Q9, the user's
+  answer of 2026-10-25: "I like B the most, although I get that there are no reviews or
+  leaderboards yet").
+  - The left page holds the title block and the facts, then "In this book" (the chapters, each
+    opening the book names), then one section that switches between Reviews and Leaderboard,
+    below "In this book" ("I want the 'in this book' section on top of the
+    leaderboard/reviews section").
+  - The right page keeps the board and the drawing.
+  - Until there are reviews and a leaderboard, the section says so in place of them. It has no
+    box for writing a review (D22, as amended).
+  - "Played by masters" (layout C) is later work, with a plan of its own: it needs games tagged
+    by player, which `position_cache` doesn't have.
+- D25. **Names, titles, descriptions and reviews are checked by their shape and a word list**
+  (Q10, the user's answer of 2026-10-25: "Start with 1 and 2 for now").
+  - **Shape:** lengths and allowed characters in the Zod schemas, so the browser and the routes
+    check alike: titles at most 30 characters (D8), descriptions and reviews at most 200 (D8,
+    D22), usernames as `USERNAME_PATTERN` already has them.
+  - **Word list:** the text is folded first (case, accents, look-alike letters, spellings like
+    "sh1t", spaces or dots between letters), then matched against banned words, with allowed
+    words so "Scunthorpe" or "assassin" pass. It runs in the browser for instant feedback and
+    on the server for the check that counts, and sends the text nowhere.
+  - Names are checked at sign-up and rename, titles and descriptions on save and publish,
+    reviews on save. A text that fails is refused with a plain message, not cleaned.
+  - A model and a report button, the third and fourth layers Q10 described, wait. Notes keep
+    what was found about models for when they're needed.
 
 ## Open questions
 
@@ -215,16 +285,8 @@ lines on a few plies from master statistics where wanted. Wikibooks fills gaps, 
 > ME: Yes, all sounds great. But if we are generating books from catalog, may wnt to take a top p sample in clashes, which will typically result in one move, but could allow a few more to satisfy a slightly more general crowd of users.
 
 The Bookstore is drawn in `docs/design/mockups/bookstore.html` (2026-10-07): cards to browse, a page
-per book, and the example books as ByTheBook's store books. Drawing it raised Q2–Q4.
-
-### Q2. What limit does a saved copy of a verified publisher's book have?
-
-A verified publisher's book can hold 5,000 positions and a user's book 1,000 (D15), so a
-saved copy of a large store book could already be past what a user may keep.
-
-**Recommendation:** the copy keeps the limit it was published under, shown the same way
-("1,000 / 5,000"). Editing can't take it past that limit. Combine makes a new book of the
-user's own, so the result is held to the user's 1,000.
+per book, and the example books as ByTheBook's store books. Drawing it raised Q2–Q4. Q2 and
+Q4 are settled by D19 and D20, and Q10 by D25.
 
 ### Q3. Should display names that imitate the verified mark be refused?
 
@@ -235,12 +297,11 @@ a card.
 **Recommendation:** yes. Refuse check-like symbols (✓ ✔ ☑) and the word "verified" in
 display names, checked at sign-up and rename together with the profanity check (Notes), once
 other people can publish (D3).
+> ME: I want to know what checks we should use to determine if an account name, book title, book description, or book review should be allowed or not. Should we use a machine learning model, or maybe JEV? how do these profanity checks work at scale?
 
-### Q4. Can a guest try a store book in the Explorer or the trainer without saving it?
-
-**Recommendation:** no. Saving is one press and costs nothing, since a guest's copy stays in
-the browser (D14). The Explorer and the trainer then always open books from one place, the
-library. A store book's page offers "Open position in Explorer" for a single position.
+Usernames already allow only letters, digits, `_` and `-` (`USERNAME_PATTERN`, Notes), so no
+name can hold a check mark today; what remains is the word "verified", which D25's word list
+could refuse in names. The user's question about checks was Q10, now D25.
 
 ### Book statistics (raised 2026-10-21)
 
@@ -252,74 +313,11 @@ longest line, clashes (D6) and the unconnected flag (D16). Coverage, the book–
 (D9), the publisher's difficulty, ratings (D8), reviews, descriptions, and how a library copy
 shows any of the store's numbers.
 
-Q5 (how difficulty is worked out and shown) is settled by D17.
-
-### Q6. What does a saved copy show of its store book?
-
-**Recommendation:** the copy keeps its store book's id (it stays a copy, D5). Its own page
-shows the store book's current rating and save count, a link to its reviews in the Bookstore,
-and the publisher with their mark, read from the store's cached routes (D14), so guests see
-them too. The description and the publisher's difficulty are copied with the book; if the
-user edits the moves, the page says "Edited from" the store book, and the publisher's
-difficulty is dropped, since it no longer describes the book. A signed-in user can rate the
-store book from their copy's page.
-
-> ME:
-
-### Q7. Do books get written reviews, as well as stars?
-
-**Recommendation:** yes, as an optional text with a rating: one per account and book, at most
-500 characters, editable and deletable by its writer, checked with the word list (Notes), and
-hidden by the user from the SQL editor if needed. The store book's page lists them newest
-first, a capped page at a time. Guests read them and can't write them. Reviews belong to the
-store book, not to copies, so editing a copy doesn't carry them.
-
-> ME:
-
-### Q8. Does every book get a description, and which screen shows which statistics?
-
-**Recommendation:** every book may have a description (at most 200 characters, D8), the
-user's own books too, so the field is the same everywhere. Then:
-
-| Where | Shows |
-|---|---|
-| Library, first level (the picked book) | positions / limit, difficulty, lines, the longest line, clashes; the rating for a store copy |
-| A book's own page (Library) | everything: the description, difficulty and the publisher's, positions / limit, lines, the average and longest line, clashes, coverage, unconnected; for a store copy also the rating, saves, publisher and the link to reviews |
-| Bookstore card (D8) | as D8: title, publisher, rating, saves, positions / limit, difficulty, coverage beside the depth, unconnected |
-| A store book's page | as a book's own page, with the reviews below |
-
-> ME:
-
-### Q9. How is a store book's page laid out?
-
-The user wasn't sure about a store book's page reading almost the same as its Library copy's
-(`game-history.md` D40), and asked for layouts that put the book and its publisher before the
-reader's own numbers, with reviews and the leaderboard on the left in at least one
-(2026-10-24). `plans/mockups/bookstore-spread.html` draws them on a whole spread. Each keeps the
-board and the drawing on the right page:
-
-- **A, the book first:** a title page with what the book covers, a subtitle, the rating and
-  Save to library; a short blurb; the chapters, each opening the book names; and the
-  publisher, with a line about them and three more of their books. Publishers would need a
-  short bio, which this plan doesn't have yet.
-- **B, readers:** a short title block and the facts, then the reviews and the leaderboard
-  (D18), each scrolling in its own box. The leaderboard ranks players who chose to show their
-  drill stats (D10) by lines known, accuracy and drills, this month or all time.
-- **C, played by masters:** a list of masters, each with how many of their moves as White,
-  while still in the book's lines, the book has, and how far they stay in it. Picking one
-  paints the drawing with their games.
-  - The user wants this section later ("it would be cool to see if a book is similar to what
-    someone like spassky or capablanca or hikaru played/plays").
-  - It needs games tagged by player, which `position_cache` doesn't have; Lichess's masters
-    explorer can't filter by player. A script would read collections of master games once,
-    like the example books, after their licences are checked. It would get a plan of its own.
-- **Like the Library:** the earlier layout, for comparison.
-
-**Rec:** A, with C's masters section added below the chapters once its data exists. A is the
-one that sells the book, and a reader who wants the reviews reaches them from the rating, as
-today. B fits better once the leaderboard has real players in it.
-
-> ME:
+Q5 is settled by D17, and Q6–Q9 by D21–D24. The "Played by masters" idea from Q9's mockup
+(the user: "it would be cool to see if a book is similar to what someone like spassky or
+capablanca or hikaru played/plays") needs games tagged by player; Lichess's masters explorer
+can't filter by player, so a script would read collections of master games once, like the
+example books, after their licences are checked.
 
 ## Steps
 
@@ -340,11 +338,28 @@ limit (D15) checked on save, restore and the copy at sign-in, all in `src/lib/li
 
 ### Phase 3. Publishing
 
-- [ ] (agent) Migration: who is verified (D13); the store fields on books (description,
+- [x] (agent) Migration: who is verified (D13); the store fields on books (description,
       publisher's difficulty, published date, scale, rating sum and count, save count);
-      ratings, one row per user and book, changed through one database function.
-- [ ] (user) Run it, mark the publishing account verified by its email, then
-      `npm run db:types`.
+      ratings, one row per user and book, changed through one database function; reviews,
+      one row per user and book, at most 200 characters (D22). `positionLimit` returns
+      1,000 for everyone (D19), and `MAX_VERIFIED_BOOK_POSITIONS` goes.
+      Written 2026-10-25 as `supabase/migrations/20261025120000_bookstore.sql`. A rating and its
+      review are one row, since D22's review is "a text with a rating". Users may change every
+      column of their own books and profile, so the verified mark, a store book's totals and
+      the reviews are tables of their own (`verified_publishers`, `store_books`,
+      `book_reviews`, `book_saves`) that only the service role writes, through
+      `review_book`, `delete_review` and `count_book_save`. `review_book` refuses an account
+      without a saved copy (D22, as amended). The description and the publisher's difficulty
+      are columns on `opening_books`. The limit change is in the code.
+- [ ] (user) Run it, then `npm run db:types`. It marks the publishing account verified by its
+      username, "ByTheBook", so no email is needed.
+- [x] (agent) The text checks (D25): one module that folds a text and matches it against the
+      word list, tested in Node, used by the Zod schemas for usernames, book titles,
+      descriptions and reviews.
+      Done 2026-10-25 for usernames (at sign-up; there is no rename yet) and book names, in
+      the browser and on the server: `src/lib/validators/words.ts`, on `obscenity`, which
+      refuses none of the catalog's 3,174 opening names. Descriptions and reviews use it once
+      they have fields.
 - [ ] (agent) The publishing script (waits on Q1): builds a draft on the publishing account
       from its source and rules, and publishes it when the user says so.
 - [ ] (user) Approve the first drafts.
@@ -358,6 +373,17 @@ limit (D15) checked on save, restore and the copy at sign-in, all in `src/lib/li
 - [ ] (agent) The store's back end under the pages: the two cached guest routes (D14) in
       place of the static files, ratings and saves on the cards, sorting by saves, and
       rating for accounts. Waits on Phase 3.
+- [ ] (agent) A store book's page as D24 lays it out, on a whole spread like the Library's
+      book page, with the Reviews and Leaderboard section saying so until it has rows. Then
+      the Library's third level of reviews and leaderboard (D22), and the page ears
+      (`book-ui.md` D21, D22).
+      The store book's page is done (2026-10-25, `StoreBookPage.tsx`), on the example books, with
+      its back ear; the Bookstore is a whole-spread chapter, so a visualization's page is now
+      the browser tests' zoomed second level. The source's credit keeps title, author and
+      licence on the page and its stated changes behind "How it was made", so the page fits a
+      short laptop. Chapters named under another ("Queen's Gambit Declined: Albin
+      Countergambit") show only the rest of their name. Still to do: the Library's third level
+      with the reviews ear and the two-fold ear.
 - [ ] (user) Check-in, as a guest and signed in.
 
 ### Phase 5. Combine, backup and restore
@@ -381,10 +407,26 @@ limit (D15) checked on save, restore and the copy at sign-in, all in `src/lib/li
   (Q1) need.
 - The trainer is still a placeholder, so "drilled the same way" means here that a repertoire
   has the same shape as a book. Drilling itself belongs to a trainer plan.
-- **Profanity checks** (from the first note on D1) matter once other users publish (D3). The
-  30- and 200-character limits go into the Zod schemas now. A word-list check, such as the
-  `obscenity` package, which runs in Node and the browser, comes with public uploads. A
-  language model would be more than this needs.
+- **Profanity checks** (from the first note on D1) are D25: shape and a word list.
+- **If a model is added later** (the third layer Q10 described, looked up 2026-10-25 at the
+  user's request):
+  - **Jev** (TypeSafe AI, released September 2026) answers a typed question about a text with
+    probabilities instead of words: pick one of several options, score on a scale, or yes/no.
+    Several Jev questions per field ("insulting?", "hateful?", "sexual?") would each give a
+    probability to compare with a threshold. Reported price: $0.042 per million input tokens,
+    output free, so a 200-character review with its questions costs a small fraction of a cent.
+    Against it: it is hosted, so users' text goes to TypeSafe in the United States, which the
+    privacy notice would have to say, and retention terms differ between sources; it is a
+    month old; and a review found that text inside the input shifts its probabilities, which
+    matters when the input is exactly what a troll writes. Checked only in secondary sources.
+  - **A small model on our side:** `minuva/MiniLMv2-toxic-jigsaw-lite-onnx` on Hugging Face,
+    23 MB quantized, Apache-2.0, distilled from `unitary/toxic-bert` (test ROC AUC 0.981
+    against the teacher's 0.983), two labels (toxic, severe toxic), English only, 256 tokens
+    at most, run with ONNX Runtime. `Xenova/toxic-bert` (about 111 MB) is the larger
+    alternative that Transformers.js runs as is. Against both: they were trained on Wikipedia
+    talk-page comments, so chess words need testing, and running one in a Vercel function
+    strains `deployment.md` D1 (cold starts load the model); in the browser it gives instant
+    feedback but can't be the check that counts.
 - **Ratings stay within `deployment.md` D1.** A rating is one row per user and book, and the
   book's row keeps a running sum and count, updated in the same call, so no card ever
   averages ratings on request.

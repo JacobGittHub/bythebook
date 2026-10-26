@@ -206,7 +206,7 @@ pages (`dashboard.md`) show them. They came from concept mockups the user ranked
 - **A drawing bigger than its box scrolls,** and a mouse drags it to look around.
 - **Every view is walked with the arrow keys** (`plans/game-history.md` D32) once it has
   focus, or from anywhere on a page whose view is its main part (`keysAnywhere`: the history
-  page, a Library book's page and the large `BookReader`), unless a field, a menu, a dialog or a control that uses the
+  page, a Library or Bookstore book's page and the large `BookReader`), unless a field, a menu, a dialog or a control that uses the
   arrows has the focus: the selected position is the current one, Up and Down move a highlight among its
   moves, stopping at the first and last, Right goes to the highlighted move and Left back to
   the parent, highlighting the move it came from (`walkKey`, `src/lib/books/views/camera.ts`).

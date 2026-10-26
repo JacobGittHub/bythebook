@@ -1,10 +1,10 @@
 // The rules every write to a library follows, wherever the books are kept: a name of 1–30
-// characters, trees that replay (`validate.ts`), a summary worked out from them (D26), and a
+// characters with no word the word list refuses, trees that replay (`validate.ts`), a summary worked out from them (D26), and a
 // change that names the `updatedAt` it read. The server applies them to rows
 // (`src/lib/db/openings.ts`), and the browser library to IndexedDB records (`browserStore.ts`).
 
 import type { MoveNode } from "@/types/chess";
-import { checkBookName } from "./names";
+import { bookNameProblem, cleanBookName } from "./names";
 import { summarize } from "./summary";
 import { sameInstant } from "./time";
 import { validateTrees } from "./validate";
@@ -21,9 +21,9 @@ export function checkedTrees(input: unknown): MoveNode[] {
 }
 
 function checkedName(raw: unknown): string {
-  const name = typeof raw === "string" ? checkBookName(raw) : null;
-  if (name === null) throw new LibraryError("invalid", "A book's name is 1 to 30 characters.");
-  return name;
+  const problem = typeof raw === "string" ? bookNameProblem(raw) : "A book needs a name.";
+  if (problem) throw new LibraryError("invalid", problem);
+  return cleanBookName(raw as string);
 }
 
 function checkedColor(raw: unknown): BookDraft["color"] {

@@ -91,12 +91,9 @@ const lineName = (line: string[]) => (line.length ? line.join(" ") : "the first 
  * first position, each move's UCI and its `skip` flag are read. Trees that start from the same
  * position are merged, as are repeated moves, and trees without moves are dropped; a book with
  * no moves at all is one empty tree from the starting position. The book must keep within its
- * position limit (bookstore.md D15).
+ * position limit (bookstore.md D15, D19).
  */
-export function validateTrees(
-  input: unknown,
-  options: { verifiedPublisher?: boolean } = {},
-): ValidationResult {
+export function validateTrees(input: unknown): ValidationResult {
   const shapeProblem = checkShape(input);
   if (shapeProblem) return invalid(shapeProblem);
 
@@ -120,7 +117,7 @@ export function validateTrees(
 
   const kept = trees.filter((tree) => tree.children.length > 0);
   const result = kept.length ? kept : [createRootMoveNode(START_FEN)];
-  const { count, limit, over } = checkPositionLimit(result, options.verifiedPublisher ?? false);
+  const { count, limit, over } = checkPositionLimit(result);
   if (over) return { ok: false, reason: "over_limit", count, limit };
   return { ok: true, trees: result, positions: count };
 }

@@ -53,6 +53,84 @@ export type Database = {
         }
         Relationships: []
       }
+      book_reviews: {
+        Row: {
+          body: string | null
+          book_id: string
+          created_at: string
+          hidden: boolean
+          stars: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          book_id: string
+          created_at?: string
+          hidden?: boolean
+          stars: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          book_id?: string
+          created_at?: string
+          hidden?: boolean
+          stars?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_reviews_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "store_books"
+            referencedColumns: ["book_id"]
+          },
+          {
+            foreignKeyName: "book_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_saves: {
+        Row: {
+          book_id: string
+          saved_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          saved_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          saved_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_saves_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "store_books"
+            referencedColumns: ["book_id"]
+          },
+          {
+            foreignKeyName: "book_saves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drill_attempts: {
         Row: {
           attempted_at: string
@@ -276,10 +354,12 @@ export type Database = {
         Row: {
           color: string
           created_at: string | null
+          description: string | null
           id: string
           is_public: boolean | null
           name: string
           origin: Json
+          publisher_difficulty: number | null
           summary: Json
           trees: Json
           updated_at: string | null
@@ -288,10 +368,12 @@ export type Database = {
         Insert: {
           color: string
           created_at?: string | null
+          description?: string | null
           id?: string
           is_public?: boolean | null
           name: string
           origin?: Json
+          publisher_difficulty?: number | null
           summary: Json
           trees: Json
           updated_at?: string | null
@@ -300,10 +382,12 @@ export type Database = {
         Update: {
           color?: string
           created_at?: string | null
+          description?: string | null
           id?: string
           is_public?: boolean | null
           name?: string
           origin?: Json
+          publisher_difficulty?: number | null
           summary?: Json
           trees?: Json
           updated_at?: string | null
@@ -457,6 +541,41 @@ export type Database = {
         }
         Relationships: []
       }
+      store_books: {
+        Row: {
+          book_id: string
+          coverage: number | null
+          published_at: string
+          rating_count: number
+          rating_sum: number
+          save_count: number
+        }
+        Insert: {
+          book_id: string
+          coverage?: number | null
+          published_at?: string
+          rating_count?: number
+          rating_sum?: number
+          save_count?: number
+        }
+        Update: {
+          book_id?: string
+          coverage?: number | null
+          published_at?: string
+          rating_count?: number
+          rating_sum?: number
+          save_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_books_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: true
+            referencedRelation: "opening_books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_sessions: {
         Row: {
           book_id: string | null
@@ -574,6 +693,29 @@ export type Database = {
           },
         ]
       }
+      verified_publishers: {
+        Row: {
+          user_id: string
+          verified_at: string
+        }
+        Insert: {
+          user_id: string
+          verified_at?: string
+        }
+        Update: {
+          user_id?: string
+          verified_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verified_publishers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -596,9 +738,26 @@ export type Database = {
         }
         Returns: number
       }
+      count_book_save: {
+        Args: { p_book_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      delete_review: {
+        Args: { p_book_id: string; p_user_id: string }
+        Returns: boolean
+      }
       increment_usage: {
         Args: { p_kind: string; p_user_id?: string }
         Returns: number
+      }
+      review_book: {
+        Args: {
+          p_body: string
+          p_book_id: string
+          p_stars: number
+          p_user_id: string
+        }
+        Returns: string
       }
       stage_game_history_chunk: {
         Args: {

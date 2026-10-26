@@ -3,6 +3,7 @@ import { isValidFen, normalizeFen } from "@/lib/chess/fen";
 import { cleanBookName, MAX_BOOK_NAME } from "@/lib/library/names";
 import { bookOriginSchema } from "@/lib/library/types";
 import { historyCommitSchema, roomRequestInputSchema, storedChunkSchema } from "@/lib/history/types";
+import { BANNED_WORDS_MESSAGE, hasBannedWords } from "@/lib/validators/words";
 
 export const colorSchema = z.enum(["white", "black"]);
 
@@ -56,8 +57,13 @@ const accessCodeSchema = z.string().trim().min(1).max(100);
 export const USERNAME_PATTERN = /^[A-Za-z0-9_-]{3,24}$/;
 
 // Letters, digits, "_" and "-" only, so a name can't hold an email or imitate the verified
-// mark (plans/bookstore.md, D8 and Q3). Unique without regard to case, in the database.
-export const usernameSchema = z.string().trim().regex(USERNAME_PATTERN);
+// mark (plans/bookstore.md, D8 and Q3), and no word the word list refuses (D25). Unique without
+// regard to case, in the database.
+export const usernameSchema = z
+  .string()
+  .trim()
+  .regex(USERNAME_PATTERN)
+  .refine((name) => !hasBannedWords(name), BANNED_WORDS_MESSAGE);
 
 export const registerInputSchema = z.object({
   username: usernameSchema,
@@ -71,11 +77,13 @@ export const resetPasswordInputSchema = z.object({
   password: z.string().min(8),
 });
 
-// A book's name, trimmed, at most `MAX_BOOK_NAME` characters (plans/bookstore.md D8).
+// A book's name, trimmed, at most `MAX_BOOK_NAME` characters (plans/bookstore.md D8), with no
+// word the word list refuses (D25).
 export const bookNameSchema = z
   .string()
   .transform(cleanBookName)
-  .pipe(z.string().min(1).max(MAX_BOOK_NAME));
+  .pipe(z.string().min(1).max(MAX_BOOK_NAME))
+  .refine((name) => !hasBannedWords(name), BANNED_WORDS_MESSAGE);
 
 // A book's trees are checked by `validateTrees` (src/lib/library/validate.ts), which replays
 // every move, so the schemas here only pass them along.
